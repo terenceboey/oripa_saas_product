@@ -4,6 +4,7 @@ import {
   updateVendorBusinessSchema,
   updateVendorLimitsSchema,
   updateVendorPlanSchema,
+  updateVendorPrefixSchema,
   updateVendorProfileSchema,
   updateVendorReferralSchema,
 } from "@oripa/shared";
@@ -153,6 +154,55 @@ vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {
   });
 
   return res.json({ vendor });
+});
+
+vendorRouter.patch("/v1/vendor/prefix", async (req: VendorRequest, res) => {
+  const auth = await requireVendorRole(req, res, ["OWNER"]);
+  if (!auth) return;
+
+  const parsed = updateVendorPrefixSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const nextSlug = parsed.data.slug.trim().toLowerCase();
+  const baseDomain = String(process.env.VENDOR_BASE_DOMAIN ?? "").trim().toLowerCase();
+  if (!baseDomain) {
+    return res.status(400).json({ error: "VENDOR_BASE_DOMAIN is not configured" });
+  }
+
+  const nextHost = `${nextSlug}.${baseDomain}`;
+  const existing = await prisma.vendor.findFirst({
+    where: {
+      OR: [{ slug: nextSlug }, { host: nextHost }],
+      NOT: { id: auth.vendorId },
+    },
+    select: { id: true },
+  });
+  if (existing) {
+    return res.status(409).json({ error: "Vendor prefix is already in use" });
+  }
+
+  const vendor = await prisma.vendor.update({
+    where: { id: auth.vendorId },
+    data: { slug: nextSlug, host: nextHost },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      host: true,
+      isActive: true,
+      referralCode: true,
+      businessLocation: true,
+      businessContact: true,
+      updatedAt: true,
+    },
+  });
+
+  return res.json({
+    vendor,
+    message: `Vendor prefix updated. New host: ${nextHost}`,
+  });
 });
 
 vendorRouter.patch("/v1/vendor/business", async (req: VendorRequest, res) => {

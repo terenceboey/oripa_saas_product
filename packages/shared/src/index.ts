@@ -10,6 +10,17 @@ export const updateVendorProfileSchema = z.object({
   name: z.string().min(2).max(80),
 });
 
+export const updateVendorPrefixSchema = z.object({
+  slug: z
+    .string()
+    .min(2)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/)
+    .refine((value) => !value.startsWith("-") && !value.endsWith("-"), {
+      message: "Prefix cannot start or end with hyphen",
+    }),
+});
+
 export const updateVendorBusinessSchema = z.object({
   businessLocation: z.string().max(200).optional().nullable(),
   businessContact: z.string().max(120).optional().nullable(),
@@ -85,6 +96,7 @@ export const updateVendorLimitsSchema = z.object({
 
 export type CreateVendorInput = z.infer<typeof createVendorSchema>;
 export type UpdateVendorProfileInput = z.infer<typeof updateVendorProfileSchema>;
+export type UpdateVendorPrefixInput = z.infer<typeof updateVendorPrefixSchema>;
 export type UpdateVendorBusinessInput = z.infer<typeof updateVendorBusinessSchema>;
 export type UpdateVendorReferralInput = z.infer<typeof updateVendorReferralSchema>;
 export type UpdateVendorPlanInput = z.infer<typeof updateVendorPlanSchema>;

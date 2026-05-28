@@ -756,6 +756,31 @@ body {
   color: #d7e2f5;
 }
 
+.qr-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 14, 24, 0.6);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 12px;
+}
+
+.qr-modal {
+  width: min(420px, 96vw);
+}
+
+.qr-image {
+  display: block;
+  width: 300px;
+  max-width: 100%;
+  margin: 10px auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+}
+
 @media (max-width: 760px) {
   .fairness-grid {
     grid-template-columns: 1fr;

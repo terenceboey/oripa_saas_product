@@ -10,16 +10,29 @@ export const vendorResolver: RequestHandler = (req: Request, _res: Response, nex
   void (async () => {
     const vendorReq = req as VendorRequest;
     const explicitHost = String(vendorReq.header("x-vendor-host") || "").trim().toLowerCase();
-    const host = explicitHost || String(vendorReq.hostname || "").toLowerCase();
+    const requestHost = explicitHost || String(vendorReq.hostname || "").toLowerCase();
+    const host = requestHost.split(":")[0];
     if (!host) {
       next();
       return;
     }
 
-    const vendor = await prisma.vendor.findUnique({ where: { host } });
+    let vendor = await prisma.vendor.findUnique({ where: { host } });
+
+    // Fallback: subdomain routing for multi-tenant hosts, e.g. vendorA.example.com
+    if (!vendor) {
+      const baseDomain = String(process.env.VENDOR_BASE_DOMAIN ?? "").trim().toLowerCase();
+      if (baseDomain && host.endsWith(`.${baseDomain}`)) {
+        const candidateSlug = host.slice(0, host.length - (`.${baseDomain}`).length).trim();
+        if (candidateSlug && !candidateSlug.includes(".")) {
+          vendor = await prisma.vendor.findUnique({ where: { slug: candidateSlug } });
+        }
+      }
+    }
+
     if (vendor) {
       vendorReq.vendorId = vendor.id;
-      vendorReq.vendorHost = vendor.host;
+      vendorReq.vendorHost = host;
     }
 
     next();

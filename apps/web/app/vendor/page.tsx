@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
+import QRCode from "qrcode";
 
 type Vendor = {
   id: string;
@@ -103,7 +104,7 @@ type TierDraft = {
 
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const vendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 
 function createItem(): ItemDraft {
   return {
@@ -131,7 +132,17 @@ function toLocalInputValue(iso?: string | null) {
 }
 
 export default function VendorPage() {
-  const headers = useMemo(() => ({ "x-vendor-host": vendorHost, "content-type": "application/json" }), []);
+  const runtimeVendorHost = useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.host) {
+      return window.location.host.toLowerCase();
+    }
+    return configuredVendorHost || "demo.localhost";
+  }, []);
+  const vendorBaseDomain = useMemo(() => {
+    const host = configuredVendorHost || runtimeVendorHost;
+    return host.replace(/^[^.]+\./, "");
+  }, [runtimeVendorHost]);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, "content-type": "application/json" }), [runtimeVendorHost]);
   const authHeaders = useCallback(() => {
     const token = localStorage.getItem("oripa_access_token") ?? "";
     return {
@@ -150,6 +161,7 @@ export default function VendorPage() {
   const [packs, setPacks] = useState<Pack[]>([]);
 
   const [vendorName, setVendorName] = useState("");
+  const [vendorSlug, setVendorSlug] = useState("");
   const [businessLocation, setBusinessLocation] = useState("");
   const [businessContact, setBusinessContact] = useState("");
   const [referralCode, setReferralCode] = useState("");
@@ -174,6 +186,8 @@ export default function VendorPage() {
   const [tiers, setTiers] = useState<TierDraft[]>([createTier(0)]);
   const [qrPoints, setQrPoints] = useState("100");
   const [qrExpiryMinutes, setQrExpiryMinutes] = useState("15");
+  const [activeQr, setActiveQr] = useState<VendorQr | null>(null);
+  const [activeQrDataUrl, setActiveQrDataUrl] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -216,6 +230,7 @@ export default function VendorPage() {
       const v = vendorJson.vendor ?? null;
       setVendor(v);
       setVendorName(v?.name ?? "");
+      setVendorSlug(v?.slug ?? "");
       setBusinessLocation(v?.businessLocation ?? "");
       setBusinessContact(v?.businessContact ?? "");
       setReferralCode(v?.referralCode ?? "");
@@ -298,6 +313,30 @@ export default function VendorPage() {
     }
   }
 
+  async function saveVendorPrefix(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/prefix`, {
+        method: "PATCH",
+        headers: authHeaders(),
+        body: JSON.stringify({ slug: vendorSlug.trim().toLowerCase() }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to update vendor prefix");
+
+      setSuccess(body?.message ?? "Vendor prefix updated.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update vendor prefix");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function switchPlan(nextPlanCode: "BASIC" | "ELITE") {
     setSaving(true);
     setError(null);
@@ -355,6 +394,32 @@ export default function VendorPage() {
       setSaving(false);
     }
   }
+
+  useEffect(() => {
+    if (!activeQr?.token) {
+      setActiveQrDataUrl(null);
+      return;
+    }
+    let mounted = true;
+    QRCode.toDataURL(activeQr.token, {
+      width: 300,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#0f172a",
+        light: "#ffffff",
+      },
+    })
+      .then((url) => {
+        if (mounted) setActiveQrDataUrl(url);
+      })
+      .catch(() => {
+        if (mounted) setActiveQrDataUrl(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [activeQr]);
 
   async function addBanner(event: FormEvent) {
     event.preventDefault();
@@ -616,7 +681,7 @@ export default function VendorPage() {
       <header className="site-header">
         <div className="brand-text">
           <strong>Vendor Dashboard</strong>
-          <span>{vendor?.name ?? "-"} ({vendorHost})</span>
+          <span>{vendor?.name ?? "-"} ({vendor?.host ?? runtimeVendorHost})</span>
         </div>
         <div className="actions">
           <button type="button" className="sort-pill" onClick={() => void bootstrapOwner()} disabled={saving}>Bootstrap Owner Access</button>
@@ -649,6 +714,19 @@ export default function VendorPage() {
           <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
           <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
           <button type="submit" className="draw-button" disabled={saving || loading}>Save Vendor Info</button>
+        </form>
+        <form className="vendor-form" onSubmit={saveVendorPrefix}>
+          <input
+            value={vendorSlug}
+            onChange={(e) => setVendorSlug(e.target.value)}
+            placeholder="Vendor URL prefix (slug)"
+            required
+            minLength={2}
+            maxLength={50}
+            pattern="^[a-z0-9-]+$"
+          />
+          <p className="muted tiny">New vendor URL: <code>https://{vendorSlug || "your-prefix"}.{vendorBaseDomain}</code></p>
+          <button type="submit" className="draw-button" disabled={saving || loading}>Update Vendor Prefix</button>
         </form>
       </section>
 
@@ -798,6 +876,7 @@ export default function VendorPage() {
             <div className="result-row" key={row.id}>
               <span>{row.token}</span>
               <span>{row.points} pts | {row.status}</span>
+              <button type="button" className="sort-pill" onClick={() => setActiveQr(row)}>Display QR</button>
             </div>
           ))}
         </div>
@@ -819,6 +898,28 @@ export default function VendorPage() {
           ))}
         </div>
       </section>
+
+      {activeQr ? (
+        <div className="qr-modal-backdrop" onClick={() => setActiveQr(null)}>
+          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
+            <div className="heading-row">
+              <h3>QR Token</h3>
+              <button type="button" className="sort-pill" onClick={() => setActiveQr(null)}>Close</button>
+            </div>
+            <p className="muted tiny">Points: {activeQr.points} | Status: {activeQr.status}</p>
+            {activeQrDataUrl ? (
+              <img
+                className="qr-image"
+                src={activeQrDataUrl}
+                alt={`QR for token ${activeQr.token}`}
+              />
+            ) : (
+              <p className="muted tiny">Generating QR image...</p>
+            )}
+            <p className="muted tiny" style={{ wordBreak: "break-all" }}>{activeQr.token}</p>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
