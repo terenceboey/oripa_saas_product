@@ -153,7 +153,7 @@ export default function HomePage() {
     void loadProfile();
   }, [loadData, loadProfile]);
 
-  useBackForwardRefresh(() => loadData(false));
+  useBackForwardRefresh(() => loadData(false), { enabled: !vendorNotFound, cooldownMs: 15000 });
 
   useEffect(() => {
     if (banners.length <= 1) return;

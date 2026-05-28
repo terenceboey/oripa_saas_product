@@ -1,13 +1,32 @@
 ﻿"use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type RefreshFn = () => void | Promise<void>;
+type RefreshOptions = {
+  enabled?: boolean;
+  cooldownMs?: number;
+};
 
-export function useBackForwardRefresh(refresh: RefreshFn) {
+export function useBackForwardRefresh(refresh: RefreshFn, options?: RefreshOptions) {
+  const inFlightRef = useRef(false);
+  const lastRunRef = useRef(0);
+  const cooldownMs = options?.cooldownMs ?? 10000;
+  const enabled = options?.enabled ?? true;
+
   useEffect(() => {
+    if (!enabled) return;
+
     const run = () => {
-      void refresh();
+      if (inFlightRef.current) return;
+      const now = Date.now();
+      if (now - lastRunRef.current < cooldownMs) return;
+
+      inFlightRef.current = true;
+      lastRunRef.current = now;
+      void Promise.resolve(refresh()).finally(() => {
+        inFlightRef.current = false;
+      });
     };
 
     const onPageShow = () => {
@@ -36,5 +55,5 @@ export function useBackForwardRefresh(refresh: RefreshFn) {
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [refresh]);
+  }, [cooldownMs, enabled, refresh]);
 }

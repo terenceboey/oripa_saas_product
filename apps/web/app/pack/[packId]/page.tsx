@@ -96,7 +96,7 @@ export default function PackDrawPage() {
     void loadData();
   }, [loadData]);
 
-  useBackForwardRefresh(loadData);
+  useBackForwardRefresh(loadData, { cooldownMs: 15000 });
 
   async function handleDraw(quantity: number) {
     if (!pack) return;

@@ -292,7 +292,7 @@ export default function VendorPage() {
     void loadAll();
   }, [loadAll]);
 
-  useBackForwardRefresh(loadAll);
+  useBackForwardRefresh(loadAll, { cooldownMs: 20000 });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
