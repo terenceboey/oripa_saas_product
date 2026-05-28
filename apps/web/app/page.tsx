@@ -85,10 +85,10 @@ export default function HomePage() {
 
     try {
       const [walletResponse, packsResponse, bannersResponse, tenantResponse] = await Promise.all([
-        fetch(`${apiBase}/v1/wallet`, { headers, cache: "no-store" }),
-        fetch(`${apiBase}/v1/packs`, { headers, cache: "no-store" }),
-        fetch(`${apiBase}/v1/banners`, { headers, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/current`, { headers, cache: "no-store" }),
+        fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/packs`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/banners`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/current`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
       if (!walletResponse.ok || !packsResponse.ok || !bannersResponse.ok || !tenantResponse.ok) {
@@ -114,22 +114,15 @@ export default function HomePage() {
   }, [headers]);
 
   const loadProfile = useCallback(async () => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("oripa_access_token") : null;
-    if (!token) {
-      setUser(null);
-      return;
-    }
-
     try {
       const response = await fetch(`${apiBase}/v1/auth/me`, {
         headers: {
-          authorization: `Bearer ${token}`,
           ...headers,
         },
+        credentials: "include",
         cache: "no-store",
       });
       if (!response.ok) {
-        localStorage.removeItem("oripa_access_token");
         setUser(null);
         return;
       }
@@ -191,8 +184,12 @@ export default function HomePage() {
     setBannerIndex((current) => (current + 1) % banners.length);
   }
 
-  function logout() {
-    localStorage.removeItem("oripa_access_token");
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers,
+      credentials: "include",
+    }).catch(() => null);
     setUser(null);
   }
 
@@ -222,7 +219,6 @@ export default function HomePage() {
             <button type="button" className="sort-pill" onClick={logout}>Logout</button>
           ) : null}
           <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
-          <a className="sort-pill" href="/vendor">Vendor Dashboard</a>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
       </header>

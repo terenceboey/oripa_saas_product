@@ -46,6 +46,7 @@ export default function RegisterPage() {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
         },
+        credentials: "include",
         body: JSON.stringify({ displayName, email, password, referralCode: referralCode || undefined }),
       });
 

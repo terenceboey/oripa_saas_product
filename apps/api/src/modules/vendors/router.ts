@@ -12,7 +12,7 @@ import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { VendorMembershipRole } from "@prisma/client";
 import { randomUUID } from "crypto";
-import { getBearerUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
 
 export const vendorRouter = Router();
 
@@ -21,7 +21,7 @@ async function requireVendorRole(req: VendorRequest, res: any, allowedRoles: Ven
     res.status(400).json({ error: "Vendor not resolved" });
     return null;
   }
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) {
     res.status(401).json({ error: "unauthorized" });
     return null;
@@ -71,7 +71,7 @@ vendorRouter.get("/v1/vendors/by-host", async (req, res) => {
 
 vendorRouter.post("/v1/vendor/bootstrap-owner", async (req: VendorRequest, res) => {
   if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
 
   const existingActiveMembers = await prisma.vendorMembership.count({
@@ -101,7 +101,7 @@ vendorRouter.post("/v1/vendor/bootstrap-owner", async (req: VendorRequest, res) 
 
 vendorRouter.get("/v1/vendor/me", async (req: VendorRequest, res) => {
   if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
   const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
   return res.json({ userId: actorUserId, role, isVendorMember: Boolean(role) });
@@ -496,7 +496,7 @@ vendorRouter.get("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
 vendorRouter.post("/v1/points/qr/redeem", async (req: VendorRequest, res) => {
   if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
   const vendorId = req.vendorId;
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
 
   const token = String(req.body?.token ?? "").trim();

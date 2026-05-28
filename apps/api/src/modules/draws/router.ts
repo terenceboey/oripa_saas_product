@@ -4,10 +4,9 @@ import { drawSchema } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
-import jwt from "jsonwebtoken";
+import { getRequestUserId } from "../../lib/rbac";
 
 const ALGORITHM_VERSION = "hmac_sha256_v1";
-const jwtSecret = process.env.JWT_SECRET ?? "change-me";
 
 type PrizeState = {
   id: string;
@@ -34,19 +33,6 @@ function tierFromLabel(label: string | null | undefined) {
   if (!label) return null;
   const idx = label.indexOf(" - ");
   return idx > 0 ? label.slice(0, idx).trim() : null;
-}
-
-function getBearerUserId(authorizationHeader?: string) {
-  const raw = String(authorizationHeader ?? "");
-  if (!raw.startsWith("Bearer ")) return null;
-  const token = raw.slice("Bearer ".length).trim();
-  if (!token) return null;
-  try {
-    const payload = jwt.verify(token, jwtSecret) as { sub?: string };
-    return payload.sub ?? null;
-  } catch {
-    return null;
-  }
 }
 
 function selectDeterministicPrize(prizes: PrizeState[], rand01: number) {
@@ -103,7 +89,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
   const requestId = String(req.header("x-request-id") ?? "").trim() || randomUUID();
   const clientIp = String((req.headers["x-forwarded-for"] as string) ?? req.ip ?? "").split(",")[0].trim() || null;
@@ -486,7 +472,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
 drawRouter.get("/v1/draws/:drawOrderId/proof", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
 
   const drawOrderId = String(req.params.drawOrderId ?? "").trim();
@@ -540,7 +526,7 @@ drawRouter.get("/v1/draws/:drawOrderId/proof", async (req: VendorRequest, res) =
 drawRouter.get("/v1/fairness-proofs", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
 
   const limitRaw = Number(req.query.limit ?? 100);

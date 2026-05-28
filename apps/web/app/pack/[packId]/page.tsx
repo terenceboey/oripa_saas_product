@@ -69,8 +69,8 @@ export default function PackDrawPage() {
 
     try {
       const [packResponse, walletResponse] = await Promise.all([
-        fetch(`${apiBase}/v1/packs/${packId}`, { headers, cache: "no-store" }),
-        fetch(`${apiBase}/v1/wallet`, { headers, cache: "no-store" }),
+        fetch(`${apiBase}/v1/packs/${packId}`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
       if (!packResponse.ok) {
@@ -99,12 +99,6 @@ export default function PackDrawPage() {
 
   async function handleDraw(quantity: number) {
     if (!pack) return;
-    const token = typeof window !== "undefined" ? localStorage.getItem("oripa_access_token") : null;
-    if (!token) {
-      setError("Please login before drawing.");
-      return;
-    }
-
     setDrawing(true);
     setError(null);
 
@@ -117,8 +111,8 @@ export default function PackDrawPage() {
           ...headers,
           "content-type": "application/json",
           "x-idempotency-key": idempotencyKey,
-          authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ packId: pack.id, quantity }),
       });
 

@@ -8,11 +8,15 @@ import crypto from "crypto";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { sendEmail } from "../../lib/email";
+import { getRequestUserId } from "../../lib/rbac";
 
 const authRouter = Router();
 const webBaseUrl = process.env.WEB_URL ?? "http://localhost:3000";
 const appBaseUrl = process.env.APP_URL ?? "http://localhost:4000";
 const jwtSecret = process.env.JWT_SECRET ?? "change-me";
+const appNodeEnv = String(process.env.NODE_ENV ?? "development").toLowerCase();
+const isProduction = appNodeEnv === "production";
+const cookieDomain = process.env.AUTH_COOKIE_DOMAIN;
 
 let passportConfigured = false;
 const OTP_TTL_MINUTES = 10;
@@ -47,6 +51,33 @@ function issueAccessToken(user: { id: string; email: string; displayName: string
     jwtSecret,
     { expiresIn: "7d" }
   );
+}
+
+function setAccessCookie(res: any, token: string) {
+  const maxAgeSeconds = 7 * 24 * 60 * 60;
+  const parts = [
+    `oripa_access_token=${encodeURIComponent(token)}`,
+    "Path=/",
+    "HttpOnly",
+    `Max-Age=${maxAgeSeconds}`,
+    "SameSite=Lax",
+  ];
+  if (isProduction) parts.push("Secure");
+  if (cookieDomain) parts.push(`Domain=${cookieDomain}`);
+  res.setHeader("Set-Cookie", parts.join("; "));
+}
+
+function clearAccessCookie(res: any) {
+  const parts = [
+    "oripa_access_token=",
+    "Path=/",
+    "HttpOnly",
+    "Max-Age=0",
+    "SameSite=Lax",
+  ];
+  if (isProduction) parts.push("Secure");
+  if (cookieDomain) parts.push(`Domain=${cookieDomain}`);
+  res.setHeader("Set-Cookie", parts.join("; "));
 }
 
 async function findOrCreateCustomerUser(email: string, displayName?: string | null) {
@@ -241,19 +272,6 @@ function configurePassportIfNeeded() {
   }
 }
 
-function getBearerUserId(authorizationHeader?: string) {
-  const raw = String(authorizationHeader ?? "");
-  if (!raw.startsWith("Bearer ")) return null;
-  const token = raw.slice("Bearer ".length).trim();
-  if (!token) return null;
-  try {
-    const payload = jwt.verify(token, jwtSecret) as { sub?: string };
-    return payload.sub ?? null;
-  } catch {
-    return null;
-  }
-}
-
 configurePassportIfNeeded();
 
 authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
@@ -331,6 +349,7 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
   });
 
   const token = issueAccessToken(user);
+  setAccessCookie(res, token);
   return res.json({
     token,
     user: { id: user.id, email: user.email, displayName: user.displayName },
@@ -348,6 +367,7 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
   if (!user.passwordHash) return res.status(409).json({ error: "social login account does not require OTP verification here." });
   if (user.emailVerificationStatus === "VERIFIED" && user.emailVerifiedAt) {
     const token = issueAccessToken(user);
+    setAccessCookie(res, token);
     return res.json({
       token,
       user: { id: user.id, email: user.email, displayName: user.displayName, emailVerificationStatus: user.emailVerificationStatus },
@@ -390,6 +410,7 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
   });
 
   const token = issueAccessToken(verifiedUser);
+  setAccessCookie(res, token);
   return res.json({
     token,
     user: { id: verifiedUser.id, email: verifiedUser.email, displayName: verifiedUser.displayName, emailVerificationStatus: verifiedUser.emailVerificationStatus },
@@ -424,8 +445,13 @@ authRouter.post("/v1/auth/resend-email-otp", async (req: VendorRequest, res) => 
   return res.json({ message: "otp sent" });
 });
 
+authRouter.post("/v1/auth/logout", async (_req: VendorRequest, res) => {
+  clearAccessCookie(res);
+  return res.json({ ok: true });
+});
+
 authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
-  const userId = getBearerUserId(req.header("authorization") ?? undefined);
+  const userId = getRequestUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -445,7 +471,7 @@ authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
 });
 
 authRouter.get("/v1/auth/vendor-home", async (req: VendorRequest, res) => {
-  const userId = getBearerUserId(req.header("authorization") ?? undefined);
+  const userId = getRequestUserId(req);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
 
   const memberships = await prisma.vendorMembership.findMany({
@@ -524,7 +550,8 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
       customerUserId: String(user.id),
     });
     const token = issueAccessToken(user);
-    return res.redirect(`${webBaseUrl}/login?token=${encodeURIComponent(token)}&vendorHost=${encodeURIComponent(vendorHost)}`);
+    setAccessCookie(res, token);
+    return res.redirect(`${webBaseUrl}/login?vendorHost=${encodeURIComponent(vendorHost)}`);
   })(req, res, next);
 });
 
@@ -541,7 +568,8 @@ authRouter.post("/v1/auth/apple/callback", (req, res, next) => {
       return res.redirect(`${webBaseUrl}/login?error=apple_auth_failed`);
     }
     const token = issueAccessToken(user);
-    return res.redirect(`${webBaseUrl}/login?token=${encodeURIComponent(token)}`);
+    setAccessCookie(res, token);
+    return res.redirect(`${webBaseUrl}/login`);
   })(req, res, next);
 });
 

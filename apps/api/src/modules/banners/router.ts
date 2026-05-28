@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createBannerSchema } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
-import { getBearerUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
 
 export const bannerRouter = Router();
 
@@ -11,7 +11,7 @@ async function requireBannerRole(req: VendorRequest, res: any, allowStaffReadOnl
     res.status(400).json({ error: "Vendor not resolved" });
     return null;
   }
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) {
     res.status(401).json({ error: "unauthorized" });
     return null;

@@ -15,9 +15,30 @@ import { authRouter } from "./modules/auth/router";
 export function createApp() {
   const app = express();
   app.set("trust proxy", true);
+  const webUrl = String(process.env.WEB_URL ?? "").trim();
+  const vendorBaseDomain = String(process.env.VENDOR_BASE_DOMAIN ?? "").trim().toLowerCase();
 
   app.use(helmet());
-  app.use(cors());
+  app.use(cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (webUrl && origin === webUrl) return callback(null, true);
+      try {
+        const parsed = new URL(origin);
+        const host = parsed.host.toLowerCase();
+        if (host.startsWith("localhost:") || host.startsWith("127.0.0.1:")) {
+          return callback(null, true);
+        }
+        if (vendorBaseDomain && (host === vendorBaseDomain || host.endsWith(`.${vendorBaseDomain}`))) {
+          return callback(null, true);
+        }
+      } catch {
+        // ignore parse error
+      }
+      return callback(new Error("CORS origin not allowed"));
+    },
+    credentials: true,
+  }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json({ limit: "64kb" }));
   app.use(morgan("dev"));

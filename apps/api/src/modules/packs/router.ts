@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createPackSchema, updatePackSchema } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
-import { getBearerUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
 
 export const packRouter = Router();
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
@@ -112,7 +112,7 @@ async function requirePackRole(req: VendorRequest, res: any, allowStaffReadOnly 
     res.status(400).json({ error: "Vendor not resolved" });
     return null;
   }
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  const actorUserId = getRequestUserId(req);
   if (!actorUserId) {
     res.status(401).json({ error: "unauthorized" });
     return null;

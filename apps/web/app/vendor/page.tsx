@@ -144,10 +144,8 @@ export default function VendorPage() {
   }, [runtimeVendorHost]);
   const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, "content-type": "application/json" }), [runtimeVendorHost]);
   const authHeaders = useCallback(() => {
-    const token = localStorage.getItem("oripa_access_token") ?? "";
     return {
       ...headers,
-      authorization: token ? `Bearer ${token}` : "",
     };
   }, [headers]);
 
@@ -201,17 +199,15 @@ export default function VendorPage() {
     setError(null);
 
     try {
-      const token = localStorage.getItem("oripa_access_token") ?? "";
-      if (!token) throw new Error("Please login with a vendor member account.");
       const [vendorRes, limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
-        fetch(`${apiBase}/v1/vendor/current`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/referrals`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/banners`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/packs`, { headers: authHeaders(), cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/points/qr`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/current`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/referrals`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/banners`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/points/qr`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
       ]);
 
       if (!vendorRes.ok || !limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
@@ -263,6 +259,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/bootstrap-owner`, {
         method: "POST",
         headers: authHeaders(),
+        credentials: "include",
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Failed to bootstrap vendor owner");
@@ -286,16 +283,19 @@ export default function VendorPage() {
         fetch(`${apiBase}/v1/vendor/profile`, {
           method: "PATCH",
           headers: authHeaders(),
+          credentials: "include",
           body: JSON.stringify({ name: vendorName }),
         }),
         fetch(`${apiBase}/v1/vendor/business`, {
           method: "PATCH",
           headers: authHeaders(),
+          credentials: "include",
           body: JSON.stringify({ businessLocation, businessContact }),
         }),
         fetch(`${apiBase}/v1/vendor/referral`, {
           method: "PATCH",
           headers: authHeaders(),
+          credentials: "include",
           body: JSON.stringify({ referralCode }),
         }),
       ]);
@@ -323,6 +323,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/prefix`, {
         method: "PATCH",
         headers: authHeaders(),
+        credentials: "include",
         body: JSON.stringify({ slug: vendorSlug.trim().toLowerCase() }),
       });
       const body = await res.json().catch(() => null);
@@ -346,6 +347,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/plan`, {
         method: "PATCH",
         headers: authHeaders(),
+        credentials: "include",
         body: JSON.stringify({ planCode: nextPlanCode }),
       });
       if (!res.ok) {
@@ -363,11 +365,6 @@ export default function VendorPage() {
 
   async function generateQr(event: FormEvent) {
     event.preventDefault();
-    const token = localStorage.getItem("oripa_access_token");
-    if (!token) {
-      setError("Login required to generate QR.");
-      return;
-    }
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -377,6 +374,7 @@ export default function VendorPage() {
         headers: {
           ...authHeaders(),
         },
+        credentials: "include",
         body: JSON.stringify({
           points: Number(qrPoints),
           expiresInMinutes: Number(qrExpiryMinutes),
@@ -438,6 +436,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/banners`, {
         method: "POST",
         headers: authHeaders(),
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to add banner");
@@ -463,6 +462,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/banners/${id}`, {
         method: "DELETE",
         headers: authHeaders(),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to delete banner");
       setSuccess("Banner removed.");
@@ -620,6 +620,7 @@ export default function VendorPage() {
       const res = await fetch(endpoint, {
         method,
         headers: authHeaders(),
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -646,6 +647,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}/archive`, {
         method: "PATCH",
         headers: authHeaders(),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to archive pack");
       setSuccess("Pack archived.");
@@ -665,6 +667,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}`, {
         method: "DELETE",
         headers: authHeaders(),
+        credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to delete pack");
       setSuccess("Pack deleted.");

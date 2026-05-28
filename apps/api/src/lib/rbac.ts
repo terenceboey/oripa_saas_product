@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { Request } from "express";
 import { VendorMembershipRole } from "@prisma/client";
 import { prisma } from "./prisma";
 
@@ -15,6 +16,44 @@ export function getBearerUserId(authorizationHeader?: string) {
   } catch {
     return null;
   }
+}
+
+function parseCookieHeader(cookieHeader?: string) {
+  const map = new Map<string, string>();
+  const raw = String(cookieHeader ?? "");
+  if (!raw) return map;
+  for (const part of raw.split(";")) {
+    const idx = part.indexOf("=");
+    if (idx <= 0) continue;
+    const key = part.slice(0, idx).trim();
+    const val = part.slice(idx + 1).trim();
+    if (!key) continue;
+    map.set(key, decodeURIComponent(val));
+  }
+  return map;
+}
+
+export function getCookieToken(cookieHeader?: string) {
+  const cookies = parseCookieHeader(cookieHeader);
+  return cookies.get("oripa_access_token") ?? null;
+}
+
+export function getTokenUserId(token?: string | null) {
+  const rawToken = String(token ?? "").trim();
+  if (!rawToken) return null;
+  try {
+    const payload = jwt.verify(rawToken, jwtSecret) as { sub?: string };
+    return payload.sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function getRequestUserId(req: Request) {
+  const bearerUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (bearerUserId) return bearerUserId;
+  const cookieToken = getCookieToken(req.header("cookie") ?? undefined);
+  return getTokenUserId(cookieToken);
 }
 
 export async function getVendorMembershipRole(input: { vendorId: string; userId: string }) {

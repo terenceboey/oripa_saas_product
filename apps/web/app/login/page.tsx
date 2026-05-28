@@ -41,13 +41,13 @@ export default function LoginPage() {
 
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
 
-  async function resolveVendorHomeHost(token: string): Promise<string | null> {
+  async function resolveVendorHomeHost(): Promise<string | null> {
     try {
       const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
         headers: {
-          authorization: `Bearer ${token}`,
           "x-vendor-host": runtimeVendorHost,
         },
+        credentials: "include",
         cache: "no-store",
       });
       const payload = await response.json().catch(() => ({}));
@@ -59,12 +59,12 @@ export default function LoginPage() {
     }
   }
 
-  async function loadProfile(token: string, resolvedVendorHost: string) {
+  async function loadProfile(resolvedVendorHost: string) {
     const response = await fetch(`${apiBase}/v1/auth/me`, {
       headers: {
-        authorization: `Bearer ${token}`,
         "x-vendor-host": resolvedVendorHost,
       },
+      credentials: "include",
       cache: "no-store",
     });
     const payload = await response.json().catch(() => ({}));
@@ -78,11 +78,10 @@ export default function LoginPage() {
     const callbackVendorHost = String(url.searchParams.get("vendorHost") ?? "").trim().toLowerCase();
     const oauthError = url.searchParams.get("error");
 
-    if (token) {
-      localStorage.setItem("oripa_access_token", token);
+    if (token || callbackVendorHost) {
       setMessage("Logged in successfully. You can continue to the storefront.");
       const resolvedVendorHost = callbackVendorHost || runtimeVendorHost;
-      void loadProfile(token, resolvedVendorHost);
+      void loadProfile(resolvedVendorHost);
       url.searchParams.delete("token");
       url.searchParams.delete("vendorHost");
       window.history.replaceState({}, "", url.toString());
@@ -90,11 +89,11 @@ export default function LoginPage() {
         void (async () => {
           const currentHost = window.location.host.toLowerCase();
           const callbackHostCandidate = callbackVendorHost && !isLocalhostLike(callbackVendorHost) ? callbackVendorHost : null;
-          const membershipHost = await resolveVendorHomeHost(token);
+          const membershipHost = await resolveVendorHomeHost();
           const targetHost = callbackHostCandidate || membershipHost;
 
           if (targetHost && targetHost !== currentHost) {
-            window.location.href = `${window.location.protocol}//${targetHost}/vendor`;
+            window.location.href = `${window.location.protocol}//${targetHost}/login`;
             return;
           }
           router.push("/vendor");
@@ -108,12 +107,7 @@ export default function LoginPage() {
       window.history.replaceState({}, "", url.toString());
     }
 
-    const existingToken = localStorage.getItem("oripa_access_token");
-    if (existingToken) {
-      void loadProfile(existingToken, runtimeVendorHost).catch(() => {
-        localStorage.removeItem("oripa_access_token");
-      });
-    }
+    void loadProfile(runtimeVendorHost).catch(() => {});
   }, [runtimeVendorHost]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
@@ -129,21 +123,21 @@ export default function LoginPage() {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
         },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
 
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Login failed");
 
-      localStorage.setItem("oripa_access_token", payload.token);
       setMessage("Logged in successfully.");
-      await loadProfile(payload.token, runtimeVendorHost);
+      await loadProfile(runtimeVendorHost);
       window.setTimeout(() => {
         void (async () => {
           const currentHost = window.location.host.toLowerCase();
-          const membershipHost = await resolveVendorHomeHost(payload.token);
+          const membershipHost = await resolveVendorHomeHost();
           if (membershipHost && !isLocalhostLike(membershipHost) && membershipHost !== currentHost) {
-            window.location.href = `${window.location.protocol}//${membershipHost}/vendor`;
+            window.location.href = `${window.location.protocol}//${membershipHost}/login`;
             return;
           }
           router.push("/vendor");

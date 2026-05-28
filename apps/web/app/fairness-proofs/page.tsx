@@ -65,10 +65,9 @@ export default function FairnessProofsPage() {
     setLoading(true);
     setError(null);
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("oripa_access_token") : null;
-      if (!token) throw new Error("Please login to view your fairness proofs.");
       const response = await fetch(`${apiBase}/v1/fairness-proofs?limit=100`, {
-        headers: { ...headers, authorization: `Bearer ${token}` },
+        headers,
+        credentials: "include",
         cache: "no-store",
       });
       const payload = await response.json();
@@ -90,10 +89,9 @@ export default function FairnessProofsPage() {
 
     setLoadingByOrderId((prev) => ({ ...prev, [drawOrderId]: true }));
     try {
-      const token = typeof window !== "undefined" ? localStorage.getItem("oripa_access_token") : null;
-      if (!token) throw new Error("Please login to view proof detail.");
       const response = await fetch(`${apiBase}/v1/draws/${drawOrderId}/proof`, {
-        headers: { ...headers, authorization: `Bearer ${token}` },
+        headers,
+        credentials: "include",
         cache: "no-store",
       });
       const payload = await response.json();

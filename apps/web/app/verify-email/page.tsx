@@ -38,12 +38,12 @@ export default function VerifyEmailPage() {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
         },
+        credentials: "include",
         body: JSON.stringify({ email, otp }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error ?? "OTP verification failed");
 
-      localStorage.setItem("oripa_access_token", payload.token);
       setMessage("Email verified and login successful.");
       setOtp("");
       window.setTimeout(() => {
@@ -67,6 +67,7 @@ export default function VerifyEmailPage() {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
         },
+        credentials: "include",
         body: JSON.stringify({ email }),
       });
       const payload = await response.json().catch(() => ({}));
