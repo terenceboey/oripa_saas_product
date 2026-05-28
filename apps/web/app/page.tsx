@@ -74,25 +74,41 @@ export default function HomePage() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [vendorNotFound, setVendorNotFound] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
 
   const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (force = false) => {
+    if (vendorNotFound && !force) return;
     setLoading(true);
     setError(null);
 
     try {
-      const [walletResponse, packsResponse, bannersResponse, tenantResponse] = await Promise.all([
+      const tenantResponse = await fetch(`${apiBase}/v1/vendor/current`, { headers, credentials: "include", cache: "no-store" });
+      if (!tenantResponse.ok) {
+        if (tenantResponse.status === 400 || tenantResponse.status === 404) {
+          setVendorNotFound(true);
+          setTenant(null);
+          setPacks([]);
+          setBanners([]);
+          setWallet(null);
+          setError(`No vendor found for host: ${runtimeVendorHost}`);
+          return;
+        }
+        throw new Error("Failed to resolve vendor storefront.");
+      }
+      setVendorNotFound(false);
+
+      const [walletResponse, packsResponse, bannersResponse] = await Promise.all([
         fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/packs`, { headers, credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/banners`, { headers, credentials: "include", cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/current`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
-      if (!walletResponse.ok || !packsResponse.ok || !bannersResponse.ok || !tenantResponse.ok) {
-        throw new Error("Failed to load storefront data. Check API and tenant config.");
+      if (!walletResponse.ok || !packsResponse.ok || !bannersResponse.ok) {
+        throw new Error("Failed to load vendor storefront data.");
       }
 
       const walletPayload = await walletResponse.json();
@@ -111,7 +127,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [headers]);
+  }, [headers, runtimeVendorHost, vendorNotFound]);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -131,11 +147,11 @@ export default function HomePage() {
   }, [headers]);
 
   useEffect(() => {
-    loadData();
+    loadData(true);
     void loadProfile();
   }, [loadData, loadProfile]);
 
-  useBackForwardRefresh(loadData);
+  useBackForwardRefresh(() => loadData(false));
 
   useEffect(() => {
     if (banners.length <= 1) return;
@@ -277,7 +293,7 @@ export default function HomePage() {
             <h1 className="hero-title">{activeCategory} Mystery Packs</h1>
             <p className="muted">Vendor: {tenant?.name ?? runtimeVendorHost}</p>
           </div>
-          <button type="button" className="refresh-button" onClick={loadData} disabled={loading}>
+          <button type="button" className="refresh-button" onClick={() => void loadData(true)} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </button>
         </div>
