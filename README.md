@@ -53,3 +53,127 @@ If Turbopack errors on your machine, use:
 - Tenant is resolved from `x-tenant-host` header or request host.
 - Draws require `x-idempotency-key` to avoid accidental duplicate charges.
 - Heavy work should be moved to worker jobs, not handled inside API requests.
+
+## Render Deployment Guide (Monorepo)
+
+This repo deploys as two Render Web Services from the same GitHub repo:
+- `oripa-api` (Express API)
+- `oripa-web` (Next.js frontend)
+
+### 1. Connect GitHub Repo
+
+1. Push this repository to GitHub.
+2. In Render, create services from that same repo.
+3. If the repo is not visible in Render:
+   - reconnect GitHub in Render Account settings
+   - confirm Render app is installed for your org/repo
+
+### 2. Root Directory
+
+Set service **Root Directory** to `.` (repo root).
+
+If you set root to `oripa_saas` but that folder is not inside the selected repo root, deploy will fail with:
+- `Root directory 'oripa_saas' does not exist`
+
+### 3. Create API Service First (`oripa-api`)
+
+Service type: Web Service
+
+Build Command:
+`npm ci --include=dev && npx prisma generate && npx prisma db push && npm run build -w @oripa/shared && npm run build -w @oripa/api`
+
+Start Command:
+`npm run start -w @oripa/api`
+
+Health Check Path:
+`/health`
+
+API environment variables (`Add from .env`):
+
+```env
+NODE_ENV=production
+NPM_CONFIG_PRODUCTION=false
+APP_URL=https://REPLACE_WITH_API_RENDER_DOMAIN
+WEB_URL=https://REPLACE_WITH_WEB_RENDER_DOMAIN
+DATABASE_URL=postgresql://REPLACE_WITH_RENDER_POSTGRES_URL?sslmode=require
+JWT_SECRET=REPLACE_WITH_STRONG_RANDOM_SECRET
+GOOGLE_CLIENT_ID=REPLACE_WITH_GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=REPLACE_WITH_GOOGLE_CLIENT_SECRET
+GOOGLE_CALLBACK_URL=https://REPLACE_WITH_API_RENDER_DOMAIN/v1/auth/google/callback
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=REPLACE_WITH_SMTP_USER
+SMTP_PASS=REPLACE_WITH_SMTP_PASS
+SMTP_FROM=REPLACE_WITH_SMTP_FROM
+NEXT_PUBLIC_TENANT_HOST=demo.localhost
+DISABLE_DRAW_QUEUE=true
+```
+
+### 4. Create Web Service Second (`oripa-web`)
+
+Service type: Web Service
+
+Build Command:
+`npm ci --include=dev && npm run build -w @oripa/web`
+
+Start Command:
+`npm run start -w @oripa/web`
+
+Web environment variables (`Add from .env`):
+
+```env
+NODE_ENV=production
+NPM_CONFIG_PRODUCTION=false
+NEXT_PUBLIC_API_URL=https://REPLACE_WITH_API_RENDER_DOMAIN
+NEXT_PUBLIC_TENANT_HOST=demo.localhost
+```
+
+### 5. Google OAuth Setup
+
+In Google Cloud Console for your OAuth Client:
+
+Authorized JavaScript origins:
+- `https://REPLACE_WITH_WEB_RENDER_DOMAIN`
+- `http://localhost:5555` (optional local)
+
+Authorized redirect URIs:
+- `https://REPLACE_WITH_API_RENDER_DOMAIN/v1/auth/google/callback`
+- `http://localhost:4000/v1/auth/google/callback` (optional local)
+
+Important:
+- Redirect URI must be the **API domain**, not web domain.
+- `GOOGLE_CALLBACK_URL` in Render API env must match exactly.
+- `WEB_URL` in API env must be your actual web service URL.
+
+### 6. Redeploy Order
+
+When changing URLs or OAuth env:
+1. Redeploy `oripa-api`
+2. Redeploy `oripa-web`
+
+Use “Clear build cache & deploy” if type/dependency errors persist.
+
+### 7. Common Errors And Fixes
+
+- `Cannot find name 'process'` / `Could not find declaration file for module 'express'`:
+  - ensure `npm ci --include=dev` is used in build command
+  - ensure `NPM_CONFIG_PRODUCTION=false` is set
+
+- `Next.js build worker exited with code 1` asking for `@types/node`:
+  - same fix: include dev deps in build
+
+- Google login returns `not found` after callback:
+  - usually `WEB_URL` points to wrong domain
+  - verify direct page: `https://<web-domain>/login`
+
+- `redirect_uri_mismatch`:
+  - mismatch between Google redirect URI and `GOOGLE_CALLBACK_URL`
+
+### 8. Security Checklist
+
+- Never store secrets in `NEXT_PUBLIC_*` vars.
+- Rotate leaked secrets immediately:
+  - DB password / `DATABASE_URL`
+  - Google client secret
+  - SMTP app password
+  - JWT secret
