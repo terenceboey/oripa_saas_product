@@ -142,7 +142,7 @@ export default function VendorPage() {
     const host = configuredVendorHost || runtimeVendorHost;
     return host.replace(/^[^.]+\./, "");
   }, [runtimeVendorHost]);
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, "content-type": "application/json" }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
   const authHeaders = useCallback(() => {
     return {
       ...headers,
@@ -194,13 +194,41 @@ export default function VendorPage() {
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
 
+  async function resolveVendorHomeHost() {
+    const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) return null;
+    const host = String(payload.vendorHost ?? "").trim().toLowerCase();
+    return host || null;
+  }
+
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const [vendorRes, limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
-        fetch(`${apiBase}/v1/vendor/current`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+      const vendorRes = await fetch(`${apiBase}/v1/vendor/current`, { headers: authHeaders(), credentials: "include", cache: "no-store" });
+      if (!vendorRes.ok) {
+        if (vendorRes.status === 400) {
+          const membershipHost = await resolveVendorHomeHost();
+          const currentHost = window.location.host.toLowerCase();
+          if (membershipHost && membershipHost !== currentHost) {
+            window.location.href = `${window.location.protocol}//${membershipHost}/vendor`;
+            return;
+          }
+          throw new Error("Vendor context not resolved for this host. Please use your vendor subdomain.");
+        }
+        if (vendorRes.status === 401) {
+          throw new Error("Please login with your vendor account.");
+        }
+        throw new Error("Failed to resolve vendor context.");
+      }
+
+      const vendorJson = await vendorRes.json();
+      const [limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
         fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
@@ -210,11 +238,10 @@ export default function VendorPage() {
         fetch(`${apiBase}/v1/vendor/points/qr`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
       ]);
 
-      if (!vendorRes.ok || !limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
+      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
         throw new Error("Failed to load vendor dashboard data");
       }
 
-      const vendorJson = await vendorRes.json();
       const limitsJson = await limitsRes.json();
       const summaryJson = await summaryRes.json();
       const packEarningsJson = await packEarningsRes.json();
@@ -279,32 +306,43 @@ export default function VendorPage() {
     setSuccess(null);
 
     try {
-      const [profileRes, businessRes, referralRes] = await Promise.all([
-        fetch(`${apiBase}/v1/vendor/profile`, {
-          method: "PATCH",
-          headers: authHeaders(),
-          credentials: "include",
-          body: JSON.stringify({ name: vendorName }),
-        }),
-        fetch(`${apiBase}/v1/vendor/business`, {
-          method: "PATCH",
-          headers: authHeaders(),
-          credentials: "include",
-          body: JSON.stringify({ businessLocation, businessContact }),
-        }),
-        fetch(`${apiBase}/v1/vendor/referral`, {
-          method: "PATCH",
-          headers: authHeaders(),
-          credentials: "include",
-          body: JSON.stringify({ referralCode }),
-        }),
-      ]);
-
-      if (!profileRes.ok || !businessRes.ok || !referralRes.ok) {
-        throw new Error("Failed to update vendor profile");
+      const profileRes = await fetch(`${apiBase}/v1/vendor/profile`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: vendorName }),
+      });
+      if (!profileRes.ok) {
+        const body = await profileRes.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to update vendor profile name");
       }
 
-      setSuccess("Vendor profile/business/referral updated.");
+      const businessRes = await fetch(`${apiBase}/v1/vendor/business`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ businessLocation, businessContact }),
+      });
+      if (!businessRes.ok) {
+        const body = await businessRes.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to update business information");
+      }
+
+      const trimmedReferral = referralCode.trim();
+      if (trimmedReferral.length > 0) {
+        const referralRes = await fetch(`${apiBase}/v1/vendor/referral`, {
+          method: "PATCH",
+          headers: { ...authHeaders(), "content-type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ referralCode: trimmedReferral }),
+        });
+        if (!referralRes.ok) {
+          const body = await referralRes.json().catch(() => null);
+          throw new Error(body?.error ?? "Failed to update referral code");
+        }
+      }
+
+      setSuccess("Vendor profile updated.");
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update vendor profile");
@@ -322,7 +360,7 @@ export default function VendorPage() {
     try {
       const res = await fetch(`${apiBase}/v1/vendor/prefix`, {
         method: "PATCH",
-        headers: authHeaders(),
+        headers: { ...authHeaders(), "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ slug: vendorSlug.trim().toLowerCase() }),
       });
@@ -346,7 +384,7 @@ export default function VendorPage() {
     try {
       const res = await fetch(`${apiBase}/v1/vendor/plan`, {
         method: "PATCH",
-        headers: authHeaders(),
+        headers: { ...authHeaders(), "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ planCode: nextPlanCode }),
       });
@@ -373,6 +411,7 @@ export default function VendorPage() {
         method: "POST",
         headers: {
           ...authHeaders(),
+          "content-type": "application/json",
         },
         credentials: "include",
         body: JSON.stringify({
@@ -435,7 +474,7 @@ export default function VendorPage() {
 
       const res = await fetch(`${apiBase}/v1/vendor/banners`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: { ...authHeaders(), "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify(payload),
       });
@@ -619,7 +658,7 @@ export default function VendorPage() {
 
       const res = await fetch(endpoint, {
         method,
-        headers: authHeaders(),
+        headers: { ...authHeaders(), "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify(payload),
       });
