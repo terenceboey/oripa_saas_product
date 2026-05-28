@@ -63,11 +63,38 @@ enum OutboxStatus {
   FAILED
 }
 
+enum VendorPlanCode {
+  BASIC
+  ELITE
+}
+
+enum PackStatus {
+  DRAFT
+  LIVE
+  ARCHIVED
+}
+
+enum DrawLimitMode {
+  NONE
+  ONCE_PER_CUSTOMER
+  DAILY_RESET
+}
+
+enum VendorPointGrantQrStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
 model Vendor {
   id                  String                @id @default(cuid())
   name                String
   slug                String                @unique
   host                String                @unique
+  referralCode        String?               @unique
+  businessLocation    String?
+  businessContact     String?
   isActive            Boolean               @default(true)
   riskLevel           Int                   @default(0)
   complianceFlags     Json?
@@ -89,6 +116,8 @@ model Vendor {
   paymentTransactions PaymentTransaction[]
   fairnessProofs      DrawFairnessProof[]
   fairnessSelections  DrawFairnessSelection[]
+  referralSignups     VendorReferralSignup[]
+  pointGrantQrs       VendorPointGrantQr[]
 }
 
 model User {
@@ -116,6 +145,9 @@ model User {
   paymentTransactions     PaymentTransaction[]
   auditLogs               AuditLog[]
   fairnessProofs          DrawFairnessProof[]
+  redeemedPointGrantQrs   VendorPointGrantQr[] @relation("RedeemedByUser")
+  createdPointGrantQrs    VendorPointGrantQr[] @relation("CreatedByUser")
+  vendorReferralSignups   VendorReferralSignup[]
 }
 
 model Role {
@@ -161,7 +193,9 @@ model VendorSettings {
   currencyCode          String   @default("USD")
   platformFeeBps        Int      @default(0)
   maxPackItems          Int      @default(500)
+  maxPackTiers          Int      @default(10)
   maxDrawQuantity       Int      @default(100)
+  planCode              VendorPlanCode @default(BASIC)
   payoutSchedule        String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -177,6 +211,11 @@ model Pack {
   remainingStock Int
   isNew          Boolean      @default(true)
   limitedLabel   String?
+  importantNotes String?
+  status         PackStatus   @default(DRAFT)
+  drawLimitMode  DrawLimitMode @default(NONE)
+  drawLimitValue Int?
+  drawLimitResetTimezone String? @default("Asia/Singapore")
   isActive       Boolean      @default(true)
   startsAt       DateTime?
   endsAt         DateTime?
@@ -502,4 +541,38 @@ model VendorBanner {
   Vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@index([vendorId, isActive, sortOrder])
+}
+
+model VendorReferralSignup {
+  id               String   @id @default(cuid())
+  vendorId         String
+  referralCode     String
+  customerUserId   String
+  createdAt        DateTime @default(now())
+  Vendor           Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  customerUser     User     @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, customerUserId])
+  @@index([vendorId, createdAt])
+  @@index([referralCode, createdAt])
+}
+
+model VendorPointGrantQr {
+  id               String                  @id @default(cuid())
+  vendorId         String
+  token            String                  @unique
+  points           Int
+  status           VendorPointGrantQrStatus @default(ACTIVE)
+  expiresAt        DateTime
+  createdByUserId  String?
+  redeemedByUserId String?
+  redeemedAt       DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  Vendor           Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdByUser    User?                   @relation("CreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  redeemedByUser   User?                   @relation("RedeemedByUser", fields: [redeemedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([vendorId, status, createdAt])
+  @@index([vendorId, expiresAt])
 }

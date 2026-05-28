@@ -9,11 +9,50 @@ type Vendor = {
   slug: string;
   host: string;
   isActive: boolean;
+  referralCode?: string | null;
+  businessLocation?: string | null;
+  businessContact?: string | null;
 };
 
 type VendorLimits = {
+  planCode: "BASIC" | "ELITE";
   maxPackItems: number;
+  maxPackTiers: number;
   maxDrawQuantity: number;
+};
+
+type EarningsSummary = {
+  totalRevenuePoints: number;
+  totalRevenueCurrency: number;
+  vendorSpentPoints: number;
+  netPoints: number;
+  currencyCode: string;
+};
+
+type PackEarning = {
+  packId: string;
+  packTitle: string;
+  drawOrders: number;
+  totalDrawQuantity: number;
+  totalPoints: number;
+};
+
+type ReferralCustomer = {
+  id: string;
+  email: string;
+  displayName?: string | null;
+  createdAt: string;
+  referredAt: string;
+  referralCode: string;
+};
+
+type VendorQr = {
+  id: string;
+  token: string;
+  points: number;
+  status: "ACTIVE" | "REDEEMED" | "EXPIRED" | "CANCELLED";
+  expiresAt: string;
+  createdAt: string;
 };
 
 type Banner = {
@@ -31,7 +70,22 @@ type Pack = {
   pricePoints: number;
   totalStock: number;
   remainingStock: number;
+  status: "DRAFT" | "LIVE" | "ARCHIVED";
+  importantNotes?: string | null;
+  drawLimitMode: "NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET";
+  drawLimitValue?: number | null;
+  drawLimitResetTimezone?: string | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
   createdAt: string;
+  prizes: Array<{
+    id: string;
+    label: string;
+    imageUrl?: string | null;
+    estimatedValue: number;
+    stock: number;
+    remainingStock: number;
+  }>;
 };
 
 type ItemDraft = {
@@ -68,27 +122,51 @@ function createTier(index: number): TierDraft {
   };
 }
 
+function toLocalInputValue(iso?: string | null) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 export default function VendorPage() {
   const headers = useMemo(() => ({ "x-vendor-host": vendorHost, "content-type": "application/json" }), []);
 
   const [vendor, setVendor] = useState<Vendor | null>(null);
-  const [limits, setLimits] = useState<VendorLimits>({ maxPackItems: 500, maxDrawQuantity: 100 });
+  const [limits, setLimits] = useState<VendorLimits>({ planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
+  const [summary, setSummary] = useState<EarningsSummary | null>(null);
+  const [packEarnings, setPackEarnings] = useState<PackEarning[]>([]);
+  const [referrals, setReferrals] = useState<ReferralCustomer[]>([]);
+  const [qrs, setQrs] = useState<VendorQr[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
 
   const [vendorName, setVendorName] = useState("");
+  const [businessLocation, setBusinessLocation] = useState("");
+  const [businessContact, setBusinessContact] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+
   const [bannerTitle, setBannerTitle] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [bannerTargetUrl, setBannerTargetUrl] = useState("");
 
+  const [editingPackId, setEditingPackId] = useState<string | null>(null);
   const [packTitle, setPackTitle] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [pricePoints, setPricePoints] = useState("100");
   const [totalStock, setTotalStock] = useState("100");
+  const [status, setStatus] = useState<"DRAFT" | "LIVE">("DRAFT");
   const [isNew, setIsNew] = useState(true);
   const [limitedLabel, setLimitedLabel] = useState("");
+  const [importantNotes, setImportantNotes] = useState("");
+  const [drawLimitMode, setDrawLimitMode] = useState<"NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET">("NONE");
+  const [drawLimitValue, setDrawLimitValue] = useState("1");
+  const [drawLimitResetTimezone, setDrawLimitResetTimezone] = useState("Asia/Singapore");
   const [tiers, setTiers] = useState<TierDraft[]>([createTier(0)]);
+  const [qrPoints, setQrPoints] = useState("100");
+  const [qrExpiryMinutes, setQrExpiryMinutes] = useState("15");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,25 +180,49 @@ export default function VendorPage() {
     setError(null);
 
     try {
-      const [vendorRes, limitsRes, bannersRes, packsRes] = await Promise.all([
+      const authToken = localStorage.getItem("oripa_access_token") ?? "";
+      const [vendorRes, limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
         fetch(`${apiBase}/v1/vendor/current`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/limits`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/referrals`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/banners`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/packs`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/packs`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/points/qr`, {
+          headers: {
+            "x-vendor-host": vendorHost,
+            authorization: authToken ? `Bearer ${authToken}` : "",
+          },
+          cache: "no-store",
+        }),
       ]);
 
-      if (!vendorRes.ok || !limitsRes.ok || !bannersRes.ok || !packsRes.ok) {
+      if (!vendorRes.ok || !limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
         throw new Error("Failed to load vendor dashboard data");
       }
 
       const vendorJson = await vendorRes.json();
       const limitsJson = await limitsRes.json();
+      const summaryJson = await summaryRes.json();
+      const packEarningsJson = await packEarningsRes.json();
+      const referralsJson = await referralsRes.json();
+      const qrJson = qrRes.ok ? await qrRes.json() : { qrs: [] };
       const bannersJson = await bannersRes.json();
       const packsJson = await packsRes.json();
 
-      setVendor(vendorJson.vendor ?? null);
-      setVendorName(vendorJson.vendor?.name ?? "");
-      setLimits(limitsJson.limits ?? { maxPackItems: 500, maxDrawQuantity: 100 });
+      const v = vendorJson.vendor ?? null;
+      setVendor(v);
+      setVendorName(v?.name ?? "");
+      setBusinessLocation(v?.businessLocation ?? "");
+      setBusinessContact(v?.businessContact ?? "");
+      setReferralCode(v?.referralCode ?? "");
+
+      setLimits(limitsJson.limits ?? { planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
+      setSummary(summaryJson.summary ?? null);
+      setPackEarnings(packEarningsJson.items ?? []);
+      setReferrals(referralsJson.customers ?? []);
+      setQrs(qrJson.qrs ?? []);
       setBanners(bannersJson.banners ?? []);
       setPacks(packsJson.packs ?? []);
     } catch (err) {
@@ -143,16 +245,91 @@ export default function VendorPage() {
     setSuccess(null);
 
     try {
-      const res = await fetch(`${apiBase}/v1/vendor/profile`, {
-        method: "PATCH",
-        headers,
-        body: JSON.stringify({ name: vendorName }),
-      });
-      if (!res.ok) throw new Error("Failed to update vendor profile");
-      setSuccess("Vendor profile updated.");
+      const [profileRes, businessRes, referralRes] = await Promise.all([
+        fetch(`${apiBase}/v1/vendor/profile`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ name: vendorName }),
+        }),
+        fetch(`${apiBase}/v1/vendor/business`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ businessLocation, businessContact }),
+        }),
+        fetch(`${apiBase}/v1/vendor/referral`, {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({ referralCode }),
+        }),
+      ]);
+
+      if (!profileRes.ok || !businessRes.ok || !referralRes.ok) {
+        throw new Error("Failed to update vendor profile");
+      }
+
+      setSuccess("Vendor profile/business/referral updated.");
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update vendor profile");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function switchPlan(nextPlanCode: "BASIC" | "ELITE") {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/plan`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ planCode: nextPlanCode }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to update plan");
+      }
+      setSuccess(`Plan updated to ${nextPlanCode}.`);
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update plan");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function generateQr(event: FormEvent) {
+    event.preventDefault();
+    const token = localStorage.getItem("oripa_access_token");
+    if (!token) {
+      setError("Login required to generate QR.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/points/qr`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          points: Number(qrPoints),
+          expiresInMinutes: Number(qrExpiryMinutes),
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Failed to create QR");
+      }
+      setSuccess("QR generated.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate QR");
     } finally {
       setSaving(false);
     }
@@ -227,7 +404,7 @@ export default function VendorPage() {
 
   function addTier() {
     setTiers((prev) => {
-      if (prev.length >= 10) return prev;
+      if (prev.length >= limits.maxPackTiers) return prev;
       return [...prev, createTier(prev.length)];
     });
   }
@@ -243,6 +420,7 @@ export default function VendorPage() {
     setTiers((prev) =>
       prev.map((tier, i) => {
         if (i !== tierIndex) return tier;
+        if (totalDraftItems >= limits.maxPackItems) return tier;
         return { ...tier, items: [...tier.items, createItem()] };
       })
     );
@@ -265,15 +443,64 @@ export default function VendorPage() {
     return date.toISOString();
   }
 
-  async function createPack(event: FormEvent) {
+  function resetPackForm() {
+    setEditingPackId(null);
+    setPackTitle("");
+    setStartsAt("");
+    setEndsAt("");
+    setPricePoints("100");
+    setTotalStock("100");
+    setStatus("DRAFT");
+    setIsNew(true);
+    setLimitedLabel("");
+    setImportantNotes("");
+    setDrawLimitMode("NONE");
+    setDrawLimitValue("1");
+    setDrawLimitResetTimezone("Asia/Singapore");
+    setTiers([createTier(0)]);
+  }
+
+  function editPack(pack: Pack) {
+    setEditingPackId(pack.id);
+    setPackTitle(pack.title);
+    setPricePoints(String(pack.pricePoints));
+    setTotalStock(String(pack.totalStock));
+    setStartsAt(toLocalInputValue(pack.startsAt));
+    setEndsAt(toLocalInputValue(pack.endsAt));
+    setStatus(pack.status === "ARCHIVED" ? "DRAFT" : pack.status);
+    setIsNew(Boolean((pack as any).isNew ?? true));
+    setLimitedLabel((pack as any).limitedLabel ?? "");
+    setImportantNotes(pack.importantNotes ?? "");
+    setDrawLimitMode(pack.drawLimitMode ?? "NONE");
+    setDrawLimitValue(String(pack.drawLimitValue ?? 1));
+    setDrawLimitResetTimezone(pack.drawLimitResetTimezone ?? "Asia/Singapore");
+
+    setTiers([
+      {
+        name: "A Tier",
+        percentage: "",
+        items: pack.prizes.map((prize) => ({
+          label: prize.label,
+          estimatedValue: String(prize.estimatedValue),
+          stock: String(prize.stock),
+          imageUrl: prize.imageUrl ?? DEFAULT_CARD,
+        })),
+      },
+    ]);
+  }
+
+  async function submitPack(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
     setError(null);
     setSuccess(null);
 
     try {
+      if (tiers.length > limits.maxPackTiers) {
+        throw new Error(`Tier count exceeds plan limit (${limits.maxPackTiers}).`);
+      }
       if (totalDraftItems > limits.maxPackItems) {
-        throw new Error(`Item count exceeds vendor limit (${limits.maxPackItems}).`);
+        throw new Error(`Item count exceeds plan limit (${limits.maxPackItems}).`);
       }
 
       const payload = {
@@ -282,8 +509,13 @@ export default function VendorPage() {
         totalStock: Number(totalStock),
         startsAt: toIsoDateTime(startsAt),
         endsAt: toIsoDateTime(endsAt),
+        status,
         isNew,
         limitedLabel: limitedLabel.trim() ? limitedLabel.trim() : undefined,
+        importantNotes: importantNotes.trim() ? importantNotes.trim() : undefined,
+        drawLimitMode,
+        drawLimitValue: drawLimitMode === "DAILY_RESET" ? Number(drawLimitValue) : undefined,
+        drawLimitResetTimezone,
         tiers: tiers.map((tier) => ({
           name: tier.name,
           percentage: tier.percentage.trim() ? Number(tier.percentage) : undefined,
@@ -296,28 +528,63 @@ export default function VendorPage() {
         })),
       };
 
-      const res = await fetch(`${apiBase}/v1/packs`, {
-        method: "POST",
+      const endpoint = editingPackId ? `${apiBase}/v1/vendor/packs/${editingPackId}` : `${apiBase}/v1/packs`;
+      const method = editingPackId ? "PATCH" : "POST";
+
+      const res = await fetch(endpoint, {
+        method,
         headers,
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Failed to create pack");
+        throw new Error(body?.error ?? "Failed to save pack");
       }
 
-      setSuccess("Pack created successfully.");
-      setPackTitle("");
-      setStartsAt("");
-      setEndsAt("");
-      setPricePoints("100");
-      setTotalStock("100");
-      setLimitedLabel("");
-      setTiers([createTier(0)]);
+      setSuccess(editingPackId ? "Pack updated successfully." : "Pack created successfully.");
+      resetPackForm();
       await loadAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create pack");
+      setError(err instanceof Error ? err.message : "Failed to save pack");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function archivePack(packId: string) {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}/archive`, {
+        method: "PATCH",
+        headers,
+      });
+      if (!res.ok) throw new Error("Failed to archive pack");
+      setSuccess("Pack archived.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to archive pack");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function deletePack(packId: string) {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}`, {
+        method: "DELETE",
+        headers: { "x-vendor-host": vendorHost },
+      });
+      if (!res.ok) throw new Error("Failed to delete pack");
+      setSuccess("Pack deleted.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete pack");
     } finally {
       setSaving(false);
     }
@@ -337,10 +604,27 @@ export default function VendorPage() {
       {success ? <p className="badge">{success}</p> : null}
 
       <section className="card">
-        <h2>Vendor Profile</h2>
+        <h2>Plan & Earnings</h2>
+        <p className="muted tiny">Current plan: <strong>{limits.planCode}</strong> | Pack tiers max: {limits.maxPackTiers} | Pack items max: {limits.maxPackItems}</p>
+        <div className="actions">
+          <button type="button" className="sort-pill" disabled={saving || limits.planCode === "BASIC"} onClick={() => void switchPlan("BASIC")}>Switch to BASIC</button>
+          <button type="button" className="sort-pill" disabled={saving || limits.planCode === "ELITE"} onClick={() => void switchPlan("ELITE")}>Switch to ELITE</button>
+        </div>
+        <div className="stats-grid">
+          <div className="stat"><div className="stat-label">Total Revenue Points</div><div className="stat-value">{summary?.totalRevenuePoints?.toLocaleString() ?? "0"}</div></div>
+          <div className="stat"><div className="stat-label">Net Points</div><div className="stat-value">{summary?.netPoints?.toLocaleString() ?? "0"}</div></div>
+          <div className="stat"><div className="stat-label">Currency Revenue</div><div className="stat-value">{summary ? `${summary.totalRevenueCurrency.toFixed(2)} ${summary.currencyCode}` : "0"}</div></div>
+        </div>
+      </section>
+
+      <section className="card" style={{ marginTop: 12 }}>
+        <h2>Vendor Profile / Business / Referral</h2>
         <form className="vendor-form" onSubmit={saveVendorProfile}>
           <input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
-          <button type="submit" className="draw-button" disabled={saving || loading}>Save Profile</button>
+          <input value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
+          <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
+          <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
+          <button type="submit" className="draw-button" disabled={saving || loading}>Save Vendor Info</button>
         </form>
       </section>
 
@@ -368,10 +652,10 @@ export default function VendorPage() {
       </section>
 
       <section className="card" style={{ marginTop: 12 }}>
-        <h2>Create Pack (Interactive)</h2>
-        <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/10</p>
+        <h2>{editingPackId ? "Edit Pack" : "Create Pack"}</h2>
+        <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/{limits.maxPackTiers}</p>
 
-        <form className="pack-builder" onSubmit={createPack}>
+        <form className="pack-builder" onSubmit={submitPack}>
           <div className="pack-builder-grid">
             <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
             <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
@@ -385,11 +669,34 @@ export default function VendorPage() {
               End date-time
               <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
             </label>
+            <label className="muted tiny">
+              Pack status
+              <select value={status} onChange={(e) => setStatus(e.target.value as "DRAFT" | "LIVE")}>
+                <option value="DRAFT">DRAFT</option>
+                <option value="LIVE">LIVE</option>
+              </select>
+            </label>
+            <label className="muted tiny">
+              Draw limit mode
+              <select value={drawLimitMode} onChange={(e) => setDrawLimitMode(e.target.value as "NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET")}>
+                <option value="NONE">No limit</option>
+                <option value="ONCE_PER_CUSTOMER">One time per customer</option>
+                <option value="DAILY_RESET">Daily limit (GMT+8 default)</option>
+              </select>
+            </label>
+            {drawLimitMode === "DAILY_RESET" ? (
+              <>
+                <input type="number" min={1} value={drawLimitValue} onChange={(e) => setDrawLimitValue(e.target.value)} placeholder="Daily max draws per customer" />
+                <input type="text" value={drawLimitResetTimezone} onChange={(e) => setDrawLimitResetTimezone(e.target.value)} placeholder="Timezone e.g. Asia/Singapore" />
+              </>
+            ) : null}
           </div>
 
           <label className="muted tiny">
             <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} /> Mark as New
           </label>
+
+          <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
 
           <div className="tier-stack">
             {tiers.map((tier, tierIndex) => (
@@ -416,16 +723,60 @@ export default function VendorPage() {
                   ))}
                 </div>
 
-                <button type="button" className="sort-pill" onClick={() => addItem(tierIndex)}>+ Add Item</button>
+                <button type="button" className="sort-pill" onClick={() => addItem(tierIndex)} disabled={totalDraftItems >= limits.maxPackItems}>+ Add Item</button>
               </article>
             ))}
           </div>
 
           <div className="actions">
-            <button type="button" className="draw-button alt" onClick={addTier} disabled={tiers.length >= 10}>+ Add Tier</button>
-            <button type="submit" className="draw-button" disabled={saving || loading}>Create Pack</button>
+            <button type="button" className="draw-button alt" onClick={addTier} disabled={tiers.length >= limits.maxPackTiers}>+ Add Tier</button>
+            {editingPackId ? <button type="button" className="sort-pill" onClick={resetPackForm}>Cancel Edit</button> : null}
+            <button type="submit" className="draw-button" disabled={saving || loading}>{editingPackId ? "Update Pack" : "Create Pack"}</button>
           </div>
         </form>
+      </section>
+
+      <section className="card" style={{ marginTop: 12 }}>
+        <h2>Pack Revenue</h2>
+        <div className="result-list">
+          {packEarnings.map((row) => (
+            <div className="result-row" key={row.packId}>
+              <span>{row.packTitle}</span>
+              <span>{row.totalPoints.toLocaleString()} pts | {row.totalDrawQuantity} draws</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="card" style={{ marginTop: 12 }}>
+        <h2>Referral Signups</h2>
+        <p className="muted tiny">Referral URL: <code>/register?ref={vendor?.referralCode ?? ""}</code></p>
+        <div className="result-list">
+          {referrals.map((row) => (
+            <div className="result-row" key={row.id}>
+              <span>{row.displayName || row.email}</span>
+              <span>{new Date(row.referredAt).toLocaleString()}</span>
+            </div>
+          ))}
+          {referrals.length === 0 ? <p className="muted tiny">No referral signups yet.</p> : null}
+        </div>
+      </section>
+
+      <section className="card" style={{ marginTop: 12 }}>
+        <h2>Generate QR Points</h2>
+        <form className="vendor-form" onSubmit={generateQr}>
+          <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
+          <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
+          <button type="submit" className="draw-button" disabled={saving}>Generate QR Token</button>
+        </form>
+        <div className="result-list">
+          {qrs.map((row) => (
+            <div className="result-row" key={row.id}>
+              <span>{row.token}</span>
+              <span>{row.points} pts | {row.status}</span>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="card" style={{ marginTop: 12 }}>
@@ -433,8 +784,13 @@ export default function VendorPage() {
         <div className="result-list">
           {packs.map((pack) => (
             <div className="result-row" key={pack.id}>
-              <span>{pack.title}</span>
+              <span>{pack.title} ({pack.status})</span>
               <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
+              <div className="actions">
+                <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
+                <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
+                <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
+              </div>
             </div>
           ))}
         </div>

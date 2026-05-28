@@ -1,9 +1,47 @@
 import { Router } from "express";
-import { createVendorSchema, updateVendorProfileSchema, updateVendorLimitsSchema } from "@oripa/shared";
+import {
+  createVendorSchema,
+  updateVendorBusinessSchema,
+  updateVendorLimitsSchema,
+  updateVendorPlanSchema,
+  updateVendorProfileSchema,
+  updateVendorReferralSchema,
+} from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
+import jwt from "jsonwebtoken";
+import { randomUUID } from "crypto";
 
 export const vendorRouter = Router();
+const jwtSecret = process.env.JWT_SECRET ?? "change-me";
+
+function getBearerUserId(authorizationHeader?: string) {
+  const raw = String(authorizationHeader ?? "");
+  if (!raw.startsWith("Bearer ")) return null;
+  const token = raw.slice("Bearer ".length).trim();
+  if (!token) return null;
+  try {
+    const payload = jwt.verify(token, jwtSecret) as { sub?: string };
+    return payload.sub ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function planLimits(planCode: "BASIC" | "ELITE") {
+  if (planCode === "ELITE") {
+    return {
+      maxPackItems: 150,
+      maxPackTiers: 10,
+      maxDrawQuantity: 100,
+    };
+  }
+  return {
+    maxPackItems: 50,
+    maxPackTiers: 5,
+    maxDrawQuantity: 100,
+  };
+}
 
 vendorRouter.post("/v1/vendors", async (req, res) => {
   const parsed = createVendorSchema.safeParse(req.body);
@@ -30,7 +68,16 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
 
   const vendor = await prisma.vendor.findUnique({
     where: { id: req.vendorId },
-    select: { id: true, name: true, slug: true, host: true, isActive: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      host: true,
+      isActive: true,
+      referralCode: true,
+      businessLocation: true,
+      businessContact: true,
+    },
   });
 
   if (!vendor) return res.status(404).json({ error: "Vendor not found" });
@@ -48,22 +95,130 @@ vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {
   const vendor = await prisma.vendor.update({
     where: { id: req.vendorId },
     data: { name: parsed.data.name },
-    select: { id: true, name: true, slug: true, host: true, isActive: true, updatedAt: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      host: true,
+      isActive: true,
+      referralCode: true,
+      businessLocation: true,
+      businessContact: true,
+      updatedAt: true,
+    },
   });
 
   return res.json({ vendor });
+});
+
+vendorRouter.patch("/v1/vendor/business", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+
+  const parsed = updateVendorBusinessSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const vendor = await prisma.vendor.update({
+    where: { id: req.vendorId },
+    data: {
+      businessLocation: parsed.data.businessLocation,
+      businessContact: parsed.data.businessContact,
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      host: true,
+      referralCode: true,
+      businessLocation: true,
+      businessContact: true,
+      updatedAt: true,
+    },
+  });
+
+  return res.json({ vendor });
+});
+
+vendorRouter.patch("/v1/vendor/referral", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+
+  const parsed = updateVendorReferralSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  try {
+    const vendor = await prisma.vendor.update({
+      where: { id: req.vendorId },
+      data: { referralCode: parsed.data.referralCode },
+      select: { id: true, referralCode: true, updatedAt: true },
+    });
+    return res.json({ vendor });
+  } catch {
+    return res.status(409).json({ error: "Referral code already in use" });
+  }
+});
+
+vendorRouter.get("/v1/vendor/plan", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: req.vendorId } });
+  const planCode = settings?.planCode ?? "BASIC";
+  return res.json({
+    plan: {
+      planCode,
+      ...planLimits(planCode),
+    },
+  });
+});
+
+vendorRouter.patch("/v1/vendor/plan", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const parsed = updateVendorPlanSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const planCode = parsed.data.planCode;
+  const limits = planLimits(planCode);
+
+  const updated = await prisma.vendorSettings.upsert({
+    where: { vendorId: req.vendorId },
+    update: {
+      planCode,
+      maxPackItems: limits.maxPackItems,
+      maxPackTiers: limits.maxPackTiers,
+      maxDrawQuantity: limits.maxDrawQuantity,
+    },
+    create: {
+      vendorId: req.vendorId,
+      planCode,
+      maxPackItems: limits.maxPackItems,
+      maxPackTiers: limits.maxPackTiers,
+      maxDrawQuantity: limits.maxDrawQuantity,
+    },
+    select: { planCode: true, maxPackItems: true, maxPackTiers: true, maxDrawQuantity: true },
+  });
+
+  return res.json({ plan: updated });
 });
 
 vendorRouter.get("/v1/vendor/limits", async (req: VendorRequest, res) => {
   if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
   const settings = await prisma.vendorSettings.findUnique({
     where: { vendorId: req.vendorId },
-    select: { maxPackItems: true, maxDrawQuantity: true },
+    select: { planCode: true, maxPackItems: true, maxPackTiers: true, maxDrawQuantity: true },
   });
+
+  const planCode = settings?.planCode ?? "BASIC";
+  const computed = planLimits(planCode);
+
   return res.json({
     limits: {
-      maxPackItems: settings?.maxPackItems ?? 500,
-      maxDrawQuantity: settings?.maxDrawQuantity ?? 100,
+      planCode,
+      maxPackItems: settings?.maxPackItems ?? computed.maxPackItems,
+      maxPackTiers: settings?.maxPackTiers ?? computed.maxPackTiers,
+      maxDrawQuantity: settings?.maxDrawQuantity ?? computed.maxDrawQuantity,
     },
   });
 });
@@ -75,25 +230,262 @@ vendorRouter.patch("/v1/vendor/limits", async (req: VendorRequest, res) => {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
+  const existing = await prisma.vendorSettings.findUnique({ where: { vendorId: req.vendorId } });
+  const planCode = existing?.planCode ?? "BASIC";
+  const bounds = planLimits(planCode);
+
+  const nextItems = parsed.data.maxPackItems ?? existing?.maxPackItems ?? bounds.maxPackItems;
+  const nextQty = parsed.data.maxDrawQuantity ?? existing?.maxDrawQuantity ?? bounds.maxDrawQuantity;
+  const nextTiers = existing?.maxPackTiers ?? bounds.maxPackTiers;
+
+  if (nextItems > bounds.maxPackItems) {
+    return res.status(400).json({ error: `plan limit exceeded: maxPackItems <= ${bounds.maxPackItems}` });
+  }
+
   const updated = await prisma.vendorSettings.upsert({
     where: { vendorId: req.vendorId },
     update: {
-      maxPackItems: parsed.data.maxPackItems,
-      maxDrawQuantity: parsed.data.maxDrawQuantity,
+      maxPackItems: nextItems,
+      maxPackTiers: nextTiers,
+      maxDrawQuantity: nextQty,
     },
     create: {
       vendorId: req.vendorId,
-      maxPackItems: parsed.data.maxPackItems ?? 500,
-      maxDrawQuantity: parsed.data.maxDrawQuantity ?? 100,
+      planCode,
+      maxPackItems: nextItems,
+      maxPackTiers: nextTiers,
+      maxDrawQuantity: nextQty,
     },
-    select: { maxPackItems: true, maxDrawQuantity: true },
+    select: { planCode: true, maxPackItems: true, maxPackTiers: true, maxDrawQuantity: true },
   });
 
   return res.json({ limits: updated });
 });
 
+vendorRouter.get("/v1/vendor/earnings/summary", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
+  const [entries, walletAgg] = await Promise.all([
+    prisma.vendorRevenueLedger.findMany({
+      where: { vendorId: req.vendorId, type: "DRAW_GROSS" },
+      select: { amountPoints: true, amountCurrency: true, currencyCode: true },
+    }),
+    prisma.walletEntry.aggregate({
+      where: { vendorId: req.vendorId, type: "DEBIT", reason: "PACK_DRAW" },
+      _sum: { amountPoints: true },
+    }),
+  ]);
 
+  const totalRevenuePoints = entries.reduce((sum, row) => sum + row.amountPoints, 0);
+  const totalRevenueCurrency = entries.reduce((sum, row) => sum + Number(row.amountCurrency ?? 0), 0);
+  const vendorSpentPoints = walletAgg._sum.amountPoints ?? 0;
 
+  return res.json({
+    summary: {
+      totalRevenuePoints,
+      totalRevenueCurrency: Number(totalRevenueCurrency.toFixed(2)),
+      vendorSpentPoints,
+      netPoints: totalRevenuePoints - vendorSpentPoints,
+      currencyCode: entries[0]?.currencyCode ?? "USD",
+    },
+  });
+});
 
+vendorRouter.get("/v1/vendor/earnings/packs", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
+  const packs = await prisma.pack.findMany({
+    where: { vendorId: req.vendorId },
+    select: { id: true, title: true },
+  });
+
+  const rows = await prisma.drawOrder.groupBy({
+    by: ["packId"],
+    where: { vendorId: req.vendorId, status: "COMPLETED" },
+    _sum: { totalPoints: true, quantity: true },
+    _count: { _all: true },
+  });
+
+  const packMap = new Map(packs.map((pack) => [pack.id, pack.title]));
+  const items = rows.map((row) => ({
+    packId: row.packId,
+    packTitle: packMap.get(row.packId) ?? "Unknown Pack",
+    drawOrders: row._count._all,
+    totalDrawQuantity: row._sum.quantity ?? 0,
+    totalPoints: row._sum.totalPoints ?? 0,
+  }));
+
+  return res.json({ items });
+});
+
+vendorRouter.get("/v1/vendor/referrals", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+
+  const vendor = await prisma.vendor.findUnique({ where: { id: req.vendorId }, select: { referralCode: true } });
+  if (!vendor?.referralCode) {
+    return res.json({ referralCode: null, customers: [] });
+  }
+
+  const signups = await prisma.vendorReferralSignup.findMany({
+    where: {
+      vendorId: req.vendorId,
+    },
+    include: { customerUser: { select: { id: true, email: true, displayName: true, createdAt: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+
+  const customers = signups.map((row) => ({
+    id: row.customerUser.id,
+    email: row.customerUser.email,
+    displayName: row.customerUser.displayName,
+    createdAt: row.customerUser.createdAt,
+    referredAt: row.createdAt,
+    referralCode: row.referralCode,
+  }));
+
+  return res.json({ referralCode: vendor.referralCode, customers });
+});
+
+vendorRouter.post("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const vendorId = req.vendorId;
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+
+  const points = Number(req.body?.points ?? 0);
+  const expiresInMinutes = Number(req.body?.expiresInMinutes ?? 15);
+
+  if (!Number.isInteger(points) || points <= 0) return res.status(400).json({ error: "points must be a positive integer" });
+  if (!Number.isInteger(expiresInMinutes) || expiresInMinutes < 1 || expiresInMinutes > 1440) {
+    return res.status(400).json({ error: "expiresInMinutes must be between 1 and 1440" });
+  }
+
+  const expiresAt = new Date(Date.now() + expiresInMinutes * 60 * 1000);
+  const token = randomUUID();
+  const qr = await prisma.vendorPointGrantQr.create({
+    data: {
+      vendorId,
+      token,
+      points,
+      expiresAt,
+      createdByUserId: actorUserId,
+    },
+  });
+
+  return res.status(201).json({ qr });
+});
+
+vendorRouter.get("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const vendorId = req.vendorId;
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+
+  const qrs = await prisma.vendorPointGrantQr.findMany({
+    where: { vendorId },
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+
+  return res.json({ qrs });
+});
+
+vendorRouter.post("/v1/points/qr/redeem", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const vendorId = req.vendorId;
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+
+  const token = String(req.body?.token ?? "").trim();
+  if (!token) return res.status(400).json({ error: "token is required" });
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const qr = await tx.vendorPointGrantQr.findFirst({
+        where: { vendorId, token },
+      });
+      if (!qr) throw new Error("QR not found");
+      if (qr.status !== "ACTIVE") throw new Error("QR is no longer active");
+      if (qr.expiresAt <= new Date()) throw new Error("QR expired");
+
+      const vendorWallet = await tx.walletAccount.findFirst({
+        where: { vendorId, userId: null },
+      });
+      if (!vendorWallet) throw new Error("Vendor source wallet not found");
+      if (vendorWallet.balancePoints < qr.points) throw new Error("Vendor balance insufficient");
+
+      const customerWallet = await tx.walletAccount.upsert({
+        where: { vendorId_userId: { vendorId, userId: actorUserId } },
+        update: {},
+        create: {
+          vendorId,
+          userId: actorUserId,
+          ownerLabel: "Customer",
+          balancePoints: 0,
+        },
+      });
+
+      const vendorBefore = vendorWallet.balancePoints;
+      const vendorAfter = vendorBefore - qr.points;
+      const customerBefore = customerWallet.balancePoints;
+      const customerAfter = customerBefore + qr.points;
+
+      await tx.walletAccount.update({
+        where: { id: vendorWallet.id },
+        data: { balancePoints: { decrement: qr.points }, version: { increment: 1 } },
+      });
+      await tx.walletAccount.update({
+        where: { id: customerWallet.id },
+        data: { balancePoints: { increment: qr.points }, version: { increment: 1 } },
+      });
+
+      await tx.walletEntry.createMany({
+        data: [
+          {
+            vendorId,
+            walletAccountId: vendorWallet.id,
+            type: "DEBIT",
+            amountPoints: qr.points,
+            reason: "VENDOR_QR_GRANT",
+            balanceBefore: vendorBefore,
+            balanceAfter: vendorAfter,
+            actorUserId,
+            referenceType: "VENDOR_QR",
+            referenceId: qr.id,
+            metadata: { token: qr.token },
+          },
+          {
+            vendorId,
+            walletAccountId: customerWallet.id,
+            type: "CREDIT",
+            amountPoints: qr.points,
+            reason: "VENDOR_QR_GRANT",
+            balanceBefore: customerBefore,
+            balanceAfter: customerAfter,
+            actorUserId,
+            referenceType: "VENDOR_QR",
+            referenceId: qr.id,
+            metadata: { token: qr.token },
+          },
+        ],
+      });
+
+      const redeemed = await tx.vendorPointGrantQr.update({
+        where: { id: qr.id },
+        data: {
+          status: "REDEEMED",
+          redeemedByUserId: actorUserId,
+          redeemedAt: new Date(),
+        },
+      });
+
+      return { qr: redeemed, pointsCredited: qr.points };
+    });
+
+    return res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to redeem QR";
+    return res.status(400).json({ error: message });
+  }
+});

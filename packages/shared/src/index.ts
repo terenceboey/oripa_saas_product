@@ -10,12 +10,30 @@ export const updateVendorProfileSchema = z.object({
   name: z.string().min(2).max(80),
 });
 
+export const updateVendorBusinessSchema = z.object({
+  businessLocation: z.string().max(200).optional().nullable(),
+  businessContact: z.string().max(120).optional().nullable(),
+});
+
+export const updateVendorReferralSchema = z.object({
+  referralCode: z.string().min(3).max(40).regex(/^[a-z0-9-]+$/),
+});
+
+export const updateVendorPlanSchema = z.object({
+  planCode: z.enum(["BASIC", "ELITE"]),
+});
+
 export const createPackSchema = z.object({
   title: z.string().min(2).max(120),
   pricePoints: z.number().int().positive(),
   totalStock: z.number().int().positive(),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
+  status: z.enum(["DRAFT", "LIVE"]).optional(),
+  importantNotes: z.string().max(2000).optional(),
+  drawLimitMode: z.enum(["NONE", "ONCE_PER_CUSTOMER", "DAILY_RESET"]).optional(),
+  drawLimitValue: z.number().int().positive().optional(),
+  drawLimitResetTimezone: z.string().max(80).optional(),
   isNew: z.boolean().optional().default(true),
   limitedLabel: z.string().min(2).max(80).optional(),
   tiers: z.array(
@@ -43,6 +61,10 @@ export const createPackSchema = z.object({
   ).min(1).max(5000).optional(),
 });
 
+export const updatePackSchema = createPackSchema.partial().extend({
+  title: z.string().min(2).max(120).optional(),
+});
+
 export const drawSchema = z.object({
   packId: z.string().cuid(),
   quantity: z.number().int().min(1).max(5000).default(1),
@@ -63,7 +85,11 @@ export const updateVendorLimitsSchema = z.object({
 
 export type CreateVendorInput = z.infer<typeof createVendorSchema>;
 export type UpdateVendorProfileInput = z.infer<typeof updateVendorProfileSchema>;
+export type UpdateVendorBusinessInput = z.infer<typeof updateVendorBusinessSchema>;
+export type UpdateVendorReferralInput = z.infer<typeof updateVendorReferralSchema>;
+export type UpdateVendorPlanInput = z.infer<typeof updateVendorPlanSchema>;
 export type CreatePackInput = z.infer<typeof createPackSchema>;
+export type UpdatePackInput = z.infer<typeof updatePackSchema>;
 export type DrawInput = z.infer<typeof drawSchema>;
 export type CreateBannerInput = z.infer<typeof createBannerSchema>;
 export type UpdateVendorLimitsInput = z.infer<typeof updateVendorLimitsSchema>;

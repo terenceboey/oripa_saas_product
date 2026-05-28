@@ -2,20 +2,32 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const vendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [referralCode, setReferralCode] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const googleStart = `${apiBase}/v1/auth/google/start?vendorHost=${encodeURIComponent(vendorHost)}`;
+  const googleStart = useMemo(() => {
+    const url = new URL(`${apiBase}/v1/auth/google/start`);
+    url.searchParams.set("vendorHost", vendorHost);
+    if (referralCode) url.searchParams.set("referralCode", referralCode);
+    return url.toString();
+  }, [referralCode]);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const ref = String(url.searchParams.get("ref") ?? "").trim().toLowerCase();
+    if (ref) setReferralCode(ref);
+  }, []);
 
   async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,7 +42,7 @@ export default function RegisterPage() {
           "content-type": "application/json",
           "x-vendor-host": vendorHost,
         },
-        body: JSON.stringify({ displayName, email, password }),
+        body: JSON.stringify({ displayName, email, password, referralCode: referralCode || undefined }),
       });
 
       const payload = await response.json();

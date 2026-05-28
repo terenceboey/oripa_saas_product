@@ -134,7 +134,17 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
         return JSON.parse(existing.responseJson);
       }
 
-      const pack = await tx.pack.findFirst({ where: { id: packId, vendorId, isActive: true } });
+      const now = new Date();
+      const pack = await tx.pack.findFirst({
+        where: {
+          id: packId,
+          vendorId,
+          isActive: true,
+          status: "LIVE",
+          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+          AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: now } }] }],
+        },
+      });
       if (!pack) throw new Error("Pack not found or inactive");
       if (pack.remainingStock < quantity) throw new Error("Not enough stock remaining");
 
@@ -147,6 +157,38 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
       if (wallet.balancePoints < totalCost) throw new Error("Insufficient balance");
       const balanceBefore = wallet.balancePoints;
       const balanceAfter = wallet.balancePoints - totalCost;
+
+      if (pack.drawLimitMode === "ONCE_PER_CUSTOMER") {
+        const exists = await tx.drawOrder.findFirst({
+          where: { vendorId, userId: actorUserId, packId: pack.id, status: "COMPLETED" },
+          select: { id: true },
+        });
+        if (exists) throw new Error("You have reached the draw limit for this pack");
+      }
+
+      if (pack.drawLimitMode === "DAILY_RESET") {
+        const tz = pack.drawLimitResetTimezone || "Asia/Singapore";
+        const nowTz = new Date(new Date().toLocaleString("en-US", { timeZone: tz }));
+        const start = new Date(nowTz);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(nowTz);
+        end.setHours(23, 59, 59, 999);
+        const used = await tx.drawOrder.aggregate({
+          where: {
+            vendorId,
+            userId: actorUserId,
+            packId: pack.id,
+            status: "COMPLETED",
+            createdAt: { gte: start, lte: end },
+          },
+          _sum: { quantity: true },
+        });
+        const usedQty = used._sum.quantity ?? 0;
+        const dailyLimit = pack.drawLimitValue ?? 1;
+        if (usedQty + quantity > dailyLimit) {
+          throw new Error(`Daily draw limit exceeded for this pack (${dailyLimit})`);
+        }
+      }
 
       const packPrizes = await tx.packPrize.findMany({ where: { packId: pack.id } });
       const prizeLookup = new Map(packPrizes.map((prize) => [prize.id, prize]));

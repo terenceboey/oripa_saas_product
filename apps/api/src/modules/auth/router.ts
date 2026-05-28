@@ -153,6 +153,26 @@ async function ensureCustomerEntitlements(input: { userId: string; email: string
   });
 }
 
+async function recordReferralSignup(input: { vendorHost?: string | null; referralCode?: string | null; customerUserId: string }) {
+  const host = String(input.vendorHost ?? "").trim().toLowerCase();
+  const referralCode = String(input.referralCode ?? "").trim().toLowerCase();
+  if (!host || !referralCode) return;
+
+  const vendor = await prisma.vendor.findUnique({ where: { host } });
+  if (!vendor || !vendor.referralCode) return;
+  if (vendor.referralCode.toLowerCase() !== referralCode) return;
+
+  await prisma.vendorReferralSignup.upsert({
+    where: { vendorId_customerUserId: { vendorId: vendor.id, customerUserId: input.customerUserId } },
+    update: { referralCode },
+    create: {
+      vendorId: vendor.id,
+      referralCode,
+      customerUserId: input.customerUserId,
+    },
+  });
+}
+
 function configurePassportIfNeeded() {
   if (passportConfigured) return;
   passportConfigured = true;
@@ -232,6 +252,7 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
   const email = String(req.body?.email ?? "").toLowerCase().trim();
   const password = String(req.body?.password ?? "");
   const displayName = String(req.body?.displayName ?? "").trim() || null;
+  const referralCode = String(req.body?.referralCode ?? "").trim().toLowerCase() || null;
   const vendorId = req.vendorId;
 
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
@@ -261,6 +282,11 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
     email,
     displayName,
     vendorHost: req.vendorHost,
+  });
+  await recordReferralSignup({
+    vendorHost: req.vendorHost,
+    referralCode,
+    customerUserId: user.id,
   });
 
   try {
@@ -415,7 +441,8 @@ authRouter.get("/v1/auth/google/start", (req, res, next) => {
     return res.status(503).json({ error: "Google OAuth not configured" });
   }
   const vendorHost = String(req.query.vendorHost ?? req.header("x-vendor-host") ?? "demo.localhost");
-  const state = Buffer.from(JSON.stringify({ vendorHost })).toString("base64url");
+  const referralCode = String(req.query.referralCode ?? "").trim().toLowerCase() || null;
+  const state = Buffer.from(JSON.stringify({ vendorHost, referralCode })).toString("base64url");
   return passport.authenticate("google", { scope: ["profile", "email"], session: false, state })(req, res, next);
 });
 
@@ -426,17 +453,25 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
     }
     const rawState = String(req.query.state ?? "");
     let vendorHost = "demo.localhost";
+    let referralCode: string | null = null;
     try {
-      const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { vendorHost?: string };
+      const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { vendorHost?: string; referralCode?: string };
       vendorHost = String(decoded.vendorHost ?? vendorHost);
+      referralCode = decoded.referralCode ? String(decoded.referralCode).toLowerCase() : null;
     } catch {
       vendorHost = "demo.localhost";
+      referralCode = null;
     }
     await ensureCustomerEntitlements({
       userId: String(user.id),
       email: String(user.email),
       displayName: user.displayName ? String(user.displayName) : null,
       vendorHost,
+    });
+    await recordReferralSignup({
+      vendorHost,
+      referralCode,
+      customerUserId: String(user.id),
     });
     const token = issueAccessToken(user);
     return res.redirect(`${webBaseUrl}/login?token=${encodeURIComponent(token)}&vendorHost=${encodeURIComponent(vendorHost)}`);
