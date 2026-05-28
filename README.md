@@ -26,7 +26,7 @@ This starter gives you a Shopify-style multi-tenant base:
 
 ## Run Frontend And Backend Separately (VS Code)
 
-Run from repo root: `C:\Users\Terence\Desktop\braumvault\oripa_saas`
+Run from repo root: `oripa_saas`
 
 1. Setup (first run):
    - `npm install`
