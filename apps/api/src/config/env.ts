@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
+import path from "path";
 
-dotenv.config({ path: "../../.env" });
+dotenv.config({ path: path.resolve(__dirname, "../../../../.env") });
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
@@ -9,3 +10,8 @@ export const env = {
   redisUrl: process.env.REDIS_URL ?? "",
   defaultTenantHost: process.env.DEFAULT_TENANT_HOST ?? "demo.localhost",
 };
+
+
+
+
+

@@ -1,63 +1,75 @@
 services:
   - type: web
-    name: oripa-web
-    runtime: node
-    rootDir: .
-    buildCommand: npm install && npm run build -w @oripa/web
-    startCommand: npm run start -w @oripa/web
-    envVars:
-      - key: NODE_VERSION
-        value: 20
-      - key: NEXT_PUBLIC_API_URL
-        fromService:
-          type: web
-          name: oripa-api
-          property: host
-
-  - type: web
     name: oripa-api
     runtime: node
     rootDir: .
-    buildCommand: npm install && npm run build -w @oripa/api
+    plan: starter
+    autoDeploy: true
+    healthCheckPath: /health
+    buildCommand: npm ci && npx prisma generate && npx prisma db push && npm run build -w @oripa/shared && npm run build -w @oripa/api
     startCommand: npm run start -w @oripa/api
     envVars:
       - key: NODE_VERSION
         value: 20
-      - key: DATABASE_URL
-        fromDatabase:
-          name: oripa-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: oripa-redis
-          property: connectionString
       - key: NODE_ENV
         value: production
+      - key: APP_URL
+        sync: false
+      - key: WEB_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
+  - type: web
+    name: oripa-web
+    runtime: node
+    rootDir: .
+    plan: starter
+    autoDeploy: true
+    buildCommand: npm ci && npm run build -w @oripa/web
+    startCommand: npm run start -w @oripa/web
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_TENANT_HOST
+        sync: false
 
   - type: worker
     name: oripa-worker
     runtime: node
     rootDir: .
-    buildCommand: npm install && npm run build -w @oripa/worker
+    plan: starter
+    autoDeploy: false
+    buildCommand: npm ci && npx prisma generate && npm run build -w @oripa/worker
     startCommand: npm run start -w @oripa/worker
     envVars:
       - key: NODE_VERSION
         value: 20
-      - key: DATABASE_URL
-        fromDatabase:
-          name: oripa-postgres
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: oripa-redis
-          property: connectionString
       - key: NODE_ENV
         value: production
-
-databases:
-  - name: oripa-postgres
-
-keyvalueInstances:
-  - name: oripa-redis
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

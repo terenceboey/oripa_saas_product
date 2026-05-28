@@ -12,103 +12,494 @@ enum WalletEntryType {
   DEBIT
 }
 
-model Tenant {
-  id          String          @id @default(cuid())
-  name        String
-  slug        String          @unique
-  host        String          @unique
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  packs       Pack[]
-  draws       PackDraw[]
-  wallets     WalletAccount[]
-  idempotency IdempotencyKey[]
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum EmailVerificationStatus {
+  PENDING
+  VERIFIED
+}
+
+enum VendorMembershipRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum DrawOrderStatus {
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum RevenueEntryType {
+  DRAW_GROSS
+  PLATFORM_FEE
+  TENANT_NET
+  ADJUSTMENT
+}
+
+enum TopupOrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentTransactionStatus {
+  INITIATED
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum OutboxStatus {
+  PENDING
+  DISPATCHED
+  FAILED
+}
+
+model Vendor {
+  id                  String                @id @default(cuid())
+  name                String
+  slug                String                @unique
+  host                String                @unique
+  isActive            Boolean               @default(true)
+  riskLevel           Int                   @default(0)
+  complianceFlags     Json?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  packs               Pack[]
+  draws               PackDraw[]
+  wallets             WalletAccount[]
+  idempotency         IdempotencyKey[]
+  banners             VendorBanner[]
+  members             VendorMembership[]
+  vendorSettings      VendorSettings?
+  drawOrders          DrawOrder[]
+  drawResults         DrawResult[]
+  revenueLedger       VendorRevenueLedger[]
+  auditLogs           AuditLog[]
+  outboxEvents        OutboxEvent[]
+  topupOrders         TopupOrder[]
+  paymentTransactions PaymentTransaction[]
+  fairnessProofs      DrawFairnessProof[]
+  fairnessSelections  DrawFairnessSelection[]
+}
+
+model User {
+  id                      String                  @id @default(cuid())
+  email                   String                  @unique
+  passwordHash            String?
+  displayName             String?
+  status                  UserStatus              @default(ACTIVE)
+  emailVerificationStatus EmailVerificationStatus @default(PENDING)
+  emailVerifiedAt         DateTime?
+  emailOtpCodeHash        String?
+  emailOtpExpiresAt       DateTime?
+  emailOtpAttemptCount    Int                     @default(0)
+  emailOtpLastSentAt      DateTime?
+  emailOtpLockedUntil     DateTime?
+  mfaEnabled              Boolean                 @default(false)
+  lastLoginAt             DateTime?
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  memberships             VendorMembership[]
+  userRoles               UserRole[]
+  walletAccounts          WalletAccount[]
+  drawOrders              DrawOrder[]
+  topupOrders             TopupOrder[]
+  paymentTransactions     PaymentTransaction[]
+  auditLogs               AuditLog[]
+  fairnessProofs          DrawFairnessProof[]
+}
+
+model Role {
+  id        String     @id @default(cuid())
+  code      String     @unique
+  label     String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userRoles UserRole[]
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model VendorMembership {
+  id              String               @id @default(cuid())
+  vendorId        String
+  userId          String
+  role            VendorMembershipRole
+  isActive        Boolean              @default(true)
+  invitedByUserId String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  Vendor          Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([vendorId, userId])
+  @@index([vendorId, role, isActive])
+}
+
+model VendorSettings {
+  id                    String   @id @default(cuid())
+  vendorId              String   @unique
+  pointsPerCurrencyUnit Int      @default(100)
+  currencyCode          String   @default("USD")
+  platformFeeBps        Int      @default(0)
+  maxPackItems          Int      @default(500)
+  maxDrawQuantity       Int      @default(100)
+  payoutSchedule        String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  Vendor                Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 }
 
 model Pack {
-  id             String     @id @default(cuid())
-  tenantId       String
+  id             String       @id @default(cuid())
+  vendorId       String
   title          String
   pricePoints    Int
   totalStock     Int
   remainingStock Int
-  isActive       Boolean    @default(true)
+  isNew          Boolean      @default(true)
+  limitedLabel   String?
+  isActive       Boolean      @default(true)
   startsAt       DateTime?
   endsAt         DateTime?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  tenant         Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  Vendor         Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   prizes         PackPrize[]
   draws          PackDraw[]
+  drawOrders     DrawOrder[]
+  drawResults    DrawResult[]
+  fairnessProofs DrawFairnessProof[]
 
-  @@index([tenantId, isActive])
+  @@index([vendorId, isActive])
 }
 
 model PackPrize {
-  id             String   @id @default(cuid())
-  packId          String
-  label           String
-  estimatedValue  Int
-  weight          Int
-  stock           Int
-  remainingStock  Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  pack            Pack     @relation(fields: [packId], references: [id], onDelete: Cascade)
-  draws           PackDraw[]
+  id             String       @id @default(cuid())
+  packId         String
+  label          String
+  imageUrl       String?
+  estimatedValue Int
+  weight         Int
+  stock          Int
+  remainingStock Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  pack           Pack         @relation(fields: [packId], references: [id], onDelete: Cascade)
+  draws          PackDraw[]
+  drawResults    DrawResult[]
 
   @@index([packId])
 }
 
 model PackDraw {
-  id          String    @id @default(cuid())
-  tenantId    String
+  id          String     @id @default(cuid())
+  vendorId    String
   packId      String
   prizeId     String?
   pointsSpent Int
-  createdAt   DateTime  @default(now())
-  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  pack        Pack      @relation(fields: [packId], references: [id], onDelete: Cascade)
+  createdAt   DateTime   @default(now())
+  Vendor      Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  pack        Pack       @relation(fields: [packId], references: [id], onDelete: Cascade)
   prize       PackPrize? @relation(fields: [prizeId], references: [id], onDelete: SetNull)
 
-  @@index([tenantId, createdAt])
+  @@index([vendorId, createdAt])
 }
 
 model WalletAccount {
   id            String        @id @default(cuid())
-  tenantId      String
+  vendorId      String
+  userId        String?
   ownerLabel    String
   balancePoints Int           @default(0)
+  version       Int           @default(0)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Vendor        Vendor        @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   entries       WalletEntry[]
+  drawOrders    DrawOrder[]
+  topupOrders   TopupOrder[]
 
-  @@index([tenantId])
+  @@unique([vendorId, userId])
+  @@index([vendorId, userId])
 }
 
 model WalletEntry {
-  id              String          @id @default(cuid())
-  tenantId        String
-  walletAccountId String
-  type            WalletEntryType
-  amountPoints    Int
-  reason          String
-  referenceId     String?
-  createdAt       DateTime        @default(now())
-  walletAccount   WalletAccount   @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
+  id                  String          @id @default(cuid())
+  vendorId            String
+  walletAccountId     String
+  type                WalletEntryType
+  amountPoints        Int
+  reason              String
+  balanceBefore       Int
+  balanceAfter        Int
+  actorUserId         String?
+  requestId           String?
+  idempotencyScopeKey String?
+  referenceType       String?
+  referenceId         String?
+  metadata            Json?
+  createdAt           DateTime        @default(now())
+  walletAccount       WalletAccount   @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId, createdAt])
+  @@index([vendorId, createdAt])
+  @@index([walletAccountId, createdAt])
+  @@index([requestId])
 }
 
 model IdempotencyKey {
-  key          String   @id
-  tenantId     String
+  id           String   @id @default(cuid())
+  key          String
+  operation    String
+  scopeKey     String   @unique
+  vendorId     String
+  userId       String?
+  requestId    String?
+  statusCode   Int?
   responseJson String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Vendor       Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId, createdAt])
+  @@index([vendorId, operation, createdAt])
+}
+
+model DrawOrder {
+  id                  String          @id @default(cuid())
+  vendorId            String
+  userId              String?
+  walletAccountId     String
+  packId              String
+  quantity            Int
+  unitPricePoints     Int
+  totalPoints         Int
+  status              DrawOrderStatus @default(COMPLETED)
+  requestId           String?
+  idempotencyScopeKey String?
+  clientIp            String?
+  userAgent           String?
+  metadata            Json?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  Vendor              Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user                User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  walletAccount       WalletAccount   @relation(fields: [walletAccountId], references: [id], onDelete: Restrict)
+  pack                Pack            @relation(fields: [packId], references: [id], onDelete: Restrict)
+  results             DrawResult[]
+  fairnessProof       DrawFairnessProof?
+  fairnessSelections  DrawFairnessSelection[]
+
+  @@index([vendorId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model DrawResult {
+  id           String     @id @default(cuid())
+  vendorId     String
+  drawOrderId  String
+  packId       String
+  packPrizeId  String?
+  drawSequence Int
+  pointsSpent  Int
+  rngVersion   String?
+  rngSeedHash  String?
+  requestId    String?
+  createdAt    DateTime   @default(now())
+  Vendor       Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  drawOrder    DrawOrder  @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  pack         Pack       @relation(fields: [packId], references: [id], onDelete: Restrict)
+  packPrize    PackPrize? @relation(fields: [packPrizeId], references: [id], onDelete: SetNull)
+
+  @@index([vendorId, createdAt])
+  @@index([drawOrderId, drawSequence])
+}
+
+model DrawFairnessProof {
+  id               String                  @id @default(cuid())
+  vendorId         String
+  drawOrderId      String                  @unique
+  packId           String
+  userId           String?
+  algorithmVersion String
+  serverSeedHash   String
+  revealedServerSeed String
+  clientSeed       String
+  nonceBase        String
+  quantity         Int
+  poolSnapshotHash String
+  poolSnapshotJson Json
+  createdAt        DateTime                @default(now())
+  Vendor           Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  drawOrder        DrawOrder               @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  pack             Pack                    @relation(fields: [packId], references: [id], onDelete: Restrict)
+  user             User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  selections       DrawFairnessSelection[]
+
+  @@index([vendorId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model DrawFairnessSelection {
+  id                  String            @id @default(cuid())
+  vendorId            String
+  drawOrderId         String
+  proofId             String
+  drawSequence        Int
+  hmacHex             String
+  randomFloat         Decimal           @db.Decimal(20, 18)
+  randomWeightValue   Int
+  totalWeightAtDraw   Int
+  tierLabel           String?
+  tierLowerBound      Int?
+  tierUpperBound      Int?
+  rowSeedHex          String
+  chosenPackPrizeId   String?
+  eligiblePrizeIds    Json
+  createdAt           DateTime          @default(now())
+  Vendor              Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  drawOrder           DrawOrder         @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  proof               DrawFairnessProof @relation(fields: [proofId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, createdAt])
+  @@index([proofId, drawSequence])
+  @@index([drawOrderId, drawSequence])
+}
+
+model VendorRevenueLedger {
+  id             String           @id @default(cuid())
+  vendorId       String
+  drawOrderId    String?
+  type           RevenueEntryType
+  amountPoints   Int
+  conversionRate Decimal?         @db.Decimal(18, 6)
+  amountCurrency Decimal?         @db.Decimal(18, 2)
+  currencyCode   String?
+  requestId      String?
+  metadata       Json?
+  createdAt      DateTime         @default(now())
+  Vendor         Vendor           @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, createdAt])
+  @@index([drawOrderId])
+}
+
+model TopupOrder {
+  id                     String           @id @default(cuid())
+  vendorId               String
+  userId                 String?
+  walletAccountId        String
+  pointsToCredit         Int
+  expectedCurrencyAmount Decimal?         @db.Decimal(18, 2)
+  currencyCode           String?
+  status                 TopupOrderStatus @default(PENDING)
+  provider               String?
+  providerOrderRef       String?
+  requestId              String?
+  idempotencyScopeKey    String?
+  metadata               Json?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  Vendor                 Vendor           @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user                   User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
+  walletAccount          WalletAccount    @relation(fields: [walletAccountId], references: [id], onDelete: Restrict)
+
+  @@index([vendorId, createdAt])
+  @@index([provider, providerOrderRef])
+}
+
+model PaymentTransaction {
+  id                 String                   @id @default(cuid())
+  vendorId           String
+  userId             String?
+  topupOrderId       String?
+  provider           String
+  providerPaymentRef String?
+  status             PaymentTransactionStatus @default(INITIATED)
+  amountCurrency     Decimal?                 @db.Decimal(18, 2)
+  currencyCode       String?
+  rawPayload         Json?
+  requestId          String?
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+  Vendor             Vendor                   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user               User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([vendorId, createdAt])
+  @@index([provider, providerPaymentRef])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  vendorId    String?
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  requestId   String?
+  ipAddress   String?
+  userAgent   String?
+  beforeState Json?
+  afterState  Json?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  Vendor      Vendor?  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  actorUser   User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([vendorId, createdAt])
+  @@index([actorUserId, createdAt])
+  @@index([requestId])
+}
+
+model OutboxEvent {
+  id            String       @id @default(cuid())
+  vendorId      String?
+  aggregateType String
+  aggregateId   String
+  eventType     String
+  payload       Json
+  status        OutboxStatus @default(PENDING)
+  attempts      Int          @default(0)
+  nextAttemptAt DateTime?
+  lastError     String?
+  requestId     String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  Vendor        Vendor?      @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  @@index([vendorId, createdAt])
+  @@index([status, nextAttemptAt])
+}
+
+model VendorBanner {
+  id        String   @id @default(cuid())
+  vendorId  String
+  title     String
+  imageUrl  String
+  targetUrl String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, isActive, sortOrder])
 }

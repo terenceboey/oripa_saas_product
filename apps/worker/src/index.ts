@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 import { Worker } from "bullmq";
+import path from "path";
 
-dotenv.config({ path: "../../.env" });
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
 const connection = { url: redisUrl };
