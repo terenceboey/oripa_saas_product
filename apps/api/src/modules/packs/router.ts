@@ -178,7 +178,7 @@ packRouter.get("/v1/packs/:packId", async (req: VendorRequest, res) => {
   return res.json({ pack: decoratePackWithRates(pack) });
 });
 
-packRouter.post("/v1/packs", async (req: VendorRequest, res) => {
+async function createVendorPack(req: VendorRequest, res: any) {
   const auth = await requirePackRole(req, res);
   if (!auth) return;
 
@@ -228,7 +228,10 @@ packRouter.post("/v1/packs", async (req: VendorRequest, res) => {
   });
 
   return res.status(201).json({ pack });
-});
+}
+
+packRouter.post("/v1/packs", createVendorPack);
+packRouter.post("/v1/vendor/packs", createVendorPack);
 
 packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => {
   const auth = await requirePackRole(req, res);

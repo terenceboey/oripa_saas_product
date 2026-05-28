@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 
@@ -105,6 +106,16 @@ type TierDraft = {
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
+type ActiveTab = "BUSINESS" | "PACKS";
+
+function parseTabValue(tab: string | null): ActiveTab {
+  if (tab === "pack-studio") return "PACKS";
+  return "BUSINESS";
+}
+
+function toTabValue(tab: ActiveTab): "business" | "pack-studio" {
+  return tab === "PACKS" ? "pack-studio" : "business";
+}
 
 function createItem(): ItemDraft {
   return {
@@ -132,6 +143,8 @@ function toLocalInputValue(iso?: string | null) {
 }
 
 export default function VendorPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const runtimeVendorHost = useMemo(() => {
     if (typeof window !== "undefined" && window.location?.host) {
       return window.location.host.toLowerCase();
@@ -191,6 +204,7 @@ export default function VendorPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<ActiveTab>("BUSINESS");
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
 
@@ -277,6 +291,19 @@ export default function VendorPage() {
   }, [loadAll]);
 
   useBackForwardRefresh(loadAll);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setActiveTab(parseTabValue(params.get("tab")));
+  }, []);
+
+  function setActiveTabInUrl(tab: ActiveTab) {
+    setActiveTab(tab);
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    params.set("tab", toTabValue(tab));
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
 
   async function bootstrapOwner() {
     setSaving(true);
@@ -653,7 +680,7 @@ export default function VendorPage() {
         })),
       };
 
-      const endpoint = editingPackId ? `${apiBase}/v1/vendor/packs/${editingPackId}` : `${apiBase}/v1/packs`;
+      const endpoint = editingPackId ? `${apiBase}/v1/vendor/packs/${editingPackId}` : `${apiBase}/v1/vendor/packs`;
       const method = editingPackId ? "PATCH" : "POST";
 
       const res = await fetch(endpoint, {
@@ -735,211 +762,238 @@ export default function VendorPage() {
       {success ? <p className="badge">{success}</p> : null}
 
       <section className="card">
-        <h2>Plan & Earnings</h2>
-        <p className="muted tiny">Current plan: <strong>{limits.planCode}</strong> | Pack tiers max: {limits.maxPackTiers} | Pack items max: {limits.maxPackItems}</p>
         <div className="actions">
-          <button type="button" className="sort-pill" disabled={saving || limits.planCode === "BASIC"} onClick={() => void switchPlan("BASIC")}>Switch to BASIC</button>
-          <button type="button" className="sort-pill" disabled={saving || limits.planCode === "ELITE"} onClick={() => void switchPlan("ELITE")}>Switch to ELITE</button>
-        </div>
-        <div className="stats-grid">
-          <div className="stat"><div className="stat-label">Total Revenue Points</div><div className="stat-value">{summary?.totalRevenuePoints?.toLocaleString() ?? "0"}</div></div>
-          <div className="stat"><div className="stat-label">Net Points</div><div className="stat-value">{summary?.netPoints?.toLocaleString() ?? "0"}</div></div>
-          <div className="stat"><div className="stat-label">Currency Revenue</div><div className="stat-value">{summary ? `${summary.totalRevenueCurrency.toFixed(2)} ${summary.currencyCode}` : "0"}</div></div>
+          <button
+            type="button"
+            className={`sort-pill ${activeTab === "BUSINESS" ? "active" : ""}`}
+            onClick={() => setActiveTabInUrl("BUSINESS")}
+          >
+            Business
+          </button>
+          <button
+            type="button"
+            className={`sort-pill ${activeTab === "PACKS" ? "active" : ""}`}
+            onClick={() => setActiveTabInUrl("PACKS")}
+          >
+            Pack Studio
+          </button>
         </div>
       </section>
 
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>Vendor Profile / Business / Referral</h2>
-        <form className="vendor-form" onSubmit={saveVendorProfile}>
-          <input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
-          <input value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
-          <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
-          <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
-          <button type="submit" className="draw-button" disabled={saving || loading}>Save Vendor Info</button>
-        </form>
-        <form className="vendor-form" onSubmit={saveVendorPrefix}>
-          <input
-            value={vendorSlug}
-            onChange={(e) => setVendorSlug(e.target.value)}
-            placeholder="Vendor URL prefix (slug)"
-            required
-            minLength={2}
-            maxLength={50}
-            pattern="^[a-z0-9-]+$"
-          />
-          <p className="muted tiny">New vendor URL: <code>https://{vendorSlug || "your-prefix"}.{vendorBaseDomain}</code></p>
-          <button type="submit" className="draw-button" disabled={saving || loading}>Update Vendor Prefix</button>
-        </form>
-      </section>
-
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>Banners</h2>
-        <form className="vendor-form" onSubmit={addBanner}>
-          <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
-          <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
-          <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
-          <button type="submit" className="draw-button" disabled={saving || loading}>Add Banner</button>
-        </form>
-
-        <div className="banner-admin-list">
-          {banners.map((banner) => (
-            <div className="banner-admin-row" key={banner.id}>
-              <img src={banner.imageUrl} alt={banner.title} />
-              <div>
-                <strong>{banner.title}</strong>
-                <div className="muted tiny">Order {banner.sortOrder}</div>
-              </div>
-              <button type="button" className="sort-pill" onClick={() => void deleteBanner(banner.id)} disabled={saving}>Delete</button>
+      {activeTab === "BUSINESS" ? (
+        <>
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Plan & Earnings</h2>
+            <p className="muted tiny">Current plan: <strong>{limits.planCode}</strong> | Pack tiers max: {limits.maxPackTiers} | Pack items max: {limits.maxPackItems}</p>
+            <div className="actions">
+              <button type="button" className="sort-pill" disabled={saving || limits.planCode === "BASIC"} onClick={() => void switchPlan("BASIC")}>Switch to BASIC</button>
+              <button type="button" className="sort-pill" disabled={saving || limits.planCode === "ELITE"} onClick={() => void switchPlan("ELITE")}>Switch to ELITE</button>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="stats-grid">
+              <div className="stat"><div className="stat-label">Total Revenue Points</div><div className="stat-value">{summary?.totalRevenuePoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Net Points</div><div className="stat-value">{summary?.netPoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Currency Revenue</div><div className="stat-value">{summary ? `${summary.totalRevenueCurrency.toFixed(2)} ${summary.currencyCode}` : "0"}</div></div>
+            </div>
+          </section>
 
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>{editingPackId ? "Edit Pack" : "Create Pack"}</h2>
-        <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/{limits.maxPackTiers}</p>
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Vendor Profile / Business / Referral</h2>
+            <form className="vendor-form" onSubmit={saveVendorProfile}>
+              <input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
+              <input value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
+              <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
+              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
+              <button type="submit" className="draw-button" disabled={saving || loading}>Save Vendor Info</button>
+            </form>
+            <form className="vendor-form" onSubmit={saveVendorPrefix}>
+              <input
+                value={vendorSlug}
+                onChange={(e) => setVendorSlug(e.target.value)}
+                placeholder="Vendor URL prefix (slug)"
+                required
+                minLength={2}
+                maxLength={50}
+                pattern="^[a-z0-9-]+$"
+              />
+              <p className="muted tiny">New vendor URL: <code>https://{vendorSlug || "your-prefix"}.{vendorBaseDomain}</code></p>
+              <button type="submit" className="draw-button" disabled={saving || loading}>Update Vendor Prefix</button>
+            </form>
+          </section>
 
-        <form className="pack-builder" onSubmit={submitPack}>
-          <div className="pack-builder-grid">
-            <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
-            <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
-            <input type="number" min={1} value={totalStock} onChange={(e) => setTotalStock(e.target.value)} placeholder="Total stock" required />
-            <input type="text" value={limitedLabel} onChange={(e) => setLimitedLabel(e.target.value)} placeholder="Limited label (optional)" />
-            <label className="muted tiny">
-              Start date-time
-              <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-            </label>
-            <label className="muted tiny">
-              End date-time
-              <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
-            </label>
-            <label className="muted tiny">
-              Pack status
-              <select value={status} onChange={(e) => setStatus(e.target.value as "DRAFT" | "LIVE")}>
-                <option value="DRAFT">DRAFT</option>
-                <option value="LIVE">LIVE</option>
-              </select>
-            </label>
-            <label className="muted tiny">
-              Draw limit mode
-              <select value={drawLimitMode} onChange={(e) => setDrawLimitMode(e.target.value as "NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET")}>
-                <option value="NONE">No limit</option>
-                <option value="ONCE_PER_CUSTOMER">One time per customer</option>
-                <option value="DAILY_RESET">Daily limit (GMT+8 default)</option>
-              </select>
-            </label>
-            {drawLimitMode === "DAILY_RESET" ? (
-              <>
-                <input type="number" min={1} value={drawLimitValue} onChange={(e) => setDrawLimitValue(e.target.value)} placeholder="Daily max draws per customer" />
-                <input type="text" value={drawLimitResetTimezone} onChange={(e) => setDrawLimitResetTimezone(e.target.value)} placeholder="Timezone e.g. Asia/Singapore" />
-              </>
-            ) : null}
-          </div>
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Banners</h2>
+            <form className="vendor-form" onSubmit={addBanner}>
+              <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
+              <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
+              <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
+              <button type="submit" className="draw-button" disabled={saving || loading}>Add Banner</button>
+            </form>
 
-          <label className="muted tiny">
-            <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} /> Mark as New
-          </label>
-
-          <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
-
-          <div className="tier-stack">
-            {tiers.map((tier, tierIndex) => (
-              <article key={`tier-${tierIndex}`} className="card tier-card">
-                <div className="heading-row">
-                  <strong>Tier {tierIndex + 1}</strong>
-                  <button type="button" className="sort-pill" onClick={() => removeTier(tierIndex)} disabled={tiers.length <= 1}>Remove Tier</button>
+            <div className="banner-admin-list">
+              {banners.map((banner) => (
+                <div className="banner-admin-row" key={banner.id}>
+                  <img src={banner.imageUrl} alt={banner.title} />
+                  <div>
+                    <strong>{banner.title}</strong>
+                    <div className="muted tiny">Order {banner.sortOrder}</div>
+                  </div>
+                  <button type="button" className="sort-pill" onClick={() => void deleteBanner(banner.id)} disabled={saving}>Delete</button>
                 </div>
+              ))}
+            </div>
+          </section>
 
-                <div className="pack-builder-grid">
-                  <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
-                  <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Referral Signups</h2>
+            <p className="muted tiny">Referral URL: <code>/register?ref={vendor?.referralCode ?? ""}</code></p>
+            <div className="result-list">
+              {referrals.map((row) => (
+                <div className="result-row" key={row.id}>
+                  <span>{row.displayName || row.email}</span>
+                  <span>{new Date(row.referredAt).toLocaleString()}</span>
                 </div>
+              ))}
+              {referrals.length === 0 ? <p className="muted tiny">No referral signups yet.</p> : null}
+            </div>
+          </section>
 
-                <div className="tier-items">
-                  {tier.items.map((item, itemIndex) => (
-                    <div className="item-row" key={`tier-${tierIndex}-item-${itemIndex}`}>
-                      <input value={item.label} onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)} placeholder="Item label" required />
-                      <input value={item.estimatedValue} onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)} placeholder="Estimated value" type="number" min={0} required />
-                      <input value={item.stock} onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)} placeholder="Stock" type="number" min={1} required />
-                      <input value={item.imageUrl} onChange={(e) => updateItem(tierIndex, itemIndex, "imageUrl", e.target.value)} placeholder="Image URL" />
-                      <button type="button" className="sort-pill" onClick={() => removeItem(tierIndex, itemIndex)} disabled={tier.items.length <= 1}>Remove</button>
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Generate QR Points</h2>
+            <form className="vendor-form" onSubmit={generateQr}>
+              <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
+              <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
+              <button type="submit" className="draw-button" disabled={saving}>Generate QR Token</button>
+            </form>
+            <div className="result-list">
+              {qrs.map((row) => (
+                <div className="result-row" key={row.id}>
+                  <span>{row.token}</span>
+                  <span>{row.points} pts | {row.status}</span>
+                  <button type="button" className="sort-pill" onClick={() => setActiveQr(row)}>Display QR</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      {activeTab === "PACKS" ? (
+        <>
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>{editingPackId ? "Edit Pack" : "Create Pack"}</h2>
+            <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/{limits.maxPackTiers}</p>
+
+            <form className="pack-builder" onSubmit={submitPack}>
+              <div className="pack-builder-grid">
+                <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
+                <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
+                <input type="number" min={1} value={totalStock} onChange={(e) => setTotalStock(e.target.value)} placeholder="Total stock" required />
+                <input type="text" value={limitedLabel} onChange={(e) => setLimitedLabel(e.target.value)} placeholder="Limited label (optional)" />
+                <label className="muted tiny">
+                  Start date-time
+                  <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+                </label>
+                <label className="muted tiny">
+                  End date-time
+                  <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
+                </label>
+                <label className="muted tiny">
+                  Pack status
+                  <select value={status} onChange={(e) => setStatus(e.target.value as "DRAFT" | "LIVE")}>
+                    <option value="DRAFT">DRAFT</option>
+                    <option value="LIVE">LIVE</option>
+                  </select>
+                </label>
+                <label className="muted tiny">
+                  Draw limit mode
+                  <select value={drawLimitMode} onChange={(e) => setDrawLimitMode(e.target.value as "NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET")}>
+                    <option value="NONE">No limit</option>
+                    <option value="ONCE_PER_CUSTOMER">One time per customer</option>
+                    <option value="DAILY_RESET">Daily limit (GMT+8 default)</option>
+                  </select>
+                </label>
+                {drawLimitMode === "DAILY_RESET" ? (
+                  <>
+                    <input type="number" min={1} value={drawLimitValue} onChange={(e) => setDrawLimitValue(e.target.value)} placeholder="Daily max draws per customer" />
+                    <input type="text" value={drawLimitResetTimezone} onChange={(e) => setDrawLimitResetTimezone(e.target.value)} placeholder="Timezone e.g. Asia/Singapore" />
+                  </>
+                ) : null}
+              </div>
+
+              <label className="muted tiny">
+                <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} /> Mark as New
+              </label>
+
+              <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
+
+              <div className="tier-stack">
+                {tiers.map((tier, tierIndex) => (
+                  <article key={`tier-${tierIndex}`} className="card tier-card">
+                    <div className="heading-row">
+                      <strong>Tier {tierIndex + 1}</strong>
+                      <button type="button" className="sort-pill" onClick={() => removeTier(tierIndex)} disabled={tiers.length <= 1}>Remove Tier</button>
                     </div>
-                  ))}
-                </div>
 
-                <button type="button" className="sort-pill" onClick={() => addItem(tierIndex)} disabled={totalDraftItems >= limits.maxPackItems}>+ Add Item</button>
-              </article>
-            ))}
-          </div>
+                    <div className="pack-builder-grid">
+                      <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
+                      <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
+                    </div>
 
-          <div className="actions">
-            <button type="button" className="draw-button alt" onClick={addTier} disabled={tiers.length >= limits.maxPackTiers}>+ Add Tier</button>
-            {editingPackId ? <button type="button" className="sort-pill" onClick={resetPackForm}>Cancel Edit</button> : null}
-            <button type="submit" className="draw-button" disabled={saving || loading}>{editingPackId ? "Update Pack" : "Create Pack"}</button>
-          </div>
-        </form>
-      </section>
+                    <div className="tier-items">
+                      {tier.items.map((item, itemIndex) => (
+                        <div className="item-row" key={`tier-${tierIndex}-item-${itemIndex}`}>
+                          <input value={item.label} onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)} placeholder="Item label" required />
+                          <input value={item.estimatedValue} onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)} placeholder="Estimated value" type="number" min={0} required />
+                          <input value={item.stock} onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)} placeholder="Stock" type="number" min={1} required />
+                          <input value={item.imageUrl} onChange={(e) => updateItem(tierIndex, itemIndex, "imageUrl", e.target.value)} placeholder="Image URL" />
+                          <button type="button" className="sort-pill" onClick={() => removeItem(tierIndex, itemIndex)} disabled={tier.items.length <= 1}>Remove</button>
+                        </div>
+                      ))}
+                    </div>
 
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>Pack Revenue</h2>
-        <div className="result-list">
-          {packEarnings.map((row) => (
-            <div className="result-row" key={row.packId}>
-              <span>{row.packTitle}</span>
-              <span>{row.totalPoints.toLocaleString()} pts | {row.totalDrawQuantity} draws</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>Referral Signups</h2>
-        <p className="muted tiny">Referral URL: <code>/register?ref={vendor?.referralCode ?? ""}</code></p>
-        <div className="result-list">
-          {referrals.map((row) => (
-            <div className="result-row" key={row.id}>
-              <span>{row.displayName || row.email}</span>
-              <span>{new Date(row.referredAt).toLocaleString()}</span>
-            </div>
-          ))}
-          {referrals.length === 0 ? <p className="muted tiny">No referral signups yet.</p> : null}
-        </div>
-      </section>
-
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>Generate QR Points</h2>
-        <form className="vendor-form" onSubmit={generateQr}>
-          <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
-          <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
-          <button type="submit" className="draw-button" disabled={saving}>Generate QR Token</button>
-        </form>
-        <div className="result-list">
-          {qrs.map((row) => (
-            <div className="result-row" key={row.id}>
-              <span>{row.token}</span>
-              <span>{row.points} pts | {row.status}</span>
-              <button type="button" className="sort-pill" onClick={() => setActiveQr(row)}>Display QR</button>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="card" style={{ marginTop: 12 }}>
-        <h2>Existing Packs</h2>
-        <div className="result-list">
-          {packs.map((pack) => (
-            <div className="result-row" key={pack.id}>
-              <span>{pack.title} ({pack.status})</span>
-              <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
-              <div className="actions">
-                <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
-                <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
-                <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
+                    <button type="button" className="sort-pill" onClick={() => addItem(tierIndex)} disabled={totalDraftItems >= limits.maxPackItems}>+ Add Item</button>
+                  </article>
+                ))}
               </div>
+
+              <div className="actions">
+                <button type="button" className="draw-button alt" onClick={addTier} disabled={tiers.length >= limits.maxPackTiers}>+ Add Tier</button>
+                {editingPackId ? <button type="button" className="sort-pill" onClick={resetPackForm}>Cancel Edit</button> : null}
+                <button type="submit" className="draw-button" disabled={saving || loading}>{editingPackId ? "Update Pack" : "Create Pack"}</button>
+              </div>
+            </form>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Pack Revenue</h2>
+            <div className="result-list">
+              {packEarnings.map((row) => (
+                <div className="result-row" key={row.packId}>
+                  <span>{row.packTitle}</span>
+                  <span>{row.totalPoints.toLocaleString()} pts | {row.totalDrawQuantity} draws</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Existing Packs</h2>
+            <div className="result-list">
+              {packs.map((pack) => (
+                <div className="result-row" key={pack.id}>
+                  <span>{pack.title} ({pack.status})</span>
+                  <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
+                  <div className="actions">
+                    <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
+                    <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
+                    <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : null}
 
       {activeQr ? (
         <div className="qr-modal-backdrop" onClick={() => setActiveQr(null)}>
