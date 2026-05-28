@@ -16,28 +16,42 @@ export function createApp() {
   const app = express();
   app.set("trust proxy", true);
   const webUrl = String(process.env.WEB_URL ?? "").trim();
-  const vendorBaseDomain = String(process.env.VENDOR_BASE_DOMAIN ?? "").trim().toLowerCase();
+
+  function normalizeHost(raw: string) {
+    const input = String(raw ?? "").trim().toLowerCase();
+    if (!input) return "";
+    try {
+      return new URL(input).host.toLowerCase();
+    } catch {
+      return input.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+    }
+  }
+
+  const webHost = normalizeHost(webUrl);
+  const vendorBaseDomain = normalizeHost(String(process.env.VENDOR_BASE_DOMAIN ?? ""));
 
   app.use(helmet());
   app.use(cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      if (webUrl && origin === webUrl) return callback(null, true);
+      const requestHost = normalizeHost(origin);
+      if (webHost && requestHost === webHost) return callback(null, true);
       try {
-        const parsed = new URL(origin);
-        const host = parsed.host.toLowerCase();
-        if (host.startsWith("localhost:") || host.startsWith("127.0.0.1:")) {
+        if (requestHost.startsWith("localhost:") || requestHost.startsWith("127.0.0.1:")) {
           return callback(null, true);
         }
-        if (vendorBaseDomain && (host === vendorBaseDomain || host.endsWith(`.${vendorBaseDomain}`))) {
+        if (vendorBaseDomain && (requestHost === vendorBaseDomain || requestHost.endsWith(`.${vendorBaseDomain}`))) {
           return callback(null, true);
         }
       } catch {
         // ignore parse error
       }
-      return callback(new Error("CORS origin not allowed"));
+      return callback(null, false);
     },
     credentials: true,
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Vendor-Host", "X-Idempotency-Key", "X-Request-Id"],
+    optionsSuccessStatus: 204,
   }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json({ limit: "64kb" }));
