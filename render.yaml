@@ -11,6 +11,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: NODE_ENV
         value: production
       - key: APP_URL
@@ -49,6 +51,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
@@ -67,6 +71,8 @@ services:
     envVars:
       - key: NODE_VERSION
         value: 20
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
