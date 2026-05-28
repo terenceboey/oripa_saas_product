@@ -20,8 +20,8 @@ export function createApp() {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json({ limit: "64kb" }));
   app.use(morgan("dev"));
-  app.use(passport.initialize());
-  app.use(vendorResolver);
+  app.use(passport.initialize() as any);
+  app.use(vendorResolver as any);
 
   app.use(healthRouter);
   app.use(vendorRouter);

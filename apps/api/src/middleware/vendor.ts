@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import { prisma } from "../lib/prisma";
 
 export type VendorRequest = Request & {
@@ -6,19 +6,25 @@ export type VendorRequest = Request & {
   vendorHost?: string;
 };
 
-export async function vendorResolver(req: VendorRequest, _res: Response, next: NextFunction) {
-  const explicitHost = String(req.header("x-vendor-host") || "").trim().toLowerCase();
-  const host = explicitHost || String(req.hostname || "").toLowerCase();
-  if (!host) return next();
+export const vendorResolver: RequestHandler = (req: Request, _res: Response, next: NextFunction) => {
+  void (async () => {
+    const vendorReq = req as VendorRequest;
+    const explicitHost = String(vendorReq.header("x-vendor-host") || "").trim().toLowerCase();
+    const host = explicitHost || String(vendorReq.hostname || "").toLowerCase();
+    if (!host) {
+      next();
+      return;
+    }
 
-  const vendor = await prisma.vendor.findUnique({ where: { host } });
-  if (vendor) {
-    req.vendorId = vendor.id;
-    req.vendorHost = vendor.host;
-  }
+    const vendor = await prisma.vendor.findUnique({ where: { host } });
+    if (vendor) {
+      vendorReq.vendorId = vendor.id;
+      vendorReq.vendorHost = vendor.host;
+    }
 
-  return next();
-}
+    next();
+  })().catch(next);
+};
 
 
 
