@@ -29,28 +29,43 @@ export function createApp() {
 
   const webHost = normalizeHost(webUrl);
   const vendorBaseDomain = normalizeHost(String(process.env.VENDOR_BASE_DOMAIN ?? ""));
+  const corsAllowedHeaders = "Content-Type, Authorization, X-Vendor-Host, X-Idempotency-Key, X-Request-Id";
+  const corsAllowedMethods = "GET,POST,PATCH,PUT,DELETE,OPTIONS";
+
+  function isAllowedOrigin(origin?: string) {
+    const requestHost = normalizeHost(String(origin ?? ""));
+    if (!requestHost) return false;
+    if (webHost && requestHost === webHost) return true;
+    if (requestHost.startsWith("localhost:") || requestHost.startsWith("127.0.0.1:")) return true;
+    if (vendorBaseDomain && (requestHost === vendorBaseDomain || requestHost.endsWith(`.${vendorBaseDomain}`))) return true;
+    return false;
+  }
 
   app.use(helmet());
+  // Explicit preflight responder for credentialed cross-subdomain requests on Render.
+  app.use((req, res, next) => {
+    const origin = String(req.headers.origin ?? "");
+    if (origin && isAllowedOrigin(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Credentials", "true");
+      res.setHeader("Access-Control-Allow-Headers", corsAllowedHeaders);
+      res.setHeader("Access-Control-Allow-Methods", corsAllowedMethods);
+    }
+    if (req.method === "OPTIONS") {
+      return res.status(204).send();
+    }
+    return next();
+  });
   app.use(cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
-      const requestHost = normalizeHost(origin);
-      if (webHost && requestHost === webHost) return callback(null, true);
-      try {
-        if (requestHost.startsWith("localhost:") || requestHost.startsWith("127.0.0.1:")) {
-          return callback(null, true);
-        }
-        if (vendorBaseDomain && (requestHost === vendorBaseDomain || requestHost.endsWith(`.${vendorBaseDomain}`))) {
-          return callback(null, true);
-        }
-      } catch {
-        // ignore parse error
-      }
+      if (isAllowedOrigin(origin)) return callback(null, true);
       return callback(null, false);
     },
     credentials: true,
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Vendor-Host", "X-Idempotency-Key", "X-Request-Id"],
+    allowedHeaders: corsAllowedHeaders.split(",").map((x) => x.trim()),
     optionsSuccessStatus: 204,
   }));
   app.use(express.urlencoded({ extended: true }));

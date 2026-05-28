@@ -44,9 +44,6 @@ export default function LoginPage() {
   async function resolveVendorHomeHost(): Promise<string | null> {
     try {
       const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
-        headers: {
-          "x-vendor-host": runtimeVendorHost,
-        },
         credentials: "include",
         cache: "no-store",
       });
@@ -59,11 +56,8 @@ export default function LoginPage() {
     }
   }
 
-  async function loadProfile(resolvedVendorHost: string) {
+  async function loadProfile() {
     const response = await fetch(`${apiBase}/v1/auth/me`, {
-      headers: {
-        "x-vendor-host": resolvedVendorHost,
-      },
       credentials: "include",
       cache: "no-store",
     });
@@ -80,8 +74,7 @@ export default function LoginPage() {
 
     if (token || callbackVendorHost) {
       setMessage("Logged in successfully. You can continue to the storefront.");
-      const resolvedVendorHost = callbackVendorHost || runtimeVendorHost;
-      void loadProfile(resolvedVendorHost);
+      void loadProfile();
       url.searchParams.delete("token");
       url.searchParams.delete("vendorHost");
       window.history.replaceState({}, "", url.toString());
@@ -107,7 +100,7 @@ export default function LoginPage() {
       window.history.replaceState({}, "", url.toString());
     }
 
-    void loadProfile(runtimeVendorHost).catch(() => {});
+    void loadProfile().catch(() => {});
   }, [runtimeVendorHost]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
@@ -131,7 +124,7 @@ export default function LoginPage() {
       if (!response.ok) throw new Error(payload.error ?? "Login failed");
 
       setMessage("Logged in successfully.");
-      await loadProfile(runtimeVendorHost);
+      await loadProfile();
       window.setTimeout(() => {
         void (async () => {
           const currentHost = window.location.host.toLowerCase();
