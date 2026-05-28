@@ -132,6 +132,13 @@ function toLocalInputValue(iso?: string | null) {
 
 export default function VendorPage() {
   const headers = useMemo(() => ({ "x-vendor-host": vendorHost, "content-type": "application/json" }), []);
+  const authHeaders = useCallback(() => {
+    const token = localStorage.getItem("oripa_access_token") ?? "";
+    return {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    };
+  }, [headers]);
 
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [limits, setLimits] = useState<VendorLimits>({ planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
@@ -180,22 +187,17 @@ export default function VendorPage() {
     setError(null);
 
     try {
-      const authToken = localStorage.getItem("oripa_access_token") ?? "";
+      const token = localStorage.getItem("oripa_access_token") ?? "";
+      if (!token) throw new Error("Please login with a vendor member account.");
       const [vendorRes, limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
-        fetch(`${apiBase}/v1/vendor/current`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/limits`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/referrals`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/banners`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/packs`, { headers: { "x-vendor-host": vendorHost }, cache: "no-store" }),
-        fetch(`${apiBase}/v1/vendor/points/qr`, {
-          headers: {
-            "x-vendor-host": vendorHost,
-            authorization: authToken ? `Bearer ${authToken}` : "",
-          },
-          cache: "no-store",
-        }),
+        fetch(`${apiBase}/v1/vendor/current`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/referrals`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/banners`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/packs`, { headers: authHeaders(), cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/points/qr`, { headers: authHeaders(), cache: "no-store" }),
       ]);
 
       if (!vendorRes.ok || !limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
@@ -230,13 +232,33 @@ export default function VendorPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authHeaders]);
 
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
 
   useBackForwardRefresh(loadAll);
+
+  async function bootstrapOwner() {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/bootstrap-owner`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to bootstrap vendor owner");
+      setSuccess(body?.membership?.bootstrapped ? "Vendor owner access granted." : "Vendor membership already exists.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to bootstrap owner");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function saveVendorProfile(event: FormEvent) {
     event.preventDefault();
@@ -248,17 +270,17 @@ export default function VendorPage() {
       const [profileRes, businessRes, referralRes] = await Promise.all([
         fetch(`${apiBase}/v1/vendor/profile`, {
           method: "PATCH",
-          headers,
+          headers: authHeaders(),
           body: JSON.stringify({ name: vendorName }),
         }),
         fetch(`${apiBase}/v1/vendor/business`, {
           method: "PATCH",
-          headers,
+          headers: authHeaders(),
           body: JSON.stringify({ businessLocation, businessContact }),
         }),
         fetch(`${apiBase}/v1/vendor/referral`, {
           method: "PATCH",
-          headers,
+          headers: authHeaders(),
           body: JSON.stringify({ referralCode }),
         }),
       ]);
@@ -284,7 +306,7 @@ export default function VendorPage() {
     try {
       const res = await fetch(`${apiBase}/v1/vendor/plan`, {
         method: "PATCH",
-        headers,
+        headers: authHeaders(),
         body: JSON.stringify({ planCode: nextPlanCode }),
       });
       if (!res.ok) {
@@ -314,8 +336,7 @@ export default function VendorPage() {
       const res = await fetch(`${apiBase}/v1/vendor/points/qr`, {
         method: "POST",
         headers: {
-          ...headers,
-          authorization: `Bearer ${token}`,
+          ...authHeaders(),
         },
         body: JSON.stringify({
           points: Number(qrPoints),
@@ -351,7 +372,7 @@ export default function VendorPage() {
 
       const res = await fetch(`${apiBase}/v1/vendor/banners`, {
         method: "POST",
-        headers,
+        headers: authHeaders(),
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to add banner");
@@ -376,7 +397,7 @@ export default function VendorPage() {
     try {
       const res = await fetch(`${apiBase}/v1/vendor/banners/${id}`, {
         method: "DELETE",
-        headers: { "x-vendor-host": vendorHost },
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error("Failed to delete banner");
       setSuccess("Banner removed.");
@@ -533,7 +554,7 @@ export default function VendorPage() {
 
       const res = await fetch(endpoint, {
         method,
-        headers,
+        headers: authHeaders(),
         body: JSON.stringify(payload),
       });
 
@@ -559,7 +580,7 @@ export default function VendorPage() {
     try {
       const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}/archive`, {
         method: "PATCH",
-        headers,
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error("Failed to archive pack");
       setSuccess("Pack archived.");
@@ -578,7 +599,7 @@ export default function VendorPage() {
     try {
       const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}`, {
         method: "DELETE",
-        headers: { "x-vendor-host": vendorHost },
+        headers: authHeaders(),
       });
       if (!res.ok) throw new Error("Failed to delete pack");
       setSuccess("Pack deleted.");
@@ -597,7 +618,10 @@ export default function VendorPage() {
           <strong>Vendor Dashboard</strong>
           <span>{vendor?.name ?? "-"} ({vendorHost})</span>
         </div>
-        <a className="sort-pill" href="/">Back to Homepage</a>
+        <div className="actions">
+          <button type="button" className="sort-pill" onClick={() => void bootstrapOwner()} disabled={saving}>Bootstrap Owner Access</button>
+          <a className="sort-pill" href="/">Back to Homepage</a>
+        </div>
       </header>
 
       {error ? <p className="error">{error}</p> : null}

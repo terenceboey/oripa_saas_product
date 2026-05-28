@@ -2,6 +2,7 @@ import { Router } from "express";
 import { createPackSchema, updatePackSchema } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
+import { getBearerUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
 
 export const packRouter = Router();
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
@@ -106,6 +107,28 @@ function buildPrizeRows(data: {
   return prizeRows;
 }
 
+async function requirePackRole(req: VendorRequest, res: any, allowStaffReadOnly = false) {
+  if (!req.vendorId) {
+    res.status(400).json({ error: "Vendor not resolved" });
+    return null;
+  }
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) {
+    res.status(401).json({ error: "unauthorized" });
+    return null;
+  }
+  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
+  if (!role) {
+    res.status(403).json({ error: "forbidden: insufficient vendor role" });
+    return null;
+  }
+  if (!allowStaffReadOnly && !hasRole(role, ["OWNER", "MANAGER"])) {
+    res.status(403).json({ error: "forbidden: insufficient vendor role" });
+    return null;
+  }
+  return { vendorId: req.vendorId, actorUserId, role };
+}
+
 packRouter.get("/v1/packs", async (req: VendorRequest, res) => {
   if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
@@ -128,10 +151,11 @@ packRouter.get("/v1/packs", async (req: VendorRequest, res) => {
 });
 
 packRouter.get("/v1/vendor/packs", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requirePackRole(req, res, true);
+  if (!auth) return;
 
   const packRows = await prisma.pack.findMany({
-    where: { vendorId: req.vendorId, isActive: true },
+    where: { vendorId: auth.vendorId, isActive: true },
     include: { prizes: true },
     orderBy: { createdAt: "desc" },
   });
@@ -155,14 +179,15 @@ packRouter.get("/v1/packs/:packId", async (req: VendorRequest, res) => {
 });
 
 packRouter.post("/v1/packs", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requirePackRole(req, res);
+  if (!auth) return;
 
   const parsed = createPackSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
-  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: req.vendorId } });
+  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const maxPackItems = settings?.maxPackItems ?? 50;
   const maxPackTiers = settings?.maxPackTiers ?? 5;
 
@@ -179,7 +204,7 @@ packRouter.post("/v1/packs", async (req: VendorRequest, res) => {
 
   const pack = await prisma.pack.create({
     data: {
-      vendorId: req.vendorId,
+      vendorId: auth.vendorId,
       title: parsed.data.title,
       pricePoints: parsed.data.pricePoints,
       totalStock: parsed.data.totalStock,
@@ -206,7 +231,8 @@ packRouter.post("/v1/packs", async (req: VendorRequest, res) => {
 });
 
 packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requirePackRole(req, res);
+  if (!auth) return;
   const packId = String(req.params.packId || "").trim();
   if (!packId) return res.status(400).json({ error: "packId is required" });
 
@@ -215,10 +241,10 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
-  const existing = await prisma.pack.findFirst({ where: { id: packId, vendorId: req.vendorId, isActive: true } });
+  const existing = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId, isActive: true } });
   if (!existing) return res.status(404).json({ error: "Pack not found" });
 
-  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: req.vendorId } });
+  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const maxPackItems = settings?.maxPackItems ?? 50;
   const maxPackTiers = settings?.maxPackTiers ?? 5;
 
@@ -276,11 +302,12 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
 });
 
 packRouter.patch("/v1/vendor/packs/:packId/archive", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requirePackRole(req, res);
+  if (!auth) return;
   const packId = String(req.params.packId || "").trim();
   if (!packId) return res.status(400).json({ error: "packId is required" });
 
-  const pack = await prisma.pack.findFirst({ where: { id: packId, vendorId: req.vendorId, isActive: true } });
+  const pack = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId, isActive: true } });
   if (!pack) return res.status(404).json({ error: "Pack not found" });
 
   const updated = await prisma.pack.update({
@@ -293,11 +320,12 @@ packRouter.patch("/v1/vendor/packs/:packId/archive", async (req: VendorRequest, 
 });
 
 packRouter.delete("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requirePackRole(req, res);
+  if (!auth) return;
   const packId = String(req.params.packId || "").trim();
   if (!packId) return res.status(400).json({ error: "packId is required" });
 
-  const pack = await prisma.pack.findFirst({ where: { id: packId, vendorId: req.vendorId } });
+  const pack = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId } });
   if (!pack) return res.status(404).json({ error: "Pack not found" });
 
   await prisma.pack.delete({ where: { id: packId } });

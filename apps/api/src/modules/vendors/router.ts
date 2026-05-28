@@ -9,23 +9,28 @@ import {
 } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
-import jwt from "jsonwebtoken";
+import { VendorMembershipRole } from "@prisma/client";
 import { randomUUID } from "crypto";
+import { getBearerUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
 
 export const vendorRouter = Router();
-const jwtSecret = process.env.JWT_SECRET ?? "change-me";
 
-function getBearerUserId(authorizationHeader?: string) {
-  const raw = String(authorizationHeader ?? "");
-  if (!raw.startsWith("Bearer ")) return null;
-  const token = raw.slice("Bearer ".length).trim();
-  if (!token) return null;
-  try {
-    const payload = jwt.verify(token, jwtSecret) as { sub?: string };
-    return payload.sub ?? null;
-  } catch {
+async function requireVendorRole(req: VendorRequest, res: any, allowedRoles: VendorMembershipRole[]) {
+  if (!req.vendorId) {
+    res.status(400).json({ error: "Vendor not resolved" });
     return null;
   }
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) {
+    res.status(401).json({ error: "unauthorized" });
+    return null;
+  }
+  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
+  if (!role || !hasRole(role, allowedRoles)) {
+    res.status(403).json({ error: "forbidden: insufficient vendor role" });
+    return null;
+  }
+  return { vendorId: req.vendorId, actorUserId, role };
 }
 
 function planLimits(planCode: "BASIC" | "ELITE") {
@@ -63,6 +68,44 @@ vendorRouter.get("/v1/vendors/by-host", async (req, res) => {
   return res.json({ vendor });
 });
 
+vendorRouter.post("/v1/vendor/bootstrap-owner", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+
+  const existingActiveMembers = await prisma.vendorMembership.count({
+    where: { vendorId: req.vendorId, isActive: true },
+  });
+
+  if (existingActiveMembers > 0) {
+    const existingRole = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
+    if (!existingRole) {
+      return res.status(403).json({ error: "Vendor already has members. Contact owner/admin for invite." });
+    }
+    return res.json({ membership: { role: existingRole, bootstrapped: false } });
+  }
+
+  const membership = await prisma.vendorMembership.create({
+    data: {
+      vendorId: req.vendorId,
+      userId: actorUserId,
+      role: "OWNER",
+      isActive: true,
+    },
+    select: { id: true, vendorId: true, userId: true, role: true, isActive: true, createdAt: true },
+  });
+
+  return res.status(201).json({ membership: { ...membership, bootstrapped: true } });
+});
+
+vendorRouter.get("/v1/vendor/me", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
+  return res.json({ userId: actorUserId, role, isVendorMember: Boolean(role) });
+});
+
 vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
   if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
@@ -85,7 +128,8 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
 
   const parsed = updateVendorProfileSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -93,7 +137,7 @@ vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {
   }
 
   const vendor = await prisma.vendor.update({
-    where: { id: req.vendorId },
+    where: { id: auth.vendorId },
     data: { name: parsed.data.name },
     select: {
       id: true,
@@ -112,7 +156,8 @@ vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.patch("/v1/vendor/business", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
 
   const parsed = updateVendorBusinessSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -120,7 +165,7 @@ vendorRouter.patch("/v1/vendor/business", async (req: VendorRequest, res) => {
   }
 
   const vendor = await prisma.vendor.update({
-    where: { id: req.vendorId },
+    where: { id: auth.vendorId },
     data: {
       businessLocation: parsed.data.businessLocation,
       businessContact: parsed.data.businessContact,
@@ -141,7 +186,8 @@ vendorRouter.patch("/v1/vendor/business", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.patch("/v1/vendor/referral", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER"]);
+  if (!auth) return;
 
   const parsed = updateVendorReferralSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -150,7 +196,7 @@ vendorRouter.patch("/v1/vendor/referral", async (req: VendorRequest, res) => {
 
   try {
     const vendor = await prisma.vendor.update({
-      where: { id: req.vendorId },
+      where: { id: auth.vendorId },
       data: { referralCode: parsed.data.referralCode },
       select: { id: true, referralCode: true, updatedAt: true },
     });
@@ -161,8 +207,9 @@ vendorRouter.patch("/v1/vendor/referral", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.get("/v1/vendor/plan", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: req.vendorId } });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
+  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const planCode = settings?.planCode ?? "BASIC";
   return res.json({
     plan: {
@@ -173,7 +220,8 @@ vendorRouter.get("/v1/vendor/plan", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.patch("/v1/vendor/plan", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER"]);
+  if (!auth) return;
   const parsed = updateVendorPlanSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
@@ -183,7 +231,7 @@ vendorRouter.patch("/v1/vendor/plan", async (req: VendorRequest, res) => {
   const limits = planLimits(planCode);
 
   const updated = await prisma.vendorSettings.upsert({
-    where: { vendorId: req.vendorId },
+    where: { vendorId: auth.vendorId },
     update: {
       planCode,
       maxPackItems: limits.maxPackItems,
@@ -191,7 +239,7 @@ vendorRouter.patch("/v1/vendor/plan", async (req: VendorRequest, res) => {
       maxDrawQuantity: limits.maxDrawQuantity,
     },
     create: {
-      vendorId: req.vendorId,
+      vendorId: auth.vendorId,
       planCode,
       maxPackItems: limits.maxPackItems,
       maxPackTiers: limits.maxPackTiers,
@@ -204,9 +252,10 @@ vendorRouter.patch("/v1/vendor/plan", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.get("/v1/vendor/limits", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
   const settings = await prisma.vendorSettings.findUnique({
-    where: { vendorId: req.vendorId },
+    where: { vendorId: auth.vendorId },
     select: { planCode: true, maxPackItems: true, maxPackTiers: true, maxDrawQuantity: true },
   });
 
@@ -224,13 +273,14 @@ vendorRouter.get("/v1/vendor/limits", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.patch("/v1/vendor/limits", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
   const parsed = updateVendorLimitsSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
-  const existing = await prisma.vendorSettings.findUnique({ where: { vendorId: req.vendorId } });
+  const existing = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const planCode = existing?.planCode ?? "BASIC";
   const bounds = planLimits(planCode);
 
@@ -243,14 +293,14 @@ vendorRouter.patch("/v1/vendor/limits", async (req: VendorRequest, res) => {
   }
 
   const updated = await prisma.vendorSettings.upsert({
-    where: { vendorId: req.vendorId },
+    where: { vendorId: auth.vendorId },
     update: {
       maxPackItems: nextItems,
       maxPackTiers: nextTiers,
       maxDrawQuantity: nextQty,
     },
     create: {
-      vendorId: req.vendorId,
+      vendorId: auth.vendorId,
       planCode,
       maxPackItems: nextItems,
       maxPackTiers: nextTiers,
@@ -263,15 +313,16 @@ vendorRouter.patch("/v1/vendor/limits", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.get("/v1/vendor/earnings/summary", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
 
   const [entries, walletAgg] = await Promise.all([
     prisma.vendorRevenueLedger.findMany({
-      where: { vendorId: req.vendorId, type: "DRAW_GROSS" },
+      where: { vendorId: auth.vendorId, type: "DRAW_GROSS" },
       select: { amountPoints: true, amountCurrency: true, currencyCode: true },
     }),
     prisma.walletEntry.aggregate({
-      where: { vendorId: req.vendorId, type: "DEBIT", reason: "PACK_DRAW" },
+      where: { vendorId: auth.vendorId, type: "DEBIT", reason: "PACK_DRAW" },
       _sum: { amountPoints: true },
     }),
   ]);
@@ -292,16 +343,17 @@ vendorRouter.get("/v1/vendor/earnings/summary", async (req: VendorRequest, res) 
 });
 
 vendorRouter.get("/v1/vendor/earnings/packs", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
 
   const packs = await prisma.pack.findMany({
-    where: { vendorId: req.vendorId },
+    where: { vendorId: auth.vendorId },
     select: { id: true, title: true },
   });
 
   const rows = await prisma.drawOrder.groupBy({
     by: ["packId"],
-    where: { vendorId: req.vendorId, status: "COMPLETED" },
+    where: { vendorId: auth.vendorId, status: "COMPLETED" },
     _sum: { totalPoints: true, quantity: true },
     _count: { _all: true },
   });
@@ -319,16 +371,17 @@ vendorRouter.get("/v1/vendor/earnings/packs", async (req: VendorRequest, res) =>
 });
 
 vendorRouter.get("/v1/vendor/referrals", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
 
-  const vendor = await prisma.vendor.findUnique({ where: { id: req.vendorId }, select: { referralCode: true } });
+  const vendor = await prisma.vendor.findUnique({ where: { id: auth.vendorId }, select: { referralCode: true } });
   if (!vendor?.referralCode) {
     return res.json({ referralCode: null, customers: [] });
   }
 
   const signups = await prisma.vendorReferralSignup.findMany({
     where: {
-      vendorId: req.vendorId,
+      vendorId: auth.vendorId,
     },
     include: { customerUser: { select: { id: true, email: true, displayName: true, createdAt: true } } },
     orderBy: { createdAt: "desc" },
@@ -348,10 +401,10 @@ vendorRouter.get("/v1/vendor/referrals", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.post("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const vendorId = req.vendorId;
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
-  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
+  const vendorId = auth.vendorId;
+  const actorUserId = auth.actorUserId;
 
   const points = Number(req.body?.points ?? 0);
   const expiresInMinutes = Number(req.body?.expiresInMinutes ?? 15);
@@ -377,10 +430,9 @@ vendorRouter.post("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.get("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const vendorId = req.vendorId;
-  const actorUserId = getBearerUserId(req.header("authorization") ?? undefined);
-  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
+  const vendorId = auth.vendorId;
 
   const qrs = await prisma.vendorPointGrantQr.findMany({
     where: { vendorId },
