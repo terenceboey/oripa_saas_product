@@ -444,6 +444,48 @@ authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
   });
 });
 
+authRouter.get("/v1/auth/vendor-home", async (req: VendorRequest, res) => {
+  const userId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+
+  const memberships = await prisma.vendorMembership.findMany({
+    where: { userId, isActive: true },
+    select: {
+      role: true,
+      createdAt: true,
+      Vendor: {
+        select: { id: true, host: true, slug: true, isActive: true },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const activeMemberships = memberships.filter((m) => m.Vendor?.isActive);
+  if (!activeMemberships.length) {
+    return res.json({ vendorHost: null });
+  }
+
+  const rolePriority: Record<string, number> = {
+    OWNER: 0,
+    MANAGER: 1,
+    STAFF: 2,
+  };
+
+  activeMemberships.sort((a, b) => {
+    const aRank = rolePriority[a.role] ?? 99;
+    const bRank = rolePriority[b.role] ?? 99;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+
+  const picked = activeMemberships[0];
+  return res.json({
+    vendorHost: picked.Vendor.host,
+    vendorSlug: picked.Vendor.slug,
+    role: picked.role,
+  });
+});
+
 authRouter.get("/v1/auth/google/start", (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.status(503).json({ error: "Google OAuth not configured" });

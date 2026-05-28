@@ -15,6 +15,17 @@ type AuthUser = {
   lastLoginAt?: string | null;
 };
 
+function isLocalhostLike(host: string) {
+  const normalized = host.trim().toLowerCase();
+  return (
+    normalized === "localhost" ||
+    normalized === "demo.localhost" ||
+    normalized.endsWith(".localhost") ||
+    normalized.startsWith("127.0.0.1") ||
+    normalized.startsWith("0.0.0.0")
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const runtimeVendorHost = useMemo(() => {
@@ -29,6 +40,24 @@ export default function LoginPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
+
+  async function resolveVendorHomeHost(token: string): Promise<string | null> {
+    try {
+      const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-vendor-host": runtimeVendorHost,
+        },
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) return null;
+      const host = String(payload.vendorHost ?? "").trim().toLowerCase();
+      return host || null;
+    } catch {
+      return null;
+    }
+  }
 
   async function loadProfile(token: string, resolvedVendorHost: string) {
     const response = await fetch(`${apiBase}/v1/auth/me`, {
@@ -58,11 +87,18 @@ export default function LoginPage() {
       url.searchParams.delete("vendorHost");
       window.history.replaceState({}, "", url.toString());
       window.setTimeout(() => {
-        if (callbackVendorHost && callbackVendorHost !== window.location.host.toLowerCase()) {
-          window.location.href = `${window.location.protocol}//${callbackVendorHost}/vendor`;
-          return;
-        }
-        router.push("/vendor");
+        void (async () => {
+          const currentHost = window.location.host.toLowerCase();
+          const callbackHostCandidate = callbackVendorHost && !isLocalhostLike(callbackVendorHost) ? callbackVendorHost : null;
+          const membershipHost = await resolveVendorHomeHost(token);
+          const targetHost = callbackHostCandidate || membershipHost;
+
+          if (targetHost && targetHost !== currentHost) {
+            window.location.href = `${window.location.protocol}//${targetHost}/vendor`;
+            return;
+          }
+          router.push("/vendor");
+        })();
       }, 500);
     }
 
@@ -103,7 +139,15 @@ export default function LoginPage() {
       setMessage("Logged in successfully.");
       await loadProfile(payload.token, runtimeVendorHost);
       window.setTimeout(() => {
-        router.push("/vendor");
+        void (async () => {
+          const currentHost = window.location.host.toLowerCase();
+          const membershipHost = await resolveVendorHomeHost(payload.token);
+          if (membershipHost && !isLocalhostLike(membershipHost) && membershipHost !== currentHost) {
+            window.location.href = `${window.location.protocol}//${membershipHost}/vendor`;
+            return;
+          }
+          router.push("/vendor");
+        })();
       }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
