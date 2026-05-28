@@ -106,6 +106,7 @@ type TierDraft = {
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
+const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
 
 function parseTabValue(tab: string | null): ActiveTab {
@@ -155,7 +156,7 @@ export default function VendorPage() {
     const host = configuredVendorHost || runtimeVendorHost;
     return host.replace(/^[^.]+\./, "");
   }, [runtimeVendorHost]);
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
   const authHeaders = useCallback(() => {
     return {
       ...headers,
@@ -210,6 +211,7 @@ export default function VendorPage() {
 
   async function resolveVendorHomeHost() {
     const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
+      headers: clientPageHeader,
       credentials: "include",
       cache: "no-store",
     });
@@ -735,8 +737,13 @@ export default function VendorPage() {
         headers: authHeaders(),
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to delete pack");
-      setSuccess("Pack deleted.");
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to delete pack");
+      if (body?.mode === "retired") {
+        setSuccess(body?.message ?? "Pack has history and was archived/hidden instead of hard deleted.");
+      } else {
+        setSuccess("Pack deleted.");
+      }
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete pack");
@@ -799,22 +806,37 @@ export default function VendorPage() {
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Vendor Profile / Business / Referral</h2>
             <form className="vendor-form" onSubmit={saveVendorProfile}>
-              <input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
-              <input value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
-              <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
-              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
+              <label className="muted tiny">
+                Vendor name
+                <input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
+              </label>
+              <label className="muted tiny">
+                Business location
+                <input value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
+              </label>
+              <label className="muted tiny">
+                Business contact
+                <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
+              </label>
+              <label className="muted tiny">
+                Referral code URL slug
+                <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
+              </label>
               <button type="submit" className="draw-button" disabled={saving || loading}>Save Vendor Info</button>
             </form>
             <form className="vendor-form" onSubmit={saveVendorPrefix}>
-              <input
-                value={vendorSlug}
-                onChange={(e) => setVendorSlug(e.target.value)}
-                placeholder="Vendor URL prefix (slug)"
-                required
-                minLength={2}
-                maxLength={50}
-                pattern="^[a-z0-9-]+$"
-              />
+              <label className="muted tiny">
+                Vendor URL prefix (slug)
+                <input
+                  value={vendorSlug}
+                  onChange={(e) => setVendorSlug(e.target.value)}
+                  placeholder="Vendor URL prefix (slug)"
+                  required
+                  minLength={2}
+                  maxLength={50}
+                  pattern="^[a-z0-9-]+$"
+                />
+              </label>
               <p className="muted tiny">New vendor URL: <code>https://{vendorSlug || "your-prefix"}.{vendorBaseDomain}</code></p>
               <button type="submit" className="draw-button" disabled={saving || loading}>Update Vendor Prefix</button>
             </form>
@@ -823,9 +845,18 @@ export default function VendorPage() {
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Banners</h2>
             <form className="vendor-form" onSubmit={addBanner}>
-              <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
-              <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
-              <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
+              <label className="muted tiny">
+                Banner title
+                <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
+              </label>
+              <label className="muted tiny">
+                Banner image URL
+                <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
+              </label>
+              <label className="muted tiny">
+                Target URL (optional)
+                <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
+              </label>
               <button type="submit" className="draw-button" disabled={saving || loading}>Add Banner</button>
             </form>
 
@@ -860,8 +891,14 @@ export default function VendorPage() {
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Generate QR Points</h2>
             <form className="vendor-form" onSubmit={generateQr}>
-              <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
-              <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
+              <label className="muted tiny">
+                Points to grant
+                <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
+              </label>
+              <label className="muted tiny">
+                Expiry minutes
+                <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
+              </label>
               <button type="submit" className="draw-button" disabled={saving}>Generate QR Token</button>
             </form>
             <div className="result-list">
@@ -885,10 +922,22 @@ export default function VendorPage() {
 
             <form className="pack-builder" onSubmit={submitPack}>
               <div className="pack-builder-grid">
-                <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
-                <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
-                <input type="number" min={1} value={totalStock} onChange={(e) => setTotalStock(e.target.value)} placeholder="Total stock" required />
-                <input type="text" value={limitedLabel} onChange={(e) => setLimitedLabel(e.target.value)} placeholder="Limited label (optional)" />
+                <label className="muted tiny">
+                  Pack name
+                  <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
+                </label>
+                <label className="muted tiny">
+                  Price (points)
+                  <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
+                </label>
+                <label className="muted tiny">
+                  Total stock
+                  <input type="number" min={1} value={totalStock} onChange={(e) => setTotalStock(e.target.value)} placeholder="Total stock" required />
+                </label>
+                <label className="muted tiny">
+                  Limited label (optional)
+                  <input type="text" value={limitedLabel} onChange={(e) => setLimitedLabel(e.target.value)} placeholder="Limited label (optional)" />
+                </label>
                 <label className="muted tiny">
                   Start date-time
                   <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
@@ -914,8 +963,14 @@ export default function VendorPage() {
                 </label>
                 {drawLimitMode === "DAILY_RESET" ? (
                   <>
-                    <input type="number" min={1} value={drawLimitValue} onChange={(e) => setDrawLimitValue(e.target.value)} placeholder="Daily max draws per customer" />
-                    <input type="text" value={drawLimitResetTimezone} onChange={(e) => setDrawLimitResetTimezone(e.target.value)} placeholder="Timezone e.g. Asia/Singapore" />
+                    <label className="muted tiny">
+                      Daily max draws per customer
+                      <input type="number" min={1} value={drawLimitValue} onChange={(e) => setDrawLimitValue(e.target.value)} placeholder="Daily max draws per customer" />
+                    </label>
+                    <label className="muted tiny">
+                      Reset timezone
+                      <input type="text" value={drawLimitResetTimezone} onChange={(e) => setDrawLimitResetTimezone(e.target.value)} placeholder="Timezone e.g. Asia/Singapore" />
+                    </label>
                   </>
                 ) : null}
               </div>
@@ -924,7 +979,10 @@ export default function VendorPage() {
                 <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} /> Mark as New
               </label>
 
-              <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
+              <label className="muted tiny">
+                Important notes shown on pack page
+                <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
+              </label>
 
               <div className="tier-stack">
                 {tiers.map((tier, tierIndex) => (
@@ -935,17 +993,35 @@ export default function VendorPage() {
                     </div>
 
                     <div className="pack-builder-grid">
-                      <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
-                      <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
+                      <label className="muted tiny">
+                        Tier name
+                        <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
+                      </label>
+                      <label className="muted tiny">
+                        Tier percentage
+                        <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
+                      </label>
                     </div>
 
                     <div className="tier-items">
                       {tier.items.map((item, itemIndex) => (
                         <div className="item-row" key={`tier-${tierIndex}-item-${itemIndex}`}>
-                          <input value={item.label} onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)} placeholder="Item label" required />
-                          <input value={item.estimatedValue} onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)} placeholder="Estimated value" type="number" min={0} required />
-                          <input value={item.stock} onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)} placeholder="Stock" type="number" min={1} required />
-                          <input value={item.imageUrl} onChange={(e) => updateItem(tierIndex, itemIndex, "imageUrl", e.target.value)} placeholder="Image URL" />
+                          <label className="muted tiny">
+                            Item label
+                            <input value={item.label} onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)} placeholder="Item label" required />
+                          </label>
+                          <label className="muted tiny">
+                            Estimated value
+                            <input value={item.estimatedValue} onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)} placeholder="Estimated value" type="number" min={0} required />
+                          </label>
+                          <label className="muted tiny">
+                            Stock
+                            <input value={item.stock} onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)} placeholder="Stock" type="number" min={1} required />
+                          </label>
+                          <label className="muted tiny">
+                            Image URL
+                            <input value={item.imageUrl} onChange={(e) => updateItem(tierIndex, itemIndex, "imageUrl", e.target.value)} placeholder="Image URL" />
+                          </label>
                           <button type="button" className="sort-pill" onClick={() => removeItem(tierIndex, itemIndex)} disabled={tier.items.length <= 1}>Remove</button>
                         </div>
                       ))}

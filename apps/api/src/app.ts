@@ -30,7 +30,7 @@ export function createApp() {
   const webHost = normalizeHost(webUrl);
   const vendorBaseDomain = normalizeHost(String(process.env.VENDOR_BASE_DOMAIN ?? ""));
   const hardcodedPrimaryDomain = "gachanow.xyz";
-  const corsAllowedHeaders = "Content-Type, Authorization, X-Vendor-Host, X-Idempotency-Key, X-Request-Id";
+  const corsAllowedHeaders = "Content-Type, Authorization, X-Vendor-Host, X-Idempotency-Key, X-Request-Id, X-Client-Page";
   const corsAllowedMethods = "GET,POST,PATCH,PUT,DELETE,OPTIONS";
 
   function isAllowedOrigin(origin?: string) {
@@ -72,7 +72,8 @@ export function createApp() {
   }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json({ limit: "64kb" }));
-  app.use(morgan("dev"));
+  morgan.token("clientPage", (req) => String(req.headers["x-client-page"] ?? "-"));
+  app.use(morgan(":method :url :status :response-time ms - :res[content-length] page=:clientPage"));
   app.use(passport.initialize() as any);
   app.use(vendorResolver as any);
 

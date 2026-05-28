@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { createPackSchema, updatePackSchema } from "@oripa/shared";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
@@ -331,6 +332,36 @@ packRouter.delete("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
   const pack = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId } });
   if (!pack) return res.status(404).json({ error: "Pack not found" });
 
-  await prisma.pack.delete({ where: { id: packId } });
-  return res.status(204).send();
+  const drawOrderCount = await prisma.drawOrder.count({ where: { packId } });
+  if (drawOrderCount > 0) {
+    const retired = await prisma.pack.update({
+      where: { id: packId },
+      data: { status: "ARCHIVED", isActive: false },
+      include: { prizes: true },
+    });
+    return res.status(200).json({
+      mode: "retired",
+      message: "Pack has draw history and cannot be hard-deleted. It has been archived and hidden.",
+      pack: decoratePackWithRates(retired),
+    });
+  }
+
+  try {
+    await prisma.pack.delete({ where: { id: packId } });
+    return res.status(204).send();
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
+      const retired = await prisma.pack.update({
+        where: { id: packId },
+        data: { status: "ARCHIVED", isActive: false },
+        include: { prizes: true },
+      });
+      return res.status(200).json({
+        mode: "retired",
+        message: "Pack is referenced by transactions and cannot be hard-deleted. It has been archived and hidden.",
+        pack: decoratePackWithRates(retired),
+      });
+    }
+    throw error;
+  }
 });

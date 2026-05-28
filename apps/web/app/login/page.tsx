@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { FormField } from "../../components/form-field";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const clientPageHeader = { "x-client-page": "/login" };
 
 type AuthUser = {
   id: string;
@@ -44,6 +46,7 @@ export default function LoginPage() {
   async function resolveVendorHomeHost(): Promise<string | null> {
     try {
       const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
+        headers: clientPageHeader,
         credentials: "include",
         cache: "no-store",
       });
@@ -58,6 +61,7 @@ export default function LoginPage() {
 
   async function loadProfile() {
     const response = await fetch(`${apiBase}/v1/auth/me`, {
+      headers: clientPageHeader,
       credentials: "include",
       cache: "no-store",
     });
@@ -115,6 +119,7 @@ export default function LoginPage() {
         headers: {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
+          ...clientPageHeader,
         },
         credentials: "include",
         body: JSON.stringify({ email, password }),
@@ -162,8 +167,12 @@ export default function LoginPage() {
         <p className="muted">Sign in with email/password, Google, or Apple.</p>
 
         <form className="auth-form" onSubmit={handleLogin}>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+          <FormField label="Email">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+          </FormField>
+          <FormField label="Password">
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+          </FormField>
           <button type="submit" className="draw-button" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
         </form>
 

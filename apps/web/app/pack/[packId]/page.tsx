@@ -44,6 +44,7 @@ type DrawResult = {
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const clientPageHeader = { "x-client-page": "/pack/[packId]" };
 
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
@@ -53,7 +54,7 @@ export default function PackDrawPage() {
     return configuredVendorHost;
   }, []);
 
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
 
   const [pack, setPack] = useState<Pack | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);

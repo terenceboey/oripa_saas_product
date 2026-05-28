@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { FormField } from "../../components/form-field";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const clientPageHeader = { "x-client-page": "/register" };
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -40,6 +42,7 @@ export default function RegisterPage() {
         headers: {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
+          ...clientPageHeader,
         },
         credentials: "include",
         body: JSON.stringify({ displayName, email, password, referralCode: referralCode || undefined }),
@@ -78,9 +81,15 @@ export default function RegisterPage() {
         <p className="muted">Register as a customer and start topping up points.</p>
 
         <form className="auth-form" onSubmit={handleRegister}>
-          <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name" required />
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (8+ chars)" minLength={8} required />
+          <FormField label="Display name">
+            <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name" required />
+          </FormField>
+          <FormField label="Email">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+          </FormField>
+          <FormField label="Password">
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (8+ chars)" minLength={8} required />
+          </FormField>
           <button type="submit" className="draw-button" disabled={loading}>{loading ? "Creating..." : "Register"}</button>
         </form>
 

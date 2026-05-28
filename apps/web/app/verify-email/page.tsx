@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { FormField } from "../../components/form-field";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const clientPageHeader = { "x-client-page": "/verify-email" };
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -37,6 +39,7 @@ export default function VerifyEmailPage() {
         headers: {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
+          ...clientPageHeader,
         },
         credentials: "include",
         body: JSON.stringify({ email, otp }),
@@ -66,6 +69,7 @@ export default function VerifyEmailPage() {
         headers: {
           "content-type": "application/json",
           "x-vendor-host": runtimeVendorHost,
+          ...clientPageHeader,
         },
         credentials: "include",
         body: JSON.stringify({ email }),
@@ -89,8 +93,12 @@ export default function VerifyEmailPage() {
         <h1>Verify Email</h1>
         <p className="muted">Enter the 6-digit OTP sent to your email to activate your account.</p>
         <form className="auth-form" onSubmit={handleVerify}>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit OTP" inputMode="numeric" pattern="\d{6}" required />
+          <FormField label="Email">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+          </FormField>
+          <FormField label="6-digit OTP">
+            <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit OTP" inputMode="numeric" pattern="\d{6}" required />
+          </FormField>
           <button type="submit" className="draw-button" disabled={loading}>{loading ? "Verifying..." : "Verify OTP"}</button>
           <button type="button" className="sort-pill" disabled={resending} onClick={resendOtp}>{resending ? "Sending..." : "Resend OTP"}</button>
         </form>

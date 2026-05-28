@@ -60,6 +60,7 @@ type SortKey = "recommended" | "remaining_asc" | "price_asc" | "price_desc" | "n
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
+const clientPageHeader = { "x-client-page": "/" };
 
 export default function HomePage() {
   const runtimeVendorHost = useMemo(() => {
@@ -78,7 +79,7 @@ export default function HomePage() {
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
 
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
 
   const loadData = useCallback(async (force = false) => {
     if (vendorNotFound && !force) return;
@@ -132,6 +133,7 @@ export default function HomePage() {
   const loadProfile = useCallback(async () => {
     try {
       const response = await fetch(`${apiBase}/v1/auth/me`, {
+        headers: clientPageHeader,
         credentials: "include",
         cache: "no-store",
       });

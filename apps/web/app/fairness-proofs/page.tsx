@@ -46,13 +46,14 @@ type FairnessProofDetail = {
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const clientPageHeader = { "x-client-page": "/fairness-proofs" };
 
 export default function FairnessProofsPage() {
   const runtimeVendorHost = useMemo(() => {
     if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
     return configuredVendorHost;
   }, []);
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
 
   const [proofs, setProofs] = useState<FairnessProofSummary[]>([]);
   const [detailsByOrderId, setDetailsByOrderId] = useState<Record<string, FairnessProofDetail>>({});
