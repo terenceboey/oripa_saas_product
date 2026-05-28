@@ -29,6 +29,7 @@ export function createApp() {
 
   const webHost = normalizeHost(webUrl);
   const vendorBaseDomain = normalizeHost(String(process.env.VENDOR_BASE_DOMAIN ?? ""));
+  const hardcodedPrimaryDomain = "gachanow.xyz";
   const corsAllowedHeaders = "Content-Type, Authorization, X-Vendor-Host, X-Idempotency-Key, X-Request-Id";
   const corsAllowedMethods = "GET,POST,PATCH,PUT,DELETE,OPTIONS";
 
@@ -37,6 +38,7 @@ export function createApp() {
     if (!requestHost) return false;
     if (webHost && requestHost === webHost) return true;
     if (requestHost.startsWith("localhost:") || requestHost.startsWith("127.0.0.1:")) return true;
+    if (requestHost === hardcodedPrimaryDomain || requestHost.endsWith(`.${hardcodedPrimaryDomain}`)) return true;
     if (vendorBaseDomain && (requestHost === vendorBaseDomain || requestHost.endsWith(`.${vendorBaseDomain}`))) return true;
     return false;
   }

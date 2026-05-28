@@ -143,6 +143,14 @@ export default function LoginPage() {
     }
   }
 
+  function startGoogleLogin(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    const host = window.location.host.toLowerCase();
+    const url = new URL(`${socialBase}/google/start`);
+    url.searchParams.set("vendorHost", host);
+    window.location.href = url.toString();
+  }
+
   return (
     <main className="container">
       <header className="auth-top-nav">
@@ -161,7 +169,7 @@ export default function LoginPage() {
 
         <div className="auth-divider">Other login options</div>
         <div className="auth-social-row">
-          <a className="auth-social-button google" href={`${socialBase}/google/start?vendorHost=${encodeURIComponent(runtimeVendorHost)}`}>
+          <a className="auth-social-button google" href="#" onClick={startGoogleLogin}>
             <span className="google-g">G</span>
             <span>Log in with Google</span>
           </a>

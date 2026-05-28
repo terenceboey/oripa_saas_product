@@ -20,12 +20,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const googleStart = useMemo(() => {
-    const url = new URL(`${apiBase}/v1/auth/google/start`);
-    url.searchParams.set("vendorHost", runtimeVendorHost);
-    if (referralCode) url.searchParams.set("referralCode", referralCode);
-    return url.toString();
-  }, [referralCode, runtimeVendorHost]);
+  const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -63,6 +58,15 @@ export default function RegisterPage() {
     }
   }
 
+  function startGoogleRegister(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    const host = window.location.host.toLowerCase();
+    const url = new URL(`${socialBase}/google/start`);
+    url.searchParams.set("vendorHost", host);
+    if (referralCode) url.searchParams.set("referralCode", referralCode);
+    window.location.href = url.toString();
+  }
+
   return (
     <main className="container">
       <header className="auth-top-nav">
@@ -82,7 +86,7 @@ export default function RegisterPage() {
 
         <div className="auth-divider">Other login options</div>
         <div className="auth-social-row">
-          <a className="auth-social-button google" href={googleStart}>
+          <a className="auth-social-button google" href="#" onClick={startGoogleRegister}>
             <span className="google-g">G</span>
             <span>Continue with Google</span>
           </a>
