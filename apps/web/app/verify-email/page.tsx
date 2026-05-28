@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const vendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
+  const runtimeVendorHost = useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
+    return configuredVendorHost;
+  }, []);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -32,7 +36,7 @@ export default function VerifyEmailPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": vendorHost,
+          "x-vendor-host": runtimeVendorHost,
         },
         body: JSON.stringify({ email, otp }),
       });
@@ -43,7 +47,7 @@ export default function VerifyEmailPage() {
       setMessage("Email verified and login successful.");
       setOtp("");
       window.setTimeout(() => {
-        router.push("/");
+        router.push("/vendor");
       }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "OTP verification failed");
@@ -61,7 +65,7 @@ export default function VerifyEmailPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": vendorHost,
+          "x-vendor-host": runtimeVendorHost,
         },
         body: JSON.stringify({ email }),
       });

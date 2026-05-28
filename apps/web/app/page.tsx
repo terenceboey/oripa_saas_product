@@ -58,10 +58,14 @@ type AuthUser = {
 type SortKey = "recommended" | "remaining_asc" | "price_asc" | "price_desc" | "newest";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const vendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
 
 export default function HomePage() {
+  const runtimeVendorHost = useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
+    return configuredVendorHost;
+  }, []);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [packs, setPacks] = useState<Pack[]>([]);
@@ -73,7 +77,7 @@ export default function HomePage() {
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
 
-  const headers = useMemo(() => ({ "x-vendor-host": vendorHost }), []);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -99,7 +103,7 @@ export default function HomePage() {
       setWallet(walletPayload.wallet);
       setPacks(packsPayload.packs ?? []);
       setBanners(bannersPayload.banners ?? []);
-      setTenant(tenantPayload.tenant ?? null);
+      setTenant(tenantPayload.vendor ?? tenantPayload.tenant ?? null);
       setBannerIndex(0);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load data";
@@ -199,7 +203,7 @@ export default function HomePage() {
           <img src="/brand-cardback.jpg" alt="Oripa logo" />
           <div className="brand-text">
             <strong>{tenant?.name ?? "Storefront"}</strong>
-            <span>{vendorHost}</span>
+            <span>{runtimeVendorHost}</span>
           </div>
         </div>
         <div className="header-right">
@@ -278,7 +282,7 @@ export default function HomePage() {
           <div>
             <span className="badge">Oripa MVP</span>
             <h1 className="hero-title">{activeCategory} Mystery Packs</h1>
-            <p className="muted">Vendor: {tenant?.name ?? vendorHost}</p>
+            <p className="muted">Vendor: {tenant?.name ?? runtimeVendorHost}</p>
           </div>
           <button type="button" className="refresh-button" onClick={loadData} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}

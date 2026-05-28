@@ -42,14 +42,18 @@ type DrawResult = {
 };
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const vendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
   const packId = String(params?.packId ?? "");
+  const runtimeVendorHost = useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
+    return configuredVendorHost;
+  }, []);
 
-  const headers = useMemo(() => ({ "x-vendor-host": vendorHost }), []);
+  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost }), [runtimeVendorHost]);
 
   const [pack, setPack] = useState<Pack | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);

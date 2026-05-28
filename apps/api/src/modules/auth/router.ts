@@ -28,6 +28,14 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
   "localhost",
 ]);
 
+function resolveRequestHost(req: VendorRequest) {
+  const explicitHost = String(req.header("x-vendor-host") ?? "").trim().toLowerCase();
+  if (explicitHost) return explicitHost;
+  const hostname = String(req.hostname ?? "").trim().toLowerCase();
+  if (hostname) return hostname;
+  return String(process.env.DEFAULT_TENANT_HOST ?? "localhost").trim().toLowerCase();
+}
+
 function issueAccessToken(user: { id: string; email: string; displayName: string | null; status: string }) {
   return jwt.sign(
     {
@@ -440,7 +448,7 @@ authRouter.get("/v1/auth/google/start", (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.status(503).json({ error: "Google OAuth not configured" });
   }
-  const vendorHost = String(req.query.vendorHost ?? req.header("x-vendor-host") ?? "demo.localhost");
+  const vendorHost = String(req.query.vendorHost ?? resolveRequestHost(req)).trim().toLowerCase();
   const referralCode = String(req.query.referralCode ?? "").trim().toLowerCase() || null;
   const state = Buffer.from(JSON.stringify({ vendorHost, referralCode })).toString("base64url");
   return passport.authenticate("google", { scope: ["profile", "email"], session: false, state })(req, res, next);
@@ -452,14 +460,14 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
       return res.redirect(`${webBaseUrl}/login?error=google_auth_failed`);
     }
     const rawState = String(req.query.state ?? "");
-    let vendorHost = "demo.localhost";
+    let vendorHost = resolveRequestHost(req);
     let referralCode: string | null = null;
     try {
       const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { vendorHost?: string; referralCode?: string };
       vendorHost = String(decoded.vendorHost ?? vendorHost);
       referralCode = decoded.referralCode ? String(decoded.referralCode).toLowerCase() : null;
     } catch {
-      vendorHost = "demo.localhost";
+      vendorHost = resolveRequestHost(req);
       referralCode = null;
     }
     await ensureCustomerEntitlements({

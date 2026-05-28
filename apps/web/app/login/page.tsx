@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
-const vendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
+const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 
 type AuthUser = {
   id: string;
@@ -17,6 +17,10 @@ type AuthUser = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const runtimeVendorHost = useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
+    return configuredVendorHost;
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,11 +30,11 @@ export default function LoginPage() {
 
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
 
-  async function loadProfile(token: string) {
+  async function loadProfile(token: string, resolvedVendorHost: string) {
     const response = await fetch(`${apiBase}/v1/auth/me`, {
       headers: {
         authorization: `Bearer ${token}`,
-        "x-vendor-host": vendorHost,
+        "x-vendor-host": resolvedVendorHost,
       },
       cache: "no-store",
     });
@@ -42,16 +46,23 @@ export default function LoginPage() {
   useEffect(() => {
     const url = new URL(window.location.href);
     const token = url.searchParams.get("token");
+    const callbackVendorHost = String(url.searchParams.get("vendorHost") ?? "").trim().toLowerCase();
     const oauthError = url.searchParams.get("error");
 
     if (token) {
       localStorage.setItem("oripa_access_token", token);
       setMessage("Logged in successfully. You can continue to the storefront.");
-      void loadProfile(token);
+      const resolvedVendorHost = callbackVendorHost || runtimeVendorHost;
+      void loadProfile(token, resolvedVendorHost);
       url.searchParams.delete("token");
+      url.searchParams.delete("vendorHost");
       window.history.replaceState({}, "", url.toString());
       window.setTimeout(() => {
-        router.push("/");
+        if (callbackVendorHost && callbackVendorHost !== window.location.host.toLowerCase()) {
+          window.location.href = `${window.location.protocol}//${callbackVendorHost}/vendor`;
+          return;
+        }
+        router.push("/vendor");
       }, 500);
     }
 
@@ -63,11 +74,11 @@ export default function LoginPage() {
 
     const existingToken = localStorage.getItem("oripa_access_token");
     if (existingToken) {
-      void loadProfile(existingToken).catch(() => {
+      void loadProfile(existingToken, runtimeVendorHost).catch(() => {
         localStorage.removeItem("oripa_access_token");
       });
     }
-  }, []);
+  }, [runtimeVendorHost]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -80,7 +91,7 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": vendorHost,
+          "x-vendor-host": runtimeVendorHost,
         },
         body: JSON.stringify({ email, password }),
       });
@@ -90,9 +101,9 @@ export default function LoginPage() {
 
       localStorage.setItem("oripa_access_token", payload.token);
       setMessage("Logged in successfully.");
-      await loadProfile(payload.token);
+      await loadProfile(payload.token, runtimeVendorHost);
       window.setTimeout(() => {
-        router.push("/");
+        router.push("/vendor");
       }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
@@ -119,7 +130,7 @@ export default function LoginPage() {
 
         <div className="auth-divider">Other login options</div>
         <div className="auth-social-row">
-          <a className="auth-social-button google" href={`${socialBase}/google/start?vendorHost=${encodeURIComponent(vendorHost)}`}>
+          <a className="auth-social-button google" href={`${socialBase}/google/start?vendorHost=${encodeURIComponent(runtimeVendorHost)}`}>
             <span className="google-g">G</span>
             <span>Log in with Google</span>
           </a>
