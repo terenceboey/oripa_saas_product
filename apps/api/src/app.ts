@@ -21,9 +21,9 @@ export function createApp() {
     const input = String(raw ?? "").trim().toLowerCase();
     if (!input) return "";
     try {
-      return new URL(input).host.toLowerCase();
+      return new URL(input).host.toLowerCase().replace(/^\.+/, "");
     } catch {
-      return input.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+      return input.replace(/^https?:\/\//, "").replace(/\/+$/, "").replace(/^\.+/, "");
     }
   }
 

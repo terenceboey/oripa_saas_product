@@ -116,9 +116,6 @@ export default function HomePage() {
   const loadProfile = useCallback(async () => {
     try {
       const response = await fetch(`${apiBase}/v1/auth/me`, {
-        headers: {
-          ...headers,
-        },
         credentials: "include",
         cache: "no-store",
       });
