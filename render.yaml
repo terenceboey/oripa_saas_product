@@ -1,0 +1,63 @@
+services:
+  - type: web
+    name: oripa-web
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build -w @oripa/web
+    startCommand: npm run start -w @oripa/web
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: oripa-api
+          property: host
+
+  - type: web
+    name: oripa-api
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build -w @oripa/api
+    startCommand: npm run start -w @oripa/api
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oripa-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: oripa-redis
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+
+  - type: worker
+    name: oripa-worker
+    runtime: node
+    rootDir: .
+    buildCommand: npm install && npm run build -w @oripa/worker
+    startCommand: npm run start -w @oripa/worker
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_URL
+        fromDatabase:
+          name: oripa-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: oripa-redis
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+
+databases:
+  - name: oripa-postgres
+
+keyvalueInstances:
+  - name: oripa-redis

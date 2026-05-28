@@ -1,0 +1,30 @@
+{
+  "name": "@oripa/api",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "node -e \"console.log('lint: add eslint config when ready')\""
+  },
+  "dependencies": {
+    "@oripa/shared": "0.1.0",
+    "@prisma/client": "^6.9.0",
+    "bullmq": "^5.56.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "ioredis": "^5.4.2",
+    "morgan": "^1.10.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.2",
+    "@types/morgan": "^1.9.9",
+    "typescript": "^5.8.3",
+    "tsx": "^4.19.4"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "oripa-saas",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web,worker -c blue,green,yellow \"npm run dev -w @oripa/api\" \"npm run dev -w @oripa/web\" \"npm run dev -w @oripa/worker\"",
+    "build": "npm run build -w @oripa/shared && npm run build -w @oripa/api && npm run build -w @oripa/web && npm run build -w @oripa/worker",
+    "lint": "npm run lint -w @oripa/api && npm run lint -w @oripa/web && npm run lint -w @oripa/worker",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "concurrently": "^9.1.2",
+    "prisma": "^6.9.0",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0"
+  }
+}

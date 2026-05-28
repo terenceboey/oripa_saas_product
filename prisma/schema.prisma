@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum WalletEntryType {
+  CREDIT
+  DEBIT
+}
+
+model Tenant {
+  id          String          @id @default(cuid())
+  name        String
+  slug        String          @unique
+  host        String          @unique
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  packs       Pack[]
+  draws       PackDraw[]
+  wallets     WalletAccount[]
+  idempotency IdempotencyKey[]
+}
+
+model Pack {
+  id             String     @id @default(cuid())
+  tenantId       String
+  title          String
+  pricePoints    Int
+  totalStock     Int
+  remainingStock Int
+  isActive       Boolean    @default(true)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  tenant         Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  prizes         PackPrize[]
+  draws          PackDraw[]
+
+  @@index([tenantId, isActive])
+}
+
+model PackPrize {
+  id             String   @id @default(cuid())
+  packId          String
+  label           String
+  estimatedValue  Int
+  weight          Int
+  stock           Int
+  remainingStock  Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  pack            Pack     @relation(fields: [packId], references: [id], onDelete: Cascade)
+  draws           PackDraw[]
+
+  @@index([packId])
+}
+
+model PackDraw {
+  id          String    @id @default(cuid())
+  tenantId    String
+  packId      String
+  prizeId     String?
+  pointsSpent Int
+  createdAt   DateTime  @default(now())
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pack        Pack      @relation(fields: [packId], references: [id], onDelete: Cascade)
+  prize       PackPrize? @relation(fields: [prizeId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+}
+
+model WalletAccount {
+  id            String        @id @default(cuid())
+  tenantId      String
+  ownerLabel    String
+  balancePoints Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  entries       WalletEntry[]
+
+  @@index([tenantId])
+}
+
+model WalletEntry {
+  id              String          @id @default(cuid())
+  tenantId        String
+  walletAccountId String
+  type            WalletEntryType
+  amountPoints    Int
+  reason          String
+  referenceId     String?
+  createdAt       DateTime        @default(now())
+  walletAccount   WalletAccount   @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
+
+model IdempotencyKey {
+  key          String   @id
+  tenantId     String
+  responseJson String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+}
