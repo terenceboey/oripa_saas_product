@@ -40,6 +40,15 @@ function resolveRequestHost(req: VendorRequest) {
   return String(process.env.DEFAULT_TENANT_HOST ?? "localhost").trim().toLowerCase();
 }
 
+function isSafeRedirectVendorHost(host: string) {
+  const normalized = String(host ?? "").trim().toLowerCase();
+  if (!normalized) return false;
+  if (normalized === "localhost" || normalized.endsWith(".localhost")) return false;
+  const base = String(process.env.VENDOR_BASE_DOMAIN ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^\.+/, "");
+  if (!base) return false;
+  return normalized === base || normalized.endsWith(`.${base}`);
+}
+
 function issueAccessToken(user: { id: string; email: string; displayName: string | null; status: string }) {
   return jwt.sign(
     {
@@ -551,6 +560,15 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
     });
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
+    try {
+      if (isSafeRedirectVendorHost(vendorHost)) {
+        const parsedWeb = new URL(webBaseUrl);
+        const directVendorLoginUrl = `${parsedWeb.protocol}//${vendorHost}/login?vendorHost=${encodeURIComponent(vendorHost)}`;
+        return res.redirect(directVendorLoginUrl);
+      }
+    } catch {
+      // fallback to WEB_URL login redirect below
+    }
     return res.redirect(`${webBaseUrl}/login?vendorHost=${encodeURIComponent(vendorHost)}`);
   })(req, res, next);
 });
