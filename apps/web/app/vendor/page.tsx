@@ -138,6 +138,12 @@ type CatalogSuggestion = {
 
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const DEFAULT_PACK_BANNER = "/default-pack-banner-desktop.webp";
+const DEFAULT_PACK_BANNER_OPTIONS = [
+  { label: "Default Green", desktop: "/default-pack-banner-desktop.webp", mobile: "/default-pack-banner-mobile.webp" },
+  { label: "Bonus Points Weekend", desktop: "/carousel/bonus-points-weekend-desktop.webp", mobile: "/carousel/bonus-points-weekend-mobile.webp" },
+  { label: "One Pack Magic", desktop: "/carousel/one-pack-magic-desktop.webp", mobile: "/carousel/one-pack-magic-mobile.webp" },
+  { label: "Pokemon Mania", desktop: "/carousel/pokemon-mania-desktop.webp", mobile: "/carousel/pokemon-mania-mobile.webp" },
+] as const;
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
@@ -1358,6 +1364,26 @@ export default function VendorPage() {
                   Pack banner image URL
                   <input value={packBannerImageUrl} onChange={(e) => setPackBannerImageUrl(e.target.value)} placeholder="Pack banner image URL" required />
                 </label>
+                <div className="muted tiny" style={{ gridColumn: "1 / -1" }}>
+                  Choose from default pack banners
+                  <div className="theme-preset-grid" style={{ marginTop: 8 }}>
+                    {DEFAULT_PACK_BANNER_OPTIONS.map((option) => (
+                      <button
+                        key={option.desktop}
+                        type="button"
+                        className={`theme-preset-card ${packBannerImageUrl === option.desktop ? "active" : ""}`}
+                        onClick={() => setPackBannerImageUrl(option.desktop)}
+                      >
+                        <strong>{option.label}</strong>
+                        <img
+                          src={option.desktop}
+                          alt={option.label}
+                          style={{ width: "100%", borderRadius: 8, border: "1px solid var(--border)" }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <label className="muted tiny">
                   Upload pack banner (max 5MB)
                   <input
@@ -1367,6 +1393,12 @@ export default function VendorPage() {
                     disabled={uploadingPackBannerImage}
                   />
                 </label>
+                {packBannerImageUrl ? (
+                  <div className="banner-admin-row" style={{ gridColumn: "1 / -1", gridTemplateColumns: "220px 1fr" }}>
+                    <img src={packBannerImageUrl} alt="Pack banner preview" style={{ width: "100%", height: "auto", objectFit: "contain", background: "#fff" }} />
+                    <div className="muted tiny">Pack banner preview</div>
+                  </div>
+                ) : null}
                 <label className="muted tiny">
                   Price (points)
                   <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
