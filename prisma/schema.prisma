@@ -596,6 +596,8 @@ model CatalogItem {
   id             String          @id @default(cuid())
   source         String
   sourceItemId   String
+  localId        String?
+  sourcePayload  Json?
   itemType       CatalogItemType @default(CARD)
   game           String          @default("POKEMON")
   language       String          @default("en")
