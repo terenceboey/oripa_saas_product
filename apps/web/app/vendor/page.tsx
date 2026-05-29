@@ -856,9 +856,15 @@ export default function VendorPage() {
   function downloadPackCsvTemplate() {
     const sample = [
       "tier_name,tier_percentage,item_label,estimated_value,stock,set_id,card_number,catalog_item_id,source_item_id,image_url,game",
-      "A Tier,10,Charizard ex,1200,1,24655,021/086,,, ,POKEMON",
-      "B Tier,30,Pikachu,250,5,24655,025/086,,, ,POKEMON",
-      "C Tier,60,Booster Pack,80,20,,,,,https://example.com/custom-image.webp,POKEMON",
+      "S Tier,8,Charizard ex,1800,1,24655,021/086,,,,POKEMON",
+      "S Tier,8,Umbreon VMAX,2200,1,24655,095/203,,,,POKEMON",
+      "S Tier,8,Gengar VMAX,1500,1,24655,157/264,,,,POKEMON",
+      "A Tier,32,Pikachu ex,450,3,24655,025/086,,,,POKEMON",
+      "A Tier,32,Mew ex,500,2,24655,151/165,,,,POKEMON",
+      "A Tier,32,Blastoise ex,480,2,24655,009/165,,,,POKEMON",
+      "B Tier,60,Basic Booster Pack,120,15,,,,,https://example.com/booster-pack.webp,POKEMON",
+      "B Tier,60,Trainer Bundle,95,20,,,,,https://example.com/trainer-bundle.webp,POKEMON",
+      "B Tier,60,Energy Set,60,30,,,,,https://example.com/energy-set.webp,POKEMON",
     ].join("\n");
     const blob = new Blob([sample], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
