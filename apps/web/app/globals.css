@@ -309,11 +309,12 @@ body {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   border-radius: 10px;
   border: 1px solid var(--border);
   margin-bottom: 10px;
-  background: #e8eef8;
+  background: radial-gradient(circle at top, #eef4ff, #dde7fb 60%);
 }
 
 .pack-header h2 {
@@ -589,11 +590,12 @@ body {
   width: 100%;
   max-height: 360px;
   aspect-ratio: 16 / 9;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
   border-radius: 12px;
   border: 1px solid var(--border);
   margin-bottom: 12px;
-  background: #e8eef8;
+  background: radial-gradient(circle at top, #eef4ff, #dde7fb 60%);
 }
 
 .card-preview-grid,
