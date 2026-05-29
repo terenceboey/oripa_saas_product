@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner.png";
 
 async function main() {
   const [platformAdminRole, customerRole] = await Promise.all([
@@ -145,6 +146,7 @@ async function main() {
       data: {
         vendorId: tenant.id,
         title: "Starter Pokemon Pack",
+        packBannerImageUrl: DEFAULT_PACK_BANNER_IMAGE,
         pricePoints: 500,
         totalStock: 1000,
         remainingStock: 1000,

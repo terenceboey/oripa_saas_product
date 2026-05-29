@@ -25,6 +25,7 @@ type Prize = {
 type Pack = {
   id: string;
   title: string;
+  packBannerImageUrl?: string | null;
   pricePoints: number;
   remainingStock: number;
   totalStock: number;
@@ -61,6 +62,7 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
 const clientPageHeader = { "x-client-page": "/" };
+const defaultPackBanner = "/default-pack-banner.png";
 
 export default function HomePage() {
   const runtimeVendorHost = useMemo(() => {
@@ -254,7 +256,7 @@ export default function HomePage() {
       <section className="banner-wrap">
         {currentBanner ? (
           <a className="banner-link" href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer">
-            <img className="banner-image" src={currentBanner.imageUrl} alt={currentBanner.title} />
+            <img className="banner-image" src={currentBanner.imageUrl} alt={currentBanner.title} loading="lazy" decoding="async" />
             <div className="banner-overlay">
               <h2>{currentBanner.title}</h2>
               <p>Limited-time campaign</p>
@@ -314,6 +316,7 @@ export default function HomePage() {
       <section className="pack-grid">
         {sortedPacks.map((pack) => (
           <article className="card pack-card" key={pack.id}>
+            <img className="pack-card-banner" src={pack.packBannerImageUrl || defaultPackBanner} alt={`${pack.title} banner`} loading="lazy" decoding="async" />
             <div className="pack-header">
               <h2>{pack.title}</h2>
               <div className="pack-badges">

@@ -1,4 +1,16 @@
 import { z } from "zod";
+const imageUrlSchema = z
+  .string()
+  .max(2048)
+  .url()
+  .refine((value) => {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }, "Image URL must be an absolute http/https URL");
 
 export const createVendorSchema = z.object({
   name: z.string().min(2).max(80),
@@ -36,6 +48,7 @@ export const updateVendorPlanSchema = z.object({
 
 export const createPackSchema = z.object({
   title: z.string().min(2).max(120),
+  packBannerImageUrl: imageUrlSchema.optional(),
   pricePoints: z.number().int().positive(),
   totalStock: z.number().int().positive(),
   startsAt: z.string().datetime().optional(),
@@ -56,7 +69,7 @@ export const createPackSchema = z.object({
           label: z.string().min(1).max(60),
           estimatedValue: z.number().int().nonnegative(),
           stock: z.number().int().positive(),
-          imageUrl: z.string().url().optional(),
+          imageUrl: imageUrlSchema.optional(),
         })
       ).min(1).max(5000),
     })
@@ -67,7 +80,7 @@ export const createPackSchema = z.object({
       estimatedValue: z.number().int().nonnegative(),
       weight: z.number().int().positive(),
       stock: z.number().int().positive(),
-      imageUrl: z.string().url().optional(),
+      imageUrl: imageUrlSchema.optional(),
     })
   ).min(1).max(5000).optional(),
 });
@@ -83,7 +96,7 @@ export const drawSchema = z.object({
 
 export const createBannerSchema = z.object({
   title: z.string().min(2).max(80),
-  imageUrl: z.string().url(),
+  imageUrl: imageUrlSchema,
   targetUrl: z.string().url().optional(),
   sortOrder: z.number().int().min(0).max(999).optional().default(0),
   isActive: z.boolean().optional().default(true),

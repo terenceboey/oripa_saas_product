@@ -17,6 +17,7 @@ type Prize = {
 type Pack = {
   id: string;
   title: string;
+  packBannerImageUrl?: string | null;
   pricePoints: number;
   remainingStock: number;
   totalStock: number;
@@ -48,6 +49,7 @@ type ImagePreview = {
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const defaultPackBannerImage = "/default-pack-banner.png";
 const clientPageHeader = { "x-client-page": "/pack/[packId]" };
 
 export default function PackDrawPage() {
@@ -150,6 +152,7 @@ export default function PackDrawPage() {
       {pack ? (
         <>
           <section className="card">
+            <img className="pack-detail-banner" src={pack.packBannerImageUrl || defaultPackBannerImage} alt={`${pack.title} banner`} loading="lazy" decoding="async" />
             <div className="pack-header">
               <h1>{pack.title}</h1>
               {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}

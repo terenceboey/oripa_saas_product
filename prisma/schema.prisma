@@ -211,6 +211,7 @@ model Pack {
   id             String       @id @default(cuid())
   vendorId       String
   title          String
+  packBannerImageUrl String?
   pricePoints    Int
   totalStock     Int
   remainingStock Int

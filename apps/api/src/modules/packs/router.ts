@@ -7,6 +7,7 @@ import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rb
 
 export const packRouter = Router();
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner.png";
 
 type CreatePrizeRow = {
   label: string;
@@ -207,6 +208,7 @@ async function createVendorPack(req: VendorRequest, res: any) {
     data: {
       vendorId: auth.vendorId,
       title: parsed.data.title,
+      packBannerImageUrl: parsed.data.packBannerImageUrl ?? DEFAULT_PACK_BANNER_IMAGE,
       pricePoints: parsed.data.pricePoints,
       totalStock: parsed.data.totalStock,
       remainingStock: parsed.data.totalStock,
@@ -285,6 +287,7 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
       where: { id: existing.id },
       data: {
         title: parsed.data.title,
+        packBannerImageUrl: parsed.data.packBannerImageUrl,
         pricePoints: parsed.data.pricePoints,
         totalStock: parsed.data.totalStock,
         remainingStock: parsed.data.totalStock,

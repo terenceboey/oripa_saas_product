@@ -69,9 +69,12 @@ type Banner = {
 type Pack = {
   id: string;
   title: string;
+  packBannerImageUrl?: string | null;
   pricePoints: number;
   totalStock: number;
   remainingStock: number;
+  isNew?: boolean;
+  limitedLabel?: string | null;
   status: "DRAFT" | "LIVE" | "ARCHIVED";
   importantNotes?: string | null;
   drawLimitMode: "NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET";
@@ -121,6 +124,7 @@ type CatalogSuggestion = {
 };
 
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const DEFAULT_PACK_BANNER = "/default-pack-banner.png";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
@@ -201,6 +205,7 @@ export default function VendorPage() {
 
   const [editingPackId, setEditingPackId] = useState<string | null>(null);
   const [packTitle, setPackTitle] = useState("");
+  const [packBannerImageUrl, setPackBannerImageUrl] = useState(DEFAULT_PACK_BANNER);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [pricePoints, setPricePoints] = useState("100");
@@ -689,6 +694,7 @@ export default function VendorPage() {
   function resetPackForm() {
     setEditingPackId(null);
     setPackTitle("");
+    setPackBannerImageUrl(DEFAULT_PACK_BANNER);
     setStartsAt("");
     setEndsAt("");
     setPricePoints("100");
@@ -706,13 +712,14 @@ export default function VendorPage() {
   function editPack(pack: Pack) {
     setEditingPackId(pack.id);
     setPackTitle(pack.title);
+    setPackBannerImageUrl(pack.packBannerImageUrl ?? DEFAULT_PACK_BANNER);
     setPricePoints(String(pack.pricePoints));
     setTotalStock(String(pack.totalStock));
     setStartsAt(toLocalInputValue(pack.startsAt));
     setEndsAt(toLocalInputValue(pack.endsAt));
     setStatus(pack.status === "ARCHIVED" ? "DRAFT" : pack.status);
-    setIsNew(Boolean((pack as any).isNew ?? true));
-    setLimitedLabel((pack as any).limitedLabel ?? "");
+    setIsNew(Boolean(pack.isNew ?? true));
+    setLimitedLabel(pack.limitedLabel ?? "");
     setImportantNotes(pack.importantNotes ?? "");
     setDrawLimitMode(pack.drawLimitMode ?? "NONE");
     setDrawLimitValue(String(pack.drawLimitValue ?? 1));
@@ -748,6 +755,7 @@ export default function VendorPage() {
 
       const payload = {
         title: packTitle,
+        packBannerImageUrl: packBannerImageUrl.trim() ? packBannerImageUrl.trim() : DEFAULT_PACK_BANNER,
         pricePoints: Number(pricePoints),
         totalStock: Number(totalStock),
         startsAt: toIsoDateTime(startsAt),
@@ -1014,6 +1022,10 @@ export default function VendorPage() {
                 <label className="muted tiny">
                   Pack name
                   <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
+                </label>
+                <label className="muted tiny">
+                  Pack banner image URL
+                  <input value={packBannerImageUrl} onChange={(e) => setPackBannerImageUrl(e.target.value)} placeholder="Pack banner image URL" required />
                 </label>
                 <label className="muted tiny">
                   Price (points)

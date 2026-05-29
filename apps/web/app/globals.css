@@ -305,6 +305,17 @@ body {
   border-width: 2px;
 }
 
+.pack-card-banner {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  background: #e8eef8;
+}
+
 .pack-header h2 {
   margin: 0;
   font-size: 20px;
@@ -571,6 +582,18 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
+}
+
+.pack-detail-banner {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  background: #e8eef8;
 }
 
 .card-preview-grid,
