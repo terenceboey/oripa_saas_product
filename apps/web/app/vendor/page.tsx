@@ -140,9 +140,9 @@ const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardbac
 const DEFAULT_PACK_BANNER = "/default-pack-banner-desktop.webp";
 const DEFAULT_PACK_BANNER_OPTIONS = [
   { label: "Default Green", desktop: "/default-pack-banner-desktop.webp", mobile: "/default-pack-banner-mobile.webp" },
-  { label: "Bonus Points Weekend", desktop: "/carousel/bonus-points-weekend-desktop.webp", mobile: "/carousel/bonus-points-weekend-mobile.webp" },
-  { label: "One Pack Magic", desktop: "/carousel/one-pack-magic-desktop.webp", mobile: "/carousel/one-pack-magic-mobile.webp" },
-  { label: "Pokemon Mania", desktop: "/carousel/pokemon-mania-desktop.webp", mobile: "/carousel/pokemon-mania-mobile.webp" },
+  { label: "S+ TIER REWARDS", desktop: "/pack-presets/splus-tier-rewards.png", mobile: "/pack-presets/splus-tier-rewards.png" },
+  { label: "GACHAPON", desktop: "/pack-presets/gachapon.png", mobile: "/pack-presets/gachapon.png" },
+  { label: "MYSTERY PACK RUSH", desktop: "/pack-presets/mystery-pack-rush.png", mobile: "/pack-presets/mystery-pack-rush.png" },
 ] as const;
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
