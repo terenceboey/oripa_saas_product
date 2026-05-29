@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
@@ -1137,6 +1138,26 @@ export default function VendorPage() {
                       <i style={{ background: preset.storefrontAccent }} />
                       <i style={{ background: preset.storefrontSurface, border: "1px solid #d9d9ef" }} />
                     </span>
+                    <div
+                      className="theme-preset-mini"
+                      style={
+                        {
+                          ["--mini-primary" as string]: preset.storefrontPrimary,
+                          ["--mini-secondary" as string]: preset.storefrontSecondary,
+                          ["--mini-accent" as string]: preset.storefrontAccent,
+                          ["--mini-surface" as string]: preset.storefrontSurface,
+                          ["--mini-text" as string]: preset.storefrontText,
+                          ["--mini-muted" as string]: preset.storefrontMuted,
+                        } as CSSProperties
+                      }
+                    >
+                      <div className="theme-preset-mini-top" />
+                      <div className="theme-preset-mini-card">
+                        <span className="theme-preset-mini-title">Mystery Pack</span>
+                        <span className="theme-preset-mini-sub">Pastel preview</span>
+                        <span className="theme-preset-mini-btn">Open</span>
+                      </div>
+                    </div>
                   </button>
                 ))}
               </div>

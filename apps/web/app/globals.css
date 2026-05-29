@@ -521,6 +521,48 @@ body {
   border-radius: 8px;
 }
 
+.theme-preset-mini {
+  border: 1px solid #e3e0f3;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(145deg, var(--mini-secondary), #ffffff);
+}
+
+.theme-preset-mini-top {
+  height: 34px;
+  background: linear-gradient(120deg, var(--mini-primary), var(--mini-accent));
+}
+
+.theme-preset-mini-card {
+  margin: 8px;
+  border-radius: 9px;
+  background: var(--mini-surface);
+  border: 1px solid #e9e6f8;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.theme-preset-mini-title {
+  color: var(--mini-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.theme-preset-mini-sub {
+  color: var(--mini-muted);
+  font-size: 11px;
+}
+
+.theme-preset-mini-btn {
+  justify-self: start;
+  font-size: 11px;
+  color: #fff;
+  background: var(--mini-primary);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
 .vendor-settings-form {
   grid-template-columns: 1fr auto;
   align-items: center;
