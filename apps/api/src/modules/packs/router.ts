@@ -10,7 +10,8 @@ import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rb
 export const packRouter = Router();
 const csvUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+  // CSV is text-only; keep this strict to prevent oversized uploads.
+  limits: { fileSize: 512 * 1024, files: 1 },
 });
 const uploadCsvSingle = csvUpload.single("file") as any;
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
