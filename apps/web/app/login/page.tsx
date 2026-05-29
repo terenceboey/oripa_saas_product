@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { FormField } from "../../components/form-field";
 import { applyVendorFavicon } from "../../lib/favicon";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -131,8 +132,8 @@ export default function LoginPage() {
       .then((payload) => {
         setTheme(payload?.vendor?.vendorSettings ?? null);
         setBranding({
-          logoImageUrl: payload?.vendor?.logoImageUrl ?? null,
-          faviconImageUrl: payload?.vendor?.faviconImageUrl ?? null,
+          logoImageUrl: normalizeVendorLogoUrl(payload?.vendor?.logoImageUrl) || null,
+          faviconImageUrl: normalizeVendorFaviconUrl(payload?.vendor?.faviconImageUrl, payload?.vendor?.logoImageUrl) || null,
         });
       })
       .catch(() => null);
@@ -153,7 +154,7 @@ export default function LoginPage() {
   }, [theme]);
 
   useEffect(() => {
-    applyVendorFavicon(branding?.faviconImageUrl || branding?.logoImageUrl);
+    applyVendorFavicon(normalizeVendorFaviconUrl(branding?.faviconImageUrl, branding?.logoImageUrl));
   }, [branding?.faviconImageUrl, branding?.logoImageUrl]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {

@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../lib/media-url";
 
 type Banner = {
   id: string;
@@ -193,7 +194,7 @@ export default function HomePage() {
   }, [loadData, loadProfile]);
 
   useEffect(() => {
-    applyVendorFavicon(tenant?.faviconImageUrl || tenant?.logoImageUrl);
+    applyVendorFavicon(normalizeVendorFaviconUrl(tenant?.faviconImageUrl, tenant?.logoImageUrl));
   }, [tenant?.faviconImageUrl, tenant?.logoImageUrl]);
 
   useBackForwardRefresh(() => loadData(false), { enabled: !vendorNotFound, cooldownMs: 15000 });
@@ -269,7 +270,7 @@ export default function HomePage() {
     <main className="container" style={storefrontThemeStyle}>
       <header className="site-header">
         <div className="brand">
-          <img src={tenant?.logoImageUrl || "/brand-cardback.jpg"} alt="Vendor logo" />
+          <img src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/brand-cardback.jpg"} alt="Vendor logo" />
           <div className="brand-text">
             <strong>{tenant?.name ?? "Storefront"}</strong>
             <span>{runtimeVendorHost}</span>

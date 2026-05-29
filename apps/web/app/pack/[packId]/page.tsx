@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../../lib/media-url";
 
 type Prize = {
   id: string;
@@ -134,8 +135,8 @@ export default function PackDrawPage() {
       setPack(packPayload.pack);
       setWallet(walletPayload.wallet);
       setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
-      setVendorLogo(vendorPayload?.vendor?.logoImageUrl ?? null);
-      setVendorFavicon(vendorPayload?.vendor?.faviconImageUrl ?? null);
+      setVendorLogo(normalizeVendorLogoUrl(vendorPayload?.vendor?.logoImageUrl) || null);
+      setVendorFavicon(normalizeVendorFaviconUrl(vendorPayload?.vendor?.faviconImageUrl, vendorPayload?.vendor?.logoImageUrl) || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pack");
     } finally {
@@ -195,7 +196,7 @@ export default function PackDrawPage() {
   }, [theme]);
 
   useEffect(() => {
-    applyVendorFavicon(vendorFavicon || vendorLogo);
+    applyVendorFavicon(normalizeVendorFaviconUrl(vendorFavicon, vendorLogo));
   }, [vendorFavicon, vendorLogo]);
 
   return (

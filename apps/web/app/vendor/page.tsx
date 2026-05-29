@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
 type Vendor = {
   id: string;
@@ -393,8 +394,8 @@ export default function VendorPage() {
       setBusinessLocation(v?.businessLocation ?? "");
       setBusinessContact(v?.businessContact ?? "");
       setReferralCode(v?.referralCode ?? "");
-      setLogoImageUrl(v?.logoImageUrl ?? "");
-      setFaviconImageUrl(v?.faviconImageUrl ?? "");
+      setLogoImageUrl(normalizeVendorLogoUrl(v?.logoImageUrl));
+      setFaviconImageUrl(normalizeVendorFaviconUrl(v?.faviconImageUrl, v?.logoImageUrl));
       setThemeDraft({
         storefrontPrimary: v?.vendorSettings?.storefrontPrimary ?? DEFAULT_THEME.storefrontPrimary,
         storefrontSecondary: v?.vendorSettings?.storefrontSecondary ?? DEFAULT_THEME.storefrontSecondary,
@@ -554,13 +555,15 @@ export default function VendorPage() {
     setError(null);
     setSuccess(null);
     try {
+      const normalizedLogo = normalizeVendorLogoUrl(logoImageUrl);
+      const normalizedFavicon = normalizeVendorFaviconUrl(faviconImageUrl, normalizedLogo);
       const res = await fetch(`${apiBase}/v1/vendor/logo`, {
         method: "PATCH",
         headers: { ...authHeaders(), "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          logoImageUrl: logoImageUrl.trim(),
-          faviconImageUrl: faviconImageUrl.trim() || logoImageUrl.trim(),
+          logoImageUrl: normalizedLogo,
+          faviconImageUrl: normalizedFavicon || normalizedLogo,
         }),
       });
       const body = await res.json().catch(() => null);
@@ -591,8 +594,8 @@ export default function VendorPage() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload?.error ?? "Logo upload failed");
-      setLogoImageUrl(String(payload.desktopUrl ?? ""));
-      setFaviconImageUrl(String(payload.faviconUrl ?? payload.desktopUrl ?? ""));
+      setLogoImageUrl(normalizeVendorLogoUrl(String(payload.desktopUrl ?? "")));
+      setFaviconImageUrl(normalizeVendorFaviconUrl(String(payload.faviconUrl ?? ""), String(payload.desktopUrl ?? "")));
       setSuccess("Logo uploaded. Save to apply across storefront and favicon.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Logo upload failed");
