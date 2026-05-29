@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import passport from "passport";
+import path from "node:path";
 import { vendorResolver } from "./middleware/vendor";
 import { healthRouter } from "./modules/health/router";
 import { vendorRouter } from "./modules/vendors/router";
@@ -12,9 +13,12 @@ import { walletRouter } from "./modules/wallet/router";
 import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
 import { catalogRouter } from "./modules/catalog/router";
+import { mediaRouter } from "./modules/media/router";
+import { ensureUploadRoot } from "./lib/image-pipeline";
 
 export function createApp() {
   const app = express();
+  void ensureUploadRoot();
   app.set("trust proxy", true);
   const webUrl = String(process.env.WEB_URL ?? "").trim();
 
@@ -73,6 +77,10 @@ export function createApp() {
   }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json({ limit: "64kb" }));
+  app.use("/uploads", express.static(path.resolve(process.cwd(), "apps/api/uploads"), {
+    maxAge: "365d",
+    immutable: true,
+  }));
   morgan.token("clientPage", (req) => String(req.headers["x-client-page"] ?? "-"));
   app.use(morgan(":method :url :status :response-time ms - :res[content-length] page=:clientPage"));
   app.use(passport.initialize() as any);
@@ -86,6 +94,7 @@ export function createApp() {
   app.use(bannerRouter);
   app.use(authRouter);
   app.use(catalogRouter);
+  app.use(mediaRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     const message = err instanceof Error ? err.message : "Internal server error";

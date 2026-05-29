@@ -226,6 +226,8 @@ export default function VendorPage() {
   const [itemSearchQuery, setItemSearchQuery] = useState("");
   const [itemSuggestions, setItemSuggestions] = useState<CatalogSuggestion[]>([]);
   const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
+  const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
+  const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -581,6 +583,57 @@ export default function VendorPage() {
       setError(err instanceof Error ? err.message : "Failed to add banner");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function uploadVendorImage(file: File, kind: "carousel-banner" | "pack-banner" | "card-art") {
+    const form = new FormData();
+    form.set("file", file);
+    form.set("kind", kind);
+    const res = await fetch(`${apiBase}/v1/vendor/media/images`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include",
+      body: form,
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(payload?.error ?? "Failed to upload image");
+    return payload as { desktopUrl?: string };
+  }
+
+  async function handleBannerImageUpload(file: File | null) {
+    if (!file) return;
+    setUploadingBannerImage(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const uploaded = await uploadVendorImage(file, "carousel-banner");
+      const nextUrl = uploaded.desktopUrl ?? "";
+      if (!nextUrl) throw new Error("Upload response missing desktopUrl");
+      setBannerImageUrl(nextUrl);
+      setSuccess("Banner image uploaded and applied.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload banner image");
+    } finally {
+      setUploadingBannerImage(false);
+    }
+  }
+
+  async function handlePackBannerImageUpload(file: File | null) {
+    if (!file) return;
+    setUploadingPackBannerImage(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const uploaded = await uploadVendorImage(file, "pack-banner");
+      const nextUrl = uploaded.desktopUrl ?? "";
+      if (!nextUrl) throw new Error("Upload response missing desktopUrl");
+      setPackBannerImageUrl(nextUrl);
+      setSuccess("Pack banner uploaded and applied.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload pack banner");
+    } finally {
+      setUploadingPackBannerImage(false);
     }
   }
 
@@ -946,10 +999,19 @@ export default function VendorPage() {
                 Banner title
                 <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
               </label>
-              <label className="muted tiny">
-                Banner image URL
-                <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
-              </label>
+                <label className="muted tiny">
+                  Banner image URL
+                  <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
+                </label>
+                <label className="muted tiny">
+                  Upload banner image (max 5MB)
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => void handleBannerImageUpload(e.target.files?.[0] ?? null)}
+                    disabled={uploadingBannerImage}
+                  />
+                </label>
               <label className="muted tiny">
                 Target URL (optional)
                 <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
@@ -1026,6 +1088,15 @@ export default function VendorPage() {
                 <label className="muted tiny">
                   Pack banner image URL
                   <input value={packBannerImageUrl} onChange={(e) => setPackBannerImageUrl(e.target.value)} placeholder="Pack banner image URL" required />
+                </label>
+                <label className="muted tiny">
+                  Upload pack banner (max 5MB)
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => void handlePackBannerImageUpload(e.target.files?.[0] ?? null)}
+                    disabled={uploadingPackBannerImage}
+                  />
                 </label>
                 <label className="muted tiny">
                   Price (points)
