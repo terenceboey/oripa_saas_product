@@ -7,6 +7,7 @@ import {
   updateVendorPrefixSchema,
   updateVendorProfileSchema,
   updateVendorReferralSchema,
+  updateVendorThemeSchema,
 } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
@@ -121,11 +122,52 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
       referralCode: true,
       businessLocation: true,
       businessContact: true,
+      vendorSettings: {
+        select: {
+          storefrontPrimary: true,
+          storefrontSecondary: true,
+          storefrontAccent: true,
+          storefrontSurface: true,
+          storefrontText: true,
+          storefrontMuted: true,
+          storefrontRadius: true,
+        },
+      },
     },
   });
 
   if (!vendor) return res.status(404).json({ error: "Vendor not found" });
   return res.json({ vendor });
+});
+
+vendorRouter.patch("/v1/vendor/theme", async (req: VendorRequest, res) => {
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
+
+  const parsed = updateVendorThemeSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const theme = await prisma.vendorSettings.upsert({
+    where: { vendorId: auth.vendorId },
+    update: parsed.data,
+    create: {
+      vendorId: auth.vendorId,
+      ...parsed.data,
+    },
+    select: {
+      storefrontPrimary: true,
+      storefrontSecondary: true,
+      storefrontAccent: true,
+      storefrontSurface: true,
+      storefrontText: true,
+      storefrontMuted: true,
+      storefrontRadius: true,
+    },
+  });
+
+  return res.json({ theme });
 });
 
 vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {

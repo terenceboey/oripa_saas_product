@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 
@@ -46,6 +47,15 @@ type Tenant = {
   slug: string;
   host: string;
   isActive: boolean;
+  vendorSettings?: {
+    storefrontPrimary: string;
+    storefrontSecondary: string;
+    storefrontAccent: string;
+    storefrontSurface: string;
+    storefrontText: string;
+    storefrontMuted: string;
+    storefrontRadius: number;
+  } | null;
 };
 
 type AuthUser = {
@@ -214,6 +224,20 @@ export default function HomePage() {
   }, [packs, sortKey]);
 
   const currentBanner = banners[bannerIndex];
+  const storefrontThemeStyle = useMemo(() => {
+    const theme = tenant?.vendorSettings;
+    if (!theme) return undefined;
+    return {
+      ["--brand" as string]: theme.storefrontPrimary,
+      ["--card" as string]: theme.storefrontSurface,
+      ["--text" as string]: theme.storefrontText,
+      ["--muted" as string]: theme.storefrontMuted,
+      ["--border" as string]: theme.storefrontSecondary,
+      ["--brand-soft" as string]: theme.storefrontSecondary,
+      ["--brand-accent" as string]: theme.storefrontAccent,
+      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
+    } as CSSProperties;
+  }, [tenant?.vendorSettings]);
 
   function goToPreviousBanner() {
     if (!banners.length) return;
@@ -235,7 +259,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="container">
+    <main className="container" style={storefrontThemeStyle}>
       <header className="site-header">
         <div className="brand">
           <img src="/brand-cardback.jpg" alt="Oripa logo" />

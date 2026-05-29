@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 
 type Prize = {
@@ -40,6 +41,16 @@ type DrawResult = {
     prizeLabel?: string | null;
     prizeImageUrl?: string | null;
   }>;
+};
+
+type VendorTheme = {
+  storefrontPrimary: string;
+  storefrontSecondary: string;
+  storefrontAccent: string;
+  storefrontSurface: string;
+  storefrontText: string;
+  storefrontMuted: string;
+  storefrontRadius: number;
 };
 type ImagePreview = {
   label: string;
@@ -93,6 +104,7 @@ export default function PackDrawPage() {
   const [drawing, setDrawing] = useState(false);
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
+  const [theme, setTheme] = useState<VendorTheme | null>(null);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -100,9 +112,10 @@ export default function PackDrawPage() {
     setError(null);
 
     try {
-      const [packResponse, walletResponse] = await Promise.all([
+      const [packResponse, walletResponse, vendorResponse] = await Promise.all([
         fetch(`${apiBase}/v1/packs/${packId}`, { headers, credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/current`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
       if (!packResponse.ok) {
@@ -113,9 +126,11 @@ export default function PackDrawPage() {
 
       const packPayload = await packResponse.json();
       const walletPayload = await walletResponse.json();
+      const vendorPayload = vendorResponse.ok ? await vendorResponse.json() : null;
 
       setPack(packPayload.pack);
       setWallet(walletPayload.wallet);
+      setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pack");
     } finally {
@@ -160,8 +175,22 @@ export default function PackDrawPage() {
     }
   }
 
+  const storefrontThemeStyle = useMemo(() => {
+    if (!theme) return undefined;
+    return {
+      ["--brand" as string]: theme.storefrontPrimary,
+      ["--card" as string]: theme.storefrontSurface,
+      ["--text" as string]: theme.storefrontText,
+      ["--muted" as string]: theme.storefrontMuted,
+      ["--border" as string]: theme.storefrontSecondary,
+      ["--brand-soft" as string]: theme.storefrontSecondary,
+      ["--brand-accent" as string]: theme.storefrontAccent,
+      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
+    } as CSSProperties;
+  }, [theme]);
+
   return (
-    <main className="container">
+    <main className="container" style={storefrontThemeStyle}>
       <div className="pack-draw-header">
         <Link href="/" className="sort-pill">Back to Catalog</Link>
         <div className="actions">

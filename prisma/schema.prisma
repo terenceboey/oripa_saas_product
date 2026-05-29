@@ -201,6 +201,13 @@ model VendorSettings {
   maxPackTiers          Int      @default(10)
   maxDrawQuantity       Int      @default(100)
   planCode              VendorPlanCode @default(BASIC)
+  storefrontPrimary     String   @default("#0E6FFF")
+  storefrontSecondary   String   @default("#EAF2FF")
+  storefrontAccent      String   @default("#1353B5")
+  storefrontSurface     String   @default("#FFFFFF")
+  storefrontText        String   @default("#121826")
+  storefrontMuted       String   @default("#516074")
+  storefrontRadius      Int      @default(16)
   payoutSchedule        String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt

@@ -14,6 +14,15 @@ type Vendor = {
   referralCode?: string | null;
   businessLocation?: string | null;
   businessContact?: string | null;
+  vendorSettings?: {
+    storefrontPrimary: string;
+    storefrontSecondary: string;
+    storefrontAccent: string;
+    storefrontSurface: string;
+    storefrontText: string;
+    storefrontMuted: string;
+    storefrontRadius: number;
+  } | null;
 };
 
 type VendorLimits = {
@@ -129,6 +138,15 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
+const DEFAULT_THEME = {
+  storefrontPrimary: "#0E6FFF",
+  storefrontSecondary: "#EAF2FF",
+  storefrontAccent: "#1353B5",
+  storefrontSurface: "#FFFFFF",
+  storefrontText: "#121826",
+  storefrontMuted: "#516074",
+  storefrontRadius: 16,
+};
 
 function parseTabValue(tab: string | null): ActiveTab {
   if (tab === "pack-studio") return "PACKS";
@@ -198,6 +216,7 @@ export default function VendorPage() {
   const [businessLocation, setBusinessLocation] = useState("");
   const [businessContact, setBusinessContact] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [themeDraft, setThemeDraft] = useState(DEFAULT_THEME);
 
   const [bannerTitle, setBannerTitle] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
@@ -301,6 +320,15 @@ export default function VendorPage() {
       setBusinessLocation(v?.businessLocation ?? "");
       setBusinessContact(v?.businessContact ?? "");
       setReferralCode(v?.referralCode ?? "");
+      setThemeDraft({
+        storefrontPrimary: v?.vendorSettings?.storefrontPrimary ?? DEFAULT_THEME.storefrontPrimary,
+        storefrontSecondary: v?.vendorSettings?.storefrontSecondary ?? DEFAULT_THEME.storefrontSecondary,
+        storefrontAccent: v?.vendorSettings?.storefrontAccent ?? DEFAULT_THEME.storefrontAccent,
+        storefrontSurface: v?.vendorSettings?.storefrontSurface ?? DEFAULT_THEME.storefrontSurface,
+        storefrontText: v?.vendorSettings?.storefrontText ?? DEFAULT_THEME.storefrontText,
+        storefrontMuted: v?.vendorSettings?.storefrontMuted ?? DEFAULT_THEME.storefrontMuted,
+        storefrontRadius: v?.vendorSettings?.storefrontRadius ?? DEFAULT_THEME.storefrontRadius,
+      });
 
       setLimits(limitsJson.limits ?? { planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
       setSummary(summaryJson.summary ?? null);
@@ -490,6 +518,29 @@ export default function VendorPage() {
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update plan");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveTheme(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/theme`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(themeDraft),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to save storefront theme");
+      setSuccess("Storefront theme updated.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save storefront theme");
     } finally {
       setSaving(false);
     }
@@ -903,7 +954,7 @@ export default function VendorPage() {
   }
 
   return (
-    <main className="container">
+    <main className="container vendor-dashboard">
       <header className="site-header">
         <div className="brand-text">
           <strong>Vendor Dashboard</strong>
@@ -989,6 +1040,42 @@ export default function VendorPage() {
               </label>
               <p className="muted tiny">New vendor URL: <code>https://{vendorSlug || "your-prefix"}.{vendorBaseDomain}</code></p>
               <button type="submit" className="draw-button" disabled={saving || loading}>Update Vendor Prefix</button>
+            </form>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Storefront Theme</h2>
+            <p className="muted tiny">Guardrails: hex colors only and rounded corners between 8 and 24.</p>
+            <form className="vendor-form" onSubmit={saveTheme}>
+              <label className="muted tiny">
+                Primary color
+                <input type="color" value={themeDraft.storefrontPrimary} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontPrimary: e.target.value }))} />
+              </label>
+              <label className="muted tiny">
+                Secondary color
+                <input type="color" value={themeDraft.storefrontSecondary} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontSecondary: e.target.value }))} />
+              </label>
+              <label className="muted tiny">
+                Accent color
+                <input type="color" value={themeDraft.storefrontAccent} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontAccent: e.target.value }))} />
+              </label>
+              <label className="muted tiny">
+                Surface color
+                <input type="color" value={themeDraft.storefrontSurface} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontSurface: e.target.value }))} />
+              </label>
+              <label className="muted tiny">
+                Text color
+                <input type="color" value={themeDraft.storefrontText} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontText: e.target.value }))} />
+              </label>
+              <label className="muted tiny">
+                Muted text color
+                <input type="color" value={themeDraft.storefrontMuted} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontMuted: e.target.value }))} />
+              </label>
+              <label className="muted tiny">
+                Corner radius ({themeDraft.storefrontRadius}px)
+                <input type="range" min={8} max={24} value={themeDraft.storefrontRadius} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontRadius: Number(e.target.value) }))} />
+              </label>
+              <button type="submit" className="draw-button" disabled={saving || loading}>Save Theme</button>
             </form>
           </section>
 

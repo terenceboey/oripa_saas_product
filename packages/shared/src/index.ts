@@ -42,6 +42,17 @@ export const updateVendorReferralSchema = z.object({
   referralCode: z.string().min(3).max(40).regex(/^[a-z0-9-]+$/),
 });
 
+const hexColorSchema = z.string().regex(/^#([A-Fa-f0-9]{6})$/, "Color must be a 6-digit hex like #A1B2C3");
+export const updateVendorThemeSchema = z.object({
+  storefrontPrimary: hexColorSchema,
+  storefrontSecondary: hexColorSchema,
+  storefrontAccent: hexColorSchema,
+  storefrontSurface: hexColorSchema,
+  storefrontText: hexColorSchema,
+  storefrontMuted: hexColorSchema,
+  storefrontRadius: z.number().int().min(8).max(24),
+});
+
 export const updateVendorPlanSchema = z.object({
   planCode: z.enum(["BASIC", "ELITE"]),
 });
@@ -112,6 +123,7 @@ export type UpdateVendorProfileInput = z.infer<typeof updateVendorProfileSchema>
 export type UpdateVendorPrefixInput = z.infer<typeof updateVendorPrefixSchema>;
 export type UpdateVendorBusinessInput = z.infer<typeof updateVendorBusinessSchema>;
 export type UpdateVendorReferralInput = z.infer<typeof updateVendorReferralSchema>;
+export type UpdateVendorThemeInput = z.infer<typeof updateVendorThemeSchema>;
 export type UpdateVendorPlanInput = z.infer<typeof updateVendorPlanSchema>;
 export type CreatePackInput = z.infer<typeof createPackSchema>;
 export type UpdatePackInput = z.infer<typeof updatePackSchema>;
