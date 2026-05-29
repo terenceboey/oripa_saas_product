@@ -646,6 +646,10 @@ body {
     padding: 12px;
   }
 
+  .site-header {
+    align-items: flex-start;
+  }
+
   .brand {
     font-size: 22px;
   }
@@ -676,7 +680,8 @@ body {
   }
 
   .header-right {
-    justify-content: flex-start;
+    width: 100%;
+    justify-content: flex-end;
   }
 
   .card-preview-grid,
