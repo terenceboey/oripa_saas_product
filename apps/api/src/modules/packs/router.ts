@@ -1,11 +1,18 @@
 import { Router } from "express";
 import { createPackSchema, updatePackSchema } from "@oripa/shared";
 import { Prisma } from "@prisma/client";
+import multer from "multer";
+import { parse } from "csv-parse/sync";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
 
 export const packRouter = Router();
+const csvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+});
+const uploadCsvSingle = csvUpload.single("file") as any;
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner-desktop.webp";
 
@@ -17,6 +24,137 @@ type CreatePrizeRow = {
   remainingStock: number;
   estimatedValue: number;
 };
+
+type CsvImportRow = {
+  rowNumber: number;
+  tierName: string;
+  tierPercentage?: number;
+  itemLabel: string;
+  estimatedValue: number;
+  stock: number;
+  setId?: string;
+  cardNumber?: string;
+  catalogItemId?: string;
+  sourceItemId?: string;
+  imageUrl?: string;
+  game: string;
+};
+
+function normalizeHeader(header: string) {
+  return header.trim().toLowerCase().replace(/\s+/g, "_");
+}
+
+function pickField(record: Record<string, string>, aliases: string[]) {
+  for (const alias of aliases) {
+    const key = normalizeHeader(alias);
+    if (record[key] !== undefined) return String(record[key] ?? "").trim();
+  }
+  return "";
+}
+
+function toOptionalPositiveNumber(value: string) {
+  if (!value) return undefined;
+  const num = Number(value);
+  if (!Number.isFinite(num) || num <= 0) return undefined;
+  return num;
+}
+
+function parseCsvRows(fileBuffer: Buffer) {
+  const raw = parse(fileBuffer, {
+    bom: true,
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  }) as Record<string, string>[];
+
+  return raw.map((row, index) => {
+    const normalized: Record<string, string> = {};
+    for (const [key, value] of Object.entries(row)) {
+      normalized[normalizeHeader(key)] = String(value ?? "").trim();
+    }
+
+    const tierName = pickField(normalized, ["tier_name", "tier"]);
+    const itemLabel = pickField(normalized, ["item_label", "item_name", "name"]);
+    const estimatedValue = Number(pickField(normalized, ["estimated_value", "est_value", "value"]));
+    const stock = Number(pickField(normalized, ["stock", "qty", "quantity"]));
+    const tierPercentage = toOptionalPositiveNumber(pickField(normalized, ["tier_percentage", "percentage", "rate"]));
+    const setId = pickField(normalized, ["set_id", "set"]) || undefined;
+    const cardNumber = pickField(normalized, ["card_number", "number"]) || undefined;
+    const catalogItemId = pickField(normalized, ["catalog_item_id"]) || undefined;
+    const sourceItemId = pickField(normalized, ["source_item_id"]) || undefined;
+    const imageUrl = pickField(normalized, ["image_url"]) || undefined;
+    const game = (pickField(normalized, ["game"]) || "POKEMON").toUpperCase();
+
+    return {
+      rowNumber: index + 2,
+      tierName,
+      tierPercentage,
+      itemLabel,
+      estimatedValue,
+      stock,
+      setId,
+      cardNumber,
+      catalogItemId,
+      sourceItemId,
+      imageUrl,
+      game,
+    } as CsvImportRow;
+  });
+}
+
+async function resolveCatalogItemForRow(
+  row: CsvImportRow,
+  cache: Map<string, { imageLargeUrl: string | null; imageThumbUrl: string | null; imageBaseUrl: string | null } | null>
+) {
+  const key = JSON.stringify({
+    catalogItemId: row.catalogItemId,
+    sourceItemId: row.sourceItemId,
+    setId: row.setId,
+    cardNumber: row.cardNumber,
+    itemLabel: row.itemLabel,
+    game: row.game,
+  });
+  if (cache.has(key)) return cache.get(key) ?? null;
+
+  let found = null as { imageLargeUrl: string | null; imageThumbUrl: string | null; imageBaseUrl: string | null } | null;
+  if (row.catalogItemId) {
+    found = await prisma.catalogItem.findUnique({
+      where: { id: row.catalogItemId },
+      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+    });
+  }
+
+  if (!found && row.sourceItemId) {
+    found = await prisma.catalogItem.findFirst({
+      where: { source: "tcgtracking", sourceItemId: row.sourceItemId, game: row.game, isActive: true },
+      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+    });
+  }
+
+  if (!found && row.setId && row.cardNumber) {
+    found = await prisma.catalogItem.findFirst({
+      where: { game: row.game, setId: row.setId, cardNumber: row.cardNumber, isActive: true },
+      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+    });
+  }
+
+  if (!found && row.setId) {
+    found = await prisma.catalogItem.findFirst({
+      where: { game: row.game, setId: row.setId, name: { equals: row.itemLabel, mode: "insensitive" }, isActive: true },
+      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+    });
+  }
+
+  if (!found) {
+    found = await prisma.catalogItem.findFirst({
+      where: { game: row.game, name: { equals: row.itemLabel, mode: "insensitive" }, isActive: true },
+      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+    });
+  }
+
+  cache.set(key, found);
+  return found;
+}
 
 function decoratePackWithRates(pack: { prizes: Array<{ weight: number }> } & Record<string, unknown>) {
   const totalWeight = pack.prizes.reduce((sum, prize) => sum + prize.weight, 0);
@@ -178,6 +316,100 @@ packRouter.get("/v1/packs/:packId", async (req: VendorRequest, res) => {
 
   if (!pack) return res.status(404).json({ error: "Pack not found" });
   return res.json({ pack: decoratePackWithRates(pack) });
+});
+
+packRouter.post("/v1/vendor/packs/import-csv", uploadCsvSingle, async (req: VendorRequest, res) => {
+  const auth = await requirePackRole(req, res);
+  if (!auth) return;
+  const file = req.file as Express.Multer.File | undefined;
+  if (!file?.buffer) return res.status(400).json({ error: "CSV file is required" });
+
+  let rows: CsvImportRow[] = [];
+  try {
+    rows = parseCsvRows(file.buffer);
+  } catch {
+    return res.status(400).json({ error: "Failed to parse CSV. Ensure UTF-8 CSV with headers." });
+  }
+
+  if (rows.length === 0) {
+    return res.status(400).json({ error: "CSV is empty" });
+  }
+
+  const validationErrors: Array<{ rowNumber: number; message: string }> = [];
+  for (const row of rows) {
+    if (!row.tierName) validationErrors.push({ rowNumber: row.rowNumber, message: "tier_name is required" });
+    if (!row.itemLabel) validationErrors.push({ rowNumber: row.rowNumber, message: "item_label is required" });
+    if (!Number.isFinite(row.estimatedValue) || row.estimatedValue < 0) validationErrors.push({ rowNumber: row.rowNumber, message: "estimated_value must be >= 0" });
+    if (!Number.isInteger(row.stock) || row.stock <= 0) validationErrors.push({ rowNumber: row.rowNumber, message: "stock must be a positive integer" });
+  }
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ error: "Invalid CSV rows", validationErrors });
+  }
+
+  const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
+  const maxPackItems = settings?.maxPackItems ?? 50;
+  const maxPackTiers = settings?.maxPackTiers ?? 5;
+  const distinctTierCount = new Set(rows.map((row) => row.tierName)).size;
+
+  if (rows.length > maxPackItems) {
+    return res.status(400).json({ error: `vendor limit exceeded: max ${maxPackItems} items allowed` });
+  }
+  if (distinctTierCount > maxPackTiers) {
+    return res.status(400).json({ error: `plan limit exceeded: max ${maxPackTiers} tiers allowed` });
+  }
+
+  const tierMap = new Map<string, { name: string; percentage?: number; items: Array<{ label: string; estimatedValue: number; stock: number; imageUrl: string }> }>();
+  const unmatchedRows: Array<{ rowNumber: number; itemLabel: string; setId?: string; cardNumber?: string; reason: string }> = [];
+  const cache = new Map<string, { imageLargeUrl: string | null; imageThumbUrl: string | null; imageBaseUrl: string | null } | null>();
+  let matchedCount = 0;
+
+  for (const row of rows) {
+    const found = row.imageUrl ? null : await resolveCatalogItemForRow(row, cache);
+    const imageUrl = row.imageUrl || found?.imageLargeUrl || found?.imageThumbUrl || found?.imageBaseUrl || DEFAULT_POKEMON_CARD_IMAGE;
+    if (!row.imageUrl && !found) {
+      unmatchedRows.push({
+        rowNumber: row.rowNumber,
+        itemLabel: row.itemLabel,
+        setId: row.setId,
+        cardNumber: row.cardNumber,
+        reason: "No exact catalog match found. Using default image.",
+      });
+    } else {
+      matchedCount += 1;
+    }
+
+    const currentTier = tierMap.get(row.tierName) ?? {
+      name: row.tierName,
+      percentage: row.tierPercentage,
+      items: [],
+    };
+    if (typeof currentTier.percentage !== "number" && typeof row.tierPercentage === "number") {
+      currentTier.percentage = row.tierPercentage;
+    }
+    currentTier.items.push({
+      label: row.itemLabel,
+      estimatedValue: row.estimatedValue,
+      stock: row.stock,
+      imageUrl,
+    });
+    tierMap.set(row.tierName, currentTier);
+  }
+
+  const tiers = Array.from(tierMap.values());
+  return res.json({
+    tiers,
+    summary: {
+      totalRows: rows.length,
+      matchedRows: matchedCount,
+      unmatchedRows: unmatchedRows.length,
+      tierCount: tiers.length,
+    },
+    unmatchedRows,
+    csvTemplate: {
+      requiredHeaders: ["tier_name", "item_label", "estimated_value", "stock"],
+      optionalHeaders: ["tier_percentage", "set_id", "card_number", "catalog_item_id", "source_item_id", "image_url", "game"],
+    },
+  });
 });
 
 async function createVendorPack(req: VendorRequest, res: any) {

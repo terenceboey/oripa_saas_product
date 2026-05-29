@@ -136,6 +136,32 @@ type CatalogSuggestion = {
   imageBaseUrl?: string | null;
 };
 
+type CsvImportResponse = {
+  tiers: Array<{
+    name: string;
+    percentage?: number;
+    items: Array<{
+      label: string;
+      estimatedValue: number;
+      stock: number;
+      imageUrl: string;
+    }>;
+  }>;
+  summary: {
+    totalRows: number;
+    matchedRows: number;
+    unmatchedRows: number;
+    tierCount: number;
+  };
+  unmatchedRows: Array<{
+    rowNumber: number;
+    itemLabel: string;
+    setId?: string;
+    cardNumber?: string;
+    reason: string;
+  }>;
+};
+
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const DEFAULT_PACK_BANNER = "/default-pack-banner-desktop.webp";
 const DEFAULT_PACK_BANNER_OPTIONS = [
@@ -323,6 +349,8 @@ export default function VendorPage() {
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
   const [uploadingVendorLogo, setUploadingVendorLogo] = useState(false);
+  const [importingPackCsv, setImportingPackCsv] = useState(false);
+  const [csvImportSummary, setCsvImportSummary] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -822,6 +850,68 @@ export default function VendorPage() {
       setError(err instanceof Error ? err.message : "Failed to upload pack banner");
     } finally {
       setUploadingPackBannerImage(false);
+    }
+  }
+
+  function downloadPackCsvTemplate() {
+    const sample = [
+      "tier_name,tier_percentage,item_label,estimated_value,stock,set_id,card_number,catalog_item_id,source_item_id,image_url,game",
+      "A Tier,10,Charizard ex,1200,1,24655,021/086,,, ,POKEMON",
+      "B Tier,30,Pikachu,250,5,24655,025/086,,, ,POKEMON",
+      "C Tier,60,Booster Pack,80,20,,,,,https://example.com/custom-image.webp,POKEMON",
+    ].join("\n");
+    const blob = new Blob([sample], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pack-contents-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handlePackCsvImport(file: File | null) {
+    if (!file) return;
+    setImportingPackCsv(true);
+    setError(null);
+    setSuccess(null);
+    setCsvImportSummary(null);
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      const res = await fetch(`${apiBase}/v1/vendor/packs/import-csv`, {
+        method: "POST",
+        headers: authHeaders(),
+        credentials: "include",
+        body: form,
+      });
+      const body = (await res.json().catch(() => null)) as CsvImportResponse | { error?: string; validationErrors?: Array<{ rowNumber: number; message: string }> } | null;
+      if (!res.ok) {
+        if (body && "validationErrors" in body && Array.isArray(body.validationErrors) && body.validationErrors.length > 0) {
+          const first = body.validationErrors[0];
+          throw new Error(`CSV row ${first.rowNumber}: ${first.message}`);
+        }
+        throw new Error((body as { error?: string } | null)?.error ?? "Failed to import CSV");
+      }
+      const payload = body as CsvImportResponse;
+      const nextTiers: TierDraft[] = payload.tiers.map((tier) => ({
+        name: tier.name,
+        percentage: typeof tier.percentage === "number" ? String(tier.percentage) : "",
+        items: tier.items.map((item) => ({
+          label: item.label,
+          estimatedValue: String(item.estimatedValue),
+          stock: String(item.stock),
+          imageUrl: item.imageUrl || DEFAULT_CARD,
+        })),
+      }));
+      setTiers(nextTiers.length > 0 ? nextTiers : [createTier(0)]);
+      setCsvImportSummary(
+        `Imported ${payload.summary.totalRows} rows across ${payload.summary.tierCount} tiers. Matched: ${payload.summary.matchedRows}, fallback image: ${payload.summary.unmatchedRows}.`
+      );
+      setSuccess("CSV imported into pack builder.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import CSV");
+    } finally {
+      setImportingPackCsv(false);
     }
   }
 
@@ -1353,6 +1443,20 @@ export default function VendorPage() {
           <section className="card" style={{ marginTop: 12 }}>
             <h2>{editingPackId ? "Edit Pack" : "Create Pack"}</h2>
             <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/{limits.maxPackTiers}</p>
+            <div className="actions" style={{ marginTop: 8 }}>
+              <button type="button" className="sort-pill" onClick={downloadPackCsvTemplate}>Download CSV Template</button>
+              <label className="sort-pill" style={{ cursor: "pointer" }}>
+                Import CSV
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  style={{ display: "none" }}
+                  onChange={(e) => void handlePackCsvImport(e.target.files?.[0] ?? null)}
+                  disabled={importingPackCsv}
+                />
+              </label>
+            </div>
+            {csvImportSummary ? <p className="muted tiny" style={{ marginTop: 8 }}>{csvImportSummary}</p> : null}
 
             <form className="pack-builder" onSubmit={submitPack}>
               <div className="pack-builder-grid">
