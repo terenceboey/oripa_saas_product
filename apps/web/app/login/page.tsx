@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { FormField } from "../../components/form-field";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -15,6 +16,15 @@ type AuthUser = {
   displayName: string | null;
   status: string;
   lastLoginAt?: string | null;
+};
+type VendorTheme = {
+  storefrontPrimary: string;
+  storefrontSecondary: string;
+  storefrontAccent: string;
+  storefrontSurface: string;
+  storefrontText: string;
+  storefrontMuted: string;
+  storefrontRadius: number;
 };
 
 function isLocalhostLike(host: string) {
@@ -40,6 +50,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [theme, setTheme] = useState<VendorTheme | null>(null);
 
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
 
@@ -105,7 +116,29 @@ export default function LoginPage() {
     }
 
     void loadProfile().catch(() => {});
+    void fetch(`${apiBase}/v1/vendor/current`, {
+      headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((payload) => setTheme(payload?.vendor?.vendorSettings ?? null))
+      .catch(() => null);
   }, [runtimeVendorHost]);
+
+  const storefrontThemeStyle = useMemo(() => {
+    if (!theme) return undefined;
+    return {
+      ["--brand" as string]: theme.storefrontPrimary,
+      ["--card" as string]: theme.storefrontSurface,
+      ["--text" as string]: theme.storefrontText,
+      ["--muted" as string]: theme.storefrontMuted,
+      ["--border" as string]: theme.storefrontSecondary,
+      ["--brand-soft" as string]: theme.storefrontSecondary,
+      ["--brand-accent" as string]: theme.storefrontAccent,
+      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
+    } as CSSProperties;
+  }, [theme]);
 
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -157,7 +190,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="container">
+    <main className="container" style={storefrontThemeStyle}>
       <header className="auth-top-nav">
         <Link href="/" className="sort-pill">Back to Home</Link>
       </header>

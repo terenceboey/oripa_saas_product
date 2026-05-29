@@ -139,14 +139,77 @@ const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
 const DEFAULT_THEME = {
-  storefrontPrimary: "#0E6FFF",
-  storefrontSecondary: "#EAF2FF",
-  storefrontAccent: "#1353B5",
+  storefrontPrimary: "#7A5CFA",
+  storefrontSecondary: "#EEE7FF",
+  storefrontAccent: "#A66BFF",
   storefrontSurface: "#FFFFFF",
-  storefrontText: "#121826",
-  storefrontMuted: "#516074",
-  storefrontRadius: 16,
+  storefrontText: "#2D2350",
+  storefrontMuted: "#6E6395",
+  storefrontRadius: 18,
 };
+
+const THEME_PRESETS = [
+  { id: "lavender-dawn", label: "Lavender Dawn (Default)", ...DEFAULT_THEME },
+  {
+    id: "mint-cloud",
+    label: "Mint Cloud",
+    storefrontPrimary: "#4FB7A5",
+    storefrontSecondary: "#E2F7F3",
+    storefrontAccent: "#7A8BFF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#1F3B44",
+    storefrontMuted: "#5E7F86",
+    storefrontRadius: 18,
+  },
+  {
+    id: "peach-sorbet",
+    label: "Peach Sorbet",
+    storefrontPrimary: "#F28D8D",
+    storefrontSecondary: "#FFEAE5",
+    storefrontAccent: "#FFB26B",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#4A2A33",
+    storefrontMuted: "#8E6D78",
+    storefrontRadius: 18,
+  },
+  {
+    id: "sky-bloom",
+    label: "Sky Bloom",
+    storefrontPrimary: "#5E8BFF",
+    storefrontSecondary: "#E8EEFF",
+    storefrontAccent: "#7CC8FF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#1F2F56",
+    storefrontMuted: "#60739B",
+    storefrontRadius: 18,
+  },
+  {
+    id: "rose-mist",
+    label: "Rose Mist",
+    storefrontPrimary: "#D471B8",
+    storefrontSecondary: "#FCEAF7",
+    storefrontAccent: "#8D7CFF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#3D2747",
+    storefrontMuted: "#7B6687",
+    storefrontRadius: 18,
+  },
+] as const;
+
+function matchesPreset(
+  theme: typeof DEFAULT_THEME,
+  preset: (typeof THEME_PRESETS)[number]
+) {
+  return (
+    theme.storefrontPrimary === preset.storefrontPrimary &&
+    theme.storefrontSecondary === preset.storefrontSecondary &&
+    theme.storefrontAccent === preset.storefrontAccent &&
+    theme.storefrontSurface === preset.storefrontSurface &&
+    theme.storefrontText === preset.storefrontText &&
+    theme.storefrontMuted === preset.storefrontMuted &&
+    theme.storefrontRadius === preset.storefrontRadius
+  );
+}
 
 function parseTabValue(tab: string | null): ActiveTab {
   if (tab === "pack-studio") return "PACKS";
@@ -253,6 +316,10 @@ export default function VendorPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("BUSINESS");
+  const selectedThemePresetId = useMemo(() => {
+    const found = THEME_PRESETS.find((preset) => matchesPreset(themeDraft, preset));
+    return found?.id ?? "custom";
+  }, [themeDraft]);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
 
@@ -1045,36 +1112,34 @@ export default function VendorPage() {
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Storefront Theme</h2>
-            <p className="muted tiny">Guardrails: hex colors only and rounded corners between 8 and 24.</p>
+            <p className="muted tiny">Choose a preset pastel theme for your landing and pack pages.</p>
             <form className="vendor-form" onSubmit={saveTheme}>
-              <label className="muted tiny">
-                Primary color
-                <input type="color" value={themeDraft.storefrontPrimary} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontPrimary: e.target.value }))} />
-              </label>
-              <label className="muted tiny">
-                Secondary color
-                <input type="color" value={themeDraft.storefrontSecondary} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontSecondary: e.target.value }))} />
-              </label>
-              <label className="muted tiny">
-                Accent color
-                <input type="color" value={themeDraft.storefrontAccent} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontAccent: e.target.value }))} />
-              </label>
-              <label className="muted tiny">
-                Surface color
-                <input type="color" value={themeDraft.storefrontSurface} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontSurface: e.target.value }))} />
-              </label>
-              <label className="muted tiny">
-                Text color
-                <input type="color" value={themeDraft.storefrontText} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontText: e.target.value }))} />
-              </label>
-              <label className="muted tiny">
-                Muted text color
-                <input type="color" value={themeDraft.storefrontMuted} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontMuted: e.target.value }))} />
-              </label>
-              <label className="muted tiny">
-                Corner radius ({themeDraft.storefrontRadius}px)
-                <input type="range" min={8} max={24} value={themeDraft.storefrontRadius} onChange={(e) => setThemeDraft((prev) => ({ ...prev, storefrontRadius: Number(e.target.value) }))} />
-              </label>
+              <div className="theme-preset-grid" style={{ gridColumn: "1 / -1" }}>
+                {THEME_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className={`theme-preset-card ${selectedThemePresetId === preset.id ? "active" : ""}`}
+                    onClick={() => setThemeDraft({
+                      storefrontPrimary: preset.storefrontPrimary,
+                      storefrontSecondary: preset.storefrontSecondary,
+                      storefrontAccent: preset.storefrontAccent,
+                      storefrontSurface: preset.storefrontSurface,
+                      storefrontText: preset.storefrontText,
+                      storefrontMuted: preset.storefrontMuted,
+                      storefrontRadius: preset.storefrontRadius,
+                    })}
+                  >
+                    <strong>{preset.label}</strong>
+                    <span className="theme-preset-swatches">
+                      <i style={{ background: preset.storefrontPrimary }} />
+                      <i style={{ background: preset.storefrontSecondary }} />
+                      <i style={{ background: preset.storefrontAccent }} />
+                      <i style={{ background: preset.storefrontSurface, border: "1px solid #d9d9ef" }} />
+                    </span>
+                  </button>
+                ))}
+              </div>
               <button type="submit" className="draw-button" disabled={saving || loading}>Save Theme</button>
             </form>
           </section>
