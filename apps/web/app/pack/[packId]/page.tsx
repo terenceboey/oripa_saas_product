@@ -40,6 +40,10 @@ type DrawResult = {
     prizeImageUrl?: string | null;
   }>;
 };
+type ImagePreview = {
+  label: string;
+  imageUrl: string;
+};
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -62,6 +66,7 @@ export default function PackDrawPage() {
   const [error, setError] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
+  const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -169,7 +174,18 @@ export default function PackDrawPage() {
             <div className="card-preview-grid">
               {pack.prizes.map((prize) => (
                 <article key={prize.id} className="card-preview-item">
-                  <img src={prize.imageUrl || defaultPokemonCardImage} alt={prize.label} />
+                  <button
+                    type="button"
+                    className="card-image-button"
+                    onClick={() =>
+                      setImagePreview({
+                        label: prize.label,
+                        imageUrl: prize.imageUrl || defaultPokemonCardImage,
+                      })
+                    }
+                  >
+                    <img src={prize.imageUrl || defaultPokemonCardImage} alt={prize.label} />
+                  </button>
                   <div className="card-preview-meta">
                     <strong>{prize.label}</strong>
                     <span className="muted tiny">Rate {(prize.dropRatePercent ?? 0).toFixed(4)}%</span>
@@ -198,6 +214,18 @@ export default function PackDrawPage() {
             </section>
           ) : null}
         </>
+      ) : null}
+
+      {imagePreview ? (
+        <div className="qr-modal-backdrop" onClick={() => setImagePreview(null)}>
+          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
+            <div className="heading-row">
+              <h3>{imagePreview.label}</h3>
+              <button type="button" className="sort-pill" onClick={() => setImagePreview(null)}>Close</button>
+            </div>
+            <img className="card-image-preview" src={imagePreview.imageUrl} alt={imagePreview.label} />
+          </div>
+        </div>
       ) : null}
     </main>
   );

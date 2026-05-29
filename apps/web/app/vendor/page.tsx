@@ -1121,13 +1121,21 @@ export default function VendorPage() {
                                   <button
                                     key={suggestion.id}
                                     type="button"
-                                    className="sort-pill"
+                                    className="sort-pill catalog-suggestion-button"
                                     style={{ width: "100%", textAlign: "left", marginBottom: 6 }}
                                     onClick={() => applyCatalogSuggestion(tierIndex, itemIndex, suggestion)}
                                   >
-                                    {suggestion.name}
-                                    {suggestion.cardNumber ? ` #${suggestion.cardNumber}` : ""}
-                                    {suggestion.setId ? ` (${suggestion.setId})` : ""}
+                                    <span>
+                                      {suggestion.name}
+                                      {suggestion.cardNumber ? ` #${suggestion.cardNumber}` : ""}
+                                      {suggestion.setId ? ` (${suggestion.setId})` : ""}
+                                    </span>
+                                    <span className="catalog-suggestion-preview" aria-hidden="true">
+                                      <img
+                                        src={suggestion.imageThumbUrl || suggestion.imageLargeUrl || suggestion.imageBaseUrl || DEFAULT_CARD}
+                                        alt=""
+                                      />
+                                    </span>
                                   </button>
                                 ))}
                               </div>
