@@ -11,7 +11,7 @@ const searchQuerySchema = z.object({
   q: z.string().trim().min(2).max(120),
   limit: z.coerce.number().int().min(1).max(30).optional().default(10),
   type: z.enum(["card", "sealed", "all"]).optional().default("card"),
-  game: z.string().trim().max(40).optional().default("POKEMON"),
+  game: z.string().trim().max(40).optional(),
 });
 
 async function requireVendorReadAccess(req: VendorRequest, res: any) {
@@ -42,6 +42,8 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
   }
 
   const { q, limit, type, game } = parsed.data;
+  const normalizedGame = String(game ?? "").trim().toUpperCase();
+  const gameFilter = normalizedGame && normalizedGame !== "ALL" ? normalizedGame : undefined;
   const typeFilter =
     type === "card"
       ? CatalogItemType.CARD
@@ -52,7 +54,7 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
   const byNameStarts = await prisma.catalogItem.findMany({
     where: {
       isActive: true,
-      game,
+      ...(gameFilter ? { game: gameFilter } : {}),
       ...(typeFilter ? { itemType: typeFilter } : {}),
       name: { startsWith: q, mode: "insensitive" },
     },
@@ -67,7 +69,7 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
     byContains = await prisma.catalogItem.findMany({
       where: {
         isActive: true,
-        game,
+        ...(gameFilter ? { game: gameFilter } : {}),
         ...(typeFilter ? { itemType: typeFilter } : {}),
         name: { contains: q, mode: "insensitive" },
         id: { notIn: byNameStarts.map((row) => row.id) },
@@ -96,4 +98,3 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
 
   return res.json({ items });
 });
-
