@@ -64,11 +64,11 @@ body {
 
 .wallet-chip {
   border-radius: 999px;
-  border: 1px solid #c8dafb;
-  background: #edf4ff;
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, white);
+  background: color-mix(in srgb, var(--brand-soft) 70%, white);
   padding: 7px 12px;
   font-weight: 700;
-  color: #0f2a63;
+  color: var(--brand-accent);
 }
 
 .header-right {
@@ -114,8 +114,8 @@ body {
 
 .refresh-button {
   border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text);
+  background: color-mix(in srgb, var(--brand-soft) 42%, white);
+  color: var(--brand-accent);
   border-radius: 10px;
   padding: 10px 14px;
   cursor: pointer;
@@ -255,12 +255,12 @@ body {
   height: 9px;
   border-radius: 50%;
   border: 0;
-  background: #b0c2e3;
+  background: color-mix(in srgb, var(--brand) 28%, #dce5f5);
   cursor: pointer;
 }
 
 .dot.active {
-  background: #0e6fff;
+  background: var(--brand);
 }
 
 .chip {
@@ -295,17 +295,17 @@ body {
 
 .sort-pill {
   border: 1px solid var(--border);
-  background: #f6f9ff;
-  color: #1a2a44;
+  background: color-mix(in srgb, var(--brand-soft) 45%, white);
+  color: var(--brand-accent);
   border-radius: 999px;
   padding: 7px 12px;
   cursor: pointer;
 }
 
 .sort-pill.active {
-  background: #0e6fff;
+  background: var(--brand);
   color: #fff;
-  border-color: #0e6fff;
+  border-color: var(--brand);
 }
 
 .pack-header {
@@ -641,9 +641,9 @@ body {
 }
 
 .auth-inline-card {
-  border: 1px solid #c8dafb;
+  border: 1px solid color-mix(in srgb, var(--brand) 35%, white);
   border-radius: 10px;
-  background: #edf4ff;
+  background: color-mix(in srgb, var(--brand-soft) 70%, white);
   padding: 6px 10px;
   display: grid;
   line-height: 1.15;
@@ -651,12 +651,12 @@ body {
 
 .auth-inline-card strong {
   font-size: 13px;
-  color: #0f2a63;
+  color: var(--brand-accent);
 }
 
 .auth-inline-card span {
   font-size: 11px;
-  color: #21437f;
+  color: color-mix(in srgb, var(--brand-accent) 75%, #243a61);
 }
 
 .google-g {
