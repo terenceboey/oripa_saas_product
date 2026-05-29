@@ -3,6 +3,7 @@ import {
   createVendorSchema,
   updateVendorBusinessSchema,
   updateVendorLimitsSchema,
+  updateVendorLogoSchema,
   updateVendorPlanSchema,
   updateVendorPrefixSchema,
   updateVendorProfileSchema,
@@ -118,6 +119,8 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
       name: true,
       slug: true,
       host: true,
+      logoImageUrl: true,
+      faviconImageUrl: true,
       isActive: true,
       referralCode: true,
       businessLocation: true,
@@ -187,10 +190,41 @@ vendorRouter.patch("/v1/vendor/profile", async (req: VendorRequest, res) => {
       name: true,
       slug: true,
       host: true,
+      logoImageUrl: true,
+      faviconImageUrl: true,
       isActive: true,
       referralCode: true,
       businessLocation: true,
       businessContact: true,
+      updatedAt: true,
+    },
+  });
+
+  return res.json({ vendor });
+});
+
+vendorRouter.patch("/v1/vendor/logo", async (req: VendorRequest, res) => {
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
+
+  const parsed = updateVendorLogoSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const vendor = await prisma.vendor.update({
+    where: { id: auth.vendorId },
+    data: {
+      logoImageUrl: parsed.data.logoImageUrl,
+      faviconImageUrl: parsed.data.faviconImageUrl ?? parsed.data.logoImageUrl,
+    },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      host: true,
+      logoImageUrl: true,
+      faviconImageUrl: true,
       updatedAt: true,
     },
   });

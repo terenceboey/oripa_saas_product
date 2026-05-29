@@ -15,6 +15,8 @@ type Vendor = {
   referralCode?: string | null;
   businessLocation?: string | null;
   businessContact?: string | null;
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
   vendorSettings?: {
     storefrontPrimary: string;
     storefrontSecondary: string;
@@ -280,6 +282,8 @@ export default function VendorPage() {
   const [businessLocation, setBusinessLocation] = useState("");
   const [businessContact, setBusinessContact] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [logoImageUrl, setLogoImageUrl] = useState("");
+  const [faviconImageUrl, setFaviconImageUrl] = useState("");
   const [themeDraft, setThemeDraft] = useState(DEFAULT_THEME);
 
   const [bannerTitle, setBannerTitle] = useState("");
@@ -311,6 +315,7 @@ export default function VendorPage() {
   const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
+  const [uploadingVendorLogo, setUploadingVendorLogo] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -388,6 +393,8 @@ export default function VendorPage() {
       setBusinessLocation(v?.businessLocation ?? "");
       setBusinessContact(v?.businessContact ?? "");
       setReferralCode(v?.referralCode ?? "");
+      setLogoImageUrl(v?.logoImageUrl ?? "");
+      setFaviconImageUrl(v?.faviconImageUrl ?? "");
       setThemeDraft({
         storefrontPrimary: v?.vendorSettings?.storefrontPrimary ?? DEFAULT_THEME.storefrontPrimary,
         storefrontSecondary: v?.vendorSettings?.storefrontSecondary ?? DEFAULT_THEME.storefrontSecondary,
@@ -538,6 +545,59 @@ export default function VendorPage() {
       setError(err instanceof Error ? err.message : "Failed to update vendor profile");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function saveVendorLogo(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/logo`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          logoImageUrl: logoImageUrl.trim(),
+          faviconImageUrl: faviconImageUrl.trim() || logoImageUrl.trim(),
+        }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to update vendor logo");
+      setSuccess("Vendor logo and favicon updated.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update vendor logo");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleVendorLogoUpload(file: File | null) {
+    if (!file) return;
+    setUploadingVendorLogo(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("kind", "vendor-logo");
+      const response = await fetch(`${apiBase}/v1/vendor/media/images`, {
+        method: "POST",
+        headers: authHeaders(),
+        credentials: "include",
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error ?? "Logo upload failed");
+      setLogoImageUrl(String(payload.desktopUrl ?? ""));
+      setFaviconImageUrl(String(payload.faviconUrl ?? payload.desktopUrl ?? ""));
+      setSuccess("Logo uploaded. Save to apply across storefront and favicon.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Logo upload failed");
+    } finally {
+      setUploadingVendorLogo(false);
     }
   }
 
@@ -1163,6 +1223,39 @@ export default function VendorPage() {
               </div>
               <button type="submit" className="draw-button" disabled={saving || loading}>Save Theme</button>
             </form>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Storefront Logo & Favicon</h2>
+            <p className="muted tiny">
+              Recommended: square logo 1024x1024 (or at least 512x512), PNG/WebP/JPG, max 5MB. This logo is used in header and favicon.
+            </p>
+            <form className="vendor-form" onSubmit={saveVendorLogo}>
+              <label className="muted tiny">
+                Logo image URL
+                <input value={logoImageUrl} onChange={(e) => setLogoImageUrl(e.target.value)} placeholder="Logo image URL" required />
+              </label>
+              <label className="muted tiny">
+                Favicon URL (optional)
+                <input value={faviconImageUrl} onChange={(e) => setFaviconImageUrl(e.target.value)} placeholder="Favicon URL (optional)" />
+              </label>
+              <label className="muted tiny">
+                Upload logo (square recommended, max 5MB)
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => void handleVendorLogoUpload(e.target.files?.[0] ?? null)}
+                  disabled={uploadingVendorLogo}
+                />
+              </label>
+              <button type="submit" className="draw-button" disabled={saving || loading}>Save Logo</button>
+            </form>
+            {logoImageUrl ? (
+              <div className="banner-admin-row" style={{ marginTop: 10, gridTemplateColumns: "96px 1fr" }}>
+                <img src={logoImageUrl} alt="Vendor logo preview" style={{ width: 96, height: 96, objectFit: "contain", background: "#fff" }} />
+                <div className="muted tiny">Logo preview</div>
+              </div>
+            ) : null}
           </section>
 
           <section className="card" style={{ marginTop: 12 }}>

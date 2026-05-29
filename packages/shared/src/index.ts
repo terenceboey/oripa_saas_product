@@ -21,6 +21,10 @@ export const createVendorSchema = z.object({
 export const updateVendorProfileSchema = z.object({
   name: z.string().min(2).max(80),
 });
+export const updateVendorLogoSchema = z.object({
+  logoImageUrl: imageUrlSchema,
+  faviconImageUrl: imageUrlSchema.optional(),
+});
 
 export const updateVendorPrefixSchema = z.object({
   slug: z
@@ -120,6 +124,7 @@ export const updateVendorLimitsSchema = z.object({
 
 export type CreateVendorInput = z.infer<typeof createVendorSchema>;
 export type UpdateVendorProfileInput = z.infer<typeof updateVendorProfileSchema>;
+export type UpdateVendorLogoInput = z.infer<typeof updateVendorLogoSchema>;
 export type UpdateVendorPrefixInput = z.infer<typeof updateVendorPrefixSchema>;
 export type UpdateVendorBusinessInput = z.infer<typeof updateVendorBusinessSchema>;
 export type UpdateVendorReferralInput = z.infer<typeof updateVendorReferralSchema>;

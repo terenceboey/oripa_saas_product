@@ -97,6 +97,8 @@ model Vendor {
   name                String
   slug                String                @unique
   host                String                @unique
+  logoImageUrl        String?
+  faviconImageUrl     String?
   referralCode        String?               @unique
   businessLocation    String?
   businessContact     String?

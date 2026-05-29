@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
+import { applyVendorFavicon } from "../../../lib/favicon";
 
 type Prize = {
   id: string;
@@ -105,6 +106,8 @@ export default function PackDrawPage() {
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
+  const [vendorLogo, setVendorLogo] = useState<string | null>(null);
+  const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -131,6 +134,8 @@ export default function PackDrawPage() {
       setPack(packPayload.pack);
       setWallet(walletPayload.wallet);
       setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
+      setVendorLogo(vendorPayload?.vendor?.logoImageUrl ?? null);
+      setVendorFavicon(vendorPayload?.vendor?.faviconImageUrl ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pack");
     } finally {
@@ -188,6 +193,10 @@ export default function PackDrawPage() {
       ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
     } as CSSProperties;
   }, [theme]);
+
+  useEffect(() => {
+    applyVendorFavicon(vendorFavicon || vendorLogo);
+  }, [vendorFavicon, vendorLogo]);
 
   return (
     <main className="container" style={storefrontThemeStyle}>

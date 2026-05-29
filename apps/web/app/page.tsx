@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
+import { applyVendorFavicon } from "../lib/favicon";
 
 type Banner = {
   id: string;
@@ -47,6 +48,8 @@ type Tenant = {
   slug: string;
   host: string;
   isActive: boolean;
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
   vendorSettings?: {
     storefrontPrimary: string;
     storefrontSecondary: string;
@@ -189,6 +192,10 @@ export default function HomePage() {
     void loadProfile();
   }, [loadData, loadProfile]);
 
+  useEffect(() => {
+    applyVendorFavicon(tenant?.faviconImageUrl || tenant?.logoImageUrl);
+  }, [tenant?.faviconImageUrl, tenant?.logoImageUrl]);
+
   useBackForwardRefresh(() => loadData(false), { enabled: !vendorNotFound, cooldownMs: 15000 });
 
   useEffect(() => {
@@ -262,7 +269,7 @@ export default function HomePage() {
     <main className="container" style={storefrontThemeStyle}>
       <header className="site-header">
         <div className="brand">
-          <img src="/brand-cardback.jpg" alt="Oripa logo" />
+          <img src={tenant?.logoImageUrl || "/brand-cardback.jpg"} alt="Vendor logo" />
           <div className="brand-text">
             <strong>{tenant?.name ?? "Storefront"}</strong>
             <span>{runtimeVendorHost}</span>

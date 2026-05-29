@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { FormField } from "../../components/form-field";
+import { applyVendorFavicon } from "../../lib/favicon";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -17,6 +18,10 @@ type VendorTheme = {
   storefrontText: string;
   storefrontMuted: string;
   storefrontRadius: number;
+};
+type VendorBranding = {
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
 };
 
 export default function RegisterPage() {
@@ -33,6 +38,7 @@ export default function RegisterPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
+  const [branding, setBranding] = useState<VendorBranding | null>(null);
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
 
   useEffect(() => {
@@ -45,7 +51,13 @@ export default function RegisterPage() {
       cache: "no-store",
     })
       .then((res) => (res.ok ? res.json() : null))
-      .then((payload) => setTheme(payload?.vendor?.vendorSettings ?? null))
+      .then((payload) => {
+        setTheme(payload?.vendor?.vendorSettings ?? null);
+        setBranding({
+          logoImageUrl: payload?.vendor?.logoImageUrl ?? null,
+          faviconImageUrl: payload?.vendor?.faviconImageUrl ?? null,
+        });
+      })
       .catch(() => null);
   }, []);
 
@@ -62,6 +74,10 @@ export default function RegisterPage() {
       ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
     } as CSSProperties;
   }, [theme]);
+
+  useEffect(() => {
+    applyVendorFavicon(branding?.faviconImageUrl || branding?.logoImageUrl);
+  }, [branding?.faviconImageUrl, branding?.logoImageUrl]);
 
   async function handleRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
