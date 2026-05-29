@@ -270,7 +270,7 @@ export default function HomePage() {
     <main className="container" style={storefrontThemeStyle}>
       <header className="site-header">
         <div className="brand">
-          <img src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/brand-cardback.jpg"} alt="Vendor logo" />
+          <img src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/default-brand-logo.png"} alt="Vendor logo" />
           <div className="brand-text">
             <strong>{tenant?.name ?? "Storefront"}</strong>
             <span>{runtimeVendorHost}</span>
