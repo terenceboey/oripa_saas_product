@@ -49,8 +49,32 @@ type ImagePreview = {
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
-const defaultPackBannerImage = "/default-pack-banner.png";
+const defaultPackBannerImage = "/default-pack-banner-desktop.webp";
+const defaultPackBannerImageMobile = "/default-pack-banner-mobile.webp";
 const clientPageHeader = { "x-client-page": "/pack/[packId]" };
+
+function resolveImageUrl(url?: string | null) {
+  if (!url) return defaultPackBannerImage;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return url;
+  return `/${url}`;
+}
+
+function responsiveImageFromBase(url?: string | null) {
+  const resolved = resolveImageUrl(url);
+  if (!resolved.startsWith("/")) {
+    return { mobile: resolved, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith("-desktop.webp")) {
+    const mobile = resolved.replace("-desktop.webp", "-mobile.webp");
+    return { mobile, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith(".png")) {
+    const base = resolved.slice(0, -4);
+    return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
+  }
+  return { mobile: resolved, desktop: resolved, fallback: resolved };
+}
 
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
@@ -152,7 +176,25 @@ export default function PackDrawPage() {
       {pack ? (
         <>
           <section className="card">
-            <img className="pack-detail-banner" src={pack.packBannerImageUrl || defaultPackBannerImage} alt={`${pack.title} banner`} loading="lazy" decoding="async" />
+            {(() => {
+              const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBannerImage);
+              return (
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="pack-detail-banner"
+                    src={image.fallback}
+                    alt={`${pack.title} banner`}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerImageMobile;
+                    }}
+                  />
+                </picture>
+              );
+            })()}
             <div className="pack-header">
               <h1>{pack.title}</h1>
               {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}

@@ -124,7 +124,7 @@ type CatalogSuggestion = {
 };
 
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
-const DEFAULT_PACK_BANNER = "/default-pack-banner.png";
+const DEFAULT_PACK_BANNER = "/default-pack-banner-desktop.webp";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };

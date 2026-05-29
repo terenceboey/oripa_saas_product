@@ -62,7 +62,31 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
 const clientPageHeader = { "x-client-page": "/" };
-const defaultPackBanner = "/default-pack-banner.png";
+const defaultPackBanner = "/default-pack-banner-desktop.webp";
+const defaultPackBannerMobile = "/default-pack-banner-mobile.webp";
+
+function resolveImageUrl(url?: string | null) {
+  if (!url) return defaultPackBanner;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return url;
+  return `/${url}`;
+}
+
+function responsiveImageFromBase(url?: string | null) {
+  const resolved = resolveImageUrl(url);
+  if (!resolved.startsWith("/")) {
+    return { mobile: resolved, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith("-desktop.webp")) {
+    const mobile = resolved.replace("-desktop.webp", "-mobile.webp");
+    return { mobile, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith(".png")) {
+    const base = resolved.slice(0, -4);
+    return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
+  }
+  return { mobile: resolved, desktop: resolved, fallback: resolved };
+}
 
 export default function HomePage() {
   const runtimeVendorHost = useMemo(() => {
@@ -256,7 +280,25 @@ export default function HomePage() {
       <section className="banner-wrap">
         {currentBanner ? (
           <a className="banner-link" href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer">
-            <img className="banner-image" src={currentBanner.imageUrl} alt={currentBanner.title} loading="lazy" decoding="async" />
+            {(() => {
+              const image = responsiveImageFromBase(currentBanner.imageUrl);
+              return (
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="banner-image"
+                    src={image.fallback}
+                    alt={currentBanner.title}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerMobile;
+                    }}
+                  />
+                </picture>
+              );
+            })()}
             <div className="banner-overlay">
               <h2>{currentBanner.title}</h2>
               <p>Limited-time campaign</p>
@@ -316,7 +358,25 @@ export default function HomePage() {
       <section className="pack-grid">
         {sortedPacks.map((pack) => (
           <article className="card pack-card" key={pack.id}>
-            <img className="pack-card-banner" src={pack.packBannerImageUrl || defaultPackBanner} alt={`${pack.title} banner`} loading="lazy" decoding="async" />
+            {(() => {
+              const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBanner);
+              return (
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="pack-card-banner"
+                    src={image.fallback}
+                    alt={`${pack.title} banner`}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerMobile;
+                    }}
+                  />
+                </picture>
+              );
+            })()}
             <div className="pack-header">
               <h2>{pack.title}</h2>
               <div className="pack-badges">

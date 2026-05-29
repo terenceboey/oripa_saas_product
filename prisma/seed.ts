@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
-const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner.png";
+const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner-desktop.webp";
 
 async function main() {
   const [platformAdminRole, customerRole] = await Promise.all([
