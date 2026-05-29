@@ -259,7 +259,6 @@ export default function HomePage() {
           {user ? (
             <button type="button" className="sort-pill" onClick={logout}>Logout</button>
           ) : null}
-          <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
       </header>
@@ -337,7 +336,6 @@ export default function HomePage() {
           <div>
             <span className="badge">Oripa MVP</span>
             <h1 className="hero-title">{activeCategory} Mystery Packs</h1>
-            <p className="muted">Vendor: {tenant?.name ?? runtimeVendorHost}</p>
           </div>
           <button type="button" className="refresh-button" onClick={() => void loadData(true)} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
@@ -415,6 +413,10 @@ export default function HomePage() {
           </article>
         ))}
       </section>
+
+      <footer className="site-footer">
+        <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
+      </footer>
     </main>
   );
 }

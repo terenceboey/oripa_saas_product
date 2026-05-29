@@ -73,6 +73,7 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .card {
@@ -280,6 +281,13 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.site-footer {
+  margin-top: 20px;
+  padding: 8px 0 4px;
+  display: flex;
+  justify-content: center;
 }
 
 .sort-pill {
@@ -647,8 +655,12 @@ body {
   }
 
   .heading-row {
-    align-items: flex-start;
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .heading-row .refresh-button {
+    width: 100%;
   }
 
   .vendor-form {
@@ -661,6 +673,10 @@ body {
 
   .banner-admin-row {
     grid-template-columns: 1fr;
+  }
+
+  .header-right {
+    justify-content: flex-start;
   }
 
   .card-preview-grid,
