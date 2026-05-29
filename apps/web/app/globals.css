@@ -14,11 +14,48 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  font-family: var(--font-body), "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
 body {
   margin: 0;
-  font-family: var(--font-body), "Segoe UI", Helvetica, Arial, sans-serif;
   background: radial-gradient(circle at top, #f7ecff, #f7f4ff 52%);
   color: var(--text);
+}
+
+p,
+span,
+label,
+li,
+small,
+strong,
+em,
+input,
+textarea,
+select,
+button,
+a,
+th,
+td {
+  font-family: var(--font-body), "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+input,
+textarea,
+select,
+button {
+  font-size: 14px;
+}
+
+a {
+  color: var(--brand-accent);
+  text-decoration-thickness: 1.5px;
+}
+
+a:hover {
+  color: var(--brand);
 }
 
 h1,
@@ -31,6 +68,15 @@ h3,
 .wallet-chip {
   font-family: var(--font-display), var(--font-body), "Segoe UI", sans-serif;
   letter-spacing: 0.01em;
+}
+
+h4,
+h5,
+h6,
+.badge,
+.stat-value,
+.pack-header h2 {
+  font-family: var(--font-display), var(--font-body), "Segoe UI", sans-serif;
 }
 
 .container {
