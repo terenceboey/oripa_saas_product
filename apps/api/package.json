@@ -6,7 +6,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "lint": "node -e \"console.log('lint: add eslint config when ready')\""
+    "lint": "node -e \"console.log('lint: add eslint config when ready')\"",
+    "catalog:sync:tcgtracking": "tsx scripts/sync-tcgtracking.ts"
   },
   "dependencies": {
     "@oripa/shared": "0.1.0",

@@ -87,6 +87,11 @@ enum VendorPointGrantQrStatus {
   CANCELLED
 }
 
+enum CatalogItemType {
+  CARD
+  SEALED_PRODUCT
+}
+
 model Vendor {
   id                  String                @id @default(cuid())
   name                String
@@ -575,4 +580,30 @@ model VendorPointGrantQr {
 
   @@index([vendorId, status, createdAt])
   @@index([vendorId, expiresAt])
+}
+
+model CatalogItem {
+  id             String          @id @default(cuid())
+  source         String
+  sourceItemId   String
+  itemType       CatalogItemType @default(CARD)
+  game           String          @default("POKEMON")
+  language       String          @default("en")
+  name           String
+  setId          String?
+  setName        String?
+  cardNumber     String?
+  rarity         String?
+  imageBaseUrl   String?
+  imageThumbUrl  String?
+  imageLargeUrl  String?
+  searchText     String
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([source, sourceItemId, language])
+  @@index([itemType, game, isActive])
+  @@index([source, isActive])
+  @@index([name])
 }

@@ -103,6 +103,23 @@ type TierDraft = {
   items: ItemDraft[];
 };
 
+type CatalogSuggestion = {
+  id: string;
+  source: string;
+  sourceItemId: string;
+  itemType: "CARD" | "SEALED_PRODUCT";
+  game: string;
+  language: string;
+  name: string;
+  setId?: string | null;
+  setName?: string | null;
+  cardNumber?: string | null;
+  rarity?: string | null;
+  imageThumbUrl?: string | null;
+  imageLargeUrl?: string | null;
+  imageBaseUrl?: string | null;
+};
+
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
@@ -200,6 +217,10 @@ export default function VendorPage() {
   const [qrExpiryMinutes, setQrExpiryMinutes] = useState("15");
   const [activeQr, setActiveQr] = useState<VendorQr | null>(null);
   const [activeQrDataUrl, setActiveQrDataUrl] = useState<string | null>(null);
+  const [itemSearchTarget, setItemSearchTarget] = useState<{ tierIndex: number; itemIndex: number } | null>(null);
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
+  const [itemSuggestions, setItemSuggestions] = useState<CatalogSuggestion[]>([]);
+  const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -293,6 +314,43 @@ export default function VendorPage() {
   }, [loadAll]);
 
   useBackForwardRefresh(loadAll, { cooldownMs: 20000 });
+
+  useEffect(() => {
+    const target = itemSearchTarget;
+    const query = itemSearchQuery.trim();
+    if (!target || query.length < 2) {
+      setItemSuggestions([]);
+      setItemSuggestLoading(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setItemSuggestLoading(true);
+      const url = new URL(`${apiBase}/v1/catalog/search`);
+      url.searchParams.set("q", query);
+      url.searchParams.set("limit", "8");
+      url.searchParams.set("type", "card");
+
+      fetch(url.toString(), {
+        headers: authHeaders(),
+        credentials: "include",
+        cache: "no-store",
+      })
+        .then(async (res) => {
+          const payload = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
+          setItemSuggestions((payload.items ?? []) as CatalogSuggestion[]);
+        })
+        .catch(() => {
+          setItemSuggestions([]);
+        })
+        .finally(() => {
+          setItemSuggestLoading(false);
+        });
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [authHeaders, itemSearchQuery, itemSearchTarget]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -556,6 +614,27 @@ export default function VendorPage() {
     );
   }
 
+  function applyCatalogSuggestion(tierIndex: number, itemIndex: number, suggestion: CatalogSuggestion) {
+    const nextLabel = [suggestion.name, suggestion.cardNumber ? `#${suggestion.cardNumber}` : ""].filter(Boolean).join(" ");
+    setTiers((prev) =>
+      prev.map((tier, i) => {
+        if (i !== tierIndex) return tier;
+        const items = tier.items.map((item, ii) => {
+          if (ii !== itemIndex) return item;
+          return {
+            ...item,
+            label: nextLabel || suggestion.name,
+            imageUrl: suggestion.imageLargeUrl || suggestion.imageThumbUrl || suggestion.imageBaseUrl || item.imageUrl || DEFAULT_CARD,
+          };
+        });
+        return { ...tier, items };
+      })
+    );
+    setItemSearchTarget(null);
+    setItemSearchQuery("");
+    setItemSuggestions([]);
+  }
+
   function addTier() {
     setTiers((prev) => {
       if (prev.length >= limits.maxPackTiers) return prev;
@@ -564,6 +643,11 @@ export default function VendorPage() {
   }
 
   function removeTier(tierIndex: number) {
+    if (itemSearchTarget?.tierIndex === tierIndex) {
+      setItemSearchTarget(null);
+      setItemSearchQuery("");
+      setItemSuggestions([]);
+    }
     setTiers((prev) => {
       if (prev.length <= 1) return prev;
       return prev.filter((_, i) => i !== tierIndex);
@@ -581,6 +665,11 @@ export default function VendorPage() {
   }
 
   function removeItem(tierIndex: number, itemIndex: number) {
+    if (itemSearchTarget?.tierIndex === tierIndex && itemSearchTarget?.itemIndex === itemIndex) {
+      setItemSearchTarget(null);
+      setItemSearchQuery("");
+      setItemSuggestions([]);
+    }
     setTiers((prev) =>
       prev.map((tier, i) => {
         if (i !== tierIndex) return tier;
@@ -1008,7 +1097,41 @@ export default function VendorPage() {
                         <div className="item-row" key={`tier-${tierIndex}-item-${itemIndex}`}>
                           <label className="muted tiny">
                             Item label
-                            <input value={item.label} onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)} placeholder="Item label" required />
+                            <input
+                              value={item.label}
+                              onChange={(e) => {
+                                updateItem(tierIndex, itemIndex, "label", e.target.value);
+                                setItemSearchTarget({ tierIndex, itemIndex });
+                                setItemSearchQuery(e.target.value);
+                              }}
+                              onFocus={() => {
+                                setItemSearchTarget({ tierIndex, itemIndex });
+                                setItemSearchQuery(item.label);
+                              }}
+                              placeholder="Item label"
+                              required
+                            />
+                            {itemSearchTarget?.tierIndex === tierIndex && itemSearchTarget?.itemIndex === itemIndex ? (
+                              <div className="card" style={{ marginTop: 6, padding: 8, maxHeight: 220, overflowY: "auto" }}>
+                                {itemSuggestLoading ? <div className="muted tiny">Searching cards...</div> : null}
+                                {!itemSuggestLoading && itemSuggestions.length === 0 && itemSearchQuery.trim().length >= 2 ? (
+                                  <div className="muted tiny">No matching cards found.</div>
+                                ) : null}
+                                {!itemSuggestLoading && itemSuggestions.map((suggestion) => (
+                                  <button
+                                    key={suggestion.id}
+                                    type="button"
+                                    className="sort-pill"
+                                    style={{ width: "100%", textAlign: "left", marginBottom: 6 }}
+                                    onClick={() => applyCatalogSuggestion(tierIndex, itemIndex, suggestion)}
+                                  >
+                                    {suggestion.name}
+                                    {suggestion.cardNumber ? ` #${suggestion.cardNumber}` : ""}
+                                    {suggestion.setId ? ` (${suggestion.setId})` : ""}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : null}
                           </label>
                           <label className="muted tiny">
                             Estimated value

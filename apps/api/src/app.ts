@@ -11,6 +11,7 @@ import { drawRouter } from "./modules/draws/router";
 import { walletRouter } from "./modules/wallet/router";
 import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
+import { catalogRouter } from "./modules/catalog/router";
 
 export function createApp() {
   const app = express();
@@ -84,6 +85,7 @@ export function createApp() {
   app.use(walletRouter);
   app.use(bannerRouter);
   app.use(authRouter);
+  app.use(catalogRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     const message = err instanceof Error ? err.message : "Internal server error";
