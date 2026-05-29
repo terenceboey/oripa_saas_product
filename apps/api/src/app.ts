@@ -48,7 +48,12 @@ export function createApp() {
     return false;
   }
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      // Allow storefront domains to embed logo/banner assets served from api.gachanow.xyz.
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    })
+  );
   // Explicit preflight responder for credentialed cross-subdomain requests on Render.
   app.use((req, res, next) => {
     const origin = String(req.headers.origin ?? "");
