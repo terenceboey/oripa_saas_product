@@ -1,5 +1,7 @@
 type JsonRecord = Record<string, unknown>;
 
+import { getSourceRank, type CatalogItemClass } from "./source-priority";
+
 export type CatalogSearchMergeInput = {
   id: string;
   source: string;
@@ -36,6 +38,21 @@ function firstNonBlank(...values: unknown[]): string | null {
   return null;
 }
 
+function asCatalogItemClass(value: string): CatalogItemClass {
+  switch (value) {
+    case "CARD":
+    case "SEALED_PRODUCT":
+    case "SET":
+    case "SLAB":
+    case "CUSTOM_ITEM":
+    case "ACCESSORY":
+    case "BONUS":
+      return value;
+    default:
+      return "CARD";
+  }
+}
+
 export function getCatalogSearchTcgplayerProductId(row: {
   source: string;
   sourceItemId?: string | null;
@@ -53,13 +70,23 @@ export function getCatalogSearchTcgplayerProductId(row: {
 }
 
 function preferredSourceRank(row: CatalogSearchMergeInput): number {
-  if (row.game === "POKEMON" && row.source === "pokemoncard.io") return 0;
-  if (row.game === "ONE_PIECE" && row.source === "onepiecedb.io") return 0;
-  if (row.source === "tcgtracking") return 10;
-  return 5;
+  return getSourceRank({
+    game: row.game,
+    itemClass: asCatalogItemClass(row.itemType),
+    source: row.source,
+    useCase: "SEARCH_DISPLAY",
+  }).displayRank;
 }
 
 function dedupeKey(row: CatalogSearchMergeInput): string | null {
+  const policy = getSourceRank({
+    game: row.game,
+    itemClass: asCatalogItemClass(row.itemType),
+    source: row.source,
+    useCase: "SEARCH_DISPLAY",
+  });
+  if (!policy.collapseEligible) return null;
+
   const tcgplayerProductId = getCatalogSearchTcgplayerProductId(row);
   if (!tcgplayerProductId) return null;
   return [row.game, row.itemType, tcgplayerProductId].join("::");
