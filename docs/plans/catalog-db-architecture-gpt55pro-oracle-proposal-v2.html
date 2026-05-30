@@ -1,0 +1,1704 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oripa Catalog Database Architecture Proposal</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #5b6475;
+      --line: #dfe5ef;
+      --brand: #5847f5;
+      --brand-2: #08a88a;
+      --brand-3: #ffb020;
+      --danger: #d64545;
+      --code-bg: #101828;
+      --code-ink: #edf2ff;
+      --shadow: 0 18px 60px rgba(16, 24, 40, .10);
+      --radius: 18px;
+      --content: 980px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(88, 71, 245, .14), transparent 32rem),
+        radial-gradient(circle at top right, rgba(8, 168, 138, .12), transparent 30rem),
+        var(--bg);
+      line-height: 1.62;
+    }
+    a { color: var(--brand); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .page { max-width: 1320px; margin: 0 auto; padding: 42px 26px 80px; }
+    .cover {
+      background: linear-gradient(135deg, #111827 0%, #261f72 55%, #087c72 100%);
+      color: white;
+      border-radius: 28px;
+      padding: 52px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .cover:before {
+      content: "";
+      position: absolute;
+      inset: -20% -10% auto auto;
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(255,255,255,.16), transparent 62%);
+      pointer-events: none;
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      color: #dbeafe;
+      font-size: 13px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .cover h1 {
+      margin: 22px 0 14px;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: .98;
+      letter-spacing: -.055em;
+      max-width: 940px;
+    }
+    .subtitle { max-width: 920px; color: #e5edf8; font-size: 20px; margin: 0; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 34px;
+    }
+    .meta-card {
+      border: 1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.10);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(14px);
+      min-height: 94px;
+    }
+    .meta-card strong { display: block; font-size: 13px; color: #bfd7ff; text-transform: uppercase; letter-spacing: .05em; }
+    .meta-card span { display: block; margin-top: 8px; color: #fff; font-size: 17px; font-weight: 750; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 24px 0;
+    }
+    .summary-card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(16,24,40,.05);
+    }
+    .summary-card h3 { margin: 0 0 8px; font-size: 16px; letter-spacing: -.01em; }
+    .summary-card p { margin: 0; color: var(--muted); }
+    .layout {
+      display: grid;
+      grid-template-columns: 295px minmax(0, 1fr);
+      gap: 28px;
+      align-items: start;
+      margin-top: 28px;
+    }
+    aside { position: sticky; top: 22px; }
+    .toc {
+      max-height: calc(100vh - 44px);
+      overflow: auto;
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 20px;
+      box-shadow: 0 10px 32px rgba(16,24,40,.06);
+      backdrop-filter: blur(14px);
+      font-size: 14px;
+    }
+    .toc:before { content: "Contents"; display: block; font-weight: 800; font-size: 13px; text-transform: uppercase; color: var(--muted); letter-spacing: .08em; margin-bottom: 10px; }
+    .toc ul { list-style: none; padding-left: 0; margin: 0; }
+    .toc li { margin: 7px 0; }
+    .toc ul ul { padding-left: 14px; border-left: 1px solid var(--line); margin: 8px 0 8px 2px; }
+    .toc a { color: #2d3748; }
+    main.article {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 44px 54px;
+      box-shadow: var(--shadow);
+      max-width: var(--content);
+    }
+    .callout {
+      border-left: 5px solid var(--brand);
+      background: #f3f4ff;
+      padding: 18px 20px;
+      border-radius: 14px;
+      margin: 0 0 30px;
+      color: #293056;
+    }
+    .callout strong { color: #1f2373; }
+    h1, h2, h3, h4 { color: #111827; letter-spacing: -.035em; line-height: 1.16; }
+    main.article > h1 {
+      margin-top: 58px;
+      padding-top: 34px;
+      border-top: 1px solid var(--line);
+      font-size: 34px;
+    }
+    main.article > h1:first-of-type { margin-top: 0; padding-top: 0; border-top: 0; }
+    h2 { margin-top: 34px; font-size: 25px; }
+    h3 { margin-top: 28px; font-size: 20px; }
+    p, li { font-size: 16px; }
+    p { margin: 13px 0; }
+    ul, ol { padding-left: 1.35rem; }
+    li + li { margin-top: 5px; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: #eef2ff;
+      color: #34318a;
+      padding: .15em .35em;
+      border-radius: 7px;
+      font-size: .92em;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      padding: 20px;
+      border-radius: 16px;
+      overflow: auto;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    pre code { background: transparent; color: inherit; padding: 0; border-radius: 0; }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 22px 0;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+    th { background: #f1f5fb; text-align: left; font-weight: 800; color: #253047; }
+    th, td { padding: 12px 14px; vertical-align: top; border-bottom: 1px solid var(--line); }
+    tr:last-child td { border-bottom: 0; }
+    blockquote {
+      margin: 22px 0;
+      padding: 16px 20px;
+      border-left: 5px solid var(--brand-2);
+      background: #effcf8;
+      border-radius: 14px;
+      color: #24443e;
+    }
+    .footer {
+      max-width: var(--content);
+      margin: 24px 0 0 auto;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: right;
+    }
+    .print-button {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      border: 0;
+      background: var(--brand);
+      color: white;
+      border-radius: 999px;
+      padding: 13px 17px;
+      font-weight: 800;
+      box-shadow: 0 10px 30px rgba(88, 71, 245, .35);
+      cursor: pointer;
+    }
+    @media (max-width: 980px) {
+      .page { padding: 20px 14px 60px; }
+      .cover { padding: 34px 26px; }
+      .meta-grid, .summary { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; }
+      main.article { padding: 30px 22px; }
+      .print-button { display: none; }
+    }
+    @media print {
+      body { background: white; }
+      .page { max-width: none; padding: 0; }
+      .cover, main.article, .summary-card, .toc { box-shadow: none; }
+      .layout { display: block; }
+      aside, .print-button { display: none; }
+      .cover { border-radius: 0; color: white; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      main.article { border: 0; padding: 28px 0; max-width: none; }
+      main.article > h1 { break-before: page; }
+      pre, table { break-inside: avoid; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+  <button class="print-button" onclick="window.print()">Print / Save PDF</button>
+  <div class="page">
+    <section class="cover">
+      <div class="eyebrow">Oripa · Database Architecture Proposal</div>
+      <h1>Catalog, Inventory & Prize Snapshot Architecture</h1>
+      <p class="subtitle">A leadership-ready proposal derived from GPT-5.5 Pro Oracle review, repo evidence, live database evidence, and locked product decisions.</p>
+      <div class="meta-grid">
+        <div class="meta-card"><strong>Prepared for</strong><span>Oripa leadership review</span></div>
+        <div class="meta-card"><strong>Source</strong><span>GPT-5.5 Pro Oracle v2</span></div>
+        <div class="meta-card"><strong>Generated</strong><span>2026-05-30 05:04 UTC</span></div>
+        <div class="meta-card"><strong>Scope</strong><span>Catalog · Search · Inventory · Prizes</span></div>
+      </div>
+    </section>
+
+    <section class="summary" aria-label="Executive summary cards">
+      <div class="summary-card">
+        <h3>Recommendation</h3>
+        <p>Keep <code>CatalogItem</code> as compatibility bridge, add layered canonical catalog, source provenance, subtype tables, vendor inventory, and immutable prize snapshots.</p>
+      </div>
+      <div class="summary-card">
+        <h3>Why now</h3>
+        <p>Current search is multi-second at 220k+ rows, live schema drift exists, and pack prizes do not preserve canonical identity or immutable snapshots.</p>
+      </div>
+      <div class="summary-card">
+        <h3>Migration posture</h3>
+        <p>Additive only: reconcile live schema first, add indexes/projections behind flags, backfill, shadow-read, then enforce.</p>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside><nav class="toc" aria-label="Proposal table of contents">
+<ul>
+<li><a href="#1-executive-recommendation">1. Executive recommendation</a><ul>
+<li><a href="#confirmed-evidence">Confirmed evidence</a></li>
+<li><a href="#final-recommendation">Final recommendation</a></li>
+</ul>
+</li>
+<li><a href="#2-evidence-backed-current-state-summary">2. Evidence-backed current-state summary</a><ul>
+<li><a href="#confirmed-evidence_1">Confirmed evidence</a><ul>
+<li><a href="#current-catalogitem">Current CatalogItem</a></li>
+<li><a href="#live-schema-drift">Live schema drift</a></li>
+<li><a href="#current-search">Current search</a></li>
+<li><a href="#current-pack-prizes">Current pack prizes</a></li>
+</ul>
+</li>
+<li><a href="#design-interpretation">Design interpretation</a></li>
+</ul>
+</li>
+<li><a href="#3-final-target-architecture">3. Final target architecture</a><ul>
+<li><a href="#confirmed-evidence_2">Confirmed evidence</a></li>
+<li><a href="#design-recommendation">Design recommendation</a><ul>
+<li><a href="#layer-1-source-provenance">Layer 1 — Source/provenance</a></li>
+<li><a href="#layer-2-canonical-global-catalog">Layer 2 — Canonical global catalog</a></li>
+<li><a href="#layer-3-type-specific-details">Layer 3 — Type-specific details</a></li>
+<li><a href="#layer-4-vendor-domain">Layer 4 — Vendor domain</a></li>
+<li><a href="#layer-5-pack-prize-historical-truth">Layer 5 — Pack/prize historical truth</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4-canonical-global-catalog-model">4. Canonical global catalog model</a><ul>
+<li><a href="#confirmed-evidence_3">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_1">Design recommendation</a><ul>
+<li><a href="#cataloggame">CatalogGame</a></li>
+<li><a href="#catalogsource">CatalogSource</a></li>
+<li><a href="#catalogimportrun">CatalogImportRun</a></li>
+<li><a href="#catalogitem">CatalogItem</a></li>
+<li><a href="#catalogexternalref">CatalogExternalRef</a></li>
+<li><a href="#catalogalias">CatalogAlias</a></li>
+<li><a href="#catalogimage">CatalogImage</a></li>
+<li><a href="#catalogset">CatalogSet</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#5-type-specific-model-strategy">5. Type-specific model strategy</a><ul>
+<li><a href="#confirmed-evidence_4">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_2">Design recommendation</a><ul>
+<li><a href="#card">CARD</a></li>
+<li><a href="#graded-card">GRADED_CARD</a></li>
+<li><a href="#sealed-product">SEALED_PRODUCT</a></li>
+<li><a href="#set">SET</a></li>
+<li><a href="#custom">CUSTOM</a></li>
+<li><a href="#accessory">ACCESSORY</a></li>
+<li><a href="#other">OTHER</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#6-vendor-inventory-listing-layer-strategy">6. Vendor inventory/listing layer strategy</a><ul>
+<li><a href="#confirmed-evidence_5">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_3">Design recommendation</a><ul>
+<li><a href="#vendorinventoryitem">VendorInventoryItem</a></li>
+<li><a href="#vendorlisting">VendorListing</a></li>
+<li><a href="#vendorprizecandidate">VendorPrizeCandidate</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#7-vendor-custom-item-moderation-and-promotion">7. Vendor custom-item moderation and promotion</a><ul>
+<li><a href="#confirmed-evidence_6">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_4">Design recommendation</a><ul>
+<li><a href="#vendorcustomitemmoderation">VendorCustomItemModeration</a></li>
+<li><a href="#moderation-states">Moderation states</a></li>
+<li><a href="#promotion-workflow">Promotion workflow</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#8-packprize-immutable-snapshot-strategy">8. PackPrize immutable snapshot strategy</a><ul>
+<li><a href="#confirmed-evidence_7">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_5">Design recommendation</a><ul>
+<li><a href="#additive-packprize-fields">Additive PackPrize fields</a></li>
+<li><a href="#required-rules">Required rules</a></li>
+<li><a href="#legacy-backfill">Legacy backfill</a></li>
+<li><a href="#draw-ledger-extension-point">Draw ledger extension point</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#9-pack-prize-snapshot-correctness-for-pack-contents">9. Pack-prize snapshot correctness for pack contents</a><ul>
+<li><a href="#confirmed-evidence_8">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_6">Design recommendation</a><ul>
+<li><a href="#snapshot-builder-inputs">Snapshot builder inputs</a></li>
+<li><a href="#snapshot-builder-output">Snapshot builder output</a></li>
+<li><a href="#correctness-tests">Correctness tests</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#10-source-conflict-workflow">10. Source conflict workflow</a><ul>
+<li><a href="#confirmed-evidence_9">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_7">Design recommendation</a><ul>
+<li><a href="#catalogsourceconflict">CatalogSourceConflict</a></li>
+<li><a href="#catalogsourcepatch">CatalogSourcePatch</a></li>
+<li><a href="#conflict-creation-rules">Conflict creation rules</a></li>
+<li><a href="#conflict-resolution-rules">Conflict resolution rules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#11-catalog-search-projection-and-postgres-search-index-strategy">11. Catalog search projection and Postgres search/index strategy</a><ul>
+<li><a href="#confirmed-evidence_10">Confirmed evidence</a></li>
+<li><a href="#design-recommendation_8">Design recommendation</a><ul>
+<li><a href="#launch-strategy">Launch strategy</a></li>
+<li><a href="#catalogsearchdocument">CatalogSearchDocument</a></li>
+<li><a href="#ranking">Ranking</a></li>
+<li><a href="#search-api-behavior">Search API behavior</a></li>
+<li><a href="#index-examples">Index examples</a></li>
+<li><a href="#bridge-indexes-before-projection-is-live">Bridge indexes before projection is live</a></li>
+<li><a href="#query-shape-rule">Query-shape rule</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#12-query-examples">12. Query examples</a><ul>
+<li><a href="#current-table-bridge-search">Current-table bridge search</a></li>
+<li><a href="#search-projection-read">Search projection read</a></li>
+<li><a href="#pack-prize-creation-from-a-search-document">Pack prize creation from a search document</a></li>
+<li><a href="#pack-display-read">Pack display read</a></li>
+</ul>
+</li>
+<li><a href="#13-non-destructive-migration-phases">13. Non-destructive migration phases</a><ul>
+<li><a href="#phase-0-baseline-and-schema-drift-reconciliation">Phase 0 — Baseline and schema drift reconciliation</a><ul>
+<li><a href="#confirmed-evidence_11">Confirmed evidence</a></li>
+<li><a href="#actions">Actions</a></li>
+<li><a href="#gate">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-1-search-stabilization-on-current-table">Phase 1 — Search stabilization on current table</a><ul>
+<li><a href="#actions_1">Actions</a></li>
+<li><a href="#gate_1">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-2-packprize-identity-and-snapshot-fields">Phase 2 — PackPrize identity and snapshot fields</a><ul>
+<li><a href="#actions_2">Actions</a></li>
+<li><a href="#gate_2">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-3-source-provenance-and-import-audit">Phase 3 — Source/provenance and import audit</a><ul>
+<li><a href="#actions_3">Actions</a></li>
+<li><a href="#gate_3">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-4-type-specific-tables-for-all-launch-critical-item-types">Phase 4 — Type-specific tables for all launch-critical item types</a><ul>
+<li><a href="#actions_4">Actions</a></li>
+<li><a href="#gate_4">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-5-search-projection">Phase 5 — Search projection</a><ul>
+<li><a href="#actions_5">Actions</a></li>
+<li><a href="#gate_5">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-6-vendor-inventory-and-custom-moderation">Phase 6 — Vendor inventory and custom moderation</a><ul>
+<li><a href="#actions_6">Actions</a></li>
+<li><a href="#gate_6">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-7-source-conflict-queue">Phase 7 — Source conflict queue</a><ul>
+<li><a href="#actions_7">Actions</a></li>
+<li><a href="#gate_7">Gate</a></li>
+</ul>
+</li>
+<li><a href="#phase-8-strengthen-constraints-after-adoption">Phase 8 — Strengthen constraints after adoption</a><ul>
+<li><a href="#actions_8">Actions</a></li>
+<li><a href="#gate_8">Gate</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#14-launch-sequencing">14. Launch sequencing</a><ul>
+<li><a href="#launch-critical-path">Launch-critical path</a></li>
+<li><a href="#not-launch-blockers">Not launch blockers</a></li>
+</ul>
+</li>
+<li><a href="#15-remaining-decisions-required-from-product">15. Remaining decisions required from product</a></li>
+<li><a href="#16-risks-and-rollout-gates">16. Risks and rollout gates</a><ul>
+<li><a href="#risk-schema-drift-continues">Risk: schema drift continues</a></li>
+<li><a href="#risk-search-rewrite-still-misses-indexes">Risk: search rewrite still misses indexes</a></li>
+<li><a href="#risk-search-projection-diverges-from-canonical-catalog">Risk: search projection diverges from canonical catalog</a></li>
+<li><a href="#risk-snapshots-are-incomplete">Risk: snapshots are incomplete</a></li>
+<li><a href="#risk-legacy-prize-matching-is-wrong">Risk: legacy prize matching is wrong</a></li>
+<li><a href="#risk-all-item-types-are-launch-critical-but-data-is-uneven">Risk: all item types are “launch-critical” but data is uneven</a></li>
+<li><a href="#risk-custom-items-pollute-global-catalog">Risk: custom items pollute global catalog</a></li>
+<li><a href="#risk-source-conflicts-overwrite-good-data">Risk: source conflicts overwrite good data</a></li>
+<li><a href="#risk-index-builds-impact-production">Risk: index builds impact production</a></li>
+</ul>
+</li>
+<li><a href="#final-position">Final position</a></li>
+</ul>
+</nav>
+</aside>
+      <main class="article">
+        <div class="callout"><strong>Bottom line:</strong> Do not replace the current catalog destructively. Add the missing architecture layers around it, make pack prizes immutable snapshots, and fix search with targeted Postgres indexes/projections before expanding product types.</div>
+        <p>According to the May 30, 2026 evidence packet, prior Oracle proposal, and product-decision document, Oripa should move to an additive layered catalog architecture: keep the current <code>CatalogItem</code> path as a compatibility bridge, introduce canonical identity/provenance/type-specific tables, serve search from a narrow projection, and make every pack prize a self-contained immutable snapshot. The product-decision file is treated below as hard constraint, not as an open question.  </p>
+<h1 id="1-executive-recommendation">1. Executive recommendation</h1>
+<h2 id="confirmed-evidence">Confirmed evidence</h2>
+<p>Oripa is a digital pack-opening platform where vendors search prize-eligible catalog items and add them to packs. The catalog scope is explicitly broader than cards: raw cards, graded/slabbed cards, sealed products, sets, custom/vendor-created items, accessories, future collectibles, and multiple games are in scope. The evidence packet also states the key invariant: pack prize odds, value, and display must not silently mutate when upstream catalog data changes. </p>
+<p>The current database is already large enough for search architecture to matter: the live catalog has 220,905 active <code>CatalogItem</code> rows, all currently <code>CARD</code>, all from <code>tcgtracking</code>, spread across 10 games. Search paths measured in the evidence packet are multi-second, including about 5.16 seconds for a prefix name search and about 2.14 seconds for <code>searchText ILIKE '%char%'</code>.  </p>
+<p>The product decisions establish hard constraints: prizes must reference both global catalog items and vendor inventory items where applicable, every prize snapshot is required, graded slabs use global templates plus vendor inventory for cert-specific slabs, <code>CatalogSet</code> remains metadata only, vendor custom items are not globally searchable by default, estimated value is out of launch scope, all item types are launch-critical, draft packs may refresh from catalog, live packs must never silently refresh, source conflicts go to human review, and compliance/odds audit is deferred but extension points must remain. </p>
+<h2 id="final-recommendation">Final recommendation</h2>
+<p>Adopt the following target architecture:</p>
+<pre><code class="language-text">External catalog sources
+  -&gt; CatalogImportRun
+  -&gt; CatalogSource / CatalogExternalRef / CatalogSourceConflict
+  -&gt; Canonical CatalogItem
+      -&gt; CatalogCard
+      -&gt; CatalogGradedCardTemplate
+      -&gt; CatalogSealedProduct
+      -&gt; CatalogSet metadata
+      -&gt; CatalogAccessory
+      -&gt; CatalogCollectibleExtension
+
+Canonical + vendor item universe
+  -&gt; CatalogSearchDocument
+  -&gt; VendorCustomItem
+  -&gt; VendorInventoryItem
+  -&gt; VendorPrizeCandidate / VendorListing
+
+Pack domain
+  -&gt; PackPrize
+      -&gt; nullable catalogItemId
+      -&gt; nullable vendorInventoryItemId
+      -&gt; nullable vendorCustomItemId
+      -&gt; required immutable snapshot fields
+  -&gt; PackPrizeDrawLedger extension point
+</code></pre>
+<p>The launch-critical work is not to replace <code>CatalogItem</code> destructively. It is to add the missing layers around it, then move reads and writes behind feature flags. The immediate P0 sequence should be:</p>
+<ol>
+<li>Reconcile Prisma schema drift with live DB non-destructively.</li>
+<li>Fix search query shape and indexes.</li>
+<li>Add nullable identity/provenance fields and required snapshot write behavior to <code>PackPrize</code>.</li>
+<li>Add source conflict and custom-item moderation workflow.</li>
+<li>Build the search projection and vendor inventory layer.</li>
+<li>Delay hard enforcement and cleanup until after backfill, shadow reads, and launch gates pass.</li>
+</ol>
+<h1 id="2-evidence-backed-current-state-summary">2. Evidence-backed current-state summary</h1>
+<h2 id="confirmed-evidence_1">Confirmed evidence</h2>
+<h3 id="current-catalogitem">Current <code>CatalogItem</code></h3>
+<p>The repo <code>CatalogItem</code> is a single table with <code>source</code>, <code>sourceItemId</code>, <code>itemType</code>, <code>game</code>, <code>language</code>, <code>name</code>, set/card fields, image URLs, <code>searchText</code>, <code>sourcePayload</code>, activity flags, and timestamps. It has a uniqueness constraint on <code>(source, sourceItemId, language)</code> and indexes around type/game/activity, source/activity, game/language/activity, set, and name. The enum has at least <code>CARD</code> and <code>SEALED_PRODUCT</code>. </p>
+<h3 id="live-schema-drift">Live schema drift</h3>
+<p>The live DB has <code>CatalogSet</code> and <code>CatalogItem.catalogSetId</code>, including a foreign key to <code>CatalogSet</code>, but the repo Prisma schema did not define <code>CatalogSet</code> or <code>catalogSetId</code> at investigation time. </p>
+<h3 id="current-search">Current search</h3>
+<p>The current search endpoint can run up to three sequential DB queries: case-insensitive name prefix, case-insensitive name contains, and case-insensitive <code>searchText</code> contains. The search response returns narrow display fields and excludes <code>sourcePayload</code>.  </p>
+<p>The DB has <code>pg_trgm</code> and an existing <code>CatalogItem_lower_name_trgm_idx</code>, but current Prisma <code>mode: insensitive</code> query shapes do not use it. Missing search-related indexes include <code>searchText</code> trigram/full-text support, composite <code>(game, itemType, isActive, name)</code>, covering search response indexes, and source item ID prefix/trigram support. </p>
+<h3 id="current-pack-prizes">Current pack prizes</h3>
+<p>Current pack prize creation copies only <code>label</code>, <code>imageUrl</code>, <code>estimatedValue</code>, <code>weight</code>, <code>stock</code>, and <code>remainingStock</code>; no <code>catalogItemId</code> is stored. The vendor UI searches catalog suggestions, then copies label and image into draft state without persisting <code>catalogItemId</code>. </p>
+<p>The live <code>PackPrize</code> table has only nine rows across three packs, and it has no FK/reference to <code>CatalogItem</code>. This is early enough to fix prize correctness non-destructively. </p>
+<h2 id="design-interpretation">Design interpretation</h2>
+<p>The current system has four separate problems:</p>
+<table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Why it matters</th>
+<th>Launch handling</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Schema drift</td>
+<td>Repo schema does not fully represent live DB.</td>
+<td>Baseline current live schema; do not drop anything.</td>
+</tr>
+<tr>
+<td>Slow search</td>
+<td>Autocomplete is already multi-second at 220k rows.</td>
+<td>Add bridge indexes and rewrite hot query shape first; build projection next.</td>
+</tr>
+<tr>
+<td>Weak prize correctness</td>
+<td>Prizes have no canonical identity or immutable snapshot.</td>
+<td>Add snapshot fields and require snapshot writes for all new prizes.</td>
+</tr>
+<tr>
+<td>Overloaded catalog model</td>
+<td>Current model is card/source-shaped, but launch-critical item types are broader.</td>
+<td>Keep core identity common; move type fields into extension tables.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="3-final-target-architecture">3. Final target architecture</h1>
+<h2 id="confirmed-evidence_2">Confirmed evidence</h2>
+<p>The prior proposal recommended a layered architecture: canonical catalog core, type-specific extension tables, narrow <code>CatalogSearchDocument</code>, immutable <code>PackPrize</code> snapshots, and vendor inventory/listing separation. It also explicitly recommended an additive migration path rather than dropping or rewriting existing catalog/prize data. </p>
+<h2 id="design-recommendation">Design recommendation</h2>
+<p>Use five layers.</p>
+<h3 id="layer-1-source-provenance">Layer 1 — Source/provenance</h3>
+<p>Tracks external data sources, import runs, raw source identity, payload hashes, source changes, and conflicts.</p>
+<pre><code class="language-text">CatalogSource
+CatalogImportRun
+CatalogExternalRef
+CatalogSourceConflict
+CatalogSourcePatch
+</code></pre>
+<h3 id="layer-2-canonical-global-catalog">Layer 2 — Canonical global catalog</h3>
+<p>Stores Oripa-owned global item identity and common display/lifecycle fields.</p>
+<pre><code class="language-text">CatalogGame
+CatalogItem
+CatalogAlias
+CatalogImage
+CatalogSet
+</code></pre>
+<h3 id="layer-3-type-specific-details">Layer 3 — Type-specific details</h3>
+<p>Stores attributes that only make sense for a type.</p>
+<pre><code class="language-text">CatalogCard
+CatalogGradedCardTemplate
+CatalogSealedProduct
+CatalogAccessory
+CatalogCollectibleExtension
+</code></pre>
+<h3 id="layer-4-vendor-domain">Layer 4 — Vendor domain</h3>
+<p>Stores vendor-owned items, custom items, cert-specific slabs, and pack-builder candidates.</p>
+<pre><code class="language-text">VendorCustomItem
+VendorInventoryItem
+VendorListing
+VendorPrizeCandidate
+VendorCustomItemModeration
+</code></pre>
+<h3 id="layer-5-pack-prize-historical-truth">Layer 5 — Pack/prize historical truth</h3>
+<p>Stores pack prize snapshots as the source of truth for display and opening behavior.</p>
+<pre><code class="language-text">PackPrize
+PackPrizeDrawLedger       -- extension point; not launch blocker unless stock correctness requires it
+PackPrizeCorrectionEvent  -- extension point for future audit/compliance
+</code></pre>
+<p>The important boundary is this: <code>CatalogItem</code> answers “what is this object globally?”; <code>VendorInventoryItem</code> answers “what does this vendor actually have or offer?”; <code>PackPrize</code> answers “what exactly was promised in this pack at creation/publish time?”</p>
+<h1 id="4-canonical-global-catalog-model">4. Canonical global catalog model</h1>
+<h2 id="confirmed-evidence_3">Confirmed evidence</h2>
+<p>The existing <code>CatalogItem</code> contains source identity, game, language, item type, name, set/card fields, images, search text, payload, and active timestamps. The evidence packet also calls out raw <code>game</code> and <code>source</code> strings as a P1 risk. </p>
+<h2 id="design-recommendation_1">Design recommendation</h2>
+<p>Do not replace the current <code>CatalogItem</code> immediately. Evolve it into a canonical global item table by adding normalized fields and moving source-specific and type-specific data into side tables.</p>
+<h3 id="cataloggame"><code>CatalogGame</code></h3>
+<pre><code class="language-text">id
+code unique                  -- POKEMON, YUGIOH, ONE_PIECE, etc.
+displayName
+categoryGroup nullable
+isActive
+sortOrder
+createdAt
+updatedAt
+</code></pre>
+<p>Use <code>code</code> as the stable product/API value. Keep the old string <code>game</code> until all reads and writes migrate.</p>
+<h3 id="catalogsource"><code>CatalogSource</code></h3>
+<pre><code class="language-text">id
+key unique                   -- tcgtracking, vendor_custom, manual_admin, future_source
+displayName
+trustTier                    -- PRIMARY, SECONDARY, VENDOR_SUBMITTED, MANUAL
+isActive
+createdAt
+updatedAt
+</code></pre>
+<p><code>trustTier</code> is not for automatic merge. It is metadata used by the human conflict workflow.</p>
+<h3 id="catalogimportrun"><code>CatalogImportRun</code></h3>
+<pre><code class="language-text">id
+sourceId
+startedAt
+completedAt nullable
+status                       -- RUNNING, SUCCEEDED, FAILED, PARTIAL
+sourceCursor nullable
+recordsSeen
+recordsInserted
+recordsUpdated
+recordsUnchanged
+recordsDeactivated
+importVersion nullable
+notes nullable
+createdBy nullable
+</code></pre>
+<p>This makes catalog changes auditable without becoming a compliance/odds launch blocker.</p>
+<h3 id="catalogitem"><code>CatalogItem</code></h3>
+<pre><code class="language-text">id
+itemType                     -- CARD, SEALED_PRODUCT, GRADED_CARD, SET, CUSTOM, ACCESSORY, OTHER
+gameId nullable
+gameCode                     -- denormalized stable code for fast filtering
+language
+canonicalName
+displayName
+subtitle nullable
+catalogSetId nullable        -- FK to CatalogSet metadata when applicable
+primaryImageUrl nullable
+thumbnailImageUrl nullable
+largeImageUrl nullable
+isPrizeEligible
+isSearchable
+status                       -- ACTIVE, INACTIVE, NEEDS_REVIEW, MERGED, REJECTED
+mergedIntoCatalogItemId nullable
+createdAt
+updatedAt
+</code></pre>
+<p>During migration, keep existing fields such as <code>source</code>, <code>sourceItemId</code>, <code>game</code>, <code>name</code>, <code>setId</code>, <code>setName</code>, <code>cardNumber</code>, <code>rarity</code>, <code>image*</code>, <code>searchText</code>, and <code>sourcePayload</code> as compatibility fields. Do not drop them in the launch migration.</p>
+<h3 id="catalogexternalref"><code>CatalogExternalRef</code></h3>
+<pre><code class="language-text">id
+catalogItemId
+sourceId
+sourceItemId
+sourceLanguage
+sourceUrl nullable
+sourcePayload jsonb nullable
+sourcePayloadHash
+sourceUpdatedAt nullable
+importRunId nullable
+isPrimary
+isActive
+createdAt
+updatedAt
+
+unique(sourceId, sourceItemId, sourceLanguage)
+index(catalogItemId)
+index(sourceId, isActive)
+index(sourcePayloadHash)
+</code></pre>
+<p>This preserves the existing uniqueness concept <code>(source, sourceItemId, language)</code> while allowing multiple external sources per canonical item later. </p>
+<h3 id="catalogalias"><code>CatalogAlias</code></h3>
+<pre><code class="language-text">id
+catalogItemId
+aliasType                    -- NAME, SOURCE_NAME, LOCALIZED_NAME, CARD_NUMBER, SET_CODE, BARCODE
+value
+normalizedValue
+language nullable
+sourceId nullable
+isSearchable
+createdAt
+
+index(catalogItemId)
+index(normalizedValue)
+</code></pre>
+<h3 id="catalogimage"><code>CatalogImage</code></h3>
+<pre><code class="language-text">id
+catalogItemId
+imageType                    -- THUMB, LARGE, FRONT, BACK, LOGO, SYMBOL, BANNER, SLAB_FRONT
+url
+sourceId nullable
+width nullable
+height nullable
+isPrimary
+createdAt
+
+index(catalogItemId, imageType)
+</code></pre>
+<h3 id="catalogset"><code>CatalogSet</code></h3>
+<p><code>CatalogSet</code> remains metadata only, per product decision. Prizeable complete sets must be separate <code>CatalogItem</code> rows with <code>itemType = SET</code>. </p>
+<pre><code class="language-text">id
+sourceId nullable
+sourceSetId nullable
+gameId nullable
+gameCode
+setCode nullable
+name
+releaseDate nullable
+productCount nullable
+symbolImageUrl nullable
+logoImageUrl nullable
+bannerImageUrl nullable
+isSupplemental
+searchText
+isActive
+createdAt
+updatedAt
+
+unique(sourceId, sourceSetId, gameCode) nullable-aware by implementation
+index(gameCode, isActive, name)
+index(gameCode, isActive, releaseDate)
+</code></pre>
+<h1 id="5-type-specific-model-strategy">5. Type-specific model strategy</h1>
+<h2 id="confirmed-evidence_4">Confirmed evidence</h2>
+<p>The current normalizer builds card-like catalog rows, uses <code>itemType: CatalogItemType.CARD</code>, preserves <code>sourcePayload</code>, and has <code>hasCardShape()</code> for card-like products. Live rows are all <code>CARD</code>, despite the broader product scope and launch-critical item types.  </p>
+<p>The product decision makes all item types launch-critical: <code>CARD</code>, <code>SEALED_PRODUCT</code>, <code>GRADED_CARD</code>, <code>SET</code>, <code>CUSTOM</code>, <code>ACCESSORY</code>, and <code>OTHER</code>. </p>
+<h2 id="design-recommendation_2">Design recommendation</h2>
+<p>Use type-specific tables for item types that are launch-critical and likely to be queried. Use a generic JSON extension only as an escape hatch for low-volume or not-yet-modeled details, not as the primary modeling strategy.</p>
+<h3 id="card"><code>CARD</code></h3>
+<pre><code class="language-text">CatalogCard
+  catalogItemId primary key / FK
+  catalogSetId nullable
+  setNameSnapshot nullable
+  localId nullable
+  cardNumber nullable
+  rarity nullable
+  printing nullable
+  finish nullable
+  regulationMark nullable
+  artist nullable
+  evolvesFrom nullable
+  metadata jsonb nullable
+  createdAt
+  updatedAt
+</code></pre>
+<p><code>cardNumber</code> and <code>rarity</code> must remain nullable because the evidence packet reports missing card numbers and rarities in current data. </p>
+<h3 id="graded-card"><code>GRADED_CARD</code></h3>
+<p>Hard product constraint: global catalog template for generic graded item; vendor inventory for cert-specific individual slabs. </p>
+<pre><code class="language-text">CatalogGradedCardTemplate
+  catalogItemId primary key / FK
+  rawCardCatalogItemId nullable
+  grader                       -- PSA, CGC, BGS, SGC, OTHER
+  grade
+  qualifier nullable
+  labelVariant nullable
+  populationData jsonb nullable
+  createdAt
+  updatedAt
+</code></pre>
+<p>Cert numbers do not belong in the global template. Put them in <code>VendorInventoryItem</code>.</p>
+<h3 id="sealed-product"><code>SEALED_PRODUCT</code></h3>
+<pre><code class="language-text">CatalogSealedProduct
+  catalogItemId primary key / FK
+  productKind                  -- BOOSTER_BOX, BOOSTER_PACK, ETB, CASE, TIN, COLLECTION, DECK, OTHER
+  catalogSetId nullable
+  releaseDate nullable
+  msrp nullable                -- extension only; not launch valuation
+  unitsPerBox nullable
+  packsPerBox nullable
+  barcode nullable
+  metadata jsonb nullable
+  createdAt
+  updatedAt
+</code></pre>
+<h3 id="set"><code>SET</code></h3>
+<p>Hard product constraint: <code>CatalogSet</code> is metadata only; prizeable complete sets are <code>CatalogItem</code> rows with <code>itemType = SET</code>. </p>
+<pre><code class="language-text">CatalogSetPrizeDetail
+  catalogItemId primary key / FK
+  catalogSetId FK
+  completenessType             -- COMPLETE_SET, MASTER_SET, PARTIAL_SET, SEALED_SET_BUNDLE, OTHER
+  itemCount nullable
+  conditionSummary nullable
+  metadata jsonb nullable
+</code></pre>
+<p>This avoids conflating “a set as metadata” with “a complete set as a prizeable object.”</p>
+<h3 id="custom"><code>CUSTOM</code></h3>
+<p>Custom items are vendor-originated and vendor-scoped by default. They become global only after review/moderation. </p>
+<pre><code class="language-text">VendorCustomItem
+  id
+  vendorId
+  linkedCatalogItemId nullable
+  itemType                     -- CUSTOM, ACCESSORY, OTHER, or proposed canonical type
+  gameId nullable
+  gameCode nullable
+  name
+  normalizedName
+  description nullable
+  imageUrl nullable
+  estimatedValue nullable       -- extension field only; not valuation engine
+  valueCurrency nullable
+  valueSource nullable
+  moderationStatus              -- DRAFT, SUBMITTED, NEEDS_CHANGES, APPROVED_VENDOR_ONLY, PROMOTED_GLOBAL, REJECTED
+  isSearchableWithinVendor
+  createdAt
+  updatedAt
+</code></pre>
+<h3 id="accessory"><code>ACCESSORY</code></h3>
+<p>Because <code>ACCESSORY</code> is launch-critical, model it explicitly instead of burying it in JSON.</p>
+<pre><code class="language-text">CatalogAccessory
+  catalogItemId primary key / FK
+  accessoryKind                -- SLEEVE, DECK_BOX, BINDER, PLAYMAT, STORAGE, OTHER
+  brand nullable
+  productLine nullable
+  size nullable
+  color nullable
+  barcode nullable
+  metadata jsonb nullable
+  createdAt
+  updatedAt
+</code></pre>
+<h3 id="other"><code>OTHER</code></h3>
+<p><code>OTHER</code> is launch-critical as a safe fallback, but it should be controlled.</p>
+<pre><code class="language-text">CatalogCollectibleExtension
+  catalogItemId primary key / FK
+  attributes jsonb
+  schemaVersion
+  reviewStatus                 -- ACTIVE, NEEDS_REVIEW, DEPRECATED
+  createdAt
+  updatedAt
+</code></pre>
+<p>Rule: <code>OTHER</code> can launch only if it maps to search projection, snapshot creation, and moderation fields. It should not become a dumping ground for unreviewed global catalog data.</p>
+<h1 id="6-vendor-inventory-listing-layer-strategy">6. Vendor inventory/listing layer strategy</h1>
+<h2 id="confirmed-evidence_5">Confirmed evidence</h2>
+<p>Current vendor UI selects catalog suggestions but only copies label and image into draft state; it does not persist <code>catalogItemId</code>. </p>
+<p>The prior proposal correctly distinguished catalog identity from vendor offering/inventory: the catalog tells Oripa what an object is; vendor inventory tells Oripa what a vendor can actually place into a pack. </p>
+<h2 id="design-recommendation_3">Design recommendation</h2>
+<h3 id="vendorinventoryitem"><code>VendorInventoryItem</code></h3>
+<pre><code class="language-text">id
+vendorId
+catalogItemId nullable
+vendorCustomItemId nullable
+inventoryType                 -- CATALOG_ITEM, CUSTOM_ITEM, CERTIFIED_SLAB, BUNDLE, LOT, OTHER
+condition nullable
+certNumber nullable            -- for cert-specific slabs
+quantityOnHand
+quantityReserved
+quantityAvailable generated/application
+acquisitionCost nullable       -- internal/vendor accounting, not launch valuation
+estimatedValue nullable        -- extension only
+valueCurrency nullable
+valueSource nullable
+status                         -- ACTIVE, RESERVED, DEPLETED, ARCHIVED, NEEDS_REVIEW
+metadata jsonb nullable
+createdAt
+updatedAt
+
+check exactly one or valid combination:
+  catalogItemId OR vendorCustomItemId OR bundle metadata
+index(vendorId, status)
+index(catalogItemId)
+index(vendorCustomItemId)
+</code></pre>
+<h3 id="vendorlisting"><code>VendorListing</code></h3>
+<pre><code class="language-text">id
+vendorId
+vendorInventoryItemId
+title
+imageUrl nullable
+displayValue nullable          -- extension only; not valuation engine
+listingStatus                  -- DRAFT, ACTIVE, PAUSED, ARCHIVED
+searchable
+createdAt
+updatedAt
+
+index(vendorId, listingStatus, searchable)
+</code></pre>
+<h3 id="vendorprizecandidate"><code>VendorPrizeCandidate</code></h3>
+<p>This can be a view or materialized table. It should unify global catalog items, vendor inventory items, and approved vendor custom items for pack builder search.</p>
+<pre><code class="language-text">id
+vendorId
+candidateType                  -- GLOBAL_CATALOG, VENDOR_INVENTORY, VENDOR_CUSTOM
+catalogItemId nullable
+vendorInventoryItemId nullable
+vendorCustomItemId nullable
+itemType
+gameCode nullable
+name
+subtitle nullable
+imageUrl nullable
+quantityAvailable nullable
+moderationStatus nullable
+isPrizeEligible
+searchDocumentId nullable
+updatedAt
+</code></pre>
+<p>For launch, pack builder can still allow direct catalog-backed prize creation. But the target should route vendor pack creation through <code>VendorPrizeCandidate</code> so that cert-specific slabs, custom items, lots, and inventory quantities can be represented.</p>
+<h1 id="7-vendor-custom-item-moderation-and-promotion">7. Vendor custom-item moderation and promotion</h1>
+<h2 id="confirmed-evidence_6">Confirmed evidence</h2>
+<p>Hard product constraint: vendor custom items are not globally searchable by default; vendors may submit/push a patch; global visibility requires manual review/moderation before promotion. </p>
+<h2 id="design-recommendation_4">Design recommendation</h2>
+<h3 id="vendorcustomitemmoderation"><code>VendorCustomItemModeration</code></h3>
+<pre><code class="language-text">id
+vendorCustomItemId
+submittedByUserId
+reviewedByUserId nullable
+status                         -- SUBMITTED, NEEDS_CHANGES, APPROVED_VENDOR_ONLY, PROMOTED_GLOBAL, REJECTED
+reviewReason nullable
+proposedCatalogItemId nullable
+resultCatalogItemId nullable
+createdAt
+reviewedAt nullable
+</code></pre>
+<h3 id="moderation-states">Moderation states</h3>
+<pre><code class="language-text">DRAFT
+  -&gt; vendor can edit; not searchable globally.
+
+SUBMITTED
+  -&gt; appears in moderation queue.
+
+NEEDS_CHANGES
+  -&gt; reviewer requests edits.
+
+APPROVED_VENDOR_ONLY
+  -&gt; usable by that vendor in packs; still not global.
+
+PROMOTED_GLOBAL
+  -&gt; creates or links to a canonical CatalogItem; global search document can be created.
+
+REJECTED
+  -&gt; cannot be used globally; pack use depends on policy.
+</code></pre>
+<h3 id="promotion-workflow">Promotion workflow</h3>
+<ol>
+<li>Vendor creates custom item.</li>
+<li>Vendor submits it for review.</li>
+<li>Reviewer compares it against existing <code>CatalogItem</code>/<code>CatalogAlias</code>.</li>
+<li>Reviewer either links it to an existing catalog item, creates a new <code>CatalogItem</code>, approves vendor-only use, requests changes, or rejects it.</li>
+<li>If promoted globally, create:</li>
+</ol>
+<ul>
+<li><code>CatalogItem</code></li>
+<li>type-specific row if applicable</li>
+<li><code>CatalogExternalRef</code> with source <code>vendor_custom</code> or <code>manual_admin</code></li>
+<li><code>CatalogSearchDocument</code> with <code>scope = GLOBAL</code>
+6. Keep a permanent link from <code>VendorCustomItem</code> to <code>linkedCatalogItemId</code> or moderation result.</li>
+</ul>
+<p>No automatic global promotion at launch.</p>
+<h1 id="8-packprize-immutable-snapshot-strategy">8. PackPrize immutable snapshot strategy</h1>
+<h2 id="confirmed-evidence_7">Confirmed evidence</h2>
+<p>Current <code>PackPrize</code> lacks a catalog FK and has only copied display/value/stock fields. The product invariant requires pack prizes to preserve historical correctness. </p>
+<p>Hard product constraint: pack prizes reference both global catalog items and vendor inventory items where applicable, and a snapshot is always required. Draft packs may refresh from catalog; live packs must never silently refresh. </p>
+<h2 id="design-recommendation_5">Design recommendation</h2>
+<p><code>PackPrize</code> must be the authoritative display/opening record after creation, especially after pack publish. Live catalog joins are for admin provenance only, not for user-facing prize truth.</p>
+<h3 id="additive-packprize-fields">Additive <code>PackPrize</code> fields</h3>
+<p>Keep all current fields. Add nullable identity/provenance fields first, then enforce snapshot presence in application code for new writes.</p>
+<pre><code class="language-text">PackPrize
+  id
+  packId
+
+  -- Existing compatibility fields
+  label
+  imageUrl
+  estimatedValue              -- keep for compatibility; no valuation engine required
+  weight
+  stock
+  remainingStock
+  createdAt
+  updatedAt
+
+  -- Identity/provenance
+  catalogItemId nullable
+  vendorInventoryItemId nullable
+  vendorCustomItemId nullable
+  catalogExternalRefId nullable
+  catalogSource nullable
+  catalogSourceItemId nullable
+  catalogPayloadHash nullable
+  createdFromSearchDocumentId nullable
+  createdFromCatalogUpdatedAt nullable
+
+  -- Required snapshot for new rows
+  snapshotVersion
+  snapshotItemType
+  snapshotGame nullable
+  snapshotLanguage nullable
+  snapshotName
+  snapshotSubtitle nullable
+  snapshotSetName nullable
+  snapshotSetId nullable
+  snapshotCardNumber nullable
+  snapshotRarity nullable
+  snapshotCondition nullable
+  snapshotGrader nullable
+  snapshotGrade nullable
+  snapshotCertNumber nullable
+  snapshotImageUrl nullable
+  snapshotThumbUrl nullable
+  snapshotLargeImageUrl nullable
+
+  -- Deferred value/compliance extension fields
+  snapshotEstimatedValue nullable
+  snapshotValueCurrency nullable
+  snapshotValueSource nullable
+  snapshotValueAsOf nullable
+
+  -- Full immutable evidence payload
+  snapshotJson jsonb
+  snapshotCreatedAt
+  snapshotCreatedBy nullable
+  isLegacySnapshot default false
+</code></pre>
+<h3 id="required-rules">Required rules</h3>
+<ol>
+<li>New <code>PackPrize</code> writes must create <code>snapshotJson</code>.</li>
+<li>New catalog-backed prizes must include <code>catalogItemId</code>.</li>
+<li>New vendor-inventory-backed prizes must include <code>vendorInventoryItemId</code>.</li>
+<li>New vendor-custom-backed prizes must include <code>vendorCustomItemId</code>.</li>
+<li>Pack display reads from <code>PackPrize.snapshot*</code> or existing compatibility fields, not from live <code>CatalogItem</code>.</li>
+<li>Pack opening logic reads <code>weight</code>, <code>stock</code>, and <code>remainingStock</code> from <code>PackPrize</code>, not from catalog.</li>
+<li>Draft packs may run explicit “refresh from catalog,” which creates a new snapshot or updates draft-only snapshot fields.</li>
+<li>Live packs never silently refresh from catalog.</li>
+<li>Existing nine <code>PackPrize</code> rows should be marked legacy and backfilled from existing fields, without forced catalog matching.</li>
+</ol>
+<p>The prior proposal’s rule that pack display should not join live catalog for prize display remains correct. </p>
+<h3 id="legacy-backfill">Legacy backfill</h3>
+<p>For existing rows:</p>
+<pre><code class="language-text">catalogItemId = null
+vendorInventoryItemId = null
+vendorCustomItemId = null
+snapshotName = label
+snapshotImageUrl = imageUrl
+snapshotEstimatedValue = estimatedValue
+snapshotJson = {
+  &quot;legacy&quot;: true,
+  &quot;label&quot;: &quot;...&quot;,
+  &quot;imageUrl&quot;: &quot;...&quot;,
+  &quot;estimatedValue&quot;: ...
+}
+isLegacySnapshot = true
+snapshotCreatedAt = createdAt
+</code></pre>
+<p>Do not auto-match legacy prizes to catalog items unless a human/admin workflow is created later. The prior proposal explicitly warns not to force-match existing rows with no FK/reference. </p>
+<h3 id="draw-ledger-extension-point">Draw ledger extension point</h3>
+<p>Compliance/odds audit is deferred, but stock correctness benefits from an event trail. Keep this as an extension point; do not make it a valuation/compliance launch blocker.</p>
+<pre><code class="language-text">PackPrizeDrawLedger
+  id
+  packId
+  packPrizeId
+  userId nullable
+  openingId nullable
+  quantity
+  eventType                    -- RESERVED, WON, RELEASED, CORRECTED
+  remainingStockBefore
+  remainingStockAfter
+  createdAt
+</code></pre>
+<h1 id="9-pack-prize-snapshot-correctness-for-pack-contents">9. Pack-prize snapshot correctness for pack contents</h1>
+<h2 id="confirmed-evidence_8">Confirmed evidence</h2>
+<p>The current pack creation model stores prize label/image/value/weight/stock only and lacks canonical identity. </p>
+<h2 id="design-recommendation_6">Design recommendation</h2>
+<p>Use a deterministic snapshot builder.</p>
+<h3 id="snapshot-builder-inputs">Snapshot builder inputs</h3>
+<p>For a global catalog prize:</p>
+<pre><code class="language-text">CatalogItem
+CatalogExternalRef primary source
+CatalogCard / CatalogSealedProduct / CatalogGradedCardTemplate / etc.
+CatalogImage primary image
+CatalogSet metadata if linked
+Vendor-entered pack fields: weight, stock, optional display override if allowed
+</code></pre>
+<p>For a vendor inventory prize:</p>
+<pre><code class="language-text">VendorInventoryItem
+CatalogItem or VendorCustomItem
+certNumber / condition / quantity
+Vendor-entered pack fields: weight, stock
+</code></pre>
+<p>For a custom item:</p>
+<pre><code class="language-text">VendorCustomItem
+moderation status
+Vendor-entered pack fields: weight, stock
+</code></pre>
+<h3 id="snapshot-builder-output">Snapshot builder output</h3>
+<p>Always produce:</p>
+<pre><code class="language-text">identityRef: catalogItemId/vendorInventoryItemId/vendorCustomItemId
+displaySnapshot: name, subtitle, images, item type, game, set/card/sealed/slab fields
+sourceSnapshot: source, sourceItemId, externalRefId, payloadHash
+valueExtension: estimatedValue/valueCurrency/valueSource/valueAsOf nullable
+packMechanics: weight, stock, remainingStock
+snapshotJson: complete immutable object
+</code></pre>
+<h3 id="correctness-tests">Correctness tests</h3>
+<p>Before launch, require tests for:</p>
+<ol>
+<li>Create draft pack with catalog-backed card.</li>
+<li>Update the catalog item’s name/image.</li>
+<li>Confirm draft pack changes only if explicit refresh is called.</li>
+<li>Publish pack.</li>
+<li>Update catalog item again.</li>
+<li>Confirm live pack display, value fields, weight, and initial stock do not change.</li>
+<li>Open pack and confirm only <code>remainingStock</code> changes.</li>
+<li>Confirm snapshot provenance still points back to source/catalog for admin inspection.</li>
+</ol>
+<h1 id="10-source-conflict-workflow">10. Source conflict workflow</h1>
+<h2 id="confirmed-evidence_9">Confirmed evidence</h2>
+<p>Hard product constraint: source conflicts go to human review; the proposal must include a conflict queue/moderation workflow rather than automatic overwrite/merge. </p>
+<h2 id="design-recommendation_7">Design recommendation</h2>
+<h3 id="catalogsourceconflict"><code>CatalogSourceConflict</code></h3>
+<pre><code class="language-text">id
+catalogItemId nullable
+incomingSourceId
+incomingSourceItemId
+incomingExternalRefId nullable
+existingExternalRefId nullable
+conflictType                  -- IDENTITY, NAME, IMAGE, SET_LINK, ITEM_TYPE, RARITY, CARD_NUMBER, LANGUAGE, PAYLOAD
+severity                      -- LOW, MEDIUM, HIGH, BLOCKING
+status                        -- OPEN, ASSIGNED, RESOLVED, REJECTED, IGNORED
+detectedAt
+assignedToUserId nullable
+resolvedByUserId nullable
+resolvedAt nullable
+resolutionAction nullable      -- ACCEPT_INCOMING, KEEP_EXISTING, MERGE, SPLIT, CREATE_NEW, MAP_ALIAS
+detailsJson jsonb
+</code></pre>
+<h3 id="catalogsourcepatch"><code>CatalogSourcePatch</code></h3>
+<pre><code class="language-text">id
+sourceConflictId nullable
+vendorCustomItemId nullable
+catalogItemId nullable
+submittedByUserId nullable
+reviewedByUserId nullable
+patchType                     -- FIELD_UPDATE, NEW_ALIAS, NEW_IMAGE, TYPE_CHANGE, SET_LINK, PROMOTION
+patchJson jsonb
+status                        -- SUBMITTED, APPROVED, REJECTED, APPLIED
+createdAt
+reviewedAt nullable
+appliedAt nullable
+</code></pre>
+<h3 id="conflict-creation-rules">Conflict creation rules</h3>
+<p>Create a conflict when an incoming source row:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Conflict type</th>
+<th>Launch behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Matches source ID but changes key identity fields unexpectedly</td>
+<td><code>IDENTITY</code></td>
+<td>Keep current canonical display, queue review.</td>
+</tr>
+<tr>
+<td>Matches likely same card but different name/image/set/card number</td>
+<td><code>NAME</code>, <code>IMAGE</code>, <code>SET_LINK</code>, <code>CARD_NUMBER</code></td>
+<td>Queue review; optionally update aliases if low risk.</td>
+</tr>
+<tr>
+<td>Appears duplicate of an existing item by normalized name + set + number</td>
+<td><code>IDENTITY</code></td>
+<td>Do not auto-merge; queue.</td>
+</tr>
+<tr>
+<td>Changes item type, such as card to sealed</td>
+<td><code>ITEM_TYPE</code></td>
+<td>Blocking review.</td>
+</tr>
+<tr>
+<td>Vendor custom item requests global promotion</td>
+<td><code>PROMOTION</code></td>
+<td>Manual review required.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="conflict-resolution-rules">Conflict resolution rules</h3>
+<p>Human reviewer can:</p>
+<ol>
+<li>Accept incoming source fields.</li>
+<li>Keep existing canonical fields.</li>
+<li>Add incoming name as alias.</li>
+<li>Add image as secondary image.</li>
+<li>Link external ref to existing item.</li>
+<li>Split into a new <code>CatalogItem</code>.</li>
+<li>Merge into existing <code>CatalogItem</code> with <code>mergedIntoCatalogItemId</code>.</li>
+<li>Reject vendor patch or custom promotion.</li>
+</ol>
+<p>No conflict resolution should mutate live pack prize snapshots.</p>
+<h1 id="11-catalog-search-projection-and-postgres-search-index-strategy">11. Catalog search projection and Postgres search/index strategy</h1>
+<h2 id="confirmed-evidence_10">Confirmed evidence</h2>
+<p>The current search reads from <code>CatalogItem</code>, while the response excludes <code>sourcePayload</code> and returns a narrow field set. The evidence packet calls out that search reads from a wide canonical table rather than a narrow projection. It also shows that <code>lower(name) LIKE '%char%'</code> used the existing trigram index and ran much faster than the current Prisma-equivalent search shapes, proving query shape matters.  </p>
+<p>The product decision requires fast search with appropriate quality and a pragmatic launch search/index design. </p>
+<h2 id="design-recommendation_8">Design recommendation</h2>
+<h3 id="launch-strategy">Launch strategy</h3>
+<p>Use PostgreSQL search with <code>pg_trgm</code>, expression indexes, and a narrow <code>CatalogSearchDocument</code> projection. Do not add OpenSearch/Typesense/Meilisearch for launch unless Postgres cannot meet P95 targets on a production-sized clone. The prior proposal states Postgres with trigram and full-text should be sufficient at current 220,905-row scale if projection and indexes are implemented. </p>
+<h3 id="catalogsearchdocument"><code>CatalogSearchDocument</code></h3>
+<pre><code class="language-text">id
+catalogItemId nullable
+vendorId nullable               -- null = global
+vendorInventoryItemId nullable
+vendorCustomItemId nullable
+scope                           -- GLOBAL, VENDOR
+itemType                        -- CARD, SEALED_PRODUCT, GRADED_CARD, SET, CUSTOM, ACCESSORY, OTHER
+gameCode nullable
+language
+name
+normalizedName
+subtitle nullable
+setName nullable
+setCode nullable
+cardNumber nullable
+rarity nullable
+grader nullable
+grade nullable
+certNumber nullable             -- vendor scope only
+productKind nullable
+accessoryKind nullable
+source nullable
+sourceItemId nullable
+imageThumbUrl nullable
+imageLargeUrl nullable
+imageBaseUrl nullable
+searchText
+normalizedSearchText
+searchVector
+isActive
+isPrizeEligible
+moderationStatus nullable
+qualityScore
+popularityScore
+createdAt
+updatedAt
+
+index rules:
+  global docs have vendorId null
+  vendor docs have vendorId non-null
+  custom global docs require moderationStatus = PROMOTED_GLOBAL
+</code></pre>
+<h3 id="ranking">Ranking</h3>
+<p>Use one ranked query or bounded <code>UNION ALL</code>, not three sequential ORM round trips.</p>
+<p>Recommended ranking order:</p>
+<ol>
+<li>Exact normalized name.</li>
+<li>Prefix normalized name.</li>
+<li>Exact/prefix card number.</li>
+<li>Exact/prefix source item ID or barcode.</li>
+<li>Graded qualifier match, such as <code>PSA 10</code>.</li>
+<li>Trigram name match.</li>
+<li>Full-text <code>searchVector</code> match.</li>
+<li>Quality/popularity tie-breaker.</li>
+<li>Stable alphabetical tie-breaker.</li>
+</ol>
+<h3 id="search-api-behavior">Search API behavior</h3>
+<p>At launch, support:</p>
+<pre><code class="language-text">q
+limit
+game
+type = card | sealed | graded | set | custom | accessory | other | all
+scope = global | vendor | all
+vendorId inferred from auth for vendor scope
+</code></pre>
+<p>For public/global search, exclude vendor custom items unless promoted. For vendor pack-builder search, include that vendor’s approved/custom inventory and global catalog.</p>
+<h3 id="index-examples">Index examples</h3>
+<p>These are architecture examples, not a production migration file.</p>
+<pre><code class="language-sql">-- Fast active global/vendor filtering.
+CREATE INDEX CONCURRENTLY catalog_search_scope_game_type_active_idx
+ON &quot;CatalogSearchDocument&quot; (&quot;scope&quot;, &quot;vendorId&quot;, &quot;gameCode&quot;, &quot;itemType&quot;, &quot;isActive&quot;, &quot;isPrizeEligible&quot;);
+
+-- Prefix autocomplete.
+CREATE INDEX CONCURRENTLY catalog_search_name_prefix_idx
+ON &quot;CatalogSearchDocument&quot; (&quot;gameCode&quot;, &quot;itemType&quot;, &quot;normalizedName&quot; text_pattern_ops)
+WHERE &quot;isActive&quot; = true AND &quot;isPrizeEligible&quot; = true;
+
+-- Fuzzy/contains name search.
+CREATE INDEX CONCURRENTLY catalog_search_name_trgm_idx
+ON &quot;CatalogSearchDocument&quot;
+USING gin (&quot;normalizedName&quot; gin_trgm_ops);
+
+-- Fallback search text.
+CREATE INDEX CONCURRENTLY catalog_search_text_trgm_idx
+ON &quot;CatalogSearchDocument&quot;
+USING gin (&quot;normalizedSearchText&quot; gin_trgm_ops);
+
+-- Full text.
+CREATE INDEX CONCURRENTLY catalog_search_vector_idx
+ON &quot;CatalogSearchDocument&quot;
+USING gin (&quot;searchVector&quot;);
+
+-- Card/source/barcode prefix.
+CREATE INDEX CONCURRENTLY catalog_search_card_number_prefix_idx
+ON &quot;CatalogSearchDocument&quot; (lower(&quot;cardNumber&quot;) text_pattern_ops)
+WHERE &quot;cardNumber&quot; IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY catalog_search_source_item_prefix_idx
+ON &quot;CatalogSearchDocument&quot; (lower(&quot;sourceItemId&quot;) text_pattern_ops)
+WHERE &quot;sourceItemId&quot; IS NOT NULL;
+</code></pre>
+<h3 id="bridge-indexes-before-projection-is-live">Bridge indexes before projection is live</h3>
+<p>The prior proposal recommended bridge indexes on current <code>CatalogItem</code> while the projection is built. This is the correct immediate stabilization path. </p>
+<pre><code class="language-sql">CREATE INDEX CONCURRENTLY catalog_item_search_text_trgm_idx
+ON &quot;CatalogItem&quot;
+USING gin (lower(&quot;searchText&quot;) gin_trgm_ops);
+
+CREATE INDEX CONCURRENTLY catalog_item_game_type_active_name_prefix_idx
+ON &quot;CatalogItem&quot; (&quot;game&quot;, &quot;itemType&quot;, &quot;isActive&quot;, lower(&quot;name&quot;) text_pattern_ops);
+
+CREATE INDEX CONCURRENTLY catalog_item_source_item_id_prefix_idx
+ON &quot;CatalogItem&quot; (lower(&quot;sourceItemId&quot;) text_pattern_ops);
+</code></pre>
+<h3 id="query-shape-rule">Query-shape rule</h3>
+<p>Stop relying on Prisma <code>mode: insensitive</code> for the hot path. Use explicit normalized/lowercase expressions that match the indexes. The evidence packet shows the trigram-compatible lowercase query shape used the trigram index while current Prisma-equivalent shapes did not. </p>
+<h1 id="12-query-examples">12. Query examples</h1>
+<p>These are intended query shapes, not production-ready migration code.</p>
+<h2 id="current-table-bridge-search">Current-table bridge search</h2>
+<pre><code class="language-sql">SELECT
+  id,
+  source,
+  &quot;sourceItemId&quot;,
+  &quot;itemType&quot;,
+  game,
+  language,
+  name,
+  &quot;setId&quot;,
+  &quot;setName&quot;,
+  &quot;cardNumber&quot;,
+  rarity,
+  &quot;imageThumbUrl&quot;,
+  &quot;imageLargeUrl&quot;,
+  &quot;imageBaseUrl&quot;
+FROM &quot;CatalogItem&quot;
+WHERE &quot;isActive&quot; = true
+  AND game = $game
+  AND ($type = 'all' OR &quot;itemType&quot; = ANY($itemTypes))
+  AND (
+    lower(name) LIKE lower($q) || '%'
+    OR lower(name) LIKE '%' || lower($q) || '%'
+    OR lower(&quot;searchText&quot;) LIKE '%' || lower($q) || '%'
+    OR lower(&quot;sourceItemId&quot;) LIKE lower($q) || '%'
+  )
+ORDER BY
+  CASE
+    WHEN lower(name) = lower($q) THEN 100
+    WHEN lower(name) LIKE lower($q) || '%' THEN 90
+    WHEN lower(&quot;sourceItemId&quot;) LIKE lower($q) || '%' THEN 75
+    WHEN lower(name) LIKE '%' || lower($q) || '%' THEN 60
+    ELSE 40
+  END DESC,
+  name ASC
+LIMIT $limit;
+</code></pre>
+<h2 id="search-projection-read">Search projection read</h2>
+<pre><code class="language-sql">SELECT
+  &quot;catalogItemId&quot;,
+  &quot;vendorInventoryItemId&quot;,
+  &quot;vendorCustomItemId&quot;,
+  scope,
+  source,
+  &quot;sourceItemId&quot;,
+  &quot;itemType&quot;,
+  &quot;gameCode&quot;,
+  language,
+  name,
+  subtitle,
+  &quot;setName&quot;,
+  &quot;cardNumber&quot;,
+  rarity,
+  grader,
+  grade,
+  &quot;imageThumbUrl&quot;,
+  &quot;imageLargeUrl&quot;,
+  &quot;imageBaseUrl&quot;
+FROM &quot;CatalogSearchDocument&quot;
+WHERE &quot;isActive&quot; = true
+  AND &quot;isPrizeEligible&quot; = true
+  AND (&quot;gameCode&quot; = $game OR $game IS NULL)
+  AND ($type = 'all' OR &quot;itemType&quot; = ANY($itemTypes))
+  AND (
+    scope = 'GLOBAL'
+    OR (scope = 'VENDOR' AND &quot;vendorId&quot; = $vendorId)
+  )
+  AND (
+    &quot;normalizedName&quot; LIKE $qPrefix
+    OR &quot;normalizedName&quot; LIKE $qContains
+    OR &quot;normalizedSearchText&quot; LIKE $qContains
+    OR lower(&quot;cardNumber&quot;) LIKE $qPrefix
+    OR lower(&quot;sourceItemId&quot;) LIKE $qPrefix
+    OR &quot;searchVector&quot; @@ websearch_to_tsquery('simple', $q)
+  )
+ORDER BY
+  &quot;qualityScore&quot; DESC,
+  &quot;popularityScore&quot; DESC,
+  name ASC
+LIMIT $limit;
+</code></pre>
+<h2 id="pack-prize-creation-from-a-search-document">Pack prize creation from a search document</h2>
+<pre><code class="language-sql">INSERT INTO &quot;PackPrize&quot; (
+  &quot;packId&quot;,
+  &quot;catalogItemId&quot;,
+  &quot;vendorInventoryItemId&quot;,
+  &quot;vendorCustomItemId&quot;,
+  &quot;label&quot;,
+  &quot;imageUrl&quot;,
+  &quot;estimatedValue&quot;,
+  &quot;weight&quot;,
+  &quot;stock&quot;,
+  &quot;remainingStock&quot;,
+  &quot;snapshotVersion&quot;,
+  &quot;snapshotItemType&quot;,
+  &quot;snapshotGame&quot;,
+  &quot;snapshotLanguage&quot;,
+  &quot;snapshotName&quot;,
+  &quot;snapshotSubtitle&quot;,
+  &quot;snapshotSetName&quot;,
+  &quot;snapshotCardNumber&quot;,
+  &quot;snapshotRarity&quot;,
+  &quot;snapshotImageUrl&quot;,
+  &quot;catalogSource&quot;,
+  &quot;catalogSourceItemId&quot;,
+  &quot;createdFromSearchDocumentId&quot;,
+  &quot;snapshotJson&quot;,
+  &quot;snapshotCreatedAt&quot;
+)
+SELECT
+  $packId,
+  d.&quot;catalogItemId&quot;,
+  d.&quot;vendorInventoryItemId&quot;,
+  d.&quot;vendorCustomItemId&quot;,
+  d.name,
+  coalesce(d.&quot;imageLargeUrl&quot;, d.&quot;imageThumbUrl&quot;, d.&quot;imageBaseUrl&quot;),
+  $estimatedValue,
+  $weight,
+  $stock,
+  $stock,
+  1,
+  d.&quot;itemType&quot;,
+  d.&quot;gameCode&quot;,
+  d.language,
+  d.name,
+  d.subtitle,
+  d.&quot;setName&quot;,
+  d.&quot;cardNumber&quot;,
+  d.rarity,
+  coalesce(d.&quot;imageLargeUrl&quot;, d.&quot;imageThumbUrl&quot;, d.&quot;imageBaseUrl&quot;),
+  d.source,
+  d.&quot;sourceItemId&quot;,
+  d.id,
+  jsonb_build_object(
+    'catalogItemId', d.&quot;catalogItemId&quot;,
+    'vendorInventoryItemId', d.&quot;vendorInventoryItemId&quot;,
+    'vendorCustomItemId', d.&quot;vendorCustomItemId&quot;,
+    'itemType', d.&quot;itemType&quot;,
+    'game', d.&quot;gameCode&quot;,
+    'language', d.language,
+    'name', d.name,
+    'subtitle', d.subtitle,
+    'setName', d.&quot;setName&quot;,
+    'cardNumber', d.&quot;cardNumber&quot;,
+    'rarity', d.rarity,
+    'source', d.source,
+    'sourceItemId', d.&quot;sourceItemId&quot;
+  ),
+  now()
+FROM &quot;CatalogSearchDocument&quot; d
+WHERE d.id = $searchDocumentId
+  AND d.&quot;isActive&quot; = true
+  AND d.&quot;isPrizeEligible&quot; = true;
+</code></pre>
+<h2 id="pack-display-read">Pack display read</h2>
+<pre><code class="language-sql">SELECT
+  id,
+  &quot;packId&quot;,
+  coalesce(&quot;snapshotName&quot;, label) AS name,
+  coalesce(&quot;snapshotImageUrl&quot;, &quot;imageUrl&quot;) AS imageUrl,
+  &quot;estimatedValue&quot;,
+  &quot;weight&quot;,
+  &quot;stock&quot;,
+  &quot;remainingStock&quot;,
+  &quot;snapshotJson&quot;
+FROM &quot;PackPrize&quot;
+WHERE &quot;packId&quot; = $packId
+ORDER BY &quot;createdAt&quot; ASC;
+</code></pre>
+<p>Pack display intentionally does not join live <code>CatalogItem</code>.</p>
+<h1 id="13-non-destructive-migration-phases">13. Non-destructive migration phases</h1>
+<p>The prior proposal’s non-destructive phased plan is directionally correct: reconcile schema drift, fix search, add snapshots, add provenance, add type-specific tables, build search projection, add vendor inventory/custom layers, and only then strengthen constraints. </p>
+<h2 id="phase-0-baseline-and-schema-drift-reconciliation">Phase 0 — Baseline and schema drift reconciliation</h2>
+<h3 id="confirmed-evidence_11">Confirmed evidence</h3>
+<p>Live DB has <code>CatalogSet</code>, <code>catalogSetId</code>, and indexes not represented in repo Prisma at investigation time. </p>
+<h3 id="actions">Actions</h3>
+<ul>
+<li>Add Prisma model for live <code>CatalogSet</code>.</li>
+<li>Add nullable <code>CatalogItem.catalogSetId</code>.</li>
+<li>Add known live constraints/indexes to schema baseline.</li>
+<li>Add CI drift check.</li>
+<li>No drops, no rewrites, no destructive migrations.</li>
+</ul>
+<h3 id="gate">Gate</h3>
+<p>Application boots against staging clone; schema introspection matches expected live-compatible schema.</p>
+<h2 id="phase-1-search-stabilization-on-current-table">Phase 1 — Search stabilization on current table</h2>
+<h3 id="actions_1">Actions</h3>
+<ul>
+<li>Add bridge indexes concurrently.</li>
+<li>Rewrite <code>/v1/catalog/search</code> hot path to use normalized/lowercase query shape.</li>
+<li>Replace three sequential ORM queries with one ranked query or bounded union.</li>
+<li>Preserve existing API response shape.</li>
+</ul>
+<h3 id="gate_1">Gate</h3>
+<p><code>EXPLAIN ANALYZE</code> on production-sized clone shows index usage and acceptable P95.</p>
+<h2 id="phase-2-packprize-identity-and-snapshot-fields">Phase 2 — PackPrize identity and snapshot fields</h2>
+<h3 id="actions_2">Actions</h3>
+<ul>
+<li>Add nullable identity fields and snapshot fields to <code>PackPrize</code>.</li>
+<li>Update vendor UI to carry <code>catalogItemId</code>, <code>source</code>, <code>sourceItemId</code>, item type, game, set/card/slab/sealed fields, and image data.</li>
+<li>Update API to require snapshot creation for new pack prizes.</li>
+<li>Backfill current rows as legacy snapshots.</li>
+<li>Do not force-match legacy prizes.</li>
+</ul>
+<h3 id="gate_2">Gate</h3>
+<p>Automated test proves catalog mutation does not alter pack display/value/odds after publish.</p>
+<h2 id="phase-3-source-provenance-and-import-audit">Phase 3 — Source/provenance and import audit</h2>
+<h3 id="actions_3">Actions</h3>
+<ul>
+<li>Add <code>CatalogSource</code>, <code>CatalogImportRun</code>, <code>CatalogExternalRef</code>, <code>CatalogAlias</code>, <code>CatalogImage</code>.</li>
+<li>Backfill from current <code>CatalogItem.source</code>, <code>sourceItemId</code>, <code>language</code>, images, and <code>sourcePayload</code>.</li>
+<li>Dual-write provenance during sync.</li>
+</ul>
+<h3 id="gate_3">Gate</h3>
+<p>Every active current catalog item has a provenance row or an explicit exception record.</p>
+<h2 id="phase-4-type-specific-tables-for-all-launch-critical-item-types">Phase 4 — Type-specific tables for all launch-critical item types</h2>
+<h3 id="actions_4">Actions</h3>
+<ul>
+<li>Add <code>CatalogCard</code>.</li>
+<li>Add <code>CatalogGradedCardTemplate</code>.</li>
+<li>Add <code>CatalogSealedProduct</code>.</li>
+<li>Add <code>CatalogAccessory</code>.</li>
+<li>Add <code>CatalogSetPrizeDetail</code>.</li>
+<li>Add <code>CatalogCollectibleExtension</code>.</li>
+<li>Backfill card rows first.</li>
+<li>Keep fields nullable where evidence shows incomplete source data.</li>
+<li>Do not remove old <code>setId</code>, <code>setName</code>, <code>cardNumber</code>, <code>rarity</code>, or image fields yet.</li>
+</ul>
+<h3 id="gate_4">Gate</h3>
+<p>Shadow reads from typed tables match current API outputs for existing card data.</p>
+<h2 id="phase-5-search-projection">Phase 5 — Search projection</h2>
+<h3 id="actions_5">Actions</h3>
+<ul>
+<li>Create <code>CatalogSearchDocument</code>.</li>
+<li>Populate global docs from canonical + typed + source data.</li>
+<li>Populate vendor docs from inventory/custom data.</li>
+<li>Add indexes.</li>
+<li>Shadow compare search quality and latency against current endpoint.</li>
+<li>Flip endpoint behind feature flag.</li>
+</ul>
+<h3 id="gate_5">Gate</h3>
+<p>Search returns acceptable quality for all launch-critical item types and meets latency target.</p>
+<h2 id="phase-6-vendor-inventory-and-custom-moderation">Phase 6 — Vendor inventory and custom moderation</h2>
+<h3 id="actions_6">Actions</h3>
+<ul>
+<li>Add <code>VendorInventoryItem</code>, <code>VendorListing</code>, <code>VendorPrizeCandidate</code>.</li>
+<li>Add <code>VendorCustomItem</code> moderation workflow.</li>
+<li>Enable vendor pack builder to choose from global catalog, vendor inventory, and approved vendor custom items.</li>
+<li>Ensure all paths snapshot into <code>PackPrize</code>.</li>
+</ul>
+<h3 id="gate_6">Gate</h3>
+<p>Vendor can create draft pack with catalog card, sealed product, graded template + cert inventory, custom item, accessory, and <code>OTHER</code> item; all create valid snapshots.</p>
+<h2 id="phase-7-source-conflict-queue">Phase 7 — Source conflict queue</h2>
+<h3 id="actions_7">Actions</h3>
+<ul>
+<li>Add <code>CatalogSourceConflict</code> and <code>CatalogSourcePatch</code>.</li>
+<li>Route conflicts to human review.</li>
+<li>Prevent automatic overwrite/merge for identity-sensitive changes.</li>
+<li>Add admin UI queue and resolution actions.</li>
+</ul>
+<h3 id="gate_7">Gate</h3>
+<p>Simulated source conflict creates queue item; resolving it updates catalog/provenance without mutating pack snapshots.</p>
+<h2 id="phase-8-strengthen-constraints-after-adoption">Phase 8 — Strengthen constraints after adoption</h2>
+<h3 id="actions_8">Actions</h3>
+<ul>
+<li>Add stricter FKs and check constraints only after backfill and null-handling are proven.</li>
+<li>Add publish-time immutability guards.</li>
+<li>Deprecate old fields only after all reads/writes have moved.</li>
+<li>Do not drop old fields until a separate cleanup project with rollback/export plan.</li>
+</ul>
+<h3 id="gate_8">Gate</h3>
+<p>No production code path depends on old fields; historical pack displays are verified.</p>
+<h1 id="14-launch-sequencing">14. Launch sequencing</h1>
+<h2 id="launch-critical-path">Launch-critical path</h2>
+<ol>
+<li><strong>Schema drift baseline</strong> — required before any meaningful DB work.</li>
+<li><strong>Search bridge fix</strong> — required because current autocomplete is multi-second.</li>
+<li><strong>PackPrize snapshot creation</strong> — required before new packs are created at scale.</li>
+<li><strong>Search projection v1</strong> — required for fast, broad item-type search.</li>
+<li><strong>Type-specific tables for all launch item types</strong> — required because product says all item types are launch-critical.</li>
+<li><strong>Vendor inventory/custom item path</strong> — required for slabs, custom items, and vendor-owned prize candidates.</li>
+<li><strong>Custom item moderation and source conflict queue</strong> — required because global visibility and source conflicts require human review.</li>
+<li><strong>Launch gates and shadow verification</strong> — required before replacing current reads.</li>
+</ol>
+<h2 id="not-launch-blockers">Not launch blockers</h2>
+<ul>
+<li>Automated market valuation.</li>
+<li>Estimated value infrastructure beyond nullable snapshot extension fields.</li>
+<li>Full compliance/odds audit system.</li>
+<li>External search infrastructure, unless Postgres fails measured P95 on production-sized clone.</li>
+<li>Destructive cleanup of old catalog fields.</li>
+</ul>
+<p>Estimated value and compliance/odds audit are explicitly deferred by product decision, so they should remain extension points only: keep value, currency, source, <code>asOf</code>, weight, initial stock, remaining stock, and ledger-ready fields, but do not build a valuation engine or compliance reporting system for launch. </p>
+<h1 id="15-remaining-decisions-required-from-product">15. Remaining decisions required from product</h1>
+<p>Most prior “open questions” are now answered. Remaining decisions should be operational, not architectural blockers.</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Required decision</th>
+<th>Blocking?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Search latency</td>
+<td>Define P50/P95 target for autocomplete.</td>
+<td>Blocks search gate, not schema work.</td>
+</tr>
+<tr>
+<td>Custom moderation SLA</td>
+<td>Who reviews vendor submissions and how fast?</td>
+<td>Blocks global promotion, not vendor-scoped use.</td>
+</tr>
+<tr>
+<td><code>OTHER</code> policy</td>
+<td>What can launch under <code>OTHER</code> without abuse?</td>
+<td>Blocks broad custom/global search.</td>
+</tr>
+<tr>
+<td>Published pack edits</td>
+<td>Who can perform audited corrections after publish?</td>
+<td>Blocks admin tooling, not snapshot schema.</td>
+</tr>
+<tr>
+<td>Source trust tiers</td>
+<td>Initial trust labels for <code>tcgtracking</code>, vendor patches, manual admin.</td>
+<td>Blocks conflict UI defaults, not conflict table.</td>
+</tr>
+<tr>
+<td>Inventory enforcement</td>
+<td>Whether quantity checks are hard at draft time or publish time.</td>
+<td>Blocks vendor inventory launch details.</td>
+</tr>
+</tbody>
+</table>
+<h1 id="16-risks-and-rollout-gates">16. Risks and rollout gates</h1>
+<h2 id="risk-schema-drift-continues">Risk: schema drift continues</h2>
+<p>Evidence already shows live DB drift from repo Prisma. Gate: CI drift check and staging introspection before deploy. </p>
+<h2 id="risk-search-rewrite-still-misses-indexes">Risk: search rewrite still misses indexes</h2>
+<p>Evidence shows query shape determines whether trigram is used. Gate: checked-in <code>EXPLAIN ANALYZE</code> snapshots for prefix, contains, <code>searchText</code>, and source/card-number searches. </p>
+<h2 id="risk-search-projection-diverges-from-canonical-catalog">Risk: search projection diverges from canonical catalog</h2>
+<p>Mitigation: rebuildable projection, checksums/counts by game/type/source, shadow search. Gate: parity and latency before feature flag flip.</p>
+<h2 id="risk-snapshots-are-incomplete">Risk: snapshots are incomplete</h2>
+<p>Mitigation: application-level requirement that every new <code>PackPrize</code> has <code>snapshotJson</code> and snapshot display fields. Gate: test catalog mutation after pack publish.</p>
+<h2 id="risk-legacy-prize-matching-is-wrong">Risk: legacy prize matching is wrong</h2>
+<p>Mitigation: do not force-match. Preserve current nine prize rows as legacy snapshots. </p>
+<h2 id="risk-all-item-types-are-launch-critical-but-data-is-uneven">Risk: all item types are “launch-critical” but data is uneven</h2>
+<p>Mitigation: support all item types structurally, but allow nullable detail fields and moderation/status states. Gate: each type must map to search projection and snapshot builder.</p>
+<h2 id="risk-custom-items-pollute-global-catalog">Risk: custom items pollute global catalog</h2>
+<p>Mitigation: vendor-scoped by default; manual promotion only. Gate: no global search document for custom item unless <code>PROMOTED_GLOBAL</code>.</p>
+<h2 id="risk-source-conflicts-overwrite-good-data">Risk: source conflicts overwrite good data</h2>
+<p>Mitigation: queue conflicts; no automatic overwrite/merge for identity-sensitive changes. Gate: conflict simulation creates review item and preserves current canonical display until resolved.</p>
+<h2 id="risk-index-builds-impact-production">Risk: index builds impact production</h2>
+<p>Mitigation: <code>CREATE INDEX CONCURRENTLY</code>, production-sized clone, low-traffic rollout, rollback/abort procedure. The prior proposal also flags index build planning as a rollout gate. </p>
+<h1 id="final-position">Final position</h1>
+<p>The final Oripa database architecture should be an additive transition, not a destructive replacement. Keep <code>CatalogItem</code> as the bridge, add canonical provenance and type-specific tables, serve search from <code>CatalogSearchDocument</code>, route vendor-owned and custom items through vendor inventory/moderation, and make <code>PackPrize</code> snapshots the historical source of truth. This directly addresses the evidence-backed P0 issues: schema drift, slow search, missing prize identity/snapshot correctness, and insufficient modeling for non-card products. </p>
+      </main>
+    </div>
+
+    <div class="footer">Generated from <code>/home/yeqiuqiu/oripa_saas/docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md</code><br/>Source SHA256: <code>64de5b487e33ffad22e05afeffdb5a62e2021f3db964b15d4e83be9c829a476e</code></div>
+  </div>
+</body>
+</html>

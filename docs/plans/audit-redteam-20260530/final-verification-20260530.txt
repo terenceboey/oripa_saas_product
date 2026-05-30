@@ -1,0 +1,124 @@
+=== npm run build ===
+
+> oripa-saas@0.1.0 build
+> npm run build -w @oripa/shared && npm run build -w @oripa/api && npm run build -w @oripa/web && npm run build -w @oripa/worker
+
+
+> @oripa/shared@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> @oripa/api@0.1.0 build
+> tsc -p tsconfig.json
+
+
+> @oripa/web@0.1.0 build
+> next build
+
+▲ Next.js 16.2.6 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 894ms
+  Running TypeScript ...
+  Finished TypeScript in 1161ms ...
+  Collecting page data using 12 workers ...
+  Generating static pages using 12 workers (0/10) ...
+  Generating static pages using 12 workers (2/10)
+  Generating static pages using 12 workers (4/10)
+  Generating static pages using 12 workers (7/10)
+✓ Generating static pages using 12 workers (10/10) in 237ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /apple-icon.jpg
+├ ○ /fairness-proofs
+├ ○ /icon.jpg
+├ ○ /login
+├ ƒ /pack/[packId]
+├ ○ /register
+├ ○ /vendor
+└ ○ /verify-email
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> @oripa/worker@0.1.0 build
+> tsc -p tsconfig.json
+
+=== npm run lint ===
+
+> oripa-saas@0.1.0 lint
+> npm run lint -w @oripa/api && npm run lint -w @oripa/web && npm run lint -w @oripa/worker
+
+
+> @oripa/api@0.1.0 lint
+> tsc -p tsconfig.json --noEmit
+
+
+> @oripa/web@0.1.0 lint
+> tsc -p tsconfig.json --noEmit
+
+
+> @oripa/worker@0.1.0 lint
+> tsc -p tsconfig.json --noEmit
+
+=== npm exec -- prisma validate --schema prisma/schema.prisma ===
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+The schema at prisma/schema.prisma is valid 🚀
+=== api canaries ===
+
+> @oripa/api@0.1.0 test:catalog:search-query
+> tsx scripts/test-catalog-search-query.ts
+
+catalog search query tests passed
+
+> @oripa/api@0.1.0 test:catalog:search-dedupe
+> tsx scripts/test-catalog-search-dedupe.ts
+
+catalog search dedupe tests passed
+catalog facets/suggest tests passed
+
+> @oripa/api@0.1.0 test:packs:catalog-snapshots
+> tsx scripts/test-pack-prize-catalog-snapshots.ts
+
+pack prize catalog snapshot tests passed
+
+> @oripa/api@0.1.0 test:packs:immutability
+> tsx scripts/test-pack-immutability-guard.ts
+
+pack immutability guard tests passed
+
+> @oripa/api@0.1.0 test:packs:publish-freeze
+> tsx scripts/test-pack-publish-freeze.ts
+
+pack publish/freeze tests passed
+
+> @oripa/api@0.1.0 test:draws:pool-integrity
+> tsx scripts/test-draw-pool-integrity.ts
+
+draw pool integrity tests passed
+
+> @oripa/api@0.1.0 test:packs:inventory-allocation
+> tsx scripts/test-pack-inventory-allocation.ts
+
+pack inventory allocation tests passed
+
+> @oripa/api@0.1.0 test:packs:template-publish
+> tsx scripts/test-pack-template-publish.ts
+
+pack template publish tests passed
+=== web ux canary ===
+vendor catalog UX source probe passed
+=== guardrails ===
+
+> @oripa/api@0.1.0 test:catalog:tcgtracking:guardrails
+> tsx scripts/test-sync-tcgtracking-guardrails.ts
+
+[tcgtracking-sync] smoke ok dbEnv=staging status=200 contentType=application/json url=https://tcgtracking.com/tcgapi/v1/3/sets category=3 productCount=1
+[tcgtracking-sync] smoke ok dbEnv=staging status=200 contentType=application/json url=https://tcgtracking.com/tcgapi/v1/3/sets/1938 category=3 productCount=1
+tcgtracking sync guardrail tests passed

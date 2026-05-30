@@ -1,5 +1,15 @@
 # Oripa SaaS Starter (Render + Node/Express + Next + Prisma)
 
+## Current Product / Engineering Workflow
+
+Use `PROJECTS.md` and `docs/current-oripa-workflow.md` for the current Oripa SaaS workflow.
+
+Canonical CAR + Customer Stories source:
+
+- `docs/oripa-saas-reconciled-car-customer-stories-proposal.md`
+
+Older source-family docs under `docs/legacy references/` are provenance only unless a ticket explicitly needs source verification.
+
 This starter gives you a Shopify-style multi-tenant base:
 - `apps/api`: Express API with tenant middleware and transactional draw endpoint
 - `apps/web`: Next.js vendor storefront/dashboard shell

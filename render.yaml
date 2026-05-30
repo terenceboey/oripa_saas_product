@@ -6,7 +6,7 @@ services:
     plan: starter
     autoDeploy: true
     healthCheckPath: /health
-    buildCommand: npm ci && npx prisma generate && npx prisma db push && npm run build -w @oripa/shared && npm run build -w @oripa/api
+    buildCommand: npm ci && npx prisma generate && npm run build -w @oripa/shared && npm run build -w @oripa/api
     startCommand: npm run start -w @oripa/api
     envVars:
       - key: NODE_VERSION

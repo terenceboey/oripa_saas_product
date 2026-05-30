@@ -14,7 +14,8 @@
     "db:studio": "prisma studio --schema prisma/schema.prisma --port 5555",
     "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
     "db:seed": "tsx prisma/seed.ts",
-    "catalog:sync:tcgtracking": "npm run catalog:sync:tcgtracking -w @oripa/api"
+    "catalog:sync:tcgtracking": "npm run catalog:sync:tcgtracking -w @oripa/api",
+    "catalog:sync:tcgdex": "npm run catalog:sync:tcgdex -w @oripa/api"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

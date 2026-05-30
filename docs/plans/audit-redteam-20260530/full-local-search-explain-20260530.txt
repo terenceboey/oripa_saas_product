@@ -1,0 +1,100 @@
+=== full local DB search EXPLAIN probes ===
+--- term=charizard ---
+                                                                                 QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=42129.53..42129.55 rows=9 width=421) (actual time=69.071..69.074 rows=40.00 loops=1)
+   Buffers: shared hit=1826 read=15474 written=9621
+   ->  Sort  (cost=42129.53..42129.55 rows=9 width=421) (actual time=69.069..69.071 rows=40.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'charizard'::text) THEN 0 WHEN (lower(name) ~~ 'charizard%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: top-N heapsort  Memory: 65kB
+         Buffers: shared hit=1826 read=15474 written=9621
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=1256.91..42129.39 rows=9 width=421) (actual time=4.662..68.738 rows=609.00 loops=1)
+               Recheck Cond: ((game = 'POKEMON'::text) AND "isActive")
+               Filter: (lower(name) ~~ '%charizard%'::text)
+               Rows Removed by Filter: 103156
+               Heap Blocks: exact=17182
+               Buffers: shared hit=1820 read=15474 written=9621
+               ->  Bitmap Index Scan on "CatalogItem_game_language_isActive_idx"  (cost=0.00..1256.91 rows=93565 width=0) (actual time=3.299..3.299 rows=103765.00 loops=1)
+                     Index Cond: ((game = 'POKEMON'::text) AND ("isActive" = true))
+                     Index Searches: 1
+                     Buffers: shared hit=33 read=79
+ Planning:
+   Buffers: shared hit=313 read=3 dirtied=4
+ Planning Time: 0.565 ms
+ Execution Time: 69.243 ms
+(20 rows)
+
+--- term=pikachu ---
+                                                                                 QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=42129.53..42129.55 rows=9 width=421) (actual time=54.623..54.627 rows=40.00 loops=1)
+   Buffers: shared hit=1235 read=16065 written=4122
+   ->  Sort  (cost=42129.53..42129.55 rows=9 width=421) (actual time=54.622..54.623 rows=40.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'pikachu'::text) THEN 0 WHEN (lower(name) ~~ 'pikachu%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: top-N heapsort  Memory: 65kB
+         Buffers: shared hit=1235 read=16065 written=4122
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=1256.91..42129.39 rows=9 width=421) (actual time=5.073..54.045 rows=1247.00 loops=1)
+               Recheck Cond: ((game = 'POKEMON'::text) AND "isActive")
+               Filter: (lower(name) ~~ '%pikachu%'::text)
+               Rows Removed by Filter: 102518
+               Heap Blocks: exact=17182
+               Buffers: shared hit=1229 read=16065 written=4122
+               ->  Bitmap Index Scan on "CatalogItem_game_language_isActive_idx"  (cost=0.00..1256.91 rows=93565 width=0) (actual time=3.474..3.475 rows=103765.00 loops=1)
+                     Index Cond: ((game = 'POKEMON'::text) AND ("isActive" = true))
+                     Index Searches: 1
+                     Buffers: shared hit=8 read=104 written=27
+ Planning:
+   Buffers: shared hit=291 read=25 written=7
+ Planning Time: 0.741 ms
+ Execution Time: 54.787 ms
+(20 rows)
+
+--- term=mew ---
+                                                                                 QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=42285.98..42286.08 rows=40 width=421) (actual time=42.918..42.921 rows=40.00 loops=1)
+   Buffers: shared hit=3547 read=13753 written=237
+   ->  Sort  (cost=42285.98..42295.33 rows=3743 width=421) (actual time=42.916..42.918 rows=40.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'mew'::text) THEN 0 WHEN (lower(name) ~~ 'mew%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: top-N heapsort  Memory: 62kB
+         Buffers: shared hit=3547 read=13753 written=237
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=1257.84..42167.66 rows=3743 width=421) (actual time=4.569..42.504 rows=724.00 loops=1)
+               Recheck Cond: ((game = 'POKEMON'::text) AND "isActive")
+               Filter: (lower(name) ~~ '%mew%'::text)
+               Rows Removed by Filter: 103041
+               Heap Blocks: exact=17182
+               Buffers: shared hit=3541 read=13753 written=237
+               ->  Bitmap Index Scan on "CatalogItem_game_language_isActive_idx"  (cost=0.00..1256.91 rows=93565 width=0) (actual time=3.049..3.049 rows=103765.00 loops=1)
+                     Index Cond: ((game = 'POKEMON'::text) AND ("isActive" = true))
+                     Index Searches: 1
+                     Buffers: shared hit=4 read=108
+ Planning:
+   Buffers: shared hit=291 read=25
+ Planning Time: 0.637 ms
+ Execution Time: 43.084 ms
+(20 rows)
+
+--- term=nonexistentzz ---
+                                                                                 QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=42129.53..42129.55 rows=9 width=421) (actual time=43.210..43.211 rows=0.00 loops=1)
+   Buffers: shared hit=11817 read=5483
+   ->  Sort  (cost=42129.53..42129.55 rows=9 width=421) (actual time=43.209..43.210 rows=0.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'nonexistentzz'::text) THEN 0 WHEN (lower(name) ~~ 'nonexistentzz%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=11817 read=5483
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=1256.91..42129.39 rows=9 width=421) (actual time=43.192..43.192 rows=0.00 loops=1)
+               Recheck Cond: ((game = 'POKEMON'::text) AND "isActive")
+               Filter: (lower(name) ~~ '%nonexistentzz%'::text)
+               Rows Removed by Filter: 103765
+               Heap Blocks: exact=17182
+               Buffers: shared hit=11811 read=5483
+               ->  Bitmap Index Scan on "CatalogItem_game_language_isActive_idx"  (cost=0.00..1256.91 rows=93565 width=0) (actual time=3.595..3.595 rows=103765.00 loops=1)
+                     Index Cond: ((game = 'POKEMON'::text) AND ("isActive" = true))
+                     Index Searches: 1
+                     Buffers: shared hit=2 read=110
+ Planning:
+   Buffers: shared hit=289 read=27
+ Planning Time: 0.616 ms
+ Execution Time: 43.372 ms
+(20 rows)

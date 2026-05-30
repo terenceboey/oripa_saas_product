@@ -1,0 +1,38 @@
+=== clone metadata ===
+oripa_collab_clone_20260530|PostgreSQL 18.4 (Debian 18.4-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit|268355|670 MB
+
+=== extensions ===
+pg_stat_statements
+pg_trgm
+plpgsql
+
+=== CatalogItem indexes ===
+                  indexname                   |                                                                 indexdef
+----------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------
+ CatalogItem_catalogSetId_isActive_idx        | CREATE INDEX "CatalogItem_catalogSetId_isActive_idx" ON public."CatalogItem" USING btree ("catalogSetId", "isActive")
+ CatalogItem_itemType_game_isActive_idx       | CREATE INDEX "CatalogItem_itemType_game_isActive_idx" ON public."CatalogItem" USING btree ("itemType", game, "isActive")
+ CatalogItem_lower_name_trgm_idx              | CREATE INDEX "CatalogItem_lower_name_trgm_idx" ON public."CatalogItem" USING gin (lower(name) gin_trgm_ops)
+ CatalogItem_name_idx                         | CREATE INDEX "CatalogItem_name_idx" ON public."CatalogItem" USING btree (name)
+ CatalogItem_pkey                             | CREATE UNIQUE INDEX "CatalogItem_pkey" ON public."CatalogItem" USING btree (id)
+ CatalogItem_source_isActive_idx              | CREATE INDEX "CatalogItem_source_isActive_idx" ON public."CatalogItem" USING btree (source, "isActive")
+ CatalogItem_source_sourceItemId_language_key | CREATE UNIQUE INDEX "CatalogItem_source_sourceItemId_language_key" ON public."CatalogItem" USING btree (source, "sourceItemId", language)
+(7 rows)
+
+
+=== CatalogItem columns search relevant ===
+ column_name  | data_type
+--------------+-----------
+ source       | text
+ sourceItemId | text
+ game         | text
+ language     | text
+ name         | text
+ setId        | text
+ setName      | text
+ cardNumber   | text
+ rarity       | text
+ searchText   | text
+ isActive     | boolean
+ localId      | text
+ catalogSetId | text
+(13 rows)

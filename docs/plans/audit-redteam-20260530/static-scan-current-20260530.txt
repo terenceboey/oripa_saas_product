@@ -1,0 +1,64 @@
+=== added-line secret-keyword scan ===
+=== added-line shell/eval scan ===
+=== added-line SQL unsafe scan ===
+=== diff check ===
+=== changed files ===
+ M .gitignore
+ M README.md
+ M apps/api/package.json
+ M apps/api/scripts/sync-tcgtracking.ts
+ M apps/api/src/app.ts
+ M apps/api/src/modules/catalog/router.ts
+ M apps/api/src/modules/draws/router.ts
+ M apps/api/src/modules/packs/router.ts
+ M apps/web/app/vendor/page.tsx
+ M apps/web/package.json
+ M apps/worker/package.json
+ D docs/traceability-schema.md
+ M package.json
+ M packages/shared/src/index.ts
+ M prisma/schema.prisma
+?? PROJECTS.md
+?? apps/api/scripts/catalog-report.ts
+?? apps/api/scripts/sync-carddb-fast.ts
+?? apps/api/scripts/sync-carddb-sources.ts
+?? apps/api/scripts/sync-tcgdex.ts
+?? apps/api/scripts/tcgtracking-report.ts
+?? apps/api/scripts/test-campaign-creative-mvp.ts
+?? apps/api/scripts/test-carddb-sources-normalizer.ts
+?? apps/api/scripts/test-catalog-facets-suggest.ts
+?? apps/api/scripts/test-catalog-search-dedupe.ts
+?? apps/api/scripts/test-catalog-search-query.ts
+?? apps/api/scripts/test-draw-pool-integrity.ts
+?? apps/api/scripts/test-pack-immutability-guard.ts
+?? apps/api/scripts/test-pack-inventory-allocation.ts
+?? apps/api/scripts/test-pack-prize-catalog-snapshots.ts
+?? apps/api/scripts/test-pack-publish-freeze.ts
+?? apps/api/scripts/test-pack-template-publish.ts
+?? apps/api/scripts/test-sync-tcgtracking-guardrails.ts
+?? apps/api/scripts/test-tcgdex-normalizer.ts
+?? apps/api/scripts/test-tcgtracking-normalizer.ts
+?? apps/api/src/modules/catalog/card-db-sources-normalizer.ts
+?? apps/api/src/modules/catalog/facets.ts
+?? apps/api/src/modules/catalog/fixtures/
+?? apps/api/src/modules/catalog/search-dedupe.ts
+?? apps/api/src/modules/catalog/search-query.ts
+?? apps/api/src/modules/catalog/tcgdex-normalizer.ts
+?? apps/api/src/modules/catalog/tcgtracking-normalizer.ts
+?? apps/api/src/modules/creative/
+?? apps/api/src/modules/draws/pool-integrity.ts
+?? apps/api/src/modules/packs/immutability.ts
+?? apps/api/src/modules/packs/inventory-allocation.ts
+?? apps/api/src/modules/packs/pool-snapshot.ts
+?? apps/api/src/modules/packs/prize-snapshots.ts
+?? apps/api/src/modules/packs/templates-router.ts
+?? apps/api/src/modules/packs/templates.ts
+?? apps/web/scripts/
+?? docs/current-oripa-workflow.md
+?? "docs/legacy references/"
+?? docs/oripa-saas-reconciled-car-customer-stories-proposal.md
+?? docs/plans/
+?? docs/reference-artifacts/
+?? docs/runbooks/
+?? prisma/sql/
+?? scripts/

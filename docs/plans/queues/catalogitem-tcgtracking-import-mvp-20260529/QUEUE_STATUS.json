@@ -1,0 +1,96 @@
+{
+  "created_at_utc": "2026-05-29T05:27:05Z",
+  "board": "oripa-catalogitem-tcgtracking-mvp-20260529",
+  "queue_root": "/home/yeqiuqiu/oripa_saas/docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529",
+  "assignee": "coding-kanban",
+  "effective_model": {
+    "provider": "openai-codex",
+    "model": "gpt-5.3-codex",
+    "source": "/home/yeqiuqiu/.hermes/profiles/coding-kanban/config.yaml"
+  },
+  "workspace": "dir:/home/yeqiuqiu/oripa_saas",
+  "dependency_shape": "serial chain; task N depends on N-1; first task promoted",
+  "task_count": 9,
+  "tasks": [
+    {
+      "order": 1,
+      "id": "t_c341197d",
+      "title": "01 schema/sql preflight for CatalogItem TCGTracking fields",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:01-schema-preflight"
+    },
+    {
+      "order": 2,
+      "id": "t_c5c7b278",
+      "title": "02 capture TCGTracking category 3 source fixtures and key paths",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:02-fixtures"
+    },
+    {
+      "order": 3,
+      "id": "t_c75819b1",
+      "title": "03 implement fixture-backed TCGTracking normalizer tests",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:03-normalizer"
+    },
+    {
+      "order": 4,
+      "id": "t_069be52f",
+      "title": "04 implement safe TCGTracking importer guardrails",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:04-importer"
+    },
+    {
+      "order": 5,
+      "id": "t_3ee4547a",
+      "title": "05 add catalog migration SQL and import runbook",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:05-runbook"
+    },
+    {
+      "order": 6,
+      "id": "t_ed7466b3",
+      "title": "06 add catalog import report script",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:06-report"
+    },
+    {
+      "order": 7,
+      "id": "t_de56752f",
+      "title": "07 local QA gate for import-only slice",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:07-local-qa"
+    },
+    {
+      "order": 8,
+      "id": "t_06bf4ea2",
+      "title": "08 staging rollout gate / block for write approval if needed",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:08-staging-gate"
+    },
+    {
+      "order": 9,
+      "id": "t_91e46de1",
+      "title": "09 production/live rollout approval gate",
+      "idempotency_key": "oripa-catalogitem-tcgtracking-mvp-20260529:09-production-gate"
+    }
+  ],
+  "verification": {
+    "stats_raw": "{\n  \"by_status\": {\n    \"ready\": 1,\n    \"todo\": 8\n  },\n  \"by_assignee\": {\n    \"coding-kanban\": {\n      \"ready\": 1,\n      \"todo\": 8\n    }\n  },\n  \"oldest_ready_age_seconds\": 2,\n  \"now\": 1780032425\n}\n",
+    "running_raw": "[]\n",
+    "ready_raw": "[\n  {\n    \"id\": \"t_c341197d\",\n    \"title\": \"01 schema/sql preflight for CatalogItem TCGTracking fields\",\n    \"body\": \"Objective: confirm existing CatalogItem import fields and idempotent SQL posture before implementation.\\nScope paths: prisma/schema.prisma, prisma/sql/catalogitem-tcgtracking.sql, docs/plans/catalogitem-tcgtracking-plan.md.\\nRequired checks:\\n1. Confirm CatalogItem has localId, sourcePayload, unique [source, sourceItemId, language], indexes [game, language, isActive] and [setId].\\n2. Confirm/repair prisma/sql/catalogitem-tcgtracking.sql so it only adds missing CatalogItem columns/indexes and is safe/idempotent. Do not include PackPrize catalog reference SQL in this MVP.\\n3. Run npm run build -w @oripa/api if feasible; isolate pre-existing unrelated failures.\\nAcceptance: preflight notes and/or patch committed in working tree; no live DB mutation.\\n\\nCOMMON HARD RULES:\\n- Repo root: /home/yeqiuqiu/oripa_saas. If you cannot inspect that exact path, fail closed/block.\\n- Queue spec: docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md.\\n- Source plan: docs/plans/catalogitem-tcgtracking-plan.md.\\n- MVP scope is import-only: CatalogItem schema/SQL, TCGTracking fixtures, fixture-backed normalizer/importer, report/runbook, QA gates.\\n- DO NOT touch PackPrize catalog reference, shared pack schemas, pack create/update/read API, public DTO mappers, or vendor UI.\\n- Category 3 only. Category 85 is blocked.\\n- DO NOT run live Render DB SQL/import writes. Current .env may point at live Render; override DATABASE_URL for local DB operations or block.\\n- On completion, report changed files, commands+exit codes, DB access/write status, and no-deferred-scope proof.\\n\",\n    \"assignee\": \"coding-kanban\",\n    \"status\": \"ready\",\n    \"priority\": 0,\n    \"tenant\": null,\n    \"workspace_kind\": \"dir\",\n    \"workspace_path\": \"/home/yeqiuqiu/oripa_saas\",\n    \"branch_name\": null,\n    \"created_by\": \"user\",\n    \"created_at\": 1780032423,\n    \"started_at\": null,\n    \"completed_at\": null,\n    \"result\": null,\n    \"skills\": [\n      \"software-development/test-driven-development\"\n    ],\n    \"max_retries\": 1,\n    \"session_id\": null,\n    \"workflow_template_id\": null,\n    \"current_step_key\": null\n  }\n]\n"
+  },
+  "last_verified_at_utc": "2026-05-29T06:19:50Z",
+  "live_dispatch": {
+    "stats_raw": "{\n  \"by_status\": {\n    \"done\": 1,\n    \"running\": 1,\n    \"todo\": 7\n  },\n  \"by_assignee\": {\n    \"coding-kanban\": {\n      \"done\": 1,\n      \"running\": 1,\n      \"todo\": 7\n    }\n  },\n  \"oldest_ready_age_seconds\": null,\n  \"now\": 1780035590\n}\n",
+    "running_raw": "[\n  {\n    \"id\": \"t_c5c7b278\",\n    \"title\": \"02 capture TCGTracking category 3 source fixtures and key paths\",\n    \"body\": \"Objective: capture real TCGTracking source-shape evidence before normalizer coding.\\nRequired fixtures under an implementation-owned fixture path:\\n- /tcgapi/v1/categories\\n- /tcgapi/v1/3/sets\\n- one /tcgapi/v1/3/sets/{set_id}\\n- matching /pricing\\n- matching /skus if available\\n- /tcgapi/v1/products/{product_id} for one product from that set\\nIf direct server HTTP is Cloudflare-blocked, use browser-based inspection or actual execution environment and document the method.\\nRecord actual key paths for product id/name, collector/local number, set/group id, set name/abbrev, image URLs, rarity/category/product type, SKU language/variant/condition, pricing shape, and whether category 3 alone is sufficient.\\nAcceptance: fixtures and key-path notes exist and are cited by later normalizer work.\\n\\nCOMMON HARD RULES:\\n- Repo root: /home/yeqiuqiu/oripa_saas. If you cannot inspect that exact path, fail closed/block.\\n- Queue spec: docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md.\\n- Source plan: docs/plans/catalogitem-tcgtracking-plan.md.\\n- MVP scope is import-only: CatalogItem schema/SQL, TCGTracking fixtures, fixture-backed normalizer/importer, report/runbook, QA gates.\\n- DO NOT touch PackPrize catalog reference, shared pack schemas, pack create/update/read API, public DTO mappers, or vendor UI.\\n- Category 3 only. Category 85 is blocked.\\n- DO NOT run live Render DB SQL/import writes. Current .env may point at live Render; override DATABASE_URL for local DB operations or block.\\n- On completion, report changed files, commands+exit codes, DB access/write status, and no-deferred-scope proof.\\n\",\n    \"assignee\": \"coding-kanban\",\n    \"status\": \"running\",\n    \"priority\": 0,\n    \"tenant\": null,\n    \"workspace_kind\": \"dir\",\n    \"workspace_path\": \"/home/yeqiuqiu/oripa_saas\",\n    \"branch_name\": null,\n    \"created_by\": \"user\",\n    \"created_at\": 1780032423,\n    \"started_at\": 1780035575,\n    \"completed_at\": null,\n    \"result\": null,\n    \"skills\": [\n      \"software-development/test-driven-development\"\n    ],\n    \"max_retries\": 1,\n    \"session_id\": null,\n    \"workflow_template_id\": null,\n    \"current_step_key\": null\n  }\n]\n",
+    "done_raw": "[\n  {\n    \"id\": \"t_c341197d\",\n    \"title\": \"01 schema/sql preflight for CatalogItem TCGTracking fields\",\n    \"body\": \"Objective: confirm existing CatalogItem import fields and idempotent SQL posture before implementation.\\nScope paths: prisma/schema.prisma, prisma/sql/catalogitem-tcgtracking.sql, docs/plans/catalogitem-tcgtracking-plan.md.\\nRequired checks:\\n1. Confirm CatalogItem has localId, sourcePayload, unique [source, sourceItemId, language], indexes [game, language, isActive] and [setId].\\n2. Confirm/repair prisma/sql/catalogitem-tcgtracking.sql so it only adds missing CatalogItem columns/indexes and is safe/idempotent. Do not include PackPrize catalog reference SQL in this MVP.\\n3. Run npm run build -w @oripa/api if feasible; isolate pre-existing unrelated failures.\\nAcceptance: preflight notes and/or patch committed in working tree; no live DB mutation.\\n\\nCOMMON HARD RULES:\\n- Repo root: /home/yeqiuqiu/oripa_saas. If you cannot inspect that exact path, fail closed/block.\\n- Queue spec: docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md.\\n- Source plan: docs/plans/catalogitem-tcgtracking-plan.md.\\n- MVP scope is import-only: CatalogItem schema/SQL, TCGTracking fixtures, fixture-backed normalizer/importer, report/runbook, QA gates.\\n- DO NOT touch PackPrize catalog reference, shared pack schemas, pack create/update/read API, public DTO mappers, or vendor UI.\\n- Category 3 only. Category 85 is blocked.\\n- DO NOT run live Render DB SQL/import writes. Current .env may point at live Render; override DATABASE_URL for local DB operations or block.\\n- On completion, report changed files, commands+exit codes, DB access/write status, and no-deferred-scope proof.\\n\",\n    \"assignee\": \"coding-kanban\",\n    \"status\": \"done\",\n    \"priority\": 0,\n    \"tenant\": null,\n    \"workspace_kind\": \"dir\",\n    \"workspace_path\": \"/home/yeqiuqiu/oripa_saas\",\n    \"branch_name\": null,\n    \"created_by\": \"user\",\n    \"created_at\": 1780032423,\n    \"started_at\": 1780032433,\n    \"completed_at\": 1780035575,\n    \"result\": null,\n    \"skills\": [\n      \"software-development/test-driven-development\"\n    ],\n    \"max_retries\": 1,\n    \"session_id\": null,\n    \"workflow_template_id\": null,\n    \"current_step_key\": null\n  }\n]\n",
+    "process_evidence": "2426383    1781    15:52:49 /home/yeqiuqiu/.hermes/hermes-agent/venv/bin/python3 /home/yeqiuqiu/.hermes/hermes-agent/venv/bin/hermes --profile coding-kanban gateway run --replace\n3001362    1781       00:14 /home/yeqiuqiu/.hermes/hermes-agent/venv/bin/python3 /home/yeqiuqiu/.hermes/hermes-agent/venv/bin/hermes -p coding-kanban --accept-hooks --skills kanban-worker --skills software-development/test-driven-development chat -q work kanban task t_c5c7b278\n"
+  },
+  "current_progress": {
+    "done": [
+      "t_c341197d"
+    ],
+    "running": [
+      "t_c5c7b278"
+    ],
+    "todo_count": 7,
+    "blocked": [],
+    "notes": [
+      "Controller reviewed and completed t_c341197d after worker blocked review-required.",
+      "Dispatched t_c5c7b278 fixture-capture card to coding-kanban."
+    ]
+  }
+}

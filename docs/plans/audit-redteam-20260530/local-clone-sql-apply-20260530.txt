@@ -1,0 +1,21 @@
+=== docker clone ===
+oripa-collab-postgres18 Up 18 minutes 127.0.0.1:15433->5432/tcp
+=== apply catalog/index SQL to local clone ===
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:5: NOTICE:  extension "pg_trgm" already exists, skipping
+CREATE EXTENSION
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:24: NOTICE:  relation "CatalogSet" already exists, skipping
+CREATE TABLE
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:26: NOTICE:  column "catalogSetId" of relation "CatalogItem" already exists, skipping
+ALTER TABLE
+DO
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:44: NOTICE:  relation "CatalogItem_catalogSetId_isActive_idx" already exists, skipping
+CREATE INDEX
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:49: NOTICE:  relation "CatalogItem_lower_name_trgm_idx" already exists, skipping
+CREATE INDEX
+=== apply inventory lifecycle SQL to local clone ===
+psql:/tmp/pack-prize-inventory-allocation-lifecycle.sql:6: ERROR:  relation "PackPrizeInventoryAllocation" does not exist

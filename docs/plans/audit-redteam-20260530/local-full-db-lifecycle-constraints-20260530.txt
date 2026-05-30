@@ -1,0 +1,19 @@
+=== apply lifecycle SQL constraints to full local DB ===
+psql:/tmp/pack-prize-inventory-allocation-lifecycle.sql:6: NOTICE:  column "quantityCommitted" of relation "PackPrizeInventoryAllocation" already exists, skipping
+psql:/tmp/pack-prize-inventory-allocation-lifecycle.sql:6: NOTICE:  column "quantityReleased" of relation "PackPrizeInventoryAllocation" already exists, skipping
+ALTER TABLE
+psql:/tmp/pack-prize-inventory-allocation-lifecycle.sql:9: NOTICE:  constraint "PackPrizeInventoryAllocation_quantity_lifecycle_check" of relation "PackPrizeInventoryAllocation" does not exist, skipping
+ALTER TABLE
+ALTER TABLE
+psql:/tmp/pack-prize-inventory-allocation-lifecycle.sql:20: NOTICE:  constraint "VendorInventoryItem_quantity_accounting_check" of relation "VendorInventoryItem" does not exist, skipping
+ALTER TABLE
+ALTER TABLE
+=== validate constraints on clone ===
+ALTER TABLE
+ALTER TABLE
+=== constraints present ===
+                        conname                        | convalidated
+-------------------------------------------------------+--------------
+ PackPrizeInventoryAllocation_quantity_lifecycle_check | t
+ VendorInventoryItem_quantity_accounting_check         | t
+(2 rows)

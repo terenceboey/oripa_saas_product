@@ -7,11 +7,13 @@ import { vendorResolver } from "./middleware/vendor";
 import { healthRouter } from "./modules/health/router";
 import { vendorRouter } from "./modules/vendors/router";
 import { packRouter } from "./modules/packs/router";
+import { packTemplateRouter } from "./modules/packs/templates-router";
 import { drawRouter } from "./modules/draws/router";
 import { walletRouter } from "./modules/wallet/router";
 import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
 import { catalogRouter } from "./modules/catalog/router";
+import { creativeRouter } from "./modules/creative/router";
 
 export function createApp() {
   const app = express();
@@ -81,11 +83,13 @@ export function createApp() {
   app.use(healthRouter);
   app.use(vendorRouter);
   app.use(packRouter);
+  app.use(packTemplateRouter);
   app.use(drawRouter);
   app.use(walletRouter);
   app.use(bannerRouter);
   app.use(authRouter);
   app.use(catalogRouter);
+  app.use(creativeRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     const message = err instanceof Error ? err.message : "Internal server error";
@@ -94,8 +98,3 @@ export function createApp() {
 
   return app;
 }
-
-
-
-
-

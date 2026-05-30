@@ -1,0 +1,470 @@
+{
+  "set_id": 1938,
+  "updated": "2026-05-28T08:15:23-04:00",
+  "prices": {
+    "131695": {
+      "tcg": {
+        "Holofoil": {
+          "low": 51.89,
+          "market": 64.04
+        }
+      }
+    },
+    "131696": {
+      "tcg": {
+        "Holofoil": {
+          "low": 9.97,
+          "market": 13.9
+        }
+      }
+    },
+    "131697": {
+      "tcg": {
+        "Holofoil": {
+          "low": 16.53,
+          "market": 23.52
+        }
+      }
+    },
+    "131698": {
+      "tcg": {
+        "Holofoil": {
+          "low": 27.18,
+          "market": 46.44
+        }
+      }
+    },
+    "133813": {
+      "tcg": {
+        "Holofoil": {
+          "low": 0.5,
+          "market": 1.25
+        }
+      }
+    },
+    "133814": {
+      "tcg": {
+        "Normal": {
+          "low": 0.24,
+          "market": 0.57
+        }
+      }
+    },
+    "133815": {
+      "tcg": {
+        "Normal": {
+          "low": 1.08,
+          "market": 1.77
+        }
+      }
+    },
+    "133816": {
+      "tcg": {
+        "Holofoil": {
+          "low": 1.49,
+          "market": 2.31
+        }
+      }
+    },
+    "148226": {
+      "tcg": {
+        "Normal": {
+          "low": 2725.01,
+          "market": 2060.61
+        }
+      }
+    },
+    "148339": {
+      "tcg": {
+        "Holofoil": {
+          "low": 16.73,
+          "market": 22.41
+        }
+      }
+    },
+    "148340": {
+      "tcg": {
+        "Holofoil": {
+          "low": 10,
+          "market": 12.45
+        }
+      }
+    },
+    "148341": {
+      "tcg": {
+        "Holofoil": {
+          "low": 38.07,
+          "market": 47.11
+        }
+      }
+    },
+    "148342": {
+      "tcg": {
+        "Holofoil": {
+          "low": 109,
+          "market": 115.95
+        }
+      }
+    },
+    "148343": {
+      "tcg": {
+        "Holofoil": {
+          "low": 220,
+          "market": 176.45
+        }
+      }
+    },
+    "148344": {
+      "tcg": {
+        "Holofoil": {
+          "low": 58.64,
+          "market": 60.69
+        }
+      }
+    },
+    "148345": {
+      "tcg": {
+        "Holofoil": {
+          "low": 20,
+          "market": 28.58
+        }
+      }
+    },
+    "148346": {
+      "tcg": {
+        "Holofoil": {
+          "low": 37.5,
+          "market": 48.85
+        }
+      }
+    },
+    "148347": {
+      "tcg": {
+        "Holofoil": {
+          "low": 126.69,
+          "market": 142.04
+        }
+      }
+    },
+    "148348": {
+      "tcg": {
+        "Holofoil": {
+          "low": 13.56,
+          "market": 17.4
+        }
+      }
+    },
+    "148349": {
+      "tcg": {
+        "Holofoil": {
+          "low": 36.01,
+          "market": 47.99
+        }
+      }
+    },
+    "148350": {
+      "tcg": {
+        "Holofoil": {
+          "low": 299.96,
+          "market": 225.43
+        }
+      }
+    },
+    "148351": {
+      "tcg": {
+        "Holofoil": {
+          "low": 14.49,
+          "market": 19.05
+        }
+      }
+    },
+    "148352": {
+      "tcg": {
+        "Holofoil": {
+          "low": 179.99,
+          "market": 178.35
+        }
+      }
+    },
+    "148388": {
+      "tcg": {
+        "Holofoil": {
+          "low": 3,
+          "market": 7.78
+        }
+      }
+    },
+    "155599": {
+      "tcg": {
+        "Holofoil": {
+          "low": 9.99,
+          "market": 20.49
+        }
+      }
+    },
+    "161362": {
+      "tcg": {
+        "Holofoil": {
+          "low": 0.44,
+          "market": 1.48
+        }
+      }
+    },
+    "162041": {
+      "tcg": {
+        "Holofoil": {
+          "low": 12,
+          "market": 19.7
+        }
+      }
+    },
+    "164234": {
+      "tcg": {
+        "Holofoil": {
+          "low": 3.14,
+          "market": 5.33
+        }
+      }
+    },
+    "171033": {
+      "tcg": {
+        "Holofoil": {
+          "low": 3.05,
+          "market": 6.18
+        }
+      }
+    },
+    "173381": {
+      "tcg": {
+        "Holofoil": {
+          "low": 3.66,
+          "market": 7.53
+        }
+      }
+    },
+    "174488": {
+      "tcg": {
+        "Holofoil": {
+          "low": 15,
+          "market": 10.25
+        }
+      }
+    },
+    "177113": {
+      "tcg": {
+        "Holofoil": {
+          "low": 17.27,
+          "market": 20.61
+        }
+      }
+    },
+    "177166": {
+      "tcg": {
+        "Holofoil": {
+          "low": 19.99,
+          "market": 19
+        },
+        "Normal": {
+          "low": 6.99,
+          "market": 8.76
+        }
+      }
+    },
+    "177167": {
+      "tcg": {
+        "Holofoil": {
+          "low": 11.35,
+          "market": 12.97
+        },
+        "Normal": {
+          "low": 10.78,
+          "market": 12.17
+        }
+      }
+    },
+    "179367": {
+      "tcg": {
+        "Holofoil": {
+          "low": 5,
+          "market": 6.63
+        }
+      }
+    },
+    "179371": {
+      "tcg": {
+        "Holofoil": {
+          "low": 2.33,
+          "market": 4.32
+        }
+      }
+    },
+    "179380": {
+      "tcg": {
+        "Holofoil": {
+          "low": 20,
+          "market": 19.58
+        }
+      }
+    },
+    "180514": {
+      "tcg": {
+        "Holofoil": {
+          "low": 0.93,
+          "market": 1.38
+        }
+      }
+    },
+    "184219": {
+      "tcg": {
+        "Holofoil": {
+          "low": 0.89,
+          "market": 2.51
+        }
+      }
+    },
+    "184331": {
+      "tcg": {
+        "Holofoil": {
+          "low": 3.38,
+          "market": 4.45
+        }
+      }
+    },
+    "186106": {
+      "tcg": {
+        "Holofoil": {
+          "low": 9,
+          "market": 10.58
+        }
+      }
+    },
+    "189786": {
+      "tcg": {
+        "Holofoil": {
+          "low": 2.19,
+          "market": 3.21
+        }
+      }
+    },
+    "191907": {
+      "tcg": {
+        "Holofoil": {
+          "low": 4.83,
+          "market": 5.08
+        }
+      }
+    },
+    "197853": {
+      "tcg": {
+        "Holofoil": {
+          "low": 1.9,
+          "market": 3.89
+        }
+      }
+    },
+    "198529": {
+      "tcg": {
+        "Holofoil": {
+          "low": 20.28,
+          "market": 20.44
+        }
+      }
+    },
+    "198530": {
+      "tcg": {
+        "Holofoil": {
+          "low": 31.84,
+          "market": 31.84
+        }
+      }
+    },
+    "200203": {
+      "tcg": {
+        "Normal": {
+          "low": 7.53,
+          "market": 9.46
+        }
+      }
+    },
+    "200204": {
+      "tcg": {
+        "Normal": {
+          "low": 6.99,
+          "market": 8.87
+        }
+      }
+    },
+    "202638": {
+      "tcg": {
+        "Holofoil": {
+          "low": 149.05,
+          "market": 143.56
+        }
+      }
+    },
+    "211603": {
+      "tcg": {
+        "Holofoil": {
+          "low": 100,
+          "market": 20.15
+        }
+      }
+    },
+    "212993": {
+      "tcg": {
+        "Holofoil": {
+          "low": 1.9,
+          "market": 2.58
+        }
+      }
+    },
+    "216699": {
+      "tcg": {
+        "Holofoil": {
+          "low": 21.99,
+          "market": 25.98
+        }
+      }
+    },
+    "216702": {
+      "tcg": {
+        "Normal": {
+          "low": 0.19,
+          "market": 0.43
+        }
+      }
+    },
+    "216705": {
+      "tcg": {
+        "Normal": {
+          "low": 1,
+          "market": 1.68
+        }
+      }
+    },
+    "216707": {
+      "tcg": {
+        "Normal": {
+          "low": 0.07,
+          "market": 0.41
+        }
+      }
+    },
+    "226129": {
+      "tcg": {
+        "Holofoil": {
+          "low": 209.81,
+          "market": 232.17
+        }
+      }
+    },
+    "226132": {
+      "tcg": {
+        "Holofoil": {
+          "low": 12.7,
+          "market": 14.78
+        }
+      }
+    }
+  }
+}

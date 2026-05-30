@@ -1,0 +1,121 @@
+[
+  {
+    "method": "GET",
+    "url": "/api/status",
+    "status": 200,
+    "ct": "application/json",
+    "text": "{\"machineStatus\":\"running\",\"legendaryStatus\":\"open\",\"eliteStatus\":\"open\",\"freePacksStatus\":\"open\",\"sportsStatus\":\"open\",\"gachas\":[{\"code\":\"pokemon_50\",\"name\":\"Elite Pok\u00e9mon Gacha Pack\",\"price\":50,\"status\":\"open\",\"isOpen\":true},{\"code\":\"pokemon_250\",\"name\":\"Legendary Pok\u00e9mon Gacha Pack\",\"price\":250,\"status\":\"open\",\"isOpen\":true},{\"code\":\"pokemon_1000\",\"name\":\"Grail Pok\u00e9mon Gacha Pack\",\"price\":1000,\"status\":\"open\",\"isOpen\":true},{\"code\":\"onepiece_250\",\"name\":\"One Piece Gacha Pack\",\"price\":250,\"status\":\"open\",\"isOpen\":true},{\"code\":\"onepiece_50\",\"name\":\"One Piece Ocean Blue Pack\",\"price\":50,\"status\":\"closed\",\"isOpen\":null},{\"code\":\"pokemon_25\",\"name\":\"Starter Pok\u00e9mon Gacha Pack\",\"price\":25,\"status\":\"open\",\"isOpen\":true},{\"code\":\"comic_25\",\"name\":\"Comic 25\",\"price\":25,\"status\":\"open\",\"isOpen\":true},{\"code\":\"sns_25\",\"name\":\"Sns 25\",\"price\":25,\"status\":\"closed\",\"isOpen\":null},{\"code\":\"baseball_50\",\"name\":\"Baseball Gacha Pack\",\"price\":50,\"status\":\"closed\",\"isOpen\":null},{\"code\":\"gachopia_50\",\"name\":\"Elite Gachopia Pack\",\"price\":50,\"status\":\"closed\",\"isOpen\":false},{\"code\":\"comic_50\",\"name\":\"Comic 50\",\"price\":50,\"status\":\"open\",\"isOpen\":true},{\"code\":\"basketball_50\",\"name\":\"Basketball Gacha Pack\",\"price\":50,\"status\":\"closed\",\"isOpen\":null},{\"code\":\"football_50\",\"name\":\"Football Gacha Pack\",\"price\":50,\"status\":\"closed\",\"isOpen\":null},{\"code\":\"pikachu_50\",\"name\":\"Pikachu Gacha Pack\",\"price\":50,\"status\":\"closed\",\"isOpen\":false},{\"code\":\"charizard_50\",\"name\":\"Charizard Gacha Pack\",\"price"
+  },
+  {
+    "method": "GET",
+    "url": "/api/getRecentWinners?packType=",
+    "status": 200,
+    "ct": "application/json",
+    "text": "{\"success\":true,\"data\":[]}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/stats?data=linkedSendNftAndSpinTxns",
+    "status": 200,
+    "ct": "application/json",
+    "text": "{\"success\":true,\"data\":{\"linkedSendNftAndSpinTxns\":[{\"id\":4833895,\"spin_txn_created_at\":\"2026-05-28T16:18:16.441Z\",\"send_nft_created_at\":null,\"spin_wallet\":\"CP6erec3XyDc8dUTaoyASaLAZPRxyVDs7guTh63RnMJT\",\"memo\":\"cc-92c3cd2c-669a-4798-8cc4-6582f2220da5\",\"spin_txn_signature\":null,\"send_nft_signature\":null,\"nft_address\":null,\"roll\":null},{\"id\":4833894,\"spin_txn_created_at\":\"2026-05-28T16:18:08.181Z\",\"send_nft_created_at\":\"2026-05-28T16:18:10.341Z\",\"spin_wallet\":\"4iG5UgKX8WqvKJHGNW9pDv4DY1uVd3msuqJis4kdNJWp\",\"memo\":\"cc-f6ebc815-5fbe-4e2e-bf2b-ca00087e9755\",\"spin_txn_signature\":\"61NjQ9d6bpTVW4tXXgsQykM1EANDG6D8FXFt4xpDTNqp1CHyags4yqmUyZH63A8rLrPkw1AJsb2NmgSzFR2w21Dn\",\"send_nft_signature\":\"jijqkWKyn5qtKTQyuHahXLzyGvU7gh1kwtSFCoLcRzRhRqdGWUPaLUmhZ8pdiesd5vCgbfdV6TscDTHoWXtBgbN\",\"nft_address\":\"12NMmRz3ksE7uJHKPvYeoxVVgn2M7aZ8YxvcKDchCUkt\",\"roll\":54506107},{\"id\":4833893,\"spin_txn_created_at\":\"2026-05-28T16:18:05.000Z\",\"send_nft_created_at\":\"2026-05-28T16:18:08.241Z\",\"spin_wallet\":\"CP6erec3XyDc8dUTaoyASaLAZPRxyVDs7guTh63RnMJT\",\"memo\":\"cc-7ac6bbf9-1c43-4e30-b7f8-fb03265d6d74\",\"spin_txn_signature\":\"2Psck5z4458fAoXavFnzuTYLMyQk35EWzq1jZ5nafKythnagVr914tpymNKVZo6L4cA7vhSTGoY5QWQRRF5qFBG5\",\"send_nft_signature\":\"turbomode\",\"nft_address\":\"Bj7inXb865KhiRhT5U8Ayk1TB7RvDk1PGa7ZCTKYiz3n\",\"roll\":32746160},{\"id\":4833892,\"spin_txn_created_at\":\"2026-05-28T16:18:03.753Z\",\"send_nft_created_at\":\"2026-05-28T16:18:07.426Z\",\"spin_wallet\":\"24KhWJ1NVZHqmHT9zxUnRMyErBjzEHM7Dr5UvMKMra7i\",\"memo\":\"slabz-d4834cd0-"
+  },
+  {
+    "method": "GET",
+    "url": "/api/getGachaWalletPubkeys",
+    "status": 200,
+    "ct": "application/json",
+    "text": "{\"pubkeys\":[\"coMiCPLD4P8NV9Q6VDhwYUn9pkkgPwp74VyWdU7kMpA\",\"PoP8747uHUq6ckFstUTPCTqZHZT1vZBTpiwPinFjvUM\",\"boXnWdYJDJrKyjKdTDGnVBHqvLy3B6NCrUU2YRUwykD\",\"BbaLLq9ZCFG1Jv3UThK1Jb4aXzpog7MGDU8Djcu82HP8\",\"FBLLkV4QYk9NifMS4HT2U4rK9h6CXe3soTjKsXS5Cf5w\",\"BsBLLQUsLg5etS8N3SuTcsjrEq3bJfj2hjV8fq3JMAuo\",\"SCCrBX1SbuGKaJMf66tVqsWAopcTUTYBvHeQiqaBdUU\",\"YugienwXYWnTQmAkRgBMc556ZLvidV7bTn1f2q8pGEs\"]}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/freePack",
+    "status": 405,
+    "ct": null,
+    "text": ""
+  },
+  {
+    "method": "POST",
+    "url": "/api/freePack",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Invalid pack type\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/buyback",
+    "status": 405,
+    "ct": null,
+    "text": ""
+  },
+  {
+    "method": "POST",
+    "url": "/api/buyback",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Invalid altRecipient address\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/userStats",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Invalid wallet address\",\"data\":null}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/openPack",
+    "status": 405,
+    "ct": null,
+    "text": ""
+  },
+  {
+    "method": "POST",
+    "url": "/api/openPack",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Invalid memo parameter\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/generatePack",
+    "status": 405,
+    "ct": null,
+    "text": ""
+  },
+  {
+    "method": "POST",
+    "url": "/api/generatePack",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Invalid request body\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/generatePurchasedPack",
+    "status": 405,
+    "ct": null,
+    "text": ""
+  },
+  {
+    "method": "POST",
+    "url": "/api/generatePurchasedPack",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Missing publicKey\"}"
+  },
+  {
+    "method": "GET",
+    "url": "/api/usePurchasedPack",
+    "status": 405,
+    "ct": null,
+    "text": ""
+  },
+  {
+    "method": "POST",
+    "url": "/api/usePurchasedPack",
+    "status": 400,
+    "ct": "application/json",
+    "text": "{\"error\":\"Missing publicKey\"}"
+  }
+]
