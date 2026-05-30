@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { CatalogItemType } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
@@ -7,10 +6,15 @@ import { getRequestUserId, getVendorMembershipRole } from "../../lib/rbac";
 import { collapseCatalogSearchItems } from "./search-dedupe";
 import {
   attachCatalogSearchPayloads,
-  findCatalogSearchCandidates,
   sortCatalogSearchCandidates,
   stripCatalogSearchPayload,
 } from "./search-query";
+import {
+  findCatalogSearchAdapterCandidates,
+  normalizeCatalogSearchClass,
+  type CatalogSearchTypeAlias,
+  type NormalizedCatalogSearchClass,
+} from "./search-adapters";
 import {
   buildCatalogFacetWhere,
   buildCatalogSuggestWhere,
@@ -20,8 +24,12 @@ import {
 
 export const catalogRouter = Router();
 
+const itemClassSchema = z.enum(["CARD", "SEALED_PRODUCT", "SET", "SLAB", "CUSTOM_ITEM", "ACCESSORY", "BONUS", "ALL"]);
+const typeSchema = z.enum(["card", "sealed", "all"]);
+
 const catalogFilterSchema = z.object({
-  type: z.enum(["card", "sealed", "all"]).optional().default("card"),
+  type: typeSchema.optional(),
+  itemClass: itemClassSchema.optional(),
   game: z.string().trim().max(40).optional().default("POKEMON"),
   language: z.string().trim().min(1).max(16).optional(),
   source: z.string().trim().min(1).max(80).optional(),
@@ -83,6 +91,28 @@ const catalogSearchSelect = {
   searchText: true,
 } as const;
 
+function normalizeOrSendInvalidQuery(
+  params: { type?: CatalogSearchTypeAlias; itemClass?: NormalizedCatalogSearchClass },
+  res: any,
+): NormalizedCatalogSearchClass | null {
+  try {
+    return normalizeCatalogSearchClass(params);
+  } catch (error) {
+    res.status(400).json({ error: "invalid_query", message: (error as Error).message });
+    return null;
+  }
+}
+
+function rejectUnsupportedFacetSuggest(itemClass: NormalizedCatalogSearchClass, res: any) {
+  if (itemClass === "CARD") return false;
+  res.status(400).json({
+    error: "unsupported_for_endpoint",
+    message: "facets and suggest are card-only in P0",
+    supportedItemClasses: ["CARD"],
+  });
+  return true;
+}
+
 catalogRouter.get("/v1/catalog/facets", async (req: VendorRequest, res) => {
   const auth = await requireVendorReadAccess(req, res);
   if (!auth) return;
@@ -92,9 +122,13 @@ catalogRouter.get("/v1/catalog/facets", async (req: VendorRequest, res) => {
     return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
   }
 
-  const { limit, ...filters } = parsed.data;
+  const { limit, type, itemClass, ...filters } = parsed.data;
+  const normalizedClass = normalizeOrSendInvalidQuery({ type, itemClass }, res);
+  if (!normalizedClass) return;
+  if (rejectUnsupportedFacetSuggest(normalizedClass, res)) return;
+
   const rows = await prisma.catalogItem.findMany({
-    where: buildCatalogFacetWhere(filters),
+    where: buildCatalogFacetWhere({ ...filters, type: "card" }),
     select: {
       source: true,
       language: true,
@@ -118,9 +152,13 @@ catalogRouter.get("/v1/catalog/suggest", async (req: VendorRequest, res) => {
     return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
   }
 
-  const { q, limit, ...filters } = parsed.data;
+  const { q, limit, type, itemClass, ...filters } = parsed.data;
+  const normalizedClass = normalizeOrSendInvalidQuery({ type, itemClass }, res);
+  if (!normalizedClass) return;
+  if (rejectUnsupportedFacetSuggest(normalizedClass, res)) return;
+
   const rows = await prisma.catalogItem.findMany({
-    where: buildCatalogSuggestWhere({ ...filters, q }),
+    where: buildCatalogSuggestWhere({ ...filters, type: "card", q }),
     orderBy: [{ name: "asc" }, { source: "asc" }, { sourceItemId: "asc" }],
     select: catalogSearchSelect,
     take: Math.min(limit * 4, 80),
@@ -134,27 +172,27 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
   const auth = await requireVendorReadAccess(req, res);
   if (!auth) return;
 
+  if ("offset" in req.query) {
+    return res.status(400).json({ error: "invalid_query", message: "offset pagination is not supported for catalog search" });
+  }
+
   const parsed = searchQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
   }
 
-  const { q, limit, type, game, language, source, setId, setName, rarity, localId, cardNumber } = parsed.data;
-  const typeFilter =
-    type === "card"
-      ? CatalogItemType.CARD
-      : type === "sealed"
-        ? CatalogItemType.SEALED_PRODUCT
-        : undefined;
+  const { q, limit, type, itemClass, game, language, source, setId, setName, rarity, localId, cardNumber } = parsed.data;
+  const normalizedClass = normalizeOrSendInvalidQuery({ type, itemClass }, res);
+  if (!normalizedClass) return;
 
   const candidateLimit = Math.min(limit * 4, 120);
 
-  const candidates = await findCatalogSearchCandidates(
+  const candidates = await findCatalogSearchAdapterCandidates(
     prisma,
     {
       q,
       game,
-      typeFilter,
+      itemClass: normalizedClass,
       language,
       source,
       setId,
@@ -166,9 +204,10 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
     candidateLimit,
   );
 
-  const payloadRows = candidates.length
+  const cardCandidates = candidates.filter((candidate) => candidate.itemType === "CARD");
+  const payloadRows = cardCandidates.length
     ? await prisma.catalogItem.findMany({
-        where: { id: { in: candidates.map((candidate) => candidate.id) } },
+        where: { id: { in: cardCandidates.map((candidate) => candidate.id) } },
         select: { id: true, sourcePayload: true },
       })
     : [];
