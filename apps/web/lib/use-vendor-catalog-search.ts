@@ -147,7 +147,7 @@ export function useVendorCatalogSearch({
     }
 
     const normalizedQuery = query.toLowerCase();
-    const cacheKey = `card-search:${normalizedGameFilter}:${normalizedQuery}:60:${catalogFilters.source}:${catalogFilters.language}:${catalogFilters.setId}:${catalogFilters.rarity}`;
+    const cacheKey = `card-search:${normalizedGameFilter}:${normalizedQuery}:30:${catalogFilters.source}:${catalogFilters.language}:${catalogFilters.setId}:${catalogFilters.rarity}`;
     const cached = catalogSearchCacheRef.current.get(cacheKey);
     if (cached) {
       setCatalogResults(cached);
@@ -164,7 +164,7 @@ export function useVendorCatalogSearch({
       setCatalogSearchError(null);
       const url = new URL(`${apiBase}/v1/catalog/search`);
       url.searchParams.set("q", query);
-      url.searchParams.set("limit", "60");
+      url.searchParams.set("limit", "30");
       url.searchParams.set("type", "card");
       url.searchParams.set("game", normalizedGameFilter);
       appendCatalogFilters(url, catalogFilters);
@@ -185,7 +185,7 @@ export function useVendorCatalogSearch({
           ) {
             const fallbackUrl = new URL(`${apiBase}/v1/catalog/search`);
             fallbackUrl.searchParams.set("q", query);
-            fallbackUrl.searchParams.set("limit", "60");
+            fallbackUrl.searchParams.set("limit", "30");
             fallbackUrl.searchParams.set("type", "card");
             fallbackUrl.searchParams.set("game", normalizedGameFilter);
             const fallbackRes = await fetch(fallbackUrl.toString(), {
@@ -317,4 +317,3 @@ export function useVendorCatalogSearch({
     setCatalogResults,
   };
 }
-
