@@ -16,7 +16,12 @@
     "db:indexes:catalog": "prisma db execute --schema prisma/schema.prisma --file prisma/catalog-indexes.sql",
     "db:seed": "tsx prisma/seed.ts",
     "catalog:sync:tcgtracking": "npm run catalog:sync:tcgtracking -w @oripa/api",
-    "catalog:sync:tcgtracking:full": "npm run catalog:sync:tcgtracking:full -w @oripa/api"
+    "catalog:sync:tcgtracking:full": "npm run catalog:sync:tcgtracking:full -w @oripa/api",
+    "catalog:sync:onepiecedb": "npm run catalog:sync:onepiecedb -w @oripa/api",
+    "catalog:sync:pokemoncardio": "npm run catalog:sync:pokemoncardio -w @oripa/api",
+    "catalog:import:pokemoncardio": "npm run catalog:import:pokemoncardio -w @oripa/api",
+    "catalog:enrich:set-images": "npm run catalog:enrich:set-images -w @oripa/api",
+    "catalog:backfill:canonical": "npm run catalog:backfill:canonical -w @oripa/api"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

@@ -43,6 +43,7 @@ export default function SetlistDetailPage() {
   const searchParams = useSearchParams();
   const sourceSetId = String(params?.sourceSetId ?? "");
   const game = (searchParams.get("game") || "pokemon").toLowerCase();
+  const source = (searchParams.get("source") || (game === "pokemon" ? "pokemoncardio" : "")).toLowerCase();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CardResponse | null>(null);
@@ -60,6 +61,7 @@ export default function SetlistDetailPage() {
     setLoading(true);
     const url = new URL(`${apiBase}/v1/public/setlists/${sourceSetId}/cards`);
     url.searchParams.set("game", game);
+    if (source) url.searchParams.set("source", source);
     url.searchParams.set("page", String(page));
     url.searchParams.set("limit", String(PAGE_SIZE));
     if (query.trim()) url.searchParams.set("q", query.trim());
@@ -79,7 +81,7 @@ export default function SetlistDetailPage() {
     return () => {
       active = false;
     };
-  }, [game, page, query, rarity, sourceSetId]);
+  }, [game, source, page, query, rarity, sourceSetId]);
 
   const currentPage = Math.max(1, Math.min(page, data?.totalPages ?? 1));
   const setInfo = data?.set;
@@ -89,7 +91,7 @@ export default function SetlistDetailPage() {
   return (
     <main style={styles.page}>
       <div style={styles.container}>
-        <Link href={`/setlists?game=${game}`} style={styles.backLink}>
+        <Link href={`/setlists?game=${game}${source ? `&source=${source}` : ""}`} style={styles.backLink}>
           ← All Sets
         </Link>
 

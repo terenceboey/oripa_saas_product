@@ -28,6 +28,7 @@ type SetlistResponse = {
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PAGE_SIZE = 18;
+const sourceForGame = (gameKey: string) => (gameKey === "pokemon" ? "pokemoncardio" : undefined);
 
 export default function SetlistsPage() {
   const [game, setGame] = useState<"pokemon" | "pokemon-japan">("pokemon");
@@ -50,6 +51,8 @@ export default function SetlistsPage() {
     const buildListUrl = (gameKey: string, params: { page?: number; limit?: number; q?: string; sort?: string }) => {
       const url = new URL(`${apiBase}/v1/public/setlists`);
       url.searchParams.set("game", gameKey);
+      const source = sourceForGame(gameKey);
+      if (source) url.searchParams.set("source", source);
       url.searchParams.set("page", String(params.page ?? 1));
       url.searchParams.set("limit", String(params.limit ?? PAGE_SIZE));
       url.searchParams.set("sort", params.sort ?? sort);
@@ -143,7 +146,10 @@ export default function SetlistsPage() {
                 <p style={styles.heroMeta}>
                   {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {featured.cardCount} cards
                 </p>
-                <Link href={`/setlists/${featured.sourceSetId}?game=${game}`} style={styles.heroButton}>
+                <Link
+                  href={`/setlists/${featured.sourceSetId}?game=${game}${sourceForGame(game) ? `&source=${sourceForGame(game)}` : ""}`}
+                  style={styles.heroButton}
+                >
                   Browse Cards →
                 </Link>
               </div>
@@ -191,8 +197,9 @@ export default function SetlistsPage() {
 }
 
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {
+  const source = sourceForGame(game);
   return (
-    <Link href={`/setlists/${set.sourceSetId}?game=${game}`} style={styles.card}>
+    <Link href={`/setlists/${set.sourceSetId}?game=${game}${source ? `&source=${source}` : ""}`} style={styles.card}>
       <div style={styles.cardLogoWrap}>
         <img src={set.logoImageUrl || set.symbolImageUrl || "/default-brand-logo.png"} alt={set.name} style={styles.cardLogo} />
       </div>

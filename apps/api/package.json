@@ -8,7 +8,12 @@
     "start": "node dist/index.js",
     "lint": "node -e \"console.log('lint: add eslint config when ready')\"",
     "catalog:sync:tcgtracking": "tsx scripts/sync-tcgtracking.ts",
-    "catalog:sync:tcgtracking:full": "tsx scripts/sync-tcgtracking-catalog.ts"
+    "catalog:sync:tcgtracking:full": "tsx scripts/sync-tcgtracking-catalog.ts",
+    "catalog:sync:onepiecedb": "tsx scripts/sync-onepiecedb-catalog.ts",
+    "catalog:sync:pokemoncardio": "tsx scripts/sync-pokemoncardio-catalog.ts",
+    "catalog:import:pokemoncardio": "tsx scripts/import-pokemoncardio-dump.ts",
+    "catalog:enrich:set-images": "tsx scripts/enrich-set-images.ts",
+    "catalog:backfill:canonical": "tsx scripts/backfill-canonical-catalog.ts"
   },
   "dependencies": {
     "@oripa/shared": "0.1.0",

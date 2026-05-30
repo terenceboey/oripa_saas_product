@@ -12,6 +12,7 @@ const gameMap: Record<string, string> = {
 
 const listQuerySchema = z.object({
   game: z.string().trim().toLowerCase().optional().default("pokemon"),
+  source: z.string().trim().toLowerCase().max(60).optional(),
   q: z.string().trim().max(120).optional(),
   sort: z.enum(["newest", "oldest", "name"]).optional().default("newest"),
   page: z.coerce.number().int().min(1).max(1000).optional().default(1),
@@ -19,6 +20,7 @@ const listQuerySchema = z.object({
 });
 
 const cardQuerySchema = z.object({
+  source: z.string().trim().toLowerCase().max(60).optional(),
   q: z.string().trim().max(120).optional(),
   rarity: z.string().trim().max(120).optional(),
   page: z.coerce.number().int().min(1).max(1000).optional().default(1),
@@ -29,14 +31,22 @@ function resolveGame(input: string) {
   return gameMap[input] ?? "POKEMON";
 }
 
+function resolveSourceForGame(game: string, source?: string) {
+  const requested = source?.trim().toLowerCase();
+  if (requested) return requested;
+  if (game === "POKEMON") return "pokemoncardio";
+  return undefined;
+}
+
 setlistRouter.get("/v1/public/setlists", async (req, res) => {
   const parsed = listQuerySchema.safeParse(req.query);
   if (!parsed.success) {
     return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
   }
 
-  const { game, q, sort, page, limit } = parsed.data;
+  const { game, source, q, sort, page, limit } = parsed.data;
   const resolvedGame = resolveGame(game);
+  const resolvedSource = resolveSourceForGame(resolvedGame, source);
   const skip = (page - 1) * limit;
   const search = q?.toLowerCase();
   const orderBy =
@@ -49,6 +59,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
   const where = {
     isActive: true,
     ...(resolvedGame !== "ALL" ? { game: resolvedGame } : {}),
+    ...(resolvedSource ? { source: resolvedSource } : {}),
     ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
   };
 
@@ -83,6 +94,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   return res.json({
     game: resolvedGame,
+    source: resolvedSource ?? null,
     page,
     limit,
     total,
@@ -117,6 +129,7 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
   }
 
   const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
+  const source = resolveSourceForGame(game, String(req.query.source ?? ""));
   const { q, rarity, page, limit } = parsed.data;
   const skip = (page - 1) * limit;
 
@@ -124,6 +137,7 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
     where: {
       sourceSetId,
       ...(game !== "ALL" ? { game } : {}),
+      ...(source ? { source } : {}),
       isActive: true,
     },
     select: {
@@ -193,11 +207,13 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/sealed", async (req, res) =>
     return res.status(400).json({ error: "sourceSetId is required" });
   }
   const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
+  const source = resolveSourceForGame(game, String(req.query.source ?? ""));
 
   const setRecord = await prisma.catalogSet.findFirst({
     where: {
       sourceSetId,
       ...(game !== "ALL" ? { game } : {}),
+      ...(source ? { source } : {}),
       isActive: true,
     },
     select: { id: true, sourceSetId: true, name: true, game: true },
@@ -228,4 +244,3 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/sealed", async (req, res) =>
     items: sealed,
   });
 });
-

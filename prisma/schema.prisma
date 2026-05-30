@@ -92,6 +92,12 @@ enum CatalogItemType {
   SEALED_PRODUCT
 }
 
+enum CatalogEntityType {
+  CARD
+  SEALED_PRODUCT
+  SET
+}
+
 model Vendor {
   id                  String                @id @default(cuid())
   name                String
@@ -670,4 +676,116 @@ model CatalogSealedProduct {
   @@unique([source, sourceProductId, language, game])
   @@index([catalogSetId, isActive])
   @@index([game, isActive, name])
+}
+
+model CanonicalCatalogGame {
+  id          String               @id @default(cuid())
+  code        String               @unique
+  name        String
+  isActive    Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  sets        CanonicalCatalogSet[]
+  cards       CanonicalCatalogCard[]
+  sealedItems CanonicalSealedProduct[]
+  searchDocs  CanonicalSearchDoc[]
+}
+
+model CanonicalCatalogSet {
+  id             String                  @id @default(cuid())
+  gameId         String
+  source         String
+  sourceSetId    String
+  slug           String?
+  setCode        String?
+  name           String
+  series         String?
+  releaseDate    DateTime?
+  totalCards     Int?
+  printedTotal   Int?
+  symbolImageUrl String?
+  logoImageUrl   String?
+  bannerImageUrl String?
+  isActive       Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  game           CanonicalCatalogGame    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  cards          CanonicalCatalogCard[]
+  sealedItems    CanonicalSealedProduct[]
+  searchDocs     CanonicalSearchDoc[]
+
+  @@unique([gameId, source, sourceSetId])
+  @@index([gameId, releaseDate])
+  @@index([gameId, name])
+}
+
+model CanonicalCatalogCard {
+  id               String                @id @default(cuid())
+  gameId           String
+  setId            String?
+  source           String
+  sourceCardId     String
+  name             String
+  displayName      String?
+  cardNumber       String?
+  rarity           String?
+  language         String                @default("en")
+  imageThumbUrl    String?
+  imageLargeUrl    String?
+  imageBaseUrl     String?
+  searchText       String
+  isActive         Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  game             CanonicalCatalogGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set              CanonicalCatalogSet?  @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  @@unique([source, sourceCardId, language, gameId])
+  @@index([gameId, setId, name])
+  @@index([gameId, rarity])
+}
+
+model CanonicalSealedProduct {
+  id               String                @id @default(cuid())
+  gameId           String
+  setId            String?
+  source           String
+  sourceProductId  String
+  name             String
+  displayName      String?
+  language         String                @default("en")
+  imageUrl         String?
+  imageThumbUrl    String?
+  searchText       String
+  isActive         Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  game             CanonicalCatalogGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set              CanonicalCatalogSet?  @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  @@unique([source, sourceProductId, language, gameId])
+  @@index([gameId, setId, name])
+}
+
+model CanonicalSearchDoc {
+  id              String               @id @default(cuid())
+  entityType      CatalogEntityType
+  entityId        String
+  gameId          String
+  setId           String?
+  displayName     String
+  tokens          String
+  imageThumbUrl   String?
+  popularityScore Int                  @default(0)
+  isActive        Boolean              @default(true)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  game            CanonicalCatalogGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set             CanonicalCatalogSet? @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  @@index([gameId, setId, isActive])
+  @@index([entityType, isActive])
+  @@index([displayName])
+  @@unique([entityType, entityId, gameId])
 }
