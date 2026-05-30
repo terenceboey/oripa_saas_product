@@ -18,7 +18,6 @@ import {
 import {
   buildCatalogFacetWhere,
   buildCatalogSuggestWhere,
-  toCatalogFacetResponse,
   toCatalogSuggestionResponse,
 } from "./facets";
 
@@ -91,6 +90,20 @@ const catalogSearchSelect = {
   searchText: true,
 } as const;
 
+function normalizeFacetValue(value: string | null | undefined) {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function groupedFacetCount(row: { _count?: unknown }, field: string) {
+  const counts = (row as any)?._count;
+  if (!counts || typeof counts !== "object") return 0;
+  const direct = (counts as Record<string, unknown>)[field];
+  if (typeof direct === "number") return direct;
+  const fallback = (counts as Record<string, unknown>)["_all"];
+  return typeof fallback === "number" ? fallback : 0;
+}
+
 function normalizeOrSendInvalidQuery(
   params: { type?: CatalogSearchTypeAlias; itemClass?: NormalizedCatalogSearchClass },
   res: any,
@@ -127,20 +140,74 @@ catalogRouter.get("/v1/catalog/facets", async (req: VendorRequest, res) => {
   if (!normalizedClass) return;
   if (rejectUnsupportedFacetSuggest(normalizedClass, res)) return;
 
-  const rows = await prisma.catalogItem.findMany({
-    where: buildCatalogFacetWhere({ ...filters, type: "card" }),
-    select: {
-      source: true,
-      language: true,
-      setId: true,
-      setName: true,
-      rarity: true,
-    },
-    orderBy: [{ source: "asc" }, { setId: "asc" }, { rarity: "asc" }],
-    take: limit,
-  });
+  const where = buildCatalogFacetWhere({ ...filters, type: "card" });
 
-  return res.json(toCatalogFacetResponse(rows));
+  const [sourceRows, languageRows, setRows, rarityRows] = await prisma.$transaction([
+    prisma.catalogItem.groupBy({
+      by: ["source"],
+      where,
+      _count: { source: true },
+      orderBy: { source: "asc" },
+    }),
+    prisma.catalogItem.groupBy({
+      by: ["language"],
+      where,
+      _count: { language: true },
+      orderBy: { language: "asc" },
+    }),
+    prisma.catalogItem.groupBy({
+      by: ["setId", "setName"],
+      where,
+      _count: { setId: true },
+      orderBy: [{ setId: "asc" }, { setName: "asc" }],
+    }),
+    prisma.catalogItem.groupBy({
+      by: ["rarity"],
+      where,
+      _count: { rarity: true },
+      orderBy: { rarity: "asc" },
+    }),
+  ]);
+
+  const sources = sourceRows
+    .map((row) => {
+      const value = normalizeFacetValue(row.source);
+      return value ? { value, count: groupedFacetCount(row, "source") } : null;
+    })
+    .filter((row): row is { value: string; count: number } => row !== null)
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    .slice(0, limit);
+
+  const languages = languageRows
+    .map((row) => {
+      const value = normalizeFacetValue(row.language);
+      return value ? { value, count: groupedFacetCount(row, "language") } : null;
+    })
+    .filter((row): row is { value: string; count: number } => row !== null)
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    .slice(0, limit);
+
+  const sets = setRows
+    .map((row) => {
+      const id = normalizeFacetValue(row.setId);
+      if (!id) return null;
+      const name = normalizeFacetValue(row.setName);
+      return { id, name, count: groupedFacetCount(row, "setId") };
+    })
+    .filter((row): row is { id: string; name: string | null; count: number } => row !== null)
+    .sort((a, b) => b.count - a.count || (a.name ?? a.id).localeCompare(b.name ?? b.id))
+    .slice(0, limit);
+
+  const rarities = rarityRows
+    .map((row) => {
+      const value = normalizeFacetValue(row.rarity);
+      return value ? { value, count: groupedFacetCount(row, "rarity") } : null;
+    })
+    .filter((row): row is { value: string; count: number } => row !== null)
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value))
+    .slice(0, limit);
+
+  return res.json({ sources, languages, sets, rarities });
 });
 
 catalogRouter.get("/v1/catalog/suggest", async (req: VendorRequest, res) => {

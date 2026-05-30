@@ -26,6 +26,7 @@
     "test:catalog:search-query": "tsx scripts/test-catalog-search-query.ts",
     "test:catalog:search-adapters": "tsx scripts/test-catalog-search-adapters.ts",
     "test:catalog:facets-suggest": "tsx scripts/test-catalog-facets-suggest.ts",
+    "test:catalog:facets-route-sources": "tsx scripts/test-catalog-facets-route-sources.ts",
     "test:packs:catalog-snapshots": "tsx scripts/test-pack-prize-catalog-snapshots.ts",
     "test:packs:immutability": "tsx scripts/test-pack-immutability-guard.ts",
     "test:packs:publish-freeze": "tsx scripts/test-pack-publish-freeze.ts",
