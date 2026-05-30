@@ -48,9 +48,9 @@ export function buildCatalogIndexedSearchSql(input: CatalogSearchWhereInput, tak
   const prefixNeedle = `${needle}%`;
   const clauses: Prisma.Sql[] = [
     Prisma.sql`"isActive" = true`,
-    Prisma.sql`game = ${input.game}`,
     Prisma.sql`lower("name") LIKE ${containsNeedle}`,
   ];
+  if (input.game && input.game !== "ALL") clauses.push(Prisma.sql`game = ${input.game}`);
 
   if (input.typeFilter) clauses.push(Prisma.sql`"itemType" = ${input.typeFilter}::"CatalogItemType"`);
   if (input.language) clauses.push(Prisma.sql`language = ${input.language}`);
@@ -105,7 +105,7 @@ export async function findCatalogSearchCandidates(
 export function buildCatalogSearchWhere(input: CatalogSearchWhereInput): Prisma.CatalogItemWhereInput {
   return {
     isActive: true,
-    game: input.game,
+    ...(input.game && input.game !== "ALL" ? { game: input.game } : {}),
     ...(input.typeFilter ? { itemType: input.typeFilter as Prisma.EnumCatalogItemTypeFilter<"CatalogItem"> } : {}),
     ...(input.language ? { language: input.language } : {}),
     ...(input.source ? { source: input.source } : {}),

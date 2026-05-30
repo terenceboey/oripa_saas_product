@@ -427,6 +427,10 @@ export default function VendorPage() {
   const [cardSearchQuery, setCardSearchQuery] = useState("");
   const [catalogResults, setCatalogResults] = useState<CatalogSuggestion[]>([]);
   const [catalogResultsLoading, setCatalogResultsLoading] = useState(false);
+  const [catalogSearchError, setCatalogSearchError] = useState<string | null>(null);
+  const [catalogFacetError, setCatalogFacetError] = useState<string | null>(null);
+  const [setOptionQuery, setSetOptionQuery] = useState("");
+  const [rarityOptionQuery, setRarityOptionQuery] = useState("");
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
   const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
   const [catalogGameFilter, setCatalogGameFilter] = useState("ALL");
@@ -448,6 +452,16 @@ export default function VendorPage() {
   }, [themeDraft]);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
+  const filteredSetFacetOptions = useMemo(() => {
+    const q = setOptionQuery.trim().toLowerCase();
+    if (!q) return catalogFacets.sets;
+    return catalogFacets.sets.filter((set) => `${set.name || ""} ${set.id}`.toLowerCase().includes(q));
+  }, [catalogFacets.sets, setOptionQuery]);
+  const filteredRarityFacetOptions = useMemo(() => {
+    const q = rarityOptionQuery.trim().toLowerCase();
+    if (!q) return catalogFacets.rarities;
+    return catalogFacets.rarities.filter((rarity) => rarity.value.toLowerCase().includes(q));
+  }, [catalogFacets.rarities, rarityOptionQuery]);
 
   async function resolveVendorHomeHost() {
     const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
@@ -555,6 +569,7 @@ export default function VendorPage() {
     if (query.length < 2) {
       setCatalogResults([]);
       setCatalogResultsLoading(false);
+      setCatalogSearchError(null);
       return;
     }
 
@@ -564,6 +579,7 @@ export default function VendorPage() {
     if (cached) {
       setCatalogResults(cached);
       setCatalogResultsLoading(false);
+      setCatalogSearchError(null);
       return;
     }
 
@@ -572,6 +588,7 @@ export default function VendorPage() {
     const timer = window.setTimeout(() => {
       if (!isActive) return;
       setCatalogResultsLoading(true);
+      setCatalogSearchError(null);
       const url = new URL(`${apiBase}/v1/catalog/search`);
       url.searchParams.set("q", query);
       url.searchParams.set("limit", "60");
@@ -588,15 +605,36 @@ export default function VendorPage() {
         .then(async (res) => {
           const payload = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
-          const nextItems = (payload.items ?? []) as CatalogSuggestion[];
+          let nextItems = (payload.items ?? []) as CatalogSuggestion[];
+          if (
+            nextItems.length === 0 &&
+            (catalogFilters.setId || catalogFilters.rarity || catalogFilters.source || catalogFilters.language)
+          ) {
+            const fallbackUrl = new URL(`${apiBase}/v1/catalog/search`);
+            fallbackUrl.searchParams.set("q", query);
+            fallbackUrl.searchParams.set("limit", "60");
+            fallbackUrl.searchParams.set("type", "card");
+            fallbackUrl.searchParams.set("game", normalizedGameFilter);
+            const fallbackRes = await fetch(fallbackUrl.toString(), {
+              headers: authHeaders(),
+              credentials: "include",
+              cache: "no-store",
+            });
+            const fallbackPayload = await fallbackRes.json().catch(() => ({}));
+            if (fallbackRes.ok) {
+              nextItems = (fallbackPayload.items ?? []) as CatalogSuggestion[];
+            }
+          }
           if (!isActive) return;
           setCatalogResults(nextItems);
           catalogSearchCacheRef.current.set(cacheKey, nextItems);
+          setCatalogSearchError(null);
         })
         .catch((error: unknown) => {
           if (!isActive) return;
           if (error instanceof DOMException && error.name === "AbortError") return;
           setCatalogResults([]);
+          setCatalogSearchError(error instanceof Error ? error.message : "Card search failed");
         })
         .finally(() => {
           if (!isActive) return;
@@ -627,15 +665,19 @@ export default function VendorPage() {
         const payload = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(payload?.error ?? "Failed to load catalog facets");
         setCatalogFacets((payload ?? emptyCatalogFacets) as CatalogFacets);
+        setCatalogFacetError(null);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         setCatalogFacets(emptyCatalogFacets);
+        setCatalogFacetError(error instanceof Error ? error.message : "Failed to load filter options");
       });
   }, [authHeaders, catalogFilters.language, catalogFilters.source, catalogGameFilter]);
 
   useEffect(() => {
     setCatalogFilters(emptyCatalogFilters);
     setCatalogResults([]);
+    setSetOptionQuery("");
+    setRarityOptionQuery("");
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
       params.delete(key);
@@ -1869,22 +1911,40 @@ export default function VendorPage() {
                       </select>
                     </label>
                     <label className="muted tiny">
+                      Filter set options
+                      <input
+                        value={setOptionQuery}
+                        onChange={(e) => setSetOptionQuery(e.target.value)}
+                        placeholder="Type to filter set dropdown..."
+                      />
+                    </label>
+                    <label className="muted tiny">
                       Card set
                       <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
                         <option value="">All sets</option>
-                        {catalogFacets.sets.map((set) => (
+                        {filteredSetFacetOptions.map((set) => (
                           <option key={set.id} value={set.id}>{set.name || set.id} ({set.count})</option>
                         ))}
                       </select>
+                      <span className="muted tiny">Showing {filteredSetFacetOptions.length} / {catalogFacets.sets.length} sets</span>
+                    </label>
+                    <label className="muted tiny">
+                      Filter rarity options
+                      <input
+                        value={rarityOptionQuery}
+                        onChange={(e) => setRarityOptionQuery(e.target.value)}
+                        placeholder="Type to filter rarity dropdown..."
+                      />
                     </label>
                     <label className="muted tiny">
                       Rarity
                       <select value={catalogFilters.rarity} onChange={(e) => setCatalogFilterInUrl("rarity", e.target.value)}>
                         <option value="">All rarities</option>
-                        {catalogFacets.rarities.map((rarity) => (
+                        {filteredRarityFacetOptions.map((rarity) => (
                           <option key={rarity.value} value={rarity.value}>{rarity.value} ({rarity.count})</option>
                         ))}
                       </select>
+                      <span className="muted tiny">Showing {filteredRarityFacetOptions.length} / {catalogFacets.rarities.length} rarities</span>
                     </label>
                   </div>
                   <div className="pack-builder-grid">
@@ -1907,6 +1967,16 @@ export default function VendorPage() {
                       </select>
                     </label>
                   </div>
+                  {catalogFacetError ? (
+                    <div className="inline-error-banner" role="alert">
+                      Filter options unavailable: {catalogFacetError}
+                    </div>
+                  ) : null}
+                  {catalogSearchError ? (
+                    <div className="inline-error-banner" role="alert">
+                      Card search failed: {catalogSearchError}
+                    </div>
+                  ) : null}
                   {catalogResultsLoading ? <p className="muted tiny">Searching cards...</p> : null}
                   {!catalogResultsLoading && cardSearchQuery.trim().length >= 2 && catalogResults.length === 0 ? (
                     <p className="muted tiny">No cards found for this search.</p>
