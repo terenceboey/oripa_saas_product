@@ -54,8 +54,10 @@ function typeToCatalogItemType(type: CatalogBrowseType | undefined) {
 export function buildCatalogFacetWhere(query: CatalogFacetQuery): Prisma.CatalogItemWhereInput {
   const where: Prisma.CatalogItemWhereInput = {
     isActive: true,
-    game: query.game ?? "POKEMON",
   };
+  if (query.game && query.game !== "ALL") {
+    where.game = query.game;
+  }
   const itemType = typeToCatalogItemType(query.type);
   if (itemType) where.itemType = itemType;
   if (query.language) where.language = query.language;

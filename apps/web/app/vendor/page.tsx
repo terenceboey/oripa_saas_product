@@ -626,7 +626,7 @@ export default function VendorPage() {
       .then(async (res) => {
         const payload = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(payload?.error ?? "Failed to load catalog facets");
-        setCatalogFacets((payload.facets ?? emptyCatalogFacets) as CatalogFacets);
+        setCatalogFacets((payload ?? emptyCatalogFacets) as CatalogFacets);
       })
       .catch(() => {
         setCatalogFacets(emptyCatalogFacets);
