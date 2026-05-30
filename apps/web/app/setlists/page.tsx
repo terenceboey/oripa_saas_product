@@ -28,7 +28,7 @@ type SetlistResponse = {
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PAGE_SIZE = 18;
-const sourceForGame = (gameKey: string) => (gameKey === "pokemon" ? "pokemoncardio" : undefined);
+const sourceForGame = (gameKey: string) => (gameKey === "pokemon" ? "tcgtracking" : undefined);
 
 export default function SetlistsPage() {
   const [game, setGame] = useState<"pokemon" | "pokemon-japan">("pokemon");

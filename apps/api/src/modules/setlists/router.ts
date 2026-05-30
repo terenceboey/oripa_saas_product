@@ -34,7 +34,7 @@ function resolveGame(input: string) {
 function resolveSourceForGame(game: string, source?: string) {
   const requested = source?.trim().toLowerCase();
   if (requested) return requested;
-  if (game === "POKEMON") return "pokemoncardio";
+  if (game === "POKEMON") return "tcgtracking";
   return undefined;
 }
 
@@ -82,6 +82,16 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
         symbolImageUrl: true,
         logoImageUrl: true,
         bannerImageUrl: true,
+        cards: {
+          where: { isActive: true, itemType: "CARD" },
+          take: 1,
+          orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
+          select: {
+            imageThumbUrl: true,
+            imageLargeUrl: true,
+            imageBaseUrl: true,
+          },
+        },
         _count: {
           select: {
             cards: { where: { isActive: true } },
@@ -100,6 +110,14 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
     items: sets.map((set) => ({
+      ...(function () {
+        const firstCard = set.cards[0];
+        const fallbackImage = firstCard?.imageLargeUrl ?? firstCard?.imageThumbUrl ?? firstCard?.imageBaseUrl ?? null;
+        return {
+          resolvedLogoImageUrl: set.logoImageUrl ?? fallbackImage,
+          resolvedSymbolImageUrl: set.symbolImageUrl ?? fallbackImage,
+        };
+      })(),
       id: set.id,
       source: set.source,
       sourceSetId: set.sourceSetId,
@@ -110,8 +128,8 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
       productCount: set.productCount,
       cardCount: set._count.cards,
       sealedProductCount: set._count.sealedProducts,
-      symbolImageUrl: set.symbolImageUrl,
-      logoImageUrl: set.logoImageUrl,
+      symbolImageUrl: set.symbolImageUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
+      logoImageUrl: set.logoImageUrl ?? set.cards[0]?.imageLargeUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
       bannerImageUrl: set.bannerImageUrl,
     })),
   });
@@ -150,6 +168,16 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
       symbolImageUrl: true,
       logoImageUrl: true,
       bannerImageUrl: true,
+      cards: {
+        where: { isActive: true, itemType: "CARD" },
+        take: 1,
+        orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
+        select: {
+          imageThumbUrl: true,
+          imageLargeUrl: true,
+          imageBaseUrl: true,
+        },
+      },
     },
   });
 
@@ -191,7 +219,20 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
   ]);
 
   return res.json({
-    set: catalogSet,
+    set: {
+      ...catalogSet,
+      logoImageUrl:
+        catalogSet.logoImageUrl ??
+        catalogSet.cards[0]?.imageLargeUrl ??
+        catalogSet.cards[0]?.imageThumbUrl ??
+        catalogSet.cards[0]?.imageBaseUrl ??
+        null,
+      symbolImageUrl:
+        catalogSet.symbolImageUrl ??
+        catalogSet.cards[0]?.imageThumbUrl ??
+        catalogSet.cards[0]?.imageBaseUrl ??
+        null,
+    },
     page,
     limit,
     total,
