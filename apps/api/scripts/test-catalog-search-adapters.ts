@@ -11,8 +11,11 @@ async function main() {
   assert.equal(normalizeCatalogSearchClass({ type: "sealed", itemClass: "SEALED_PRODUCT" }), "SEALED_PRODUCT");
   assert.throws(() => normalizeCatalogSearchClass({ type: "sealed", itemClass: "CARD" }), /type and itemClass conflict/);
 
+  let lastCardSql = "";
   const mockClient = {
-    $queryRaw: async () => [
+    $queryRaw: async (sql: any) => {
+      lastCardSql = Array.isArray(sql?.strings) ? sql.strings.join("?") : "";
+      return [
       {
         id: "card-1",
         source: "tcgtracking",
@@ -31,7 +34,8 @@ async function main() {
         imageBaseUrl: "base.jpg",
         searchText: "charizard ex",
       },
-    ],
+    ];
+    },
     catalogSealedProduct: {
       findMany: async () => [
         {
@@ -87,6 +91,9 @@ async function main() {
 
   const slabs = await findCatalogSearchAdapterCandidates(mockClient as any, { q: "char", game: "POKEMON", itemClass: "SLAB" }, 5);
   assert.deepEqual(slabs, []);
+
+  await findCatalogSearchAdapterCandidates(mockClient as any, { q: "char", game: "ALL", itemClass: "CARD" }, 5);
+  assert.equal(lastCardSql.includes("game ="), false);
 
   console.log("catalog search adapter tests passed");
 }

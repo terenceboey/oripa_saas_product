@@ -1,11 +1,16 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
+import {
+  CATALOG_GAME_OPTIONS,
+  type CatalogSuggestion,
+  useVendorCatalogSearch,
+} from "../../lib/use-vendor-catalog-search";
 
 type Vendor = {
   id: string;
@@ -142,51 +147,10 @@ type ItemDraft = {
   language?: string;
 };
 
-type CatalogFilters = {
-  source: string;
-  language: string;
-  setId: string;
-  rarity: string;
-};
-
-type CatalogFacetOption = {
-  value: string;
-  count: number;
-};
-
-type CatalogSetFacet = {
-  id: string;
-  name?: string | null;
-  count: number;
-};
-
-type CatalogFacets = {
-  sources: CatalogFacetOption[];
-  languages: CatalogFacetOption[];
-  sets: CatalogSetFacet[];
-  rarities: CatalogFacetOption[];
-};
-
 type TierDraft = {
   name: string;
   percentage: string;
   items: ItemDraft[];
-};
-
-type CatalogSuggestion = {
-  id: string;
-  source?: string | null;
-  sourceItemId?: string | null;
-  itemType?: string | null;
-  game: string;
-  language?: string | null;
-  name: string;
-  setId?: string | null;
-  cardNumber?: string | null;
-  rarity?: string | null;
-  imageThumbUrl?: string | null;
-  imageLargeUrl?: string | null;
-  imageBaseUrl?: string | null;
 };
 
 type CsvImportResponse = {
@@ -227,32 +191,6 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
-const emptyCatalogFilters: CatalogFilters = { source: "", language: "", setId: "", rarity: "" };
-const emptyCatalogFacets: CatalogFacets = { sources: [], languages: [], sets: [], rarities: [] };
-const CATALOG_GAME_OPTIONS = [
-  { value: "ALL", label: "All games" },
-  { value: "POKEMON", label: "Pokemon" },
-  { value: "POKEMON_JAPAN", label: "Pokemon Japan" },
-  { value: "ONE_PIECE", label: "One Piece" },
-  { value: "YUGIOH", label: "Yu-Gi-Oh!" },
-  { value: "DRAGON_BALL_SUPER", label: "Dragon Ball Super" },
-] as const;
-
-function parseCatalogFilters(params: URLSearchParams): CatalogFilters {
-  return {
-    source: params.get("source") ?? "",
-    language: params.get("language") ?? "",
-    setId: params.get("setId") ?? "",
-    rarity: params.get("rarity") ?? "",
-  };
-}
-
-function appendCatalogFilters(url: URL, catalogFilters: CatalogFilters) {
-  if (catalogFilters.source) url.searchParams.set("source", catalogFilters.source);
-  if (catalogFilters.language) url.searchParams.set("language", catalogFilters.language);
-  if (catalogFilters.setId) url.searchParams.set("setId", catalogFilters.setId);
-  if (catalogFilters.rarity) url.searchParams.set("rarity", catalogFilters.rarity);
-}
 
 const DEFAULT_THEME = {
   storefrontPrimary: "#7A5CFA",
@@ -424,17 +362,6 @@ export default function VendorPage() {
   const [activeQr, setActiveQr] = useState<VendorQr | null>(null);
   const [activeQrDataUrl, setActiveQrDataUrl] = useState<string | null>(null);
   const [selectedTierIndex, setSelectedTierIndex] = useState(0);
-  const [cardSearchQuery, setCardSearchQuery] = useState("");
-  const [catalogResults, setCatalogResults] = useState<CatalogSuggestion[]>([]);
-  const [catalogResultsLoading, setCatalogResultsLoading] = useState(false);
-  const [catalogSearchError, setCatalogSearchError] = useState<string | null>(null);
-  const [catalogFacetError, setCatalogFacetError] = useState<string | null>(null);
-  const [setOptionQuery, setSetOptionQuery] = useState("");
-  const [rarityOptionQuery, setRarityOptionQuery] = useState("");
-  const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
-  const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
-  const [catalogGameFilter, setCatalogGameFilter] = useState("ALL");
-  const catalogSearchCacheRef = useRef<Map<string, CatalogSuggestion[]>>(new Map());
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
   const [uploadingVendorLogo, setUploadingVendorLogo] = useState(false);
@@ -452,16 +379,33 @@ export default function VendorPage() {
   }, [themeDraft]);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
-  const filteredSetFacetOptions = useMemo(() => {
-    const q = setOptionQuery.trim().toLowerCase();
-    if (!q) return catalogFacets.sets;
-    return catalogFacets.sets.filter((set) => `${set.name || ""} ${set.id}`.toLowerCase().includes(q));
-  }, [catalogFacets.sets, setOptionQuery]);
-  const filteredRarityFacetOptions = useMemo(() => {
-    const q = rarityOptionQuery.trim().toLowerCase();
-    if (!q) return catalogFacets.rarities;
-    return catalogFacets.rarities.filter((rarity) => rarity.value.toLowerCase().includes(q));
-  }, [catalogFacets.rarities, rarityOptionQuery]);
+  const {
+    cardSearchQuery,
+    setCardSearchQuery,
+    catalogResults,
+    catalogResultsLoading,
+    catalogSearchError,
+    catalogFacetError,
+    setOptionQuery,
+    setSetOptionQuery,
+    rarityOptionQuery,
+    setRarityOptionQuery,
+    catalogFilters,
+    catalogFacets,
+    catalogGameFilter,
+    setCatalogGameFilter,
+    filteredSetFacetOptions,
+    filteredRarityFacetOptions,
+    setCatalogFilterInUrl,
+    resetCatalogFilters,
+    setCatalogResults,
+  } = useVendorCatalogSearch({
+    apiBase,
+    authHeaders,
+    pathname,
+    router,
+    initialGameFilter: "POKEMON",
+  });
 
   async function resolveVendorHomeHost() {
     const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
@@ -563,170 +507,10 @@ export default function VendorPage() {
   useBackForwardRefresh(loadAll, { cooldownMs: 20000 });
 
   useEffect(() => {
-    const query = cardSearchQuery.trim();
-    const normalizedGameFilter = catalogGameFilter.trim().toUpperCase() || "ALL";
-
-    if (query.length < 2) {
-      setCatalogResults([]);
-      setCatalogResultsLoading(false);
-      setCatalogSearchError(null);
-      return;
-    }
-
-    const normalizedQuery = query.toLowerCase();
-    const cacheKey = `card-search:${normalizedGameFilter}:${normalizedQuery}:60:${catalogFilters.source}:${catalogFilters.language}:${catalogFilters.setId}:${catalogFilters.rarity}`;
-    const cached = catalogSearchCacheRef.current.get(cacheKey);
-    if (cached) {
-      setCatalogResults(cached);
-      setCatalogResultsLoading(false);
-      setCatalogSearchError(null);
-      return;
-    }
-
-    let isActive = true;
-    const controller = new AbortController();
-    const timer = window.setTimeout(() => {
-      if (!isActive) return;
-      setCatalogResultsLoading(true);
-      setCatalogSearchError(null);
-      const url = new URL(`${apiBase}/v1/catalog/search`);
-      url.searchParams.set("q", query);
-      url.searchParams.set("limit", "60");
-      url.searchParams.set("type", "card");
-      url.searchParams.set("game", normalizedGameFilter);
-      appendCatalogFilters(url, catalogFilters);
-
-      fetch(url.toString(), {
-        headers: authHeaders(),
-        credentials: "include",
-        cache: "no-store",
-        signal: controller.signal,
-      })
-        .then(async (res) => {
-          const payload = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
-          let nextItems = (payload.items ?? []) as CatalogSuggestion[];
-          if (
-            nextItems.length === 0 &&
-            (catalogFilters.setId || catalogFilters.rarity || catalogFilters.source || catalogFilters.language)
-          ) {
-            const fallbackUrl = new URL(`${apiBase}/v1/catalog/search`);
-            fallbackUrl.searchParams.set("q", query);
-            fallbackUrl.searchParams.set("limit", "60");
-            fallbackUrl.searchParams.set("type", "card");
-            fallbackUrl.searchParams.set("game", normalizedGameFilter);
-            const fallbackRes = await fetch(fallbackUrl.toString(), {
-              headers: authHeaders(),
-              credentials: "include",
-              cache: "no-store",
-            });
-            const fallbackPayload = await fallbackRes.json().catch(() => ({}));
-            if (fallbackRes.ok) {
-              nextItems = (fallbackPayload.items ?? []) as CatalogSuggestion[];
-            }
-          }
-          if (!isActive) return;
-          setCatalogResults(nextItems);
-          catalogSearchCacheRef.current.set(cacheKey, nextItems);
-          setCatalogSearchError(null);
-        })
-        .catch((error: unknown) => {
-          if (!isActive) return;
-          if (error instanceof DOMException && error.name === "AbortError") return;
-          setCatalogResults([]);
-          setCatalogSearchError(error instanceof Error ? error.message : "Card search failed");
-        })
-        .finally(() => {
-          if (!isActive) return;
-          setCatalogResultsLoading(false);
-        });
-    }, 250);
-
-    return () => {
-      isActive = false;
-      controller.abort();
-      window.clearTimeout(timer);
-    };
-  }, [authHeaders, cardSearchQuery, catalogFilters, catalogGameFilter]);
-
-  useEffect(() => {
-    const url = new URL(`${apiBase}/v1/catalog/facets`);
-    url.searchParams.set("type", "card");
-    url.searchParams.set("game", catalogGameFilter);
-    if (catalogFilters.source) url.searchParams.set("source", catalogFilters.source);
-    if (catalogFilters.language) url.searchParams.set("language", catalogFilters.language);
-
-    fetch(url.toString(), {
-      headers: authHeaders(),
-      credentials: "include",
-      cache: "no-store",
-    })
-      .then(async (res) => {
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(payload?.error ?? "Failed to load catalog facets");
-        const parsed = (payload ?? emptyCatalogFacets) as CatalogFacets;
-        if (
-          parsed.sets.length === 0 &&
-          parsed.rarities.length === 0 &&
-          (catalogFilters.source || catalogFilters.language)
-        ) {
-          const fallbackUrl = new URL(`${apiBase}/v1/catalog/facets`);
-          fallbackUrl.searchParams.set("type", "card");
-          fallbackUrl.searchParams.set("game", catalogGameFilter);
-          const fallbackRes = await fetch(fallbackUrl.toString(), {
-            headers: authHeaders(),
-            credentials: "include",
-            cache: "no-store",
-          });
-          const fallbackPayload = await fallbackRes.json().catch(() => ({}));
-          if (fallbackRes.ok) {
-            setCatalogFacets((fallbackPayload ?? emptyCatalogFacets) as CatalogFacets);
-            setCatalogFilters((prev) => ({ ...prev, source: "", language: "" }));
-            setCatalogFacetError("Filters were auto-reset because no matching options were found.");
-            return;
-          }
-        }
-        setCatalogFacets(parsed);
-        setCatalogFacetError(null);
-      })
-      .catch((error: unknown) => {
-        setCatalogFacets(emptyCatalogFacets);
-        setCatalogFacetError(error instanceof Error ? error.message : "Failed to load filter options");
-      });
-  }, [authHeaders, catalogFilters.language, catalogFilters.source, catalogGameFilter]);
-
-  useEffect(() => {
-    setCatalogFilters(emptyCatalogFilters);
-    setCatalogResults([]);
-    setSetOptionQuery("");
-    setRarityOptionQuery("");
-    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
-      params.delete(key);
-    }
-    params.set("tab", "pack-studio");
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [catalogGameFilter, pathname, router]);
-
-  useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     setActiveTab(parseTabValue(params.get("tab")));
-    setCatalogFilters(parseCatalogFilters(params));
   }, []);
-
-  function setCatalogFilterInUrl(field: keyof CatalogFilters, value: string) {
-    const nextFilters = { ...catalogFilters, [field]: value };
-    setCatalogFilters(nextFilters);
-    setCatalogResults([]);
-    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
-      if (nextFilters[key]) params.set(key, nextFilters[key]);
-      else params.delete(key);
-    }
-    params.set("tab", "pack-studio");
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }
 
   function setActiveTabInUrl(tab: ActiveTab) {
     setActiveTab(tab);
@@ -1258,19 +1042,6 @@ export default function VendorPage() {
         return { ...tier, items };
       })
     );
-  }
-
-  function resetCatalogFilters() {
-    setCatalogFilters(emptyCatalogFilters);
-    setCatalogResults([]);
-    setSetOptionQuery("");
-    setRarityOptionQuery("");
-    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
-      params.delete(key);
-    }
-    params.set("tab", "pack-studio");
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
   function addTier() {
