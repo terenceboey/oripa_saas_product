@@ -27,7 +27,10 @@ const DEFAULT_POLICY: SourceRankPolicy = {
 };
 
 function sourceKey(value?: string | null) {
-  return (value ?? "").trim().toLowerCase();
+  const normalized = (value ?? "").trim().toLowerCase();
+  if (normalized === "pokemoncardio") return "pokemoncard.io";
+  if (normalized === "onepiecedb") return "onepiecedb.io";
+  return normalized;
 }
 
 function gameKey(value?: string | null) {
@@ -53,6 +56,7 @@ export function getSourceRank(input: SourceRankInput): SourceRankPolicy {
 
   if (input.itemClass === "SEALED_PRODUCT" && input.useCase === "SEARCH_DISPLAY") {
     if (source === "tcgtracking") return { displayRank: 0, collapseEligible: true };
+    if (source === "onepiecedb.io") return { displayRank: 0, collapseEligible: true };
     return DEFAULT_POLICY;
   }
 

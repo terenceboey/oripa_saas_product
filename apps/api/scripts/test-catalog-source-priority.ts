@@ -18,7 +18,17 @@ assert.deepEqual(
 );
 
 assert.deepEqual(
+  getSourceRank({ game: "POKEMON", itemClass: "CARD", source: "pokemoncardio", useCase: "SEARCH_DISPLAY" }),
+  { displayRank: 0, collapseEligible: true },
+);
+
+assert.deepEqual(
   getSourceRank({ game: "ONE_PIECE", itemClass: "CARD", source: "onepiecedb.io", useCase: "SEARCH_DISPLAY" }),
+  { displayRank: 0, collapseEligible: true },
+);
+
+assert.deepEqual(
+  getSourceRank({ game: "ONE_PIECE", itemClass: "CARD", source: "onepiecedb", useCase: "SEARCH_DISPLAY" }),
   { displayRank: 0, collapseEligible: true },
 );
 
@@ -30,6 +40,11 @@ assert.deepEqual(
 assert.deepEqual(
   getSourceRank({ game: "POKEMON", itemClass: "SLAB", source: "tcgtracking", useCase: "SEARCH_DISPLAY" }),
   { displayRank: 1000, collapseEligible: false },
+);
+
+assert.deepEqual(
+  getSourceRank({ game: "ONE_PIECE", itemClass: "SEALED_PRODUCT", source: "onepiecedb", useCase: "SEARCH_DISPLAY" }),
+  { displayRank: 0, collapseEligible: true },
 );
 
 console.log("catalog source priority tests passed");
