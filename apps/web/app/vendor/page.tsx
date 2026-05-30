@@ -664,7 +664,29 @@ export default function VendorPage() {
       .then(async (res) => {
         const payload = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(payload?.error ?? "Failed to load catalog facets");
-        setCatalogFacets((payload ?? emptyCatalogFacets) as CatalogFacets);
+        const parsed = (payload ?? emptyCatalogFacets) as CatalogFacets;
+        if (
+          parsed.sets.length === 0 &&
+          parsed.rarities.length === 0 &&
+          (catalogFilters.source || catalogFilters.language)
+        ) {
+          const fallbackUrl = new URL(`${apiBase}/v1/catalog/facets`);
+          fallbackUrl.searchParams.set("type", "card");
+          fallbackUrl.searchParams.set("game", catalogGameFilter);
+          const fallbackRes = await fetch(fallbackUrl.toString(), {
+            headers: authHeaders(),
+            credentials: "include",
+            cache: "no-store",
+          });
+          const fallbackPayload = await fallbackRes.json().catch(() => ({}));
+          if (fallbackRes.ok) {
+            setCatalogFacets((fallbackPayload ?? emptyCatalogFacets) as CatalogFacets);
+            setCatalogFilters((prev) => ({ ...prev, source: "", language: "" }));
+            setCatalogFacetError("Filters were auto-reset because no matching options were found.");
+            return;
+          }
+        }
+        setCatalogFacets(parsed);
         setCatalogFacetError(null);
       })
       .catch((error: unknown) => {
@@ -1236,6 +1258,19 @@ export default function VendorPage() {
         return { ...tier, items };
       })
     );
+  }
+
+  function resetCatalogFilters() {
+    setCatalogFilters(emptyCatalogFilters);
+    setCatalogResults([]);
+    setSetOptionQuery("");
+    setRarityOptionQuery("");
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
+      params.delete(key);
+    }
+    params.set("tab", "pack-studio");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
   function addTier() {
@@ -1891,7 +1926,10 @@ export default function VendorPage() {
                 <section className="card search-pane">
                   <div className="heading-row">
                     <h3>Add Cards</h3>
-                    <span className="muted tiny">Selected tier: {tiers[selectedTierIndex]?.name || `Tier ${selectedTierIndex + 1}`}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span className="muted tiny">Selected tier: {tiers[selectedTierIndex]?.name || `Tier ${selectedTierIndex + 1}`}</span>
+                      <button type="button" className="sort-pill" onClick={resetCatalogFilters}>Reset Filters</button>
+                    </div>
                   </div>
                   <label className="muted tiny">
                     Search cards
