@@ -229,6 +229,14 @@ const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
 const emptyCatalogFilters: CatalogFilters = { source: "", language: "", setId: "", rarity: "" };
 const emptyCatalogFacets: CatalogFacets = { sources: [], languages: [], sets: [], rarities: [] };
+const CATALOG_GAME_OPTIONS = [
+  { value: "ALL", label: "All games" },
+  { value: "POKEMON", label: "Pokemon" },
+  { value: "POKEMON_JAPAN", label: "Pokemon Japan" },
+  { value: "ONE_PIECE", label: "One Piece" },
+  { value: "YUGIOH", label: "Yu-Gi-Oh!" },
+  { value: "DRAGON_BALL_SUPER", label: "Dragon Ball Super" },
+] as const;
 
 function parseCatalogFilters(params: URLSearchParams): CatalogFilters {
   return {
@@ -421,7 +429,7 @@ export default function VendorPage() {
   const [catalogResultsLoading, setCatalogResultsLoading] = useState(false);
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
   const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
-  const [catalogGameFilter, setCatalogGameFilter] = useState("POKEMON");
+  const [catalogGameFilter, setCatalogGameFilter] = useState("ALL");
   const catalogSearchCacheRef = useRef<Map<string, CatalogSuggestion[]>>(new Map());
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
@@ -606,7 +614,9 @@ export default function VendorPage() {
   useEffect(() => {
     const url = new URL(`${apiBase}/v1/catalog/facets`);
     url.searchParams.set("type", "card");
-    appendCatalogFilters(url, catalogFilters);
+    url.searchParams.set("game", catalogGameFilter);
+    if (catalogFilters.source) url.searchParams.set("source", catalogFilters.source);
+    if (catalogFilters.language) url.searchParams.set("language", catalogFilters.language);
 
     fetch(url.toString(), {
       headers: authHeaders(),
@@ -621,7 +631,18 @@ export default function VendorPage() {
       .catch(() => {
         setCatalogFacets(emptyCatalogFacets);
       });
-  }, [authHeaders, catalogFilters]);
+  }, [authHeaders, catalogFilters.language, catalogFilters.source, catalogGameFilter]);
+
+  useEffect(() => {
+    setCatalogFilters(emptyCatalogFilters);
+    setCatalogResults([]);
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
+      params.delete(key);
+    }
+    params.set("tab", "pack-studio");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [catalogGameFilter, pathname, router]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1668,17 +1689,6 @@ export default function VendorPage() {
               </label>
             </div>
             {csvImportSummary ? <p className="muted tiny" style={{ marginTop: 8 }}>{csvImportSummary}</p> : null}
-            <label className="muted tiny" style={{ marginTop: 8, display: "inline-flex", flexDirection: "column", gap: 6 }}>
-              Catalog game search scope
-              <select value={catalogGameFilter} onChange={(e) => setCatalogGameFilter(e.target.value)}>
-                <option value="POKEMON">Pokemon</option>
-                <option value="ONE PIECE">One Piece</option>
-                <option value="YU-GI-OH!">Yu-Gi-Oh!</option>
-                <option value="DRAGON BALL">Dragon Ball</option>
-                <option value="ALL">All games</option>
-              </select>
-            </label>
-
             <form className="pack-builder" onSubmit={submitPack}>
               <div className="pack-builder-grid">
                 <label className="muted tiny">
@@ -1850,6 +1860,14 @@ export default function VendorPage() {
                     />
                   </label>
                   <div className="pack-builder-grid">
+                    <label className="muted tiny">
+                      Game
+                      <select value={catalogGameFilter} onChange={(e) => setCatalogGameFilter(e.target.value)}>
+                        {CATALOG_GAME_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </label>
                     <label className="muted tiny">
                       Card set
                       <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
