@@ -1,8 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
+import { applyVendorFavicon } from "../lib/favicon";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../lib/media-url";
 
 type Banner = {
   id: string;
@@ -25,6 +28,7 @@ type Prize = {
 type Pack = {
   id: string;
   title: string;
+  packBannerImageUrl?: string | null;
   pricePoints: number;
   remainingStock: number;
   totalStock: number;
@@ -45,6 +49,17 @@ type Tenant = {
   slug: string;
   host: string;
   isActive: boolean;
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
+  vendorSettings?: {
+    storefrontPrimary: string;
+    storefrontSecondary: string;
+    storefrontAccent: string;
+    storefrontSurface: string;
+    storefrontText: string;
+    storefrontMuted: string;
+    storefrontRadius: number;
+  } | null;
 };
 
 type AuthUser = {
@@ -61,6 +76,31 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
 const clientPageHeader = { "x-client-page": "/" };
+const defaultPackBanner = "/default-pack-banner-desktop.webp";
+const defaultPackBannerMobile = "/default-pack-banner-mobile.webp";
+
+function resolveImageUrl(url?: string | null) {
+  if (!url) return defaultPackBanner;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return url;
+  return `/${url}`;
+}
+
+function responsiveImageFromBase(url?: string | null) {
+  const resolved = resolveImageUrl(url);
+  if (!resolved.startsWith("/")) {
+    return { mobile: resolved, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith("-desktop.webp")) {
+    const mobile = resolved.replace("-desktop.webp", "-mobile.webp");
+    return { mobile, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith(".png")) {
+    const base = resolved.slice(0, -4);
+    return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
+  }
+  return { mobile: resolved, desktop: resolved, fallback: resolved };
+}
 
 export default function HomePage() {
   const runtimeVendorHost = useMemo(() => {
@@ -153,6 +193,10 @@ export default function HomePage() {
     void loadProfile();
   }, [loadData, loadProfile]);
 
+  useEffect(() => {
+    applyVendorFavicon(normalizeVendorFaviconUrl(tenant?.faviconImageUrl, tenant?.logoImageUrl));
+  }, [tenant?.faviconImageUrl, tenant?.logoImageUrl]);
+
   useBackForwardRefresh(() => loadData(false), { enabled: !vendorNotFound, cooldownMs: 15000 });
 
   useEffect(() => {
@@ -188,6 +232,20 @@ export default function HomePage() {
   }, [packs, sortKey]);
 
   const currentBanner = banners[bannerIndex];
+  const storefrontThemeStyle = useMemo(() => {
+    const theme = tenant?.vendorSettings;
+    if (!theme) return undefined;
+    return {
+      ["--brand" as string]: theme.storefrontPrimary,
+      ["--card" as string]: theme.storefrontSurface,
+      ["--text" as string]: theme.storefrontText,
+      ["--muted" as string]: theme.storefrontMuted,
+      ["--border" as string]: theme.storefrontSecondary,
+      ["--brand-soft" as string]: theme.storefrontSecondary,
+      ["--brand-accent" as string]: theme.storefrontAccent,
+      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
+    } as CSSProperties;
+  }, [tenant?.vendorSettings]);
 
   function goToPreviousBanner() {
     if (!banners.length) return;
@@ -209,10 +267,10 @@ export default function HomePage() {
   }
 
   return (
-    <main className="container">
+    <main className="container" style={storefrontThemeStyle}>
       <header className="site-header">
         <div className="brand">
-          <img src="/brand-cardback.jpg" alt="Oripa logo" />
+          <img src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/default-brand-logo.png"} alt="Vendor logo" />
           <div className="brand-text">
             <strong>{tenant?.name ?? "Storefront"}</strong>
             <span>{runtimeVendorHost}</span>
@@ -233,7 +291,7 @@ export default function HomePage() {
           {user ? (
             <button type="button" className="sort-pill" onClick={logout}>Logout</button>
           ) : null}
-          <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
+          <a className="sort-pill" href="/setlists">Setlists</a>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
       </header>
@@ -254,7 +312,25 @@ export default function HomePage() {
       <section className="banner-wrap">
         {currentBanner ? (
           <a className="banner-link" href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer">
-            <img className="banner-image" src={currentBanner.imageUrl} alt={currentBanner.title} />
+            {(() => {
+              const image = responsiveImageFromBase(currentBanner.imageUrl);
+              return (
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="banner-image"
+                    src={image.fallback}
+                    alt={currentBanner.title}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerMobile;
+                    }}
+                  />
+                </picture>
+              );
+            })()}
             <div className="banner-overlay">
               <h2>{currentBanner.title}</h2>
               <p>Limited-time campaign</p>
@@ -293,7 +369,6 @@ export default function HomePage() {
           <div>
             <span className="badge">Oripa MVP</span>
             <h1 className="hero-title">{activeCategory} Mystery Packs</h1>
-            <p className="muted">Vendor: {tenant?.name ?? runtimeVendorHost}</p>
           </div>
           <button type="button" className="refresh-button" onClick={() => void loadData(true)} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
@@ -314,6 +389,25 @@ export default function HomePage() {
       <section className="pack-grid">
         {sortedPacks.map((pack) => (
           <article className="card pack-card" key={pack.id}>
+            {(() => {
+              const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBanner);
+              return (
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="pack-card-banner"
+                    src={image.fallback}
+                    alt={`${pack.title} banner`}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerMobile;
+                    }}
+                  />
+                </picture>
+              );
+            })()}
             <div className="pack-header">
               <h2>{pack.title}</h2>
               <div className="pack-badges">
@@ -352,6 +446,10 @@ export default function HomePage() {
           </article>
         ))}
       </section>
+
+      <footer className="site-footer">
+        <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
+      </footer>
     </main>
   );
 }

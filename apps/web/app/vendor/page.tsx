@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
 type Vendor = {
   id: string;
@@ -14,6 +16,17 @@ type Vendor = {
   referralCode?: string | null;
   businessLocation?: string | null;
   businessContact?: string | null;
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
+  vendorSettings?: {
+    storefrontPrimary: string;
+    storefrontSecondary: string;
+    storefrontAccent: string;
+    storefrontSurface: string;
+    storefrontText: string;
+    storefrontMuted: string;
+    storefrontRadius: number;
+  } | null;
 };
 
 type VendorLimits = {
@@ -69,9 +82,12 @@ type Banner = {
 type Pack = {
   id: string;
   title: string;
+  packBannerImageUrl?: string | null;
   pricePoints: number;
   totalStock: number;
   remainingStock: number;
+  isNew?: boolean;
+  limitedLabel?: string | null;
   status: "DRAFT" | "LIVE" | "ARCHIVED";
   importantNotes?: string | null;
   drawLimitMode: "NONE" | "ONCE_PER_CUSTOMER" | "DAILY_RESET";
@@ -159,14 +175,13 @@ type TierDraft = {
 
 type CatalogSuggestion = {
   id: string;
-  source: string;
-  sourceItemId: string;
-  itemType: "CARD" | "SEALED_PRODUCT";
+  source?: string | null;
+  sourceItemId?: string | null;
+  itemType?: string | null;
   game: string;
-  language: string;
+  language?: string | null;
   name: string;
   setId?: string | null;
-  setName?: string | null;
   cardNumber?: string | null;
   rarity?: string | null;
   imageThumbUrl?: string | null;
@@ -174,7 +189,40 @@ type CatalogSuggestion = {
   imageBaseUrl?: string | null;
 };
 
+type CsvImportResponse = {
+  tiers: Array<{
+    name: string;
+    percentage?: number;
+    items: Array<{
+      label: string;
+      estimatedValue: number;
+      stock: number;
+      imageUrl: string;
+    }>;
+  }>;
+  summary: {
+    totalRows: number;
+    matchedRows: number;
+    unmatchedRows: number;
+    tierCount: number;
+  };
+  unmatchedRows: Array<{
+    rowNumber: number;
+    itemLabel: string;
+    setId?: string;
+    cardNumber?: string;
+    reason: string;
+  }>;
+};
+
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const DEFAULT_PACK_BANNER = "/default-pack-banner-desktop.webp";
+const DEFAULT_PACK_BANNER_OPTIONS = [
+  { label: "Default Green", desktop: "/default-pack-banner-desktop.webp", mobile: "/default-pack-banner-mobile.webp" },
+  { label: "S+ TIER REWARDS", desktop: "/pack-presets/splus-tier-rewards.png", mobile: "/pack-presets/splus-tier-rewards.png" },
+  { label: "GACHAPON", desktop: "/pack-presets/gachapon.png", mobile: "/pack-presets/gachapon.png" },
+  { label: "MYSTERY PACK RUSH", desktop: "/pack-presets/mystery-pack-rush.png", mobile: "/pack-presets/mystery-pack-rush.png" },
+] as const;
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
@@ -196,6 +244,79 @@ function appendCatalogFilters(url: URL, catalogFilters: CatalogFilters) {
   if (catalogFilters.language) url.searchParams.set("language", catalogFilters.language);
   if (catalogFilters.setId) url.searchParams.set("setId", catalogFilters.setId);
   if (catalogFilters.rarity) url.searchParams.set("rarity", catalogFilters.rarity);
+}
+
+const DEFAULT_THEME = {
+  storefrontPrimary: "#7A5CFA",
+  storefrontSecondary: "#EEE7FF",
+  storefrontAccent: "#A66BFF",
+  storefrontSurface: "#FFFFFF",
+  storefrontText: "#2D2350",
+  storefrontMuted: "#6E6395",
+  storefrontRadius: 18,
+};
+
+const THEME_PRESETS = [
+  { id: "lavender-dawn", label: "Lavender Dawn (Default)", ...DEFAULT_THEME },
+  {
+    id: "mint-cloud",
+    label: "Mint Cloud",
+    storefrontPrimary: "#4FB7A5",
+    storefrontSecondary: "#E2F7F3",
+    storefrontAccent: "#7A8BFF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#1F3B44",
+    storefrontMuted: "#5E7F86",
+    storefrontRadius: 18,
+  },
+  {
+    id: "peach-sorbet",
+    label: "Peach Sorbet",
+    storefrontPrimary: "#F28D8D",
+    storefrontSecondary: "#FFEAE5",
+    storefrontAccent: "#FFB26B",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#4A2A33",
+    storefrontMuted: "#8E6D78",
+    storefrontRadius: 18,
+  },
+  {
+    id: "sky-bloom",
+    label: "Sky Bloom",
+    storefrontPrimary: "#5E8BFF",
+    storefrontSecondary: "#E8EEFF",
+    storefrontAccent: "#7CC8FF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#1F2F56",
+    storefrontMuted: "#60739B",
+    storefrontRadius: 18,
+  },
+  {
+    id: "rose-mist",
+    label: "Rose Mist",
+    storefrontPrimary: "#D471B8",
+    storefrontSecondary: "#FCEAF7",
+    storefrontAccent: "#8D7CFF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#3D2747",
+    storefrontMuted: "#7B6687",
+    storefrontRadius: 18,
+  },
+] as const;
+
+function matchesPreset(
+  theme: typeof DEFAULT_THEME,
+  preset: (typeof THEME_PRESETS)[number]
+) {
+  return (
+    theme.storefrontPrimary === preset.storefrontPrimary &&
+    theme.storefrontSecondary === preset.storefrontSecondary &&
+    theme.storefrontAccent === preset.storefrontAccent &&
+    theme.storefrontSurface === preset.storefrontSurface &&
+    theme.storefrontText === preset.storefrontText &&
+    theme.storefrontMuted === preset.storefrontMuted &&
+    theme.storefrontRadius === preset.storefrontRadius
+  );
 }
 
 function parseTabValue(tab: string | null): ActiveTab {
@@ -267,6 +388,9 @@ export default function VendorPage() {
   const [businessLocation, setBusinessLocation] = useState("");
   const [businessContact, setBusinessContact] = useState("");
   const [referralCode, setReferralCode] = useState("");
+  const [logoImageUrl, setLogoImageUrl] = useState("");
+  const [faviconImageUrl, setFaviconImageUrl] = useState("");
+  const [themeDraft, setThemeDraft] = useState(DEFAULT_THEME);
 
   const [bannerTitle, setBannerTitle] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
@@ -274,6 +398,7 @@ export default function VendorPage() {
 
   const [editingPackId, setEditingPackId] = useState<string | null>(null);
   const [packTitle, setPackTitle] = useState("");
+  const [packBannerImageUrl, setPackBannerImageUrl] = useState(DEFAULT_PACK_BANNER);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [pricePoints, setPricePoints] = useState("100");
@@ -296,12 +421,23 @@ export default function VendorPage() {
   const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
   const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
+  const [catalogGameFilter, setCatalogGameFilter] = useState("POKEMON");
+  const catalogSearchCacheRef = useRef<Map<string, CatalogSuggestion[]>>(new Map());
+  const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
+  const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
+  const [uploadingVendorLogo, setUploadingVendorLogo] = useState(false);
+  const [importingPackCsv, setImportingPackCsv] = useState(false);
+  const [csvImportSummary, setCsvImportSummary] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("BUSINESS");
+  const selectedThemePresetId = useMemo(() => {
+    const found = THEME_PRESETS.find((preset) => matchesPreset(themeDraft, preset));
+    return found?.id ?? "custom";
+  }, [themeDraft]);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
 
@@ -371,6 +507,17 @@ export default function VendorPage() {
       setBusinessLocation(v?.businessLocation ?? "");
       setBusinessContact(v?.businessContact ?? "");
       setReferralCode(v?.referralCode ?? "");
+      setLogoImageUrl(normalizeVendorLogoUrl(v?.logoImageUrl));
+      setFaviconImageUrl(normalizeVendorFaviconUrl(v?.faviconImageUrl, v?.logoImageUrl));
+      setThemeDraft({
+        storefrontPrimary: v?.vendorSettings?.storefrontPrimary ?? DEFAULT_THEME.storefrontPrimary,
+        storefrontSecondary: v?.vendorSettings?.storefrontSecondary ?? DEFAULT_THEME.storefrontSecondary,
+        storefrontAccent: v?.vendorSettings?.storefrontAccent ?? DEFAULT_THEME.storefrontAccent,
+        storefrontSurface: v?.vendorSettings?.storefrontSurface ?? DEFAULT_THEME.storefrontSurface,
+        storefrontText: v?.vendorSettings?.storefrontText ?? DEFAULT_THEME.storefrontText,
+        storefrontMuted: v?.vendorSettings?.storefrontMuted ?? DEFAULT_THEME.storefrontMuted,
+        storefrontRadius: v?.vendorSettings?.storefrontRadius ?? DEFAULT_THEME.storefrontRadius,
+      });
 
       setLimits(limitsJson.limits ?? { planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
       setSummary(summaryJson.summary ?? null);
@@ -396,40 +543,65 @@ export default function VendorPage() {
   useEffect(() => {
     const target = itemSearchTarget;
     const query = itemSearchQuery.trim();
-    if (!target || query.length < 2) {
+    if (!target || query.length < 3) {
       setItemSuggestions([]);
       setItemSuggestLoading(false);
       return;
     }
 
+    const normalizedQuery = query.toLowerCase();
+    const normalizedGameFilter = catalogGameFilter.trim().toUpperCase() || "ALL";
+    const cacheKey = `card:${normalizedGameFilter}:${normalizedQuery}:8`;
+    const cached = catalogSearchCacheRef.current.get(cacheKey);
+    if (cached) {
+      setItemSuggestions(cached);
+      setItemSuggestLoading(false);
+      return;
+    }
+
+    let isActive = true;
+    const controller = new AbortController();
     const timer = window.setTimeout(() => {
+      if (!isActive) return;
       setItemSuggestLoading(true);
       const url = new URL(`${apiBase}/v1/catalog/suggest`);
       url.searchParams.set("q", query);
       url.searchParams.set("limit", "8");
       url.searchParams.set("type", "card");
+      url.searchParams.set("game", normalizedGameFilter);
       appendCatalogFilters(url, catalogFilters);
 
       fetch(url.toString(), {
         headers: authHeaders(),
         credentials: "include",
         cache: "no-store",
+        signal: controller.signal,
       })
         .then(async (res) => {
           const payload = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(payload?.error ?? "Failed to suggest cards");
-          setItemSuggestions((payload.items ?? []) as CatalogSuggestion[]);
+          const nextItems = (payload.items ?? []) as CatalogSuggestion[];
+          if (!isActive) return;
+          setItemSuggestions(nextItems);
+          catalogSearchCacheRef.current.set(cacheKey, nextItems);
         })
-        .catch(() => {
+        .catch((error: unknown) => {
+          if (!isActive) return;
+          if (error instanceof DOMException && error.name === "AbortError") return;
           setItemSuggestions([]);
         })
         .finally(() => {
+          if (!isActive) return;
           setItemSuggestLoading(false);
         });
     }, 300);
 
-    return () => window.clearTimeout(timer);
-  }, [authHeaders, catalogFilters, itemSearchQuery, itemSearchTarget]);
+    return () => {
+      isActive = false;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [authHeaders, catalogFilters, itemSearchQuery, itemSearchTarget, catalogGameFilter]);
 
   useEffect(() => {
     const url = new URL(`${apiBase}/v1/catalog/facets`);
@@ -551,6 +723,61 @@ export default function VendorPage() {
     }
   }
 
+  async function saveVendorLogo(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const normalizedLogo = normalizeVendorLogoUrl(logoImageUrl);
+      const normalizedFavicon = normalizeVendorFaviconUrl(faviconImageUrl, normalizedLogo);
+      const res = await fetch(`${apiBase}/v1/vendor/logo`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          logoImageUrl: normalizedLogo,
+          faviconImageUrl: normalizedFavicon || normalizedLogo,
+        }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to update vendor logo");
+      setSuccess("Vendor logo and favicon updated.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update vendor logo");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleVendorLogoUpload(file: File | null) {
+    if (!file) return;
+    setUploadingVendorLogo(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("kind", "vendor-logo");
+      const response = await fetch(`${apiBase}/v1/vendor/media/images`, {
+        method: "POST",
+        headers: authHeaders(),
+        credentials: "include",
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error ?? "Logo upload failed");
+      setLogoImageUrl(normalizeVendorLogoUrl(String(payload.desktopUrl ?? "")));
+      setFaviconImageUrl(normalizeVendorFaviconUrl(String(payload.faviconUrl ?? ""), String(payload.desktopUrl ?? "")));
+      setSuccess("Logo uploaded. Save to apply across storefront and favicon.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Logo upload failed");
+    } finally {
+      setUploadingVendorLogo(false);
+    }
+  }
+
   async function saveVendorPrefix(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
@@ -596,6 +823,29 @@ export default function VendorPage() {
       await loadAll();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update plan");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveTheme(event: FormEvent) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/theme`, {
+        method: "PATCH",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(themeDraft),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.error ?? "Failed to save storefront theme");
+      setSuccess("Storefront theme updated.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save storefront theme");
     } finally {
       setSaving(false);
     }
@@ -689,6 +939,125 @@ export default function VendorPage() {
       setError(err instanceof Error ? err.message : "Failed to add banner");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function uploadVendorImage(file: File, kind: "carousel-banner" | "pack-banner" | "card-art") {
+    const form = new FormData();
+    form.set("file", file);
+    form.set("kind", kind);
+    const res = await fetch(`${apiBase}/v1/vendor/media/images`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include",
+      body: form,
+    });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(payload?.error ?? "Failed to upload image");
+    return payload as { desktopUrl?: string };
+  }
+
+  async function handleBannerImageUpload(file: File | null) {
+    if (!file) return;
+    setUploadingBannerImage(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const uploaded = await uploadVendorImage(file, "carousel-banner");
+      const nextUrl = uploaded.desktopUrl ?? "";
+      if (!nextUrl) throw new Error("Upload response missing desktopUrl");
+      setBannerImageUrl(nextUrl);
+      setSuccess("Banner image uploaded and applied.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload banner image");
+    } finally {
+      setUploadingBannerImage(false);
+    }
+  }
+
+  async function handlePackBannerImageUpload(file: File | null) {
+    if (!file) return;
+    setUploadingPackBannerImage(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const uploaded = await uploadVendorImage(file, "pack-banner");
+      const nextUrl = uploaded.desktopUrl ?? "";
+      if (!nextUrl) throw new Error("Upload response missing desktopUrl");
+      setPackBannerImageUrl(nextUrl);
+      setSuccess("Pack banner uploaded and applied.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload pack banner");
+    } finally {
+      setUploadingPackBannerImage(false);
+    }
+  }
+
+  function downloadPackCsvTemplate() {
+    const sample = [
+      "tier_name,tier_percentage,item_label,estimated_value,stock,set_id,card_number,catalog_item_id,source_item_id,image_url,game",
+      "S Tier,8,Charizard ex,1800,1,24655,021/086,,,,POKEMON",
+      "S Tier,8,Umbreon VMAX,2200,1,24655,095/203,,,,POKEMON",
+      "S Tier,8,Gengar VMAX,1500,1,24655,157/264,,,,POKEMON",
+      "A Tier,32,Pikachu ex,450,3,24655,025/086,,,,POKEMON",
+      "A Tier,32,Mew ex,500,2,24655,151/165,,,,POKEMON",
+      "A Tier,32,Blastoise ex,480,2,24655,009/165,,,,POKEMON",
+      "B Tier,60,Basic Booster Pack,120,15,,,,,https://example.com/booster-pack.webp,POKEMON",
+      "B Tier,60,Trainer Bundle,95,20,,,,,https://example.com/trainer-bundle.webp,POKEMON",
+      "B Tier,60,Energy Set,60,30,,,,,https://example.com/energy-set.webp,POKEMON",
+    ].join("\n");
+    const blob = new Blob([sample], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pack-contents-template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handlePackCsvImport(file: File | null) {
+    if (!file) return;
+    setImportingPackCsv(true);
+    setError(null);
+    setSuccess(null);
+    setCsvImportSummary(null);
+    try {
+      const form = new FormData();
+      form.set("file", file);
+      const res = await fetch(`${apiBase}/v1/vendor/packs/import-csv`, {
+        method: "POST",
+        headers: authHeaders(),
+        credentials: "include",
+        body: form,
+      });
+      const body = (await res.json().catch(() => null)) as CsvImportResponse | { error?: string; validationErrors?: Array<{ rowNumber: number; message: string }> } | null;
+      if (!res.ok) {
+        if (body && "validationErrors" in body && Array.isArray(body.validationErrors) && body.validationErrors.length > 0) {
+          const first = body.validationErrors[0];
+          throw new Error(`CSV row ${first.rowNumber}: ${first.message}`);
+        }
+        throw new Error((body as { error?: string } | null)?.error ?? "Failed to import CSV");
+      }
+      const payload = body as CsvImportResponse;
+      const nextTiers: TierDraft[] = payload.tiers.map((tier) => ({
+        name: tier.name,
+        percentage: typeof tier.percentage === "number" ? String(tier.percentage) : "",
+        items: tier.items.map((item) => ({
+          label: item.label,
+          estimatedValue: String(item.estimatedValue),
+          stock: String(item.stock),
+          imageUrl: item.imageUrl || DEFAULT_CARD,
+        })),
+      }));
+      setTiers(nextTiers.length > 0 ? nextTiers : [createTier(0)]);
+      setCsvImportSummary(
+        `Imported ${payload.summary.totalRows} rows across ${payload.summary.tierCount} tiers. Matched: ${payload.summary.matchedRows}, fallback image: ${payload.summary.unmatchedRows}.`
+      );
+      setSuccess("CSV imported into pack builder.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import CSV");
+    } finally {
+      setImportingPackCsv(false);
     }
   }
 
@@ -794,9 +1163,9 @@ export default function VendorPage() {
             label: nextLabel || suggestion.name,
             imageUrl: suggestion.imageLargeUrl || suggestion.imageThumbUrl || suggestion.imageBaseUrl || item.imageUrl || DEFAULT_CARD,
             catalogItemId: suggestion.id,
-            catalogSource: suggestion.source,
-            catalogSourceItemId: suggestion.sourceItemId,
-            language: suggestion.language,
+            catalogSource: suggestion.source ?? undefined,
+            catalogSourceItemId: suggestion.sourceItemId ?? undefined,
+            language: suggestion.language ?? undefined,
           };
         });
         return { ...tier, items };
@@ -861,6 +1230,7 @@ export default function VendorPage() {
   function resetPackForm() {
     setEditingPackId(null);
     setPackTitle("");
+    setPackBannerImageUrl(DEFAULT_PACK_BANNER);
     setStartsAt("");
     setEndsAt("");
     setPricePoints("100");
@@ -878,13 +1248,14 @@ export default function VendorPage() {
   function editPack(pack: Pack) {
     setEditingPackId(pack.id);
     setPackTitle(pack.title);
+    setPackBannerImageUrl(pack.packBannerImageUrl ?? DEFAULT_PACK_BANNER);
     setPricePoints(String(pack.pricePoints));
     setTotalStock(String(pack.totalStock));
     setStartsAt(toLocalInputValue(pack.startsAt));
     setEndsAt(toLocalInputValue(pack.endsAt));
     setStatus(pack.status === "ARCHIVED" ? "DRAFT" : pack.status);
-    setIsNew(Boolean((pack as any).isNew ?? true));
-    setLimitedLabel((pack as any).limitedLabel ?? "");
+    setIsNew(Boolean(pack.isNew ?? true));
+    setLimitedLabel(pack.limitedLabel ?? "");
     setImportantNotes(pack.importantNotes ?? "");
     setDrawLimitMode(pack.drawLimitMode ?? "NONE");
     setDrawLimitValue(String(pack.drawLimitValue ?? 1));
@@ -924,6 +1295,7 @@ export default function VendorPage() {
 
       const payload = {
         title: packTitle,
+        packBannerImageUrl: packBannerImageUrl.trim() ? packBannerImageUrl.trim() : DEFAULT_PACK_BANNER,
         pricePoints: Number(pricePoints),
         totalStock: Number(totalStock),
         startsAt: toIsoDateTime(startsAt),
@@ -1022,7 +1394,7 @@ export default function VendorPage() {
   }
 
   return (
-    <main className="container">
+    <main className="container vendor-dashboard">
       <header className="site-header">
         <div className="brand-text">
           <strong>Vendor Dashboard</strong>
@@ -1112,16 +1484,112 @@ export default function VendorPage() {
           </section>
 
           <section className="card" style={{ marginTop: 12 }}>
+            <h2>Storefront Theme</h2>
+            <p className="muted tiny">Choose a preset pastel theme for your landing and pack pages.</p>
+            <form className="vendor-form" onSubmit={saveTheme}>
+              <div className="theme-preset-grid" style={{ gridColumn: "1 / -1" }}>
+                {THEME_PRESETS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className={`theme-preset-card ${selectedThemePresetId === preset.id ? "active" : ""}`}
+                    onClick={() => setThemeDraft({
+                      storefrontPrimary: preset.storefrontPrimary,
+                      storefrontSecondary: preset.storefrontSecondary,
+                      storefrontAccent: preset.storefrontAccent,
+                      storefrontSurface: preset.storefrontSurface,
+                      storefrontText: preset.storefrontText,
+                      storefrontMuted: preset.storefrontMuted,
+                      storefrontRadius: preset.storefrontRadius,
+                    })}
+                  >
+                    <strong>{preset.label}</strong>
+                    <span className="theme-preset-swatches">
+                      <i style={{ background: preset.storefrontPrimary }} />
+                      <i style={{ background: preset.storefrontSecondary }} />
+                      <i style={{ background: preset.storefrontAccent }} />
+                      <i style={{ background: preset.storefrontSurface, border: "1px solid #d9d9ef" }} />
+                    </span>
+                    <div
+                      className="theme-preset-mini"
+                      style={
+                        {
+                          ["--mini-primary" as string]: preset.storefrontPrimary,
+                          ["--mini-secondary" as string]: preset.storefrontSecondary,
+                          ["--mini-accent" as string]: preset.storefrontAccent,
+                          ["--mini-surface" as string]: preset.storefrontSurface,
+                          ["--mini-text" as string]: preset.storefrontText,
+                          ["--mini-muted" as string]: preset.storefrontMuted,
+                        } as CSSProperties
+                      }
+                    >
+                      <div className="theme-preset-mini-top" />
+                      <div className="theme-preset-mini-card">
+                        <span className="theme-preset-mini-title">Mystery Pack</span>
+                        <span className="theme-preset-mini-sub">Pastel preview</span>
+                        <span className="theme-preset-mini-btn">Open</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <button type="submit" className="draw-button" disabled={saving || loading}>Save Theme</button>
+            </form>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Storefront Logo & Favicon</h2>
+            <p className="muted tiny">
+              Recommended: square logo 1024x1024 (or at least 512x512), PNG/WebP/JPG, max 5MB. This logo is used in header and favicon.
+            </p>
+            <form className="vendor-form" onSubmit={saveVendorLogo}>
+              <label className="muted tiny">
+                Logo image URL
+                <input value={logoImageUrl} onChange={(e) => setLogoImageUrl(e.target.value)} placeholder="Logo image URL" required />
+              </label>
+              <label className="muted tiny">
+                Favicon URL (optional)
+                <input value={faviconImageUrl} onChange={(e) => setFaviconImageUrl(e.target.value)} placeholder="Favicon URL (optional)" />
+              </label>
+              <label className="muted tiny">
+                Upload logo (square recommended, max 5MB)
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => void handleVendorLogoUpload(e.target.files?.[0] ?? null)}
+                  disabled={uploadingVendorLogo}
+                />
+              </label>
+              <button type="submit" className="draw-button" disabled={saving || loading}>Save Logo</button>
+            </form>
+            {logoImageUrl ? (
+              <div className="banner-admin-row" style={{ marginTop: 10, gridTemplateColumns: "96px 1fr" }}>
+                <img src={logoImageUrl} alt="Vendor logo preview" style={{ width: 96, height: 96, objectFit: "contain", background: "#fff" }} />
+                <div className="muted tiny">Logo preview</div>
+              </div>
+            ) : null}
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
             <h2>Banners</h2>
             <form className="vendor-form" onSubmit={addBanner}>
               <label className="muted tiny">
                 Banner title
                 <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
               </label>
-              <label className="muted tiny">
-                Banner image URL
-                <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
-              </label>
+                <label className="muted tiny">
+                  Banner image URL
+                  <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
+                </label>
+                <label className="muted tiny">
+                  Upload banner image (max 5MB)
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => void handleBannerImageUpload(e.target.files?.[0] ?? null)}
+                    disabled={uploadingBannerImage}
+                  />
+                </label>
               <label className="muted tiny">
                 Target URL (optional)
                 <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
@@ -1188,6 +1656,30 @@ export default function VendorPage() {
           <section className="card" style={{ marginTop: 12 }}>
             <h2>{editingPackId ? "Edit Pack" : "Create Pack"}</h2>
             <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/{limits.maxPackTiers}</p>
+            <div className="actions" style={{ marginTop: 8 }}>
+              <button type="button" className="sort-pill" onClick={downloadPackCsvTemplate}>Download CSV Template</button>
+              <label className="sort-pill" style={{ cursor: "pointer" }}>
+                Import CSV
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  style={{ display: "none" }}
+                  onChange={(e) => void handlePackCsvImport(e.target.files?.[0] ?? null)}
+                  disabled={importingPackCsv}
+                />
+              </label>
+            </div>
+            {csvImportSummary ? <p className="muted tiny" style={{ marginTop: 8 }}>{csvImportSummary}</p> : null}
+            <label className="muted tiny" style={{ marginTop: 8, display: "inline-flex", flexDirection: "column", gap: 6 }}>
+              Catalog game search scope
+              <select value={catalogGameFilter} onChange={(e) => setCatalogGameFilter(e.target.value)}>
+                <option value="POKEMON">Pokemon</option>
+                <option value="ONE PIECE">One Piece</option>
+                <option value="YU-GI-OH!">Yu-Gi-Oh!</option>
+                <option value="DRAGON BALL">Dragon Ball</option>
+                <option value="ALL">All games</option>
+              </select>
+            </label>
 
             <form className="pack-builder" onSubmit={submitPack}>
               <div className="pack-builder-grid">
@@ -1195,6 +1687,45 @@ export default function VendorPage() {
                   Pack name
                   <input value={packTitle} onChange={(e) => setPackTitle(e.target.value)} placeholder="Pack Name" required minLength={2} maxLength={120} />
                 </label>
+                <label className="muted tiny">
+                  Pack banner image URL
+                  <input value={packBannerImageUrl} onChange={(e) => setPackBannerImageUrl(e.target.value)} placeholder="Pack banner image URL" required />
+                </label>
+                <div className="muted tiny" style={{ gridColumn: "1 / -1" }}>
+                  Choose from default pack banners
+                  <div className="theme-preset-grid" style={{ marginTop: 8 }}>
+                    {DEFAULT_PACK_BANNER_OPTIONS.map((option) => (
+                      <button
+                        key={option.desktop}
+                        type="button"
+                        className={`theme-preset-card ${packBannerImageUrl === option.desktop ? "active" : ""}`}
+                        onClick={() => setPackBannerImageUrl(option.desktop)}
+                      >
+                        <strong>{option.label}</strong>
+                        <img
+                          src={option.desktop}
+                          alt={option.label}
+                          style={{ width: "100%", borderRadius: 8, border: "1px solid var(--border)" }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <label className="muted tiny">
+                  Upload pack banner (max 5MB)
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={(e) => void handlePackBannerImageUpload(e.target.files?.[0] ?? null)}
+                    disabled={uploadingPackBannerImage}
+                  />
+                </label>
+                {packBannerImageUrl ? (
+                  <div className="banner-admin-row" style={{ gridColumn: "1 / -1", gridTemplateColumns: "220px 1fr" }}>
+                    <img src={packBannerImageUrl} alt="Pack banner preview" style={{ width: "100%", height: "auto", objectFit: "contain", background: "#fff" }} />
+                    <div className="muted tiny">Pack banner preview</div>
+                  </div>
+                ) : null}
                 <label className="muted tiny">
                   Price (points)
                   <input type="number" min={1} value={pricePoints} onChange={(e) => setPricePoints(e.target.value)} placeholder="Price (points)" required />
@@ -1337,20 +1868,28 @@ export default function VendorPage() {
                             {itemSearchTarget?.tierIndex === tierIndex && itemSearchTarget?.itemIndex === itemIndex ? (
                               <div className="card" style={{ marginTop: 6, padding: 8, maxHeight: 220, overflowY: "auto" }}>
                                 {itemSuggestLoading ? <div className="muted tiny">Searching cards...</div> : null}
-                                {!itemSuggestLoading && itemSuggestions.length === 0 && itemSearchQuery.trim().length >= 2 ? (
+                                {!itemSuggestLoading && itemSuggestions.length === 0 && itemSearchQuery.trim().length >= 3 ? (
                                   <div className="muted tiny">No matching cards found.</div>
                                 ) : null}
                                 {!itemSuggestLoading && itemSuggestions.map((suggestion) => (
                                   <button
                                     key={suggestion.id}
                                     type="button"
-                                    className="sort-pill"
+                                    className="sort-pill catalog-suggestion-button"
                                     style={{ width: "100%", textAlign: "left", marginBottom: 6 }}
                                     onClick={() => applyCatalogSuggestion(tierIndex, itemIndex, suggestion)}
                                   >
-                                    {suggestion.name}
-                                    {suggestion.cardNumber ? ` #${suggestion.cardNumber}` : ""}
-                                    {suggestion.setId ? ` (${suggestion.setId})` : ""}
+                                    <span>
+                                      {suggestion.name}
+                                      {suggestion.cardNumber ? ` #${suggestion.cardNumber}` : ""}
+                                      {suggestion.setId ? ` (${suggestion.setId})` : ""}
+                                    </span>
+                                    <span className="catalog-suggestion-preview" aria-hidden="true">
+                                      <img
+                                        src={suggestion.imageThumbUrl || suggestion.imageLargeUrl || suggestion.imageBaseUrl || DEFAULT_CARD}
+                                        alt=""
+                                      />
+                                    </span>
                                   </button>
                                 ))}
                               </div>

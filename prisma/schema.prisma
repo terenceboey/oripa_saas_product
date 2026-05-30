@@ -132,11 +132,19 @@ enum CatalogItemType {
   SEALED_PRODUCT
 }
 
+enum CatalogEntityType {
+  CARD
+  SEALED_PRODUCT
+  SET
+}
+
 model Vendor {
   id                  String                @id @default(cuid())
   name                String
   slug                String                @unique
   host                String                @unique
+  logoImageUrl        String?
+  faviconImageUrl     String?
   referralCode        String?               @unique
   businessLocation    String?
   businessContact     String?
@@ -247,6 +255,13 @@ model VendorSettings {
   maxPackTiers          Int      @default(10)
   maxDrawQuantity       Int      @default(100)
   planCode              VendorPlanCode @default(BASIC)
+  storefrontPrimary     String   @default("#0E6FFF")
+  storefrontSecondary   String   @default("#EAF2FF")
+  storefrontAccent      String   @default("#1353B5")
+  storefrontSurface     String   @default("#FFFFFF")
+  storefrontText        String   @default("#121826")
+  storefrontMuted       String   @default("#516074")
+  storefrontRadius      Int      @default(16)
   payoutSchedule        String?
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -257,6 +272,7 @@ model Pack {
   id             String       @id @default(cuid())
   vendorId       String
   title          String
+  packBannerImageUrl String?
   pricePoints    Int
   totalStock     Int
   remainingStock Int
@@ -817,61 +833,194 @@ model VendorPointGrantQr {
   @@index([vendorId, expiresAt])
 }
 
-model CatalogSet {
-  id              String        @id @default(cuid())
-  source          String
-  sourceSetId     String
-  game            String        @default("POKEMON")
-  setCode         String?
-  name            String
-  releaseDate     DateTime?
-  productCount    Int?
-  symbolImageUrl  String?
-  logoImageUrl    String?
-  bannerImageUrl  String?
-  isSupplemental  Boolean       @default(false)
-  searchText      String
-  isActive        Boolean       @default(true)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  catalogItems    CatalogItem[]
-
-  @@unique([source, sourceSetId])
-  @@index([game, isActive])
-  @@index([source, isActive])
-  @@index([setCode])
-  @@index([name])
-}
-
 model CatalogItem {
   id             String          @id @default(cuid())
   source         String
   sourceItemId   String
+  catalogSetId   String?
+  localId        String?
+  sourcePayload  Json?
   itemType       CatalogItemType @default(CARD)
   game           String          @default("POKEMON")
   language       String          @default("en")
   name           String
   setId          String?
   setName        String?
-  localId        String?
   cardNumber     String?
   rarity         String?
   imageBaseUrl   String?
   imageThumbUrl  String?
   imageLargeUrl  String?
   searchText     String
-  sourcePayload  Json?
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
-  catalogSetId   String?
   catalogSet     CatalogSet?     @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
 
   @@unique([source, sourceItemId, language])
   @@index([itemType, game, isActive])
   @@index([source, isActive])
-  @@index([game, language, isActive])
-  @@index([catalogSetId, isActive])
-  @@index([setId])
   @@index([name])
+  @@index([catalogSetId, isActive])
+}
+
+model CatalogSet {
+  id               String      @id @default(cuid())
+  source           String
+  sourceSetId      String
+  game             String
+  setCode          String?
+  name             String
+  releaseDate      DateTime?
+  productCount     Int?
+  symbolImageUrl   String?
+  logoImageUrl     String?
+  bannerImageUrl   String?
+  isSupplemental   Boolean     @default(false)
+  searchText       String
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  cards            CatalogItem[]
+  sealedProducts   CatalogSealedProduct[]
+
+  @@unique([source, sourceSetId, game])
+  @@index([game, isActive, releaseDate])
+  @@index([game, isActive, name])
+}
+
+model CatalogSealedProduct {
+  id               String      @id @default(cuid())
+  source           String
+  sourceProductId  String
+  catalogSetId     String?
+  game             String
+  language         String      @default("en")
+  name             String
+  cleanName        String?
+  imageUrl         String?
+  imageCount       Int?
+  isPresale        Boolean     @default(false)
+  presaleReleaseDate DateTime?
+  searchText       String
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  catalogSet       CatalogSet? @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
+
+  @@unique([source, sourceProductId, language, game])
+  @@index([catalogSetId, isActive])
+  @@index([game, isActive, name])
+}
+
+model CanonicalCatalogGame {
+  id          String               @id @default(cuid())
+  code        String               @unique
+  name        String
+  isActive    Boolean              @default(true)
+  sortOrder   Int                  @default(0)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  sets        CanonicalCatalogSet[]
+  cards       CanonicalCatalogCard[]
+  sealedItems CanonicalSealedProduct[]
+  searchDocs  CanonicalSearchDoc[]
+}
+
+model CanonicalCatalogSet {
+  id             String                  @id @default(cuid())
+  gameId         String
+  source         String
+  sourceSetId    String
+  slug           String?
+  setCode        String?
+  name           String
+  series         String?
+  releaseDate    DateTime?
+  totalCards     Int?
+  printedTotal   Int?
+  symbolImageUrl String?
+  logoImageUrl   String?
+  bannerImageUrl String?
+  isActive       Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  game           CanonicalCatalogGame    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  cards          CanonicalCatalogCard[]
+  sealedItems    CanonicalSealedProduct[]
+  searchDocs     CanonicalSearchDoc[]
+
+  @@unique([gameId, source, sourceSetId])
+  @@index([gameId, releaseDate])
+  @@index([gameId, name])
+}
+
+model CanonicalCatalogCard {
+  id               String                @id @default(cuid())
+  gameId           String
+  setId            String?
+  source           String
+  sourceCardId     String
+  name             String
+  displayName      String?
+  cardNumber       String?
+  rarity           String?
+  language         String                @default("en")
+  imageThumbUrl    String?
+  imageLargeUrl    String?
+  imageBaseUrl     String?
+  searchText       String
+  isActive         Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  game             CanonicalCatalogGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set              CanonicalCatalogSet?  @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  @@unique([source, sourceCardId, language, gameId])
+  @@index([gameId, setId, name])
+  @@index([gameId, rarity])
+}
+
+model CanonicalSealedProduct {
+  id               String                @id @default(cuid())
+  gameId           String
+  setId            String?
+  source           String
+  sourceProductId  String
+  name             String
+  displayName      String?
+  language         String                @default("en")
+  imageUrl         String?
+  imageThumbUrl    String?
+  searchText       String
+  isActive         Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  game             CanonicalCatalogGame  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set              CanonicalCatalogSet?  @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  @@unique([source, sourceProductId, language, gameId])
+  @@index([gameId, setId, name])
+}
+
+model CanonicalSearchDoc {
+  id              String               @id @default(cuid())
+  entityType      CatalogEntityType
+  entityId        String
+  gameId          String
+  setId           String?
+  displayName     String
+  tokens          String
+  imageThumbUrl   String?
+  popularityScore Int                  @default(0)
+  isActive        Boolean              @default(true)
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  game            CanonicalCatalogGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  set             CanonicalCatalogSet? @relation(fields: [setId], references: [id], onDelete: SetNull)
+
+  @@index([gameId, setId, isActive])
+  @@index([entityType, isActive])
+  @@index([displayName])
+  @@unique([entityType, entityId, gameId])
 }

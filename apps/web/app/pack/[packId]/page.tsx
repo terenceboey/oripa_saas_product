@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
+import { applyVendorFavicon } from "../../../lib/favicon";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../../lib/media-url";
 
 type Prize = {
   id: string;
@@ -17,6 +20,7 @@ type Prize = {
 type Pack = {
   id: string;
   title: string;
+  packBannerImageUrl?: string | null;
   pricePoints: number;
   remainingStock: number;
   totalStock: number;
@@ -41,10 +45,49 @@ type DrawResult = {
   }>;
 };
 
+type VendorTheme = {
+  storefrontPrimary: string;
+  storefrontSecondary: string;
+  storefrontAccent: string;
+  storefrontSurface: string;
+  storefrontText: string;
+  storefrontMuted: string;
+  storefrontRadius: number;
+};
+type ImagePreview = {
+  label: string;
+  imageUrl: string;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+const defaultPackBannerImage = "/default-pack-banner-desktop.webp";
+const defaultPackBannerImageMobile = "/default-pack-banner-mobile.webp";
 const clientPageHeader = { "x-client-page": "/pack/[packId]" };
+
+function resolveImageUrl(url?: string | null) {
+  if (!url) return defaultPackBannerImage;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return url;
+  return `/${url}`;
+}
+
+function responsiveImageFromBase(url?: string | null) {
+  const resolved = resolveImageUrl(url);
+  if (!resolved.startsWith("/")) {
+    return { mobile: resolved, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith("-desktop.webp")) {
+    const mobile = resolved.replace("-desktop.webp", "-mobile.webp");
+    return { mobile, desktop: resolved, fallback: resolved };
+  }
+  if (resolved.endsWith(".png")) {
+    const base = resolved.slice(0, -4);
+    return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
+  }
+  return { mobile: resolved, desktop: resolved, fallback: resolved };
+}
 
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
@@ -62,6 +105,10 @@ export default function PackDrawPage() {
   const [error, setError] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
+  const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
+  const [theme, setTheme] = useState<VendorTheme | null>(null);
+  const [vendorLogo, setVendorLogo] = useState<string | null>(null);
+  const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -69,9 +116,10 @@ export default function PackDrawPage() {
     setError(null);
 
     try {
-      const [packResponse, walletResponse] = await Promise.all([
+      const [packResponse, walletResponse, vendorResponse] = await Promise.all([
         fetch(`${apiBase}/v1/packs/${packId}`, { headers, credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/current`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
       if (!packResponse.ok) {
@@ -82,9 +130,13 @@ export default function PackDrawPage() {
 
       const packPayload = await packResponse.json();
       const walletPayload = await walletResponse.json();
+      const vendorPayload = vendorResponse.ok ? await vendorResponse.json() : null;
 
       setPack(packPayload.pack);
       setWallet(walletPayload.wallet);
+      setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
+      setVendorLogo(normalizeVendorLogoUrl(vendorPayload?.vendor?.logoImageUrl) || null);
+      setVendorFavicon(normalizeVendorFaviconUrl(vendorPayload?.vendor?.faviconImageUrl, vendorPayload?.vendor?.logoImageUrl) || null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pack");
     } finally {
@@ -129,8 +181,26 @@ export default function PackDrawPage() {
     }
   }
 
+  const storefrontThemeStyle = useMemo(() => {
+    if (!theme) return undefined;
+    return {
+      ["--brand" as string]: theme.storefrontPrimary,
+      ["--card" as string]: theme.storefrontSurface,
+      ["--text" as string]: theme.storefrontText,
+      ["--muted" as string]: theme.storefrontMuted,
+      ["--border" as string]: theme.storefrontSecondary,
+      ["--brand-soft" as string]: theme.storefrontSecondary,
+      ["--brand-accent" as string]: theme.storefrontAccent,
+      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
+    } as CSSProperties;
+  }, [theme]);
+
+  useEffect(() => {
+    applyVendorFavicon(normalizeVendorFaviconUrl(vendorFavicon, vendorLogo));
+  }, [vendorFavicon, vendorLogo]);
+
   return (
-    <main className="container">
+    <main className="container" style={storefrontThemeStyle}>
       <div className="pack-draw-header">
         <Link href="/" className="sort-pill">Back to Catalog</Link>
         <div className="actions">
@@ -145,6 +215,25 @@ export default function PackDrawPage() {
       {pack ? (
         <>
           <section className="card">
+            {(() => {
+              const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBannerImage);
+              return (
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="pack-detail-banner"
+                    src={image.fallback}
+                    alt={`${pack.title} banner`}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerImageMobile;
+                    }}
+                  />
+                </picture>
+              );
+            })()}
             <div className="pack-header">
               <h1>{pack.title}</h1>
               {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
@@ -169,7 +258,18 @@ export default function PackDrawPage() {
             <div className="card-preview-grid">
               {pack.prizes.map((prize) => (
                 <article key={prize.id} className="card-preview-item">
-                  <img src={prize.imageUrl || defaultPokemonCardImage} alt={prize.label} />
+                  <button
+                    type="button"
+                    className="card-image-button"
+                    onClick={() =>
+                      setImagePreview({
+                        label: prize.label,
+                        imageUrl: prize.imageUrl || defaultPokemonCardImage,
+                      })
+                    }
+                  >
+                    <img src={prize.imageUrl || defaultPokemonCardImage} alt={prize.label} />
+                  </button>
                   <div className="card-preview-meta">
                     <strong>{prize.label}</strong>
                     <span className="muted tiny">Rate {(prize.dropRatePercent ?? 0).toFixed(4)}%</span>
@@ -198,6 +298,18 @@ export default function PackDrawPage() {
             </section>
           ) : null}
         </>
+      ) : null}
+
+      {imagePreview ? (
+        <div className="qr-modal-backdrop" onClick={() => setImagePreview(null)}>
+          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
+            <div className="heading-row">
+              <h3>{imagePreview.label}</h3>
+              <button type="button" className="sort-pill" onClick={() => setImagePreview(null)}>Close</button>
+            </div>
+            <img className="card-image-preview" src={imagePreview.imageUrl} alt={imagePreview.label} />
+          </div>
+        </div>
       ) : null}
     </main>
   );
