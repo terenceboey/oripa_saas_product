@@ -415,10 +415,10 @@ export default function VendorPage() {
   const [qrExpiryMinutes, setQrExpiryMinutes] = useState("15");
   const [activeQr, setActiveQr] = useState<VendorQr | null>(null);
   const [activeQrDataUrl, setActiveQrDataUrl] = useState<string | null>(null);
-  const [itemSearchTarget, setItemSearchTarget] = useState<{ tierIndex: number; itemIndex: number } | null>(null);
-  const [itemSearchQuery, setItemSearchQuery] = useState("");
-  const [itemSuggestions, setItemSuggestions] = useState<CatalogSuggestion[]>([]);
-  const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
+  const [selectedTierIndex, setSelectedTierIndex] = useState(0);
+  const [cardSearchQuery, setCardSearchQuery] = useState("");
+  const [catalogResults, setCatalogResults] = useState<CatalogSuggestion[]>([]);
+  const [catalogResultsLoading, setCatalogResultsLoading] = useState(false);
   const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
   const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
   const [catalogGameFilter, setCatalogGameFilter] = useState("POKEMON");
@@ -541,21 +541,21 @@ export default function VendorPage() {
   useBackForwardRefresh(loadAll, { cooldownMs: 20000 });
 
   useEffect(() => {
-    const target = itemSearchTarget;
-    const query = itemSearchQuery.trim();
-    if (!target || query.length < 3) {
-      setItemSuggestions([]);
-      setItemSuggestLoading(false);
+    const query = cardSearchQuery.trim();
+    const normalizedGameFilter = catalogGameFilter.trim().toUpperCase() || "ALL";
+
+    if (query.length < 2) {
+      setCatalogResults([]);
+      setCatalogResultsLoading(false);
       return;
     }
 
     const normalizedQuery = query.toLowerCase();
-    const normalizedGameFilter = catalogGameFilter.trim().toUpperCase() || "ALL";
-    const cacheKey = `card:${normalizedGameFilter}:${normalizedQuery}:8`;
+    const cacheKey = `card-search:${normalizedGameFilter}:${normalizedQuery}:60:${catalogFilters.source}:${catalogFilters.language}:${catalogFilters.setId}:${catalogFilters.rarity}`;
     const cached = catalogSearchCacheRef.current.get(cacheKey);
     if (cached) {
-      setItemSuggestions(cached);
-      setItemSuggestLoading(false);
+      setCatalogResults(cached);
+      setCatalogResultsLoading(false);
       return;
     }
 
@@ -563,10 +563,10 @@ export default function VendorPage() {
     const controller = new AbortController();
     const timer = window.setTimeout(() => {
       if (!isActive) return;
-      setItemSuggestLoading(true);
-      const url = new URL(`${apiBase}/v1/catalog/suggest`);
+      setCatalogResultsLoading(true);
+      const url = new URL(`${apiBase}/v1/catalog/search`);
       url.searchParams.set("q", query);
-      url.searchParams.set("limit", "8");
+      url.searchParams.set("limit", "60");
       url.searchParams.set("type", "card");
       url.searchParams.set("game", normalizedGameFilter);
       appendCatalogFilters(url, catalogFilters);
@@ -579,29 +579,29 @@ export default function VendorPage() {
       })
         .then(async (res) => {
           const payload = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(payload?.error ?? "Failed to suggest cards");
+          if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
           const nextItems = (payload.items ?? []) as CatalogSuggestion[];
           if (!isActive) return;
-          setItemSuggestions(nextItems);
+          setCatalogResults(nextItems);
           catalogSearchCacheRef.current.set(cacheKey, nextItems);
         })
         .catch((error: unknown) => {
           if (!isActive) return;
           if (error instanceof DOMException && error.name === "AbortError") return;
-          setItemSuggestions([]);
+          setCatalogResults([]);
         })
         .finally(() => {
           if (!isActive) return;
-          setItemSuggestLoading(false);
+          setCatalogResultsLoading(false);
         });
-    }, 300);
+    }, 250);
 
     return () => {
       isActive = false;
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [authHeaders, catalogFilters, itemSearchQuery, itemSearchTarget, catalogGameFilter]);
+  }, [authHeaders, cardSearchQuery, catalogFilters, catalogGameFilter]);
 
   useEffect(() => {
     const url = new URL(`${apiBase}/v1/catalog/facets`);
@@ -633,7 +633,7 @@ export default function VendorPage() {
   function setCatalogFilterInUrl(field: keyof CatalogFilters, value: string) {
     const nextFilters = { ...catalogFilters, [field]: value };
     setCatalogFilters(nextFilters);
-    setItemSuggestions([]);
+    setCatalogResults([]);
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
       if (nextFilters[key]) params.set(key, nextFilters[key]);
@@ -1151,29 +1151,28 @@ export default function VendorPage() {
     );
   }
 
-  function applyCatalogSuggestion(tierIndex: number, itemIndex: number, suggestion: CatalogSuggestion) {
+  function applyCatalogSuggestion(tierIndex: number, suggestion: CatalogSuggestion) {
     const nextLabel = [suggestion.name, suggestion.cardNumber ? `#${suggestion.cardNumber}` : ""].filter(Boolean).join(" ");
     setTiers((prev) =>
       prev.map((tier, i) => {
         if (i !== tierIndex) return tier;
-        const items = tier.items.map((item, ii) => {
-          if (ii !== itemIndex) return item;
-          return {
-            ...item,
+        if (totalDraftItems >= limits.maxPackItems) return tier;
+        const items = [
+          ...tier.items,
+          {
             label: nextLabel || suggestion.name,
-            imageUrl: suggestion.imageLargeUrl || suggestion.imageThumbUrl || suggestion.imageBaseUrl || item.imageUrl || DEFAULT_CARD,
+            estimatedValue: "50",
+            stock: "1",
+            imageUrl: suggestion.imageLargeUrl || suggestion.imageThumbUrl || suggestion.imageBaseUrl || DEFAULT_CARD,
             catalogItemId: suggestion.id,
             catalogSource: suggestion.source ?? undefined,
             catalogSourceItemId: suggestion.sourceItemId ?? undefined,
             language: suggestion.language ?? undefined,
-          };
-        });
+          },
+        ];
         return { ...tier, items };
       })
     );
-    setItemSearchTarget(null);
-    setItemSearchQuery("");
-    setItemSuggestions([]);
   }
 
   function addTier() {
@@ -1181,17 +1180,18 @@ export default function VendorPage() {
       if (prev.length >= limits.maxPackTiers) return prev;
       return [...prev, createTier(prev.length)];
     });
+    setSelectedTierIndex((prev) => Math.min(prev + 1, limits.maxPackTiers - 1));
   }
 
   function removeTier(tierIndex: number) {
-    if (itemSearchTarget?.tierIndex === tierIndex) {
-      setItemSearchTarget(null);
-      setItemSearchQuery("");
-      setItemSuggestions([]);
-    }
     setTiers((prev) => {
       if (prev.length <= 1) return prev;
       return prev.filter((_, i) => i !== tierIndex);
+    });
+    setSelectedTierIndex((prev) => {
+      if (prev === tierIndex) return Math.max(0, tierIndex - 1);
+      if (prev > tierIndex) return prev - 1;
+      return prev;
     });
   }
 
@@ -1206,15 +1206,9 @@ export default function VendorPage() {
   }
 
   function removeItem(tierIndex: number, itemIndex: number) {
-    if (itemSearchTarget?.tierIndex === tierIndex && itemSearchTarget?.itemIndex === itemIndex) {
-      setItemSearchTarget(null);
-      setItemSearchQuery("");
-      setItemSuggestions([]);
-    }
     setTiers((prev) =>
       prev.map((tier, i) => {
         if (i !== tierIndex) return tier;
-        if (tier.items.length <= 1) return tier;
         return { ...tier, items: tier.items.filter((_, ii) => ii !== itemIndex) };
       })
     );
@@ -1243,6 +1237,9 @@ export default function VendorPage() {
     setDrawLimitValue("1");
     setDrawLimitResetTimezone("Asia/Singapore");
     setTiers([createTier(0)]);
+    setSelectedTierIndex(0);
+    setCardSearchQuery("");
+    setCatalogResults([]);
   }
 
   function editPack(pack: Pack) {
@@ -1277,6 +1274,7 @@ export default function VendorPage() {
         })),
       },
     ]);
+    setSelectedTierIndex(0);
   }
 
   async function submitPack(event: FormEvent) {
@@ -1784,137 +1782,134 @@ export default function VendorPage() {
                 <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
               </label>
 
-              <section className="card" style={{ padding: 12 }}>
-                <h3>Catalog filters</h3>
-                <p className="muted tiny">Filters sync into the URL and constrain card typeahead results.</p>
-                <div className="pack-builder-grid">
-                  <label className="muted tiny">
-                    Source
-                    <select value={catalogFilters.source} onChange={(e) => setCatalogFilterInUrl("source", e.target.value)}>
-                      <option value="">All sources</option>
-                      {catalogFacets.sources.map((source) => (
-                        <option key={source.value} value={source.value}>{source.value} ({source.count})</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="muted tiny">
-                    Language
-                    <select value={catalogFilters.language} onChange={(e) => setCatalogFilterInUrl("language", e.target.value)}>
-                      <option value="">All languages</option>
-                      {catalogFacets.languages.map((language) => (
-                        <option key={language.value} value={language.value}>{language.value} ({language.count})</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="muted tiny">
-                    Set
-                    <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
-                      <option value="">All sets</option>
-                      {catalogFacets.sets.map((set) => (
-                        <option key={set.id} value={set.id}>{set.name || set.id} ({set.count})</option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="muted tiny">
-                    Rarity
-                    <select value={catalogFilters.rarity} onChange={(e) => setCatalogFilterInUrl("rarity", e.target.value)}>
-                      <option value="">All rarities</option>
-                      {catalogFacets.rarities.map((rarity) => (
-                        <option key={rarity.value} value={rarity.value}>{rarity.value} ({rarity.count})</option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              </section>
-
-              <div className="tier-stack">
-                {tiers.map((tier, tierIndex) => (
-                  <article key={`tier-${tierIndex}`} className="card tier-card">
-                    <div className="heading-row">
-                      <strong>Tier {tierIndex + 1}</strong>
-                      <button type="button" className="sort-pill" onClick={() => removeTier(tierIndex)} disabled={tiers.length <= 1}>Remove Tier</button>
-                    </div>
-
-                    <div className="pack-builder-grid">
-                      <label className="muted tiny">
-                        Tier name
-                        <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
-                      </label>
-                      <label className="muted tiny">
-                        Tier percentage
-                        <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
-                      </label>
-                    </div>
-
-                    <div className="tier-items">
-                      {tier.items.map((item, itemIndex) => (
-                        <div className="item-row" key={`tier-${tierIndex}-item-${itemIndex}`}>
-                          <label className="muted tiny">
-                            Item label
-                            <input
-                              value={item.label}
-                              onChange={(e) => {
-                                updateItem(tierIndex, itemIndex, "label", e.target.value);
-                                setItemSearchTarget({ tierIndex, itemIndex });
-                                setItemSearchQuery(e.target.value);
-                              }}
-                              onFocus={() => {
-                                setItemSearchTarget({ tierIndex, itemIndex });
-                                setItemSearchQuery(item.label);
-                              }}
-                              placeholder="Item label"
-                              required
-                            />
-                            {itemSearchTarget?.tierIndex === tierIndex && itemSearchTarget?.itemIndex === itemIndex ? (
-                              <div className="card" style={{ marginTop: 6, padding: 8, maxHeight: 220, overflowY: "auto" }}>
-                                {itemSuggestLoading ? <div className="muted tiny">Searching cards...</div> : null}
-                                {!itemSuggestLoading && itemSuggestions.length === 0 && itemSearchQuery.trim().length >= 3 ? (
-                                  <div className="muted tiny">No matching cards found.</div>
-                                ) : null}
-                                {!itemSuggestLoading && itemSuggestions.map((suggestion) => (
-                                  <button
-                                    key={suggestion.id}
-                                    type="button"
-                                    className="sort-pill catalog-suggestion-button"
-                                    style={{ width: "100%", textAlign: "left", marginBottom: 6 }}
-                                    onClick={() => applyCatalogSuggestion(tierIndex, itemIndex, suggestion)}
-                                  >
-                                    <span>
-                                      {suggestion.name}
-                                      {suggestion.cardNumber ? ` #${suggestion.cardNumber}` : ""}
-                                      {suggestion.setId ? ` (${suggestion.setId})` : ""}
-                                    </span>
-                                    <span className="catalog-suggestion-preview" aria-hidden="true">
-                                      <img
-                                        src={suggestion.imageThumbUrl || suggestion.imageLargeUrl || suggestion.imageBaseUrl || DEFAULT_CARD}
-                                        alt=""
-                                      />
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            ) : null}
-                          </label>
-                          <label className="muted tiny">
-                            Estimated value
-                            <input value={item.estimatedValue} onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)} placeholder="Estimated value" type="number" min={0} required />
-                          </label>
-                          <label className="muted tiny">
-                            Stock
-                            <input value={item.stock} onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)} placeholder="Stock" type="number" min={1} required />
-                          </label>
-                          <label className="muted tiny">
-                            Image URL
-                            <input value={item.imageUrl} onChange={(e) => updateItem(tierIndex, itemIndex, "imageUrl", e.target.value)} placeholder="Image URL" />
-                          </label>
-                          <button type="button" className="sort-pill" onClick={() => removeItem(tierIndex, itemIndex)} disabled={tier.items.length <= 1}>Remove</button>
+              <div className="pack-builder-two-panel">
+                <section className="card tier-pane">
+                  <div className="heading-row">
+                    <h3>Pack Contents</h3>
+                    <span className="muted tiny">{totalDraftItems}/{limits.maxPackItems} cards</span>
+                  </div>
+                  <div className="tier-stack">
+                    {tiers.map((tier, tierIndex) => (
+                      <article
+                        key={`tier-${tierIndex}`}
+                        className={`tier-bucket ${selectedTierIndex === tierIndex ? "active" : ""}`}
+                        onClick={() => setSelectedTierIndex(tierIndex)}
+                      >
+                        <div className="heading-row">
+                          <strong>{tier.name || `Tier ${tierIndex + 1}`}</strong>
+                          <span className="muted tiny">{tier.items.length} cards</span>
                         </div>
-                      ))}
-                    </div>
+                        <div className="pack-builder-grid">
+                          <label className="muted tiny">
+                            Tier label
+                            <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
+                          </label>
+                          <label className="muted tiny">
+                            Tier rate %
+                            <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
+                          </label>
+                        </div>
+                        <div className="tier-card-strip">
+                          {tier.items.map((item, itemIndex) => (
+                            <button
+                              type="button"
+                              className="tier-card-tile"
+                              key={`tier-${tierIndex}-item-${itemIndex}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeItem(tierIndex, itemIndex);
+                              }}
+                              title={`Remove ${item.label || "card"}`}
+                            >
+                              <img src={item.imageUrl || DEFAULT_CARD} alt={item.label || "Card"} />
+                              <span>{item.label || "Untitled card"}</span>
+                            </button>
+                          ))}
+                          {tier.items.length === 0 ? <p className="muted tiny">No cards added yet.</p> : null}
+                        </div>
+                        <div className="actions" style={{ marginTop: 8 }}>
+                          <button type="button" className="sort-pill" onClick={(e) => { e.stopPropagation(); addItem(tierIndex); }} disabled={totalDraftItems >= limits.maxPackItems}>+ Add blank item</button>
+                          <button type="button" className="sort-pill" onClick={(e) => { e.stopPropagation(); removeTier(tierIndex); }} disabled={tiers.length <= 1}>Remove Tier</button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
 
-                    <button type="button" className="sort-pill" onClick={() => addItem(tierIndex)} disabled={totalDraftItems >= limits.maxPackItems}>+ Add Item</button>
-                  </article>
-                ))}
+                <section className="card search-pane">
+                  <div className="heading-row">
+                    <h3>Add Cards</h3>
+                    <span className="muted tiny">Selected tier: {tiers[selectedTierIndex]?.name || `Tier ${selectedTierIndex + 1}`}</span>
+                  </div>
+                  <label className="muted tiny">
+                    Search cards
+                    <input
+                      value={cardSearchQuery}
+                      onChange={(e) => setCardSearchQuery(e.target.value)}
+                      placeholder="Search by card name..."
+                    />
+                  </label>
+                  <div className="pack-builder-grid">
+                    <label className="muted tiny">
+                      Card set
+                      <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
+                        <option value="">All sets</option>
+                        {catalogFacets.sets.map((set) => (
+                          <option key={set.id} value={set.id}>{set.name || set.id} ({set.count})</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="muted tiny">
+                      Rarity
+                      <select value={catalogFilters.rarity} onChange={(e) => setCatalogFilterInUrl("rarity", e.target.value)}>
+                        <option value="">All rarities</option>
+                        {catalogFacets.rarities.map((rarity) => (
+                          <option key={rarity.value} value={rarity.value}>{rarity.value} ({rarity.count})</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="pack-builder-grid">
+                    <label className="muted tiny">
+                      Source
+                      <select value={catalogFilters.source} onChange={(e) => setCatalogFilterInUrl("source", e.target.value)}>
+                        <option value="">All sources</option>
+                        {catalogFacets.sources.map((source) => (
+                          <option key={source.value} value={source.value}>{source.value} ({source.count})</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="muted tiny">
+                      Language
+                      <select value={catalogFilters.language} onChange={(e) => setCatalogFilterInUrl("language", e.target.value)}>
+                        <option value="">All languages</option>
+                        {catalogFacets.languages.map((language) => (
+                          <option key={language.value} value={language.value}>{language.value} ({language.count})</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  {catalogResultsLoading ? <p className="muted tiny">Searching cards...</p> : null}
+                  {!catalogResultsLoading && cardSearchQuery.trim().length >= 2 && catalogResults.length === 0 ? (
+                    <p className="muted tiny">No cards found for this search.</p>
+                  ) : null}
+                  <div className="catalog-result-grid">
+                    {catalogResults.map((suggestion) => (
+                      <button
+                        key={suggestion.id}
+                        type="button"
+                        className="catalog-result-tile"
+                        onClick={() => applyCatalogSuggestion(selectedTierIndex, suggestion)}
+                        disabled={totalDraftItems >= limits.maxPackItems || !tiers[selectedTierIndex]}
+                        title={`Add to ${tiers[selectedTierIndex]?.name || `Tier ${selectedTierIndex + 1}`}`}
+                      >
+                        <img src={suggestion.imageThumbUrl || suggestion.imageLargeUrl || suggestion.imageBaseUrl || DEFAULT_CARD} alt={suggestion.name} />
+                        <span className="catalog-result-name">{suggestion.name}</span>
+                        <span className="muted tiny">{suggestion.cardNumber ? `#${suggestion.cardNumber}` : suggestion.setId || "Card"}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
               </div>
 
               <div className="actions">

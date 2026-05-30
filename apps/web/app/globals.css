@@ -885,6 +885,110 @@ h6,
   gap: 12px;
 }
 
+.pack-builder-two-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.tier-pane,
+.search-pane {
+  padding: 14px;
+}
+
+.tier-bucket {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--surface) 80%, var(--secondary) 20%);
+  cursor: pointer;
+}
+
+.tier-bucket.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+.tier-card-strip {
+  margin-top: 8px;
+  min-height: 90px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+  gap: 8px;
+}
+
+.tier-card-tile {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px;
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tier-card-tile img {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.tier-card-tile span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-result-grid {
+  margin-top: 8px;
+  min-height: 240px;
+  max-height: 740px;
+  overflow-y: auto;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.catalog-result-tile {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 4px;
+  display: grid;
+  gap: 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.catalog-result-tile:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.catalog-result-tile img {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.catalog-result-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  min-height: 28px;
+}
+
 .tier-card {
   padding: 14px;
 }
@@ -934,6 +1038,10 @@ h6,
 }
 
 @media (max-width: 760px) {
+  .pack-builder-two-panel {
+    grid-template-columns: 1fr;
+  }
+
   .item-row {
     grid-template-columns: 1fr;
   }

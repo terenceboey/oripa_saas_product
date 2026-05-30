@@ -1,0 +1,22 @@
+[
+  {
+    "id": "crown-zenith-pokemon",
+    "name": "Crown Zenith",
+    "count": 0,
+    "release_date": "2023-01-20T00:00:00+00:00",
+    "image_tcgplayer_id": null,
+    "game_id": "pokemon",
+    "s3LogoUrl": "pokemon-sets/swsh12pt5/logo.png",
+    "s3SymbolUrl": "pokemon-sets/swsh12pt5/symbol.png"
+  },
+  {
+    "id": "crown-zenith-galarian-gallery-pokemon",
+    "name": "Crown Zenith: Galarian Gallery",
+    "count": 70,
+    "release_date": "2023-01-20T00:00:00+00:00",
+    "image_tcgplayer_id": null,
+    "game_id": "pokemon",
+    "s3LogoUrl": "pokemon-sets/swsh12pt5gg/logo.png",
+    "s3SymbolUrl": "pokemon-sets/swsh12pt5gg/symbol.png"
+  }
+]

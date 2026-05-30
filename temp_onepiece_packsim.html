@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="UML2g6PETCVRkXNWhIIxkHp2rHxeGCsfPLvUzrMc">
+
+        <!--Include SEO -->
+        <link rel="icon" href="https://onepiecedb.io/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="https://onepiecedb.io/favicon.ico" type="image/x-icon"/>
+<link rel="apple-touch-icon" href="https://onepiecedb.io/favicon-apple.png" sizes="180x180"/>
+<link rel="icon" sizes="192x192" href="https://onepiecedb.io/favicon-192x192.png"/>
+<link rel="icon" sizes="32x32" href="https://onepiecedb.io/favicon-32x32.png"/>
+<link rel="canonical" href="https://onepiecedb.io/pack-sim">
+<title>Pack Opening Simulator - OnePieceDB</title>
+<meta name="description" content="A One Piece TCG Card Pack Simulator! Open virtual One Piece packs and see what you pull. Experience the thrill of pack opening online!">
+
+<meta property="og:title" content="Pack Opening Simulator - OnePieceDB">
+<meta property="og:description" content="A One Piece TCG Card Pack Simulator! Open virtual One Piece packs and see what you pull. Experience the thrill of pack opening online!">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://onepiecedb.io/pack-sim">
+<meta property="og:image" content="https://onepiecedb.io/assets/icons/open-graph.png">
+<meta property="og:site_name" content="OnePieceDB">
+<meta property="og:locale" content="en_US">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pack Opening Simulator - OnePieceDB">
+<meta name="twitter:description" content="A One Piece TCG Card Pack Simulator! Open virtual One Piece packs and see what you pull. Experience the thrill of pack opening online!">
+<meta name="twitter:image" content="https://onepiecedb.io/assets/icons/open-graph.png">
+<meta name="twitter:site" content="">
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
+        <!-- Scripts -->
+        <link rel="preload" as="style" href="https://onepiecedb.io/build/assets/app-Dt0j4q0t.css" /><link rel="preload" as="style" href="https://onepiecedb.io/build/assets/vendor-BHH8rdGj.css" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/app-CVLp-ziM.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/bootstrap-D8gTUXzq.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/vendor-mjjl5Z2A.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/autocomplete-BFg9jIKx.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/tooltip-CoXL1l5t.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/toast-BqUYiFuB.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/ads-CA0D5E19.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/axios-BBlBkyG8.js" /><link rel="stylesheet" href="https://onepiecedb.io/build/assets/app-Dt0j4q0t.css" data-navigate-track="reload" /><link rel="stylesheet" href="https://onepiecedb.io/build/assets/vendor-BHH8rdGj.css" data-navigate-track="reload" /><script type="module" src="https://onepiecedb.io/build/assets/app-CVLp-ziM.js" data-navigate-track="reload"></script>        <!-- Livewire Styles --><style >[wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {display: none;}[wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {display: none;}[wire\:offline][wire\:offline] {display: none;}[wire\:dirty]:not(textarea):not(input):not(select) {display: none;}:root {--livewire-progress-bar-color: #2299dd;}[x-cloak] {display: none !important;}[wire\:cloak] {display: none !important;}dialog#livewire-error::backdrop {background-color: rgba(0, 0, 0, .6);}</style>
+
+        
+        <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WBXBZRDJ5X"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-WBXBZRDJ5X');
+    </script>
+
+        <!-- Ad System Initialization -->
+                            <script data-cfasync="false">
+                window.nitroAds = window.nitroAds || {
+                    createAd: function() {
+                        return new Promise(e => {
+                            window.nitroAds.queue.push(["createAd", arguments, e]);
+                        });
+                    },
+                    addUserToken: function() {
+                        window.nitroAds.queue.push(["addUserToken", arguments]);
+                    },
+                    queue: []
+                };
+            </script>
+            <script data-cfasync="false" async src="https://s.nitropay.com/ads-2401.js"></script>
+            <script>
+                window.adsEnabled = true;
+                window.adsDemoMode = false;
+                window.nitropayScriptUrl = 'https://s.nitropay.com/ads-2401.js';
+                            </script>
+            </head>
+    <body class="font-sans antialiased flex flex-col min-h-screen dark:bg-gray-900" data-ads-enabled="true"><a href="https://onepiecedb.io/cdn-cgi/content?id=jWZVRwJKbs1TncGSWIewEaHwZ4MeXx0zGzAzZo1WXuU-1780118479.1209571-1.0.1.1-jyk6DNm.BXOlePzl24lxo1zr9yGBReS9XCYYg88Tq0w" aria-hidden="true" rel="nofollow noopener" style="display: none !important; visibility: hidden !important"></a>
+            <aside id="sidebar-info" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full" aria-label="Sidebar">
+    <div class="overflow-y-auto py-4 px-3 h-full bg-white border-r border-gray-200 dark:bg-gray-800 dark:border-gray-700 scrollbar-thin dark:scrollbar-thumb-gray-900 dark:scrollbar-track-gray-700">
+        <a href="/" class="flex items-center pl-2 mb-5">
+            <img src="https://onepiecedb.io/logo.svg" class="mr-3 h-6 sm:h-8" alt="OnePieceDB Logo" />
+            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">OnePieceDB</span>
+        </a>
+        <ul class="space-y-2">
+            <!-- If guest or if user who is not premium, show a premium upgrade link -->
+                            <li>
+                    <a href="https://onepiecedb.io/premium" class="flex items-center p-2 text-base font-normal text-yellow-800 bg-yellow-100 rounded-lg dark:bg-yellow-700 dark:text-yellow-200 hover:bg-yellow-200 dark:hover:bg-yellow-600 group">
+                        <svg class="w-6 h-6 text-yellow-500 dark:text-yellow-300 transition duration-75 group-hover:text-yellow-700 dark:group-hover:text-yellow-100" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="m15 1.784-.796.795a1.125 1.125 0 1 0 1.591 0L15 1.784ZM12 1.784l-.796.795a1.125 1.125 0 1 0 1.591 0L12 1.784ZM9 1.784l-.796.795a1.125 1.125 0 1 0 1.591 0L9 1.784ZM9.75 7.547c.498-.021.998-.035 1.5-.042V6.75a.75.75 0 0 1 1.5 0v.755c.502.007 1.002.021 1.5.042V6.75a.75.75 0 0 1 1.5 0v.88l.307.022c1.55.117 2.693 1.427 2.693 2.946v1.018a62.182 62.182 0 0 0-13.5 0v-1.018c0-1.519 1.143-2.829 2.693-2.946l.307-.022v-.88a.75.75 0 0 1 1.5 0v.797ZM12 12.75c-2.472 0-4.9.184-7.274.54-1.454.217-2.476 1.482-2.476 2.916v.384a4.104 4.104 0 0 1 2.585.364 2.605 2.605 0 0 0 2.33 0 4.104 4.104 0 0 1 3.67 0 2.605 2.605 0 0 0 2.33 0 4.104 4.104 0 0 1 3.67 0 2.605 2.605 0 0 0 2.33 0 4.104 4.104 0 0 1 2.585-.364v-.384c0-1.434-1.022-2.7-2.476-2.917A49.138 49.138 0 0 0 12 12.75ZM21.75 18.131a2.604 2.604 0 0 0-1.915.165 4.104 4.104 0 0 1-3.67 0 2.605 2.605 0 0 0-2.33 0 4.104 4.104 0 0 1-3.67 0 2.605 2.605 0 0 0-2.33 0 4.104 4.104 0 0 1-3.67 0 2.604 2.604 0 0 0-1.915-.165v2.494c0 1.035.84 1.875 1.875 1.875h15.75c1.035 0 1.875-.84 1.875-1.875v-2.494Z"/>
+</svg>                        <span class="ml-3">Upgrade to Premium</span>
+                    </a>
+                </li>
+                                    <li>
+                <a href="https://onepiecedb.io/snapshot" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg aria-hidden="true" class="w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path></svg>
+                    <span class="ml-3">Snapshot</span>
+                </a>
+            </li>
+            <li>
+                <button type="button" class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" aria-controls="dropdown-pages" data-collapse-toggle="dropdown-pages">
+                    <svg class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                         aria-hidden="true"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 576 512"
+                         fill="currentColor">
+                    <path d="M264.5 5.2c14.9-6.9 32.1-6.9 47 0l218.6 101c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 149.8C37.4 145.8 32 137.3 32 128s5.4-17.9 13.9-21.8L264.5 5.2zM476.9 209.6l53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 277.8C37.4 273.8 32 265.3 32 256s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0l152-70.2zm-152 198.2l152-70.2 53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 405.8C37.4 401.8 32 393.3 32 384s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0z"/></svg>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Decks</span>
+                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <ul id="dropdown-pages" class="hidden py-2 space-y-2">
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/deck-search" class="flex-1">All Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/deckbuilder" class="flex-1">Deck Builder</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/folders/search" class="flex-1">Deck Folders</a>
+                    </li>
+                                            <li class="pt-2 pb-1 pl-4">
+                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Recent Formats</span>
+                        </li>
+                                                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                <svg class="w-4 h-4 mr-2 flex-shrink-0 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.484a11.2 11.2 0 0 0-5.45 5.173.75.75 0 0 1-1.199.19L9 12.312l-6.22 6.22a.75.75 0 0 1-1.06-1.061l6.75-6.75a.75.75 0 0 1 1.06 0l3.606 3.606a12.695 12.695 0 0 1 5.68-4.974l1.086-.483-4.251-1.632a.75.75 0 0 1-.432-.97Z" clip-rule="evenodd"/>
+</svg>                                <a href="https://onepiecedb.io/format/eb03" class="flex-1">EB03 Meta</a>
+                            </li>
+                                                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                <svg class="w-4 h-4 mr-2 flex-shrink-0 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.484a11.2 11.2 0 0 0-5.45 5.173.75.75 0 0 1-1.199.19L9 12.312l-6.22 6.22a.75.75 0 0 1-1.06-1.061l6.75-6.75a.75.75 0 0 1 1.06 0l3.606 3.606a12.695 12.695 0 0 1 5.68-4.974l1.086-.483-4.251-1.632a.75.75 0 0 1-.432-.97Z" clip-rule="evenodd"/>
+</svg>                                <a href="https://onepiecedb.io/format/op15" class="flex-1">OP15 Meta</a>
+                            </li>
+                                                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                                <svg class="w-4 h-4 mr-2 flex-shrink-0 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.484a11.2 11.2 0 0 0-5.45 5.173.75.75 0 0 1-1.199.19L9 12.312l-6.22 6.22a.75.75 0 0 1-1.06-1.061l6.75-6.75a.75.75 0 0 1 1.06 0l3.606 3.606a12.695 12.695 0 0 1 5.68-4.974l1.086-.483-4.251-1.632a.75.75 0 0 1-.432-.97Z" clip-rule="evenodd"/>
+</svg>                                <a href="https://onepiecedb.io/format/st29" class="flex-1">ST29 Meta</a>
+                            </li>
+                                                                <li class="pt-2 pb-1 pl-4">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">By Color</span>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 0 0-.584.859 6.753 6.753 0 0 0 6.138 5.6 6.73 6.73 0 0 0 2.743 1.346A6.707 6.707 0 0 1 9.279 15H8.54c-1.036 0-1.875.84-1.875 1.875V19.5h-.75a2.25 2.25 0 0 0-2.25 2.25c0 .414.336.75.75.75h15a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-2.25-2.25h-.75v-2.625c0-1.036-.84-1.875-1.875-1.875h-.739a6.706 6.706 0 0 1-1.112-3.173 6.73 6.73 0 0 0 2.743-1.347 6.753 6.753 0 0 0 6.139-5.6.75.75 0 0 0-.585-.858 47.077 47.077 0 0 0-3.07-.543V2.62a.75.75 0 0 0-.658-.744 49.22 49.22 0 0 0-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 0 0-.657.744Zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 0 1 3.16 5.337a45.6 45.6 0 0 1 2.006-.343v.256Zm13.5 0v-.256c.674.1 1.343.214 2.006.343a5.265 5.265 0 0 1-2.863 3.207 6.72 6.72 0 0 0 .857-3.294Z" clip-rule="evenodd"/>
+</svg>                        <a href="https://onepiecedb.io/category/tournament-decks?tournament" class="flex-1">Tournament Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <span class="w-4 h-4 mr-2 flex-shrink-0 rounded-full bg-gray-800 border border-gray-600"></span>
+                        <a href="https://onepiecedb.io/category/color/black" class="flex-1">Black Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <span class="w-4 h-4 mr-2 flex-shrink-0 rounded-full bg-blue-500"></span>
+                        <a href="https://onepiecedb.io/category/color/blue" class="flex-1">Blue Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <span class="w-4 h-4 mr-2 flex-shrink-0 rounded-full bg-green-500"></span>
+                        <a href="https://onepiecedb.io/category/color/green" class="flex-1">Green Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <span class="w-4 h-4 mr-2 flex-shrink-0 rounded-full bg-purple-500"></span>
+                        <a href="https://onepiecedb.io/category/color/purple" class="flex-1">Purple Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <span class="w-4 h-4 mr-2 flex-shrink-0 rounded-full bg-red-500"></span>
+                        <a href="https://onepiecedb.io/category/color/red" class="flex-1">Red Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <span class="w-4 h-4 mr-2 flex-shrink-0 rounded-full bg-yellow-400"></span>
+                        <a href="https://onepiecedb.io/category/color/yellow" class="flex-1">Yellow Decks</a>
+                    </li>
+                    <li class="pt-2 pb-1 pl-4">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Special</span>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.484a11.2 11.2 0 0 0-5.45 5.173.75.75 0 0 1-1.199.19L9 12.312l-6.22 6.22a.75.75 0 0 1-1.06-1.061l6.75-6.75a.75.75 0 0 1 1.06 0l3.606 3.606a12.695 12.695 0 0 1 5.68-4.974l1.086-.483-4.251-1.632a.75.75 0 0 1-.432-.97Z" clip-rule="evenodd"/>
+</svg>                        <a href="https://onepiecedb.io/category/meta-decks" class="flex-1">Meta Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                        </svg>
+                        <a href="https://onepiecedb.io/category/budget-decks" class="flex-1">Budget Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-orange-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.431l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.484a11.2 11.2 0 0 0-5.45 5.173.75.75 0 0 1-1.199.19L9 12.312l-6.22 6.22a.75.75 0 0 1-1.06-1.061l6.75-6.75a.75.75 0 0 1 1.06 0l3.606 3.606a12.695 12.695 0 0 1 5.68-4.974l1.086-.483-4.251-1.632a.75.75 0 0 1-.432-.97Z" clip-rule="evenodd"/>
+</svg>                        <a href="https://onepiecedb.io/deck-search?sort=Deck%20Views&amp;from=2026-05-16" class="flex-1">Trending Decks</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd"/>
+</svg>                        <a href="https://onepiecedb.io/category/cards" class="flex-1">Card Categories</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <button type="button" class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" aria-controls="dropdown-tournaments" data-collapse-toggle="dropdown-tournaments">
+                    <svg
+                        class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                        aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 640 640"
+                        fill="currentColor"
+                    >
+                        <path d="M208.3 64L432.3 64C458.8 64 480.4 85.8 479.4 112.2C479.2 117.5 479 122.8 478.7 128L528.3 128C554.4 128 577.4 149.6 575.4 177.8C567.9 281.5 514.9 338.5 457.4 368.3C441.6 376.5 425.5 382.6 410.2 387.1C390 415.7 369 430.8 352.3 438.9L352.3 512L416.3 512C434 512 448.3 526.3 448.3 544C448.3 561.7 434 576 416.3 576L224.3 576C206.6 576 192.3 561.7 192.3 544C192.3 526.3 206.6 512 224.3 512L288.3 512L288.3 438.9C272.3 431.2 252.4 416.9 233 390.6C214.6 385.8 194.6 378.5 175.1 367.5C121 337.2 72.2 280.1 65.2 177.6C63.3 149.5 86.2 127.9 112.3 127.9L161.9 127.9C161.6 122.7 161.4 117.5 161.2 112.1C160.2 85.6 181.8 63.9 208.3 63.9zM165.5 176L113.1 176C119.3 260.7 158.2 303.1 198.3 325.6C183.9 288.3 172 239.6 165.5 176zM444 320.8C484.5 297 521.1 254.7 527.3 176L475 176C468.8 236.9 457.6 284.2 444 320.8z"/>
+                    </svg>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Tournaments</span>
+                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <ul id="dropdown-tournaments" class="hidden py-2 space-y-2">
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/tier-list" class="flex-1">Tier List</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/tournaments" class="flex-1">Tournament Results</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/tournaments/submit" class="flex-1">Tournament Submission</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="https://onepiecedb.io/article-search" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg aria-hidden="true" class="w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path></svg>
+                    <span class="ml-3">Articles</span>
+                </a>
+            </li>
+            <li>
+                <button type="button" class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" aria-controls="dropdown-sales" data-collapse-toggle="dropdown-sales">
+                    <svg class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                         aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 640 512"
+                    fill="currentColor">
+                    <path class="fa-secondary" opacity=".4" d="M306.4 472.3c45.7-26.4 91.3-52.7 137-79.1c3.3-1.9 6.4-4.1 9.1-6.6c6-5.4 10.7-11.9 13.9-19s4.8-14.9 4.8-22.7c0-9.4-2.4-19-7.5-27.8c-46.3-80.2-92.7-160.5-139-240.7C334.4 68.7 346.7 64 360 64l224 0c30.9 0 56 25.1 56 56l0 336c0 30.9-25.1 56-56 56l-224 0c-25.3 0-46.6-16.7-53.6-39.7z"/>
+                        <path class="fa-primary" d="M7.5 194.9c-15.4-26.6-6.3-60.7 20.4-76.1L220.7 7.5c26.6-15.4 60.7-6.3 76.1 20.4l167 289.3c15.4 26.6 6.2 60.7-20.4 76.1L250.5 504.5c-26.6 15.4-60.7 6.2-76.1-20.4L7.5 194.9z"/></svg>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Cards</span>
+                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <ul id="dropdown-sales" class="hidden py-2 space-y-2">
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/card-database" class="flex-1">Card Database</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/packs" class="flex-1">Card Sets</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-purple-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.875 1.875 0 0 1 1.5 9.375v-.75c0-1.036.84-1.875 1.875-1.875h3.193A3.375 3.375 0 0 1 12 2.753a3.375 3.375 0 0 1 5.432 3.997h3.943c1.035 0 1.875.84 1.875 1.875v.75c0 1.036-.84 1.875-1.875 1.875H12.75v-4.5h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75h-1.5V4.875C11.25 3.839 10.41 3 9.375 3ZM11.25 12.75H3v6.75a2.25 2.25 0 0 0 2.25 2.25h6v-9ZM12.75 12.75v9h6.75a2.25 2.25 0 0 0 2.25-2.25v-6.75h-9Z"/>
+</svg>                        <a href="https://onepiecedb.io/pack-sim" class="flex-1">Pack Simulator</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M11.644 1.59a.75.75 0 0 1 .712 0l9.75 5.25a.75.75 0 0 1 0 1.32l-9.75 5.25a.75.75 0 0 1-.712 0l-9.75-5.25a.75.75 0 0 1 0-1.32l9.75-5.25Z"/>
+  <path d="m3.265 10.602 7.668 4.129a2.25 2.25 0 0 0 2.134 0l7.668-4.13 1.37.739a.75.75 0 0 1 0 1.32l-9.75 5.25a.75.75 0 0 1-.71 0l-9.75-5.25a.75.75 0 0 1 0-1.32l1.37-.738Z"/>
+  <path d="m10.933 19.231-7.668-4.13-1.37.739a.75.75 0 0 0 0 1.32l9.75 5.25c.221.12.489.12.71 0l9.75-5.25a.75.75 0 0 0 0-1.32l-1.37-.738-7.668 4.13a2.25 2.25 0 0 1-2.134-.001Z"/>
+</svg>                        <a href="https://onepiecedb.io/collection" class="flex-1">My Collection</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        <a href="https://onepiecedb.io/top" class="flex-1">Top Cards</a>
+                    </li>
+                    <!--
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <svg class="w-4 h-4 mr-2 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                        </svg>
+                        <a href="https://onepiecedb.io/prices" class="flex-1">Price Analysis</a>
+                    </li>
+                    -->
+                </ul>
+            </li>
+            <li>
+                <button type="button" class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" aria-controls="dropdown-authentication" data-collapse-toggle="dropdown-authentication">
+                    <svg class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                         aria-hidden="true"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 576 512"
+                         fill="currentColor">
+                        <path d="M78.6 5C69.1-2.4 55.6-1.5 47 7L7 47c-8.5 8.5-9.4 22-2.1 31.6l80 104c4.5 5.9 11.6 9.4 19 9.4l54.1 0 109 109c-14.7 29-10 65.4 14.3 89.6l112 112c12.5 12.5 32.8 12.5 45.3 0l64-64c12.5-12.5 12.5-32.8 0-45.3l-112-112c-24.2-24.2-60.6-29-89.6-14.3l-109-109 0-54.1c0-7.5-3.5-14.5-9.4-19L78.6 5zM19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9L233.7 374.3c-7.8-20.9-9-43.6-3.6-65.1l-61.7-61.7L19.9 396.1zM512 144c0-10.5-1.1-20.7-3.2-30.5c-2.4-11.2-16.1-14.1-24.2-6l-63.9 63.9c-3 3-7.1 4.7-11.3 4.7L352 176c-8.8 0-16-7.2-16-16l0-57.4c0-4.2 1.7-8.3 4.7-11.3l63.9-63.9c8.1-8.1 5.2-21.8-6-24.2C388.7 1.1 378.5 0 368 0C288.5 0 224 64.5 224 144l0 .8 85.3 85.3c36-9.1 75.8 .5 104 28.7L429 274.5c49-23 83-72.8 83-130.5zM56 432a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"/></svg>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Tools</span>
+                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <ul id="dropdown-authentication" class="hidden py-2 space-y-2">
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/deckbuilder" class="flex-1">Deck Builder</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="https://onepiecedb.io/packages" class="flex-1">Deck Packages</a>
+                    </li>
+                                    </ul>
+            </li>
+                    </ul>
+        <ul class="pt-5 my-5 space-y-2 border-t border-gray-200 dark:border-gray-700">
+                        <li>
+                <button type="button" class="flex items-center p-2 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700" aria-controls="dropdown-forums" data-collapse-toggle="dropdown-forums">
+                    <svg class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:text-gray-400 dark:group-hover:text-white"
+                         aria-hidden="true"
+                         xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 576 512"
+                         fill="currentColor">
+                        <path d="M64 0C28.7 0 0 28.7 0 64L0 256c0 35.3 28.7 64 64 64l32 0 0 48c0 6.1 3.4 11.6 8.8 14.3s11.9 2.1 16.8-1.5L202.7 320 352 320c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64L64 0zM352 352l-96 0 0 32c0 35.3 28.7 64 64 64l117.3 0 81.1 60.8c4.8 3.6 11.3 4.2 16.8 1.5s8.8-8.2 8.8-14.3l0-48 32 0c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64l-128 0 0 128c0 53-43 96-96 96z"/></svg>
+                    <span class="flex-1 ml-3 text-left whitespace-nowrap">Forums</span>
+                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                </button>
+                <ul id="dropdown-forums" class="hidden py-2 space-y-2">
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="/forums/general" class="flex-1">General Discussion</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="/forums/bug-report" class="flex-1">Bug Report</a>
+                    </li>
+                    <li class="flex items-center p-2 pl-4 w-full text-base font-normal text-gray-900 rounded-lg transition duration-75 group hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700">
+                        <a href="/forums/feature-request" class="flex-1">Feature Request</a>
+                    </li>
+                </ul>
+            </li>
+            <li>
+                <a href="https://onepiecedb.io/about" class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
+                    <svg aria-hidden="true" class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.562C15.802 8.249 16 9.1 16 10zm-5.165 3.913l1.58 1.58A5.98 5.98 0 0110 16a5.976 5.976 0 01-2.516-.552l1.562-1.562a4.006 4.006 0 001.789.027zm-4.677-2.796a4.002 4.002 0 01-.041-2.08l-.08.08-1.53-1.533A5.98 5.98 0 004 10c0 .954.223 1.856.619 2.657l1.54-1.54zm1.088-6.45A5.974 5.974 0 0110 4c.954 0 1.856.223 2.657.619l-1.54 1.54a4.002 4.002 0 00-2.346.033L7.246 4.668zM12 10a2 2 0 11-4 0 2 2 0 014 0z" clip-rule="evenodd"></path></svg>
+                    <span class="ml-3">About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://onepiecedb.io/help"
+                   class="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg transition duration-75 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white group">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 640 640"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        class="flex-shrink-0 w-6 h-6 text-gray-400 transition duration-75
+               dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white">
+                        <path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM288 224C288 206.3 302.3 192 320 192C337.7 192 352 206.3 352 224C352 241.7 337.7 256 320 256C302.3 256 288 241.7 288 224zM280 288L328 288C341.3 288 352 298.7 352 312L352 400L360 400C373.3 400 384 410.7 384 424C384 437.3 373.3 448 360 448L280 448C266.7 448 256 437.3 256 424C256 410.7 266.7 400 280 400L304 400L304 336L280 336C266.7 336 256 325.3 256 312C256 298.7 266.7 288 280 288z"/>
+                    </svg>
+
+                    <span class="ml-3">Help</span>
+                </a>
+            </li>
+        </ul>
+                    <div class="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700 pl-1">
+                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                    <svg class="w-4 h-4 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03ZM21.75 7.93l-9 5.25v9l8.628-5.032a.75.75 0 0 0 .372-.648V7.93ZM11.25 22.18v-9l-9-5.25v8.57a.75.75 0 0 0 .372.648l8.628 5.033Z"/>
+</svg>                    <span>1.0.0</span>
+                </div>
+            </div>
+            </div>
+</aside>
+        <div class="min-h-svh bg-gray-100 dark:bg-gray-900">
+            <header class="antialiased">
+    <nav class="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
+        <div class="flex flex-wrap justify-between items-center">
+            <div class="flex justify-start items-center">
+                <button data-drawer-target="sidebar-info" data-drawer-toggle="sidebar-info" id="toggleSidebar" aria-expanded="true" aria-controls="sidebar-info" class="hidden p-2 mr-3 text-gray-600 rounded cursor-pointer lg:inline hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700">
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 16 12"> <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h14M1 6h14M1 11h7"/> </svg>
+                </button>
+                <button data-drawer-target="sidebar-info" data-drawer-toggle="sidebar-info" aria-expanded="true" aria-controls="sidebar-info" class="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer lg:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <svg class="w-[18px] h-[18px]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/></svg>
+                    <span class="sr-only">Toggle sidebar</span>
+                </button>
+                <div class="flex items-center mr-4">
+                    <div class="relative">
+    <!-- Dropdown trigger button -->
+    <button
+        type="button"
+        data-dropdown-toggle="site-switcher-dropdown"
+        class="flex items-center p-1.5 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600 transition-colors"
+        aria-label="Switch site"
+    >
+        <img
+            src="https://onepiecedb.io/logo.svg"
+            alt="OnePieceDB"
+            class="h-6 w-6 sm:h-7 sm:w-7 rounded object-contain"
+            loading="lazy"
+        />
+        <svg class="w-3 h-3 ml-1 text-gray-400 dark:text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+        </svg>
+    </button>
+
+    <!-- Dropdown menu -->
+    <div
+        class="hidden overflow-hidden z-50 my-4 w-56 text-base list-none bg-white rounded-lg divide-y divide-gray-100 shadow-lg dark:bg-gray-700 dark:divide-gray-600"
+        id="site-switcher-dropdown"
+    >
+        <div class="block py-2 px-4 text-sm font-medium text-center text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            Switch Site
+        </div>
+        <ul class="py-2 text-gray-500 dark:text-gray-400">
+                            <li>
+                    <a
+                        href="https://onepiecedb.io"
+                        class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors bg-gray-50 dark:bg-gray-800"
+                    >
+                        <img
+                            src="https://onepiecedb.io/logo.svg"
+                            alt="OnePieceDB"
+                            class="w-5 h-5 mr-3 rounded object-contain flex-shrink-0"
+                            loading="lazy"
+                        />
+                        <span class="flex-1 font-semibold text-gray-900 dark:text-white">
+                            OnePieceDB
+                        </span>
+                                                    <svg class="w-4 h-4 text-green-600 dark:text-green-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                                            </a>
+                </li>
+                            <li>
+                    <a
+                        href="https://pokemoncard.io"
+                        class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors "
+                    >
+                        <img
+                            src="https://onepiecedb.io/assets/images/sites/pokemoncard_logo.png"
+                            alt="PokemonCard"
+                            class="w-5 h-5 mr-3 rounded object-contain flex-shrink-0"
+                            loading="lazy"
+                        />
+                        <span class="flex-1 ">
+                            PokemonCard
+                        </span>
+                                            </a>
+                </li>
+                            <li>
+                    <a
+                        href="https://digimoncard.io"
+                        class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors "
+                    >
+                        <img
+                            src="https://onepiecedb.io/assets/images/sites/digimoncard_logo.png"
+                            alt="DigimonCard"
+                            class="w-5 h-5 mr-3 rounded object-contain flex-shrink-0"
+                            loading="lazy"
+                        />
+                        <span class="flex-1 ">
+                            DigimonCard
+                        </span>
+                                            </a>
+                </li>
+                            <li>
+                    <a
+                        href="https://hearthcard.io"
+                        class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors "
+                    >
+                        <img
+                            src="https://onepiecedb.io/assets/images/sites/hearthcard_logo.png"
+                            alt="HearthCard"
+                            class="w-5 h-5 mr-3 rounded object-contain flex-shrink-0"
+                            loading="lazy"
+                        />
+                        <span class="flex-1 ">
+                            HearthCard
+                        </span>
+                                            </a>
+                </li>
+                            <li>
+                    <a
+                        href="https://sorcerycard.io"
+                        class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors "
+                    >
+                        <img
+                            src="https://onepiecedb.io/assets/images/sites/sorcerycard_logo.png"
+                            alt="SorceryCard"
+                            class="w-5 h-5 mr-3 rounded object-contain flex-shrink-0"
+                            loading="lazy"
+                        />
+                        <span class="flex-1 ">
+                            SorceryCard
+                        </span>
+                                            </a>
+                </li>
+                            <li>
+                    <a
+                        href="https://gametips.gg"
+                        class="flex items-center px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white transition-colors "
+                    >
+                        <img
+                            src="https://onepiecedb.io/assets/images/sites/gametips_logo.png"
+                            alt="GameTips"
+                            class="w-5 h-5 mr-3 rounded object-contain flex-shrink-0"
+                            loading="lazy"
+                        />
+                        <span class="flex-1 ">
+                            GameTips
+                        </span>
+                                            </a>
+                </li>
+                    </ul>
+    </div>
+</div>
+
+                    <a href="/" class="ml-2 sm:ml-3">
+                        <span class="self-center hidden xs:block sm:text-xl md:text-2xl font-semibold whitespace-nowrap dark:text-white">OnePieceDB</span>
+                    </a>
+                </div>
+                <div class="hidden lg:block lg:pl-2">
+                    <label for="nav-search" class="sr-only">Search</label>
+
+                    <div class="relative mt-1 lg:w-96">
+                        <!-- Left Icon (absolute) -->
+                        <div
+                            class="flex absolute inset-y-0 left-0 items-center pl-3
+                   pointer-events-none z-10"
+                        >
+                            <svg
+                                class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 20 20"
+                            >
+                                <path
+                                    stroke="currentColor"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                                />
+                            </svg>
+                        </div>
+
+                        <!-- Autocomplete Component -->
+                        <div
+    x-data="autocomplete('/api/cards/search', 'name', 'name', '')"
+    class="relative"
+>
+    
+    <input
+        id="nav-search"
+        name="card_search"
+        x-model="query"
+        @input="fetchResults"
+        @keydown.arrow-down.prevent="highlightNext()"
+        @keydown.arrow-up.prevent="highlightPrev()"
+
+        @keydown.enter.prevent="
+    if (highlightIndex >= 0 && results[highlightIndex]) {
+        selectResult(results[highlightIndex].name);
+        window.location = '/card/' + results[highlightIndex].pretty_url;
+    } else if (query.length > 0) {
+        window.location = '/card-database?n=' + encodeURIComponent(query);
+    }
+"
+
+    @click.away="closeResults()"
+    class="
+                block w-full p-2.5 pl-9 sm:text-sm
+                bg-gray-50 border border-gray-300 text-gray-900
+                rounded-lg focus:ring-primary-500 focus:border-primary-500
+                dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+                dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500
+            "
+    placeholder="Search by name or ID (e.g. OP13-001)..."
+    autocomplete="off"
+    />
+
+    <!-- Autocomplete Dropdown -->
+    <ul
+        x-show="open"
+        x-cloak
+        class="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg
+               dark:bg-gray-700 dark:border-gray-600 mt-1 max-h-48 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+    >
+        <template x-for="(result, index) in results" :key="index">
+            <li
+                @mouseover="highlightIndex = index"
+                :class="{
+                    'bg-blue-500 text-white': highlightIndex === index,
+                    'text-gray-900 dark:text-white': highlightIndex !== index
+                }"
+                class="px-4 py-2 cursor-pointer hover:bg-blue-500 hover:text-white
+                       dark:hover:bg-blue-600 flex items-center"
+
+            @click="
+            selectResult(result.name);
+            if (result.pretty_url) {
+                window.location = '/card/' + result.pretty_url;
+            } else if (result.slug) {
+                window.location = '/card/' + result.slug;
+            }
+            "
+            >
+            <div class="relative w-10 h-10 overflow-hidden rounded-full mr-2">
+                <img
+                    x-show="result.crop_image_url"
+                    :src="result.crop_image_url"
+                    alt="Card"
+                    width="48" height="64"
+                class="absolute inset-0 w-full h-full object-cover object-center [image-rendering:crisp-edges] md:[image-rendering:auto]"
+                loading="lazy" decoding="async"
+                />
+            </div>
+                <div class="flex items-center gap-1 min-w-0">
+                    <span class="truncate min-w-0" x-text="result.name"></span>
+                    <span
+                        x-show="result.id"
+                        class="text-xs text-gray-500 whitespace-nowrap shrink-0"
+                        x-text="`(${result.id})`"
+                    ></span>
+                </div>
+            </li>
+        </template>
+    </ul>
+</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center lg:order-2">
+                <!-- Apps -->
+                <button type="button" data-dropdown-toggle="apps-dropdown" class="mr-1 p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700 focus:ring-1 focus:ring-gray-300 dark:focus:ring-gray-600">
+                    <span class="sr-only">View notifications</span>
+                    <!-- Icon -->
+                    <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 18">
+                        <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z"/>
+                    </svg>
+                </button>
+                <!-- Dropdown menu -->
+                <div class="hidden overflow-hidden z-50 my-4 max-w-sm text-base list-none bg-white rounded divide-y divide-gray-100 shadow-lg dark:bg-gray-700 dark:divide-gray-600" id="apps-dropdown">
+                    <div class="block py-2 px-4 text-base font-medium text-center text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        Quick-Links
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 p-4">
+                        <a href="https://onepiecedb.io/card-database" class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group">
+                            <svg class="mx-auto mb-2 w-5 h-5 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400"
+                                 aria-hidden="true"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 640 512"
+                                 fill="currentColor">
+                                <path class="fa-secondary" opacity=".4" d="M306.4 472.3c45.7-26.4 91.3-52.7 137-79.1c3.3-1.9 6.4-4.1 9.1-6.6c6-5.4 10.7-11.9 13.9-19s4.8-14.9 4.8-22.7c0-9.4-2.4-19-7.5-27.8c-46.3-80.2-92.7-160.5-139-240.7C334.4 68.7 346.7 64 360 64l224 0c30.9 0 56 25.1 56 56l0 336c0 30.9-25.1 56-56 56l-224 0c-25.3 0-46.6-16.7-53.6-39.7z"/>
+                                <path class="fa-primary" d="M7.5 194.9c-15.4-26.6-6.3-60.7 20.4-76.1L220.7 7.5c26.6-15.4 60.7-6.3 76.1 20.4l167 289.3c15.4 26.6 6.2 60.7-20.4 76.1L250.5 504.5c-26.6 15.4-60.7 6.2-76.1-20.4L7.5 194.9z"/>
+                            </svg>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Cards</div>
+                        </a>
+                        <a href="https://onepiecedb.io/deck-search" class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group">
+                            <svg class="mx-auto mb-2 w-5 h-5 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400"
+                                 aria-hidden="true"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 576 512"
+                                 fill="currentColor">
+                                <path d="M264.5 5.2c14.9-6.9 32.1-6.9 47 0l218.6 101c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 149.8C37.4 145.8 32 137.3 32 128s5.4-17.9 13.9-21.8L264.5 5.2zM476.9 209.6l53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 277.8C37.4 273.8 32 265.3 32 256s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0l152-70.2zm-152 198.2l152-70.2 53.2 24.6c8.5 3.9 13.9 12.4 13.9 21.8s-5.4 17.9-13.9 21.8l-218.6 101c-14.9 6.9-32.1 6.9-47 0L45.9 405.8C37.4 401.8 32 393.3 32 384s5.4-17.9 13.9-21.8l53.2-24.6 152 70.2c23.4 10.8 50.4 10.8 73.8 0z"/>
+                            </svg>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Decks</div>
+                        </a>
+                        <a href="https://onepiecedb.io/deckbuilder" class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group">
+                            <svg class="mx-auto mb-2 w-5 h-5 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor">
+                                <path d="M78.6 5C69.1-2.4 55.6-1.5 47 7L7 47c-8.5 8.5-9.4 22-2.1 31.6l80 104c4.5 5.9 11.6 9.4 19 9.4l54.1 0 109 109c-14.7 29-10 65.4 14.3 89.6l112 112c12.5 12.5 32.8 12.5 45.3 0l64-64c12.5-12.5 12.5-32.8 0-45.3l-112-112c-24.2-24.2-60.6-29-89.6-14.3l-109-109 0-54.1c0-7.5-3.5-14.5-9.4-19L78.6 5zM19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9L233.7 374.3c-7.8-20.9-9-43.6-3.6-65.1l-61.7-61.7L19.9 396.1zM512 144c0-10.5-1.1-20.7-3.2-30.5c-2.4-11.2-16.1-14.1-24.2-6l-63.9 63.9c-3 3-7.1 4.7-11.3 4.7L352 176c-8.8 0-16-7.2-16-16l0-57.4c0-4.2 1.7-8.3 4.7-11.3l63.9-63.9c8.1-8.1 5.2-21.8-6-24.2C388.7 1.1 378.5 0 368 0C288.5 0 224 64.5 224 144l0 .8 85.3 85.3c36-9.1 75.8 .5 104 28.7L429 274.5c49-23 83-72.8 83-130.5zM56 432a24 24 0 1 1 48 0 24 24 0 1 1 -48 0z"/>
+                            </svg>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Builder</div>
+                        </a>
+                        <a href="https://onepiecedb.io/packs" class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group">
+                            <svg aria-hidden="true" class="mx-auto mb-2 w-5 h-5 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M5.566 4.657A4.505 4.505 0 0 1 6.75 4.5h10.5c.41 0 .806.055 1.183.157A3 3 0 0 0 15.75 3h-7.5a3 3 0 0 0-2.684 1.657ZM2.25 12a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3v-6ZM5.25 7.5c-.41 0-.806.055-1.184.157A3 3 0 0 1 6.75 6h10.5a3 3 0 0 1 2.683 1.657A4.505 4.505 0 0 0 18.75 7.5H5.25Z"/>
+</svg>                            <div class="text-sm font-medium text-gray-900 dark:text-white">Card Sets</div>
+                        </a>
+                        <a href="https://onepiecedb.io/users" class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group">
+                            <svg class="mx-auto mb-2 w-5 h-5 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 19"><path d="M14.5 0A3.987 3.987 0 0 0 11 2.1a4.977 4.977 0 0 1 3.9 5.858A3.989 3.989 0 0 0 14.5 0ZM9 13h2a4 4 0 0 1 4 4v2H5v-2a4 4 0 0 1 4-4Z"/><path d="M5 19h10v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2ZM5 7a5.008 5.008 0 0 1 4-4.9 3.988 3.988 0 1 0-3.9 5.859A4.974 4.974 0 0 1 5 7Zm5 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm5-1h-.424a5.016 5.016 0 0 1-1.942 2.232A6.007 6.007 0 0 1 17 17h2a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5ZM5.424 9H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h2a6.007 6.007 0 0 1 4.366-5.768A5.016 5.016 0 0 1 5.424 9Z"/></svg>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Users</div>
+                        </a>
+                        <a href="https://onepiecedb.io/forums" class="block p-4 text-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 group">
+                            <svg class="mx-auto mb-2 w-5 h-5 text-gray-400 group-hover:text-gray-500 dark:text-gray-400 dark:group-hover:text-gray-400"
+                                 aria-hidden="true"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 viewBox="0 0 576 512"
+                                 fill="currentColor">
+                                <path d="M64 0C28.7 0 0 28.7 0 64L0 256c0 35.3 28.7 64 64 64l32 0 0 48c0 6.1 3.4 11.6 8.8 14.3s11.9 2.1 16.8-1.5L202.7 320 352 320c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64L64 0zM352 352l-96 0 0 32c0 35.3 28.7 64 64 64l117.3 0 81.1 60.8c4.8 3.6 11.3 4.2 16.8 1.5s8.8-8.2 8.8-14.3l0-48 32 0c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64l-128 0 0 128c0 53-43 96-96 96z"/></svg>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">Forums</div>
+                        </a>
+                                            </div>
+                </div>
+                <button id="toggleSidebarMobileSearch" type="button" class="mr-1 p-2 text-gray-500 rounded-lg lg:hidden hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" data-modal-toggle="mobileSearch-modal" data-modal-target="mobileSearch-modal">
+                    <span class="sr-only">Search Cards</span>
+                    <!-- Search icon -->
+                    <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                    </svg>
+                </button>
+                                    <a href="https://onepiecedb.io/login"
+                       class="lg:hidden sm:inline-flex items-center justify-center text-white bg-green-700 hover:bg-green-800 focus:ring-1 focus:ring-green-300 font-medium rounded-lg text-xs px-2 py-1.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
+                        <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </a>
+                                                <a href="https://onepiecedb.io/deckbuilder"
+                   class="hidden lg:inline-flex items-center justify-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-1 focus:ring-blue-300 font-medium rounded-lg text-xs px-3 py-1.5 mr-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                    <svg aria-hidden="true" class="mr-1 -ml-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    New Deck
+                </a>
+                                    <a href="https://onepiecedb.io/login"
+                       class="hidden lg:inline-flex items-center justify-center text-white bg-green-700 hover:bg-green-800 focus:ring-1 focus:ring-green-300 font-medium rounded-lg text-xs px-3 py-1.5 mr-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800">
+                        <svg aria-hidden="true" class="mr-1 -ml-1 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1zm7.707 3.293a1 1 0 010 1.414L9.414 9H17a1 1 0 110 2H9.414l1.293 1.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        Log In
+                    </a>
+                            </div>
+        </div>
+    </nav>
+</header>
+
+            <!-- Page Content -->
+            <main id="main-content0">
+                <div class="py-6">
+                    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8" id="main-content1">
+
+                        
+                        <div id="header-banner-desktop" class="ad-container"></div>
+    <script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'header-banner-desktop';
+            const renderVisibleOnly = false;
+            
+            function initHeaderBanner() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    window.adManager.createHeaderBannerDesktop(adId, renderVisibleOnly).catch(function(error) {
+                        console.warn('Failed to create header banner ad:', error);
+                    });
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initHeaderBanner, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initHeaderBanner);
+            } else {
+                initHeaderBanner();
+            }
+        })();
+    </script>
+
+                        <div id="banner-block-unit-mobile" class="ad-container"></div>
+    <script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'banner-block-unit-mobile';
+            const renderVisibleOnly = false;
+            
+            function initBannerMobile() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    window.adManager.createBannerMobile(adId, renderVisibleOnly).catch(function(error) {
+                        console.warn('Failed to create mobile banner ad:', error);
+                    });
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initBannerMobile, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initBannerMobile);
+            } else {
+                initBannerMobile();
+            }
+        })();
+    </script>
+
+                        <script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'siderail-ads-right';
+            const renderVisibleOnly = false;
+            
+            function initSideRail() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    // Only load on desktop (min-width: 1024px)
+                    if (window.innerWidth >= 1024) {
+                        window.adManager.createSideRail(adId, renderVisibleOnly).catch(function(error) {
+                            console.warn('Failed to create side rail ad:', error);
+                        });
+                    }
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initSideRail, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initSideRail);
+            } else {
+                initSideRail();
+            }
+            
+            // Also handle window resize to add/remove rail on desktop/mobile switch
+            let resizeTimeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    // If we're on desktop now and rail wasn't created, try again
+                    if (window.innerWidth >= 1024 && window.adManager && window.adsEnabled) {
+                        // Check if this specific rail ad already exists
+                        if (!document.getElementById(adId)) {
+                            window.adManager.createSideRail(adId, renderVisibleOnly).catch(function(error) {
+                                console.warn('Failed to create side rail ad on resize:', error);
+                            });
+                        }
+                    }
+                }, 250);
+            });
+        })();
+    </script>
+
+                        <script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'onepiecedb-video-2';
+            const renderVisibleOnly = false;
+
+            function initVideoAd() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    window.adManager.createVideoAd(adId, renderVisibleOnly).catch(function(error) {
+                        console.warn('Failed to create video ad:', error);
+                    });
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initVideoAd, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initVideoAd);
+            } else {
+                initVideoAd();
+            }
+        })();
+    </script>
+
+
+                        
+                                                    <div class="mb-3 sm:inline-block">
+                                    <nav class="scrollbar-thin dark:scrollbar-thumb-gray-900 dark:scrollbar-track-gray-700 flex overflow-x-auto px-3 py-2 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 max-w-full lg:max-w-3xl mx-auto" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse whitespace-nowrap">
+                                    <li class="inline-flex items-center">
+                    <a href="/" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                        <svg class="w-4 h-4 me-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z"/>
+  <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z"/>
+</svg>                        <span class="truncate">Home</span>
+                    </a>
+                </li>
+                                                <li class="flex items-center">
+                    <svg class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400 md:w-4 md:h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+                    </svg>
+                                            <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400 truncate">
+                            Pack Simulator
+                        </span>
+                                    </li>
+                        </ol>
+</nav>
+                            </div>
+                        
+                        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm rounded-lg" id="main-content2">
+                            <div class="p-6 text-gray-900 dark:text-gray-100">
+                                <div class="container mx-auto">
+
+    <!-- Start Area -->
+    <div id="start-area">
+        <h1 class="text-4xl font-bold text-center mb-4 text-gray-900 dark:text-gray-100">One Piece TCG Pack Simulator</h1>
+
+        <div class="text-center mb-6" id="info-area">
+            <p class="text-gray-700 dark:text-gray-300 mb-2">A virtual One Piece TCG Pack Opener. Open a pack and see what you pull!</p>
+            <p class="text-gray-700 dark:text-gray-300">
+                Set pack quantity then click <span class="inline-flex items-center"><svg class="w-4 h-4 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+</svg></span> "Draft" or
+                <span class="inline-flex items-center"><svg class="w-4 h-4 mx-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z"/>
+</svg></span> "Auto Open" buttons to begin.
+            </p>
+        </div>
+
+        <div class="text-center mb-8" id="pack-selection-area">
+            <!-- Pack Stats Alert -->
+            <div class="bg-blue-100 dark:bg-blue-900 border border-blue-400 dark:border-blue-600 text-blue-700 dark:text-blue-200 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="inline-flex items-center">
+                    <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M9.375 3a1.875 1.875 0 0 0 0 3.75h1.875v4.5H3.375A1.875 1.875 0 0 1 1.5 9.375v-.75c0-1.036.84-1.875 1.875-1.875h3.193A3.375 3.375 0 0 1 12 2.753a3.375 3.375 0 0 1 5.432 3.997h3.943c1.035 0 1.875.84 1.875 1.875v.75c0 1.036-.84 1.875-1.875 1.875H12.75v-4.5h1.875a1.875 1.875 0 1 0-1.875-1.875V6.75h-1.5V4.875C11.25 3.839 10.41 3 9.375 3ZM11.25 12.75H3v6.75a2.25 2.25 0 0 0 2.25 2.25h6v-9ZM12.75 12.75v9h6.75a2.25 2.25 0 0 0 2.25-2.25v-6.75h-9Z"/>
+</svg>                    61,745 Packs Opened!
+                </span>
+            </div>
+
+            <!-- Pack Filters -->
+            <div id="pack-filters" class="max-w-5xl mx-auto mb-6">
+                <!-- Search Pack Name Input -->
+                <div class="mb-3">
+                    <label for="packname_input" class="block mb-1 text-xs font-semibold tracking-wide uppercase text-gray-600 dark:text-gray-400">Search</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd"/>
+</svg>                        </div>
+                        <input type="search"
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="Search Pack Name"
+                               id="packname_input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                    <div>
+                        <label for="open_mode" class="block mb-1 text-xs font-semibold tracking-wide uppercase text-gray-600 dark:text-gray-400">Open As</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                id="open_mode">
+                            <option value="pack" selected>Packs</option>
+                            <option value="box">Booster Boxes</option>
+                        </select>
+                    </div>
+
+                    <!-- Pack Type Filter -->
+                    <div>
+                        <label for="packtype_filter" class="block mb-1 text-xs font-semibold tracking-wide uppercase text-gray-600 dark:text-gray-400">Type</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                id="packtype_filter">
+                            <option value="official" selected>Official Packs</option>
+                            <option value="custom">Custom Packs</option>
+                            <option value="all">All Packs</option>
+                        </select>
+                    </div>
+
+                    <!-- Region Select -->
+                    <div>
+                        <label for="packtype_select" class="block mb-1 text-xs font-semibold tracking-wide uppercase text-gray-600 dark:text-gray-400">Region</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                id="packtype_select">
+                            <option value="all" selected>All</option>
+                        </select>
+                    </div>
+
+                    <!-- Sort Select -->
+                    <div>
+                        <label for="packtype_sort" class="block mb-1 text-xs font-semibold tracking-wide uppercase text-gray-600 dark:text-gray-400">Sort</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                id="packtype_sort">
+                            <option value="release date" selected>Newest</option>
+                            <option value="release date (oldest)">Oldest</option>
+                            <option value="name">Name</option>
+                            <option value="name (z-a)">Name (z-a)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pack Selection Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-7xl mx-auto" id="pack-selection">
+                <!-- Packs will be loaded here -->
+            </div>
+        </div>
+    </div>
+    <!-- End Start Area -->
+
+    <!-- Draft Area -->
+    <div class="hidden" id="play-area">
+        <h4 class="text-2xl font-bold text-center mb-4 text-gray-900 dark:text-gray-100" id="pack-name"></h4>
+
+        <div class="flex flex-wrap justify-center gap-2 mb-4 hidden md:flex" id="control-area">
+            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition" id="flip">
+                <svg class="w-5 h-5 inline-block mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z" clip-rule="evenodd"/>
+</svg> Flip Cards
+            </button>
+            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition" id="nextPack">
+                <svg class="w-5 h-5 inline-block mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+</svg> Open Next Pack (<span id="remaining-pack-count"></span>)
+            </button>
+            <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition" id="choosePacks" data-toggle="modal" data-target="#simModal">
+                <svg class="w-5 h-5 inline-block mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
+</svg> Return to Pack Select
+            </button>
+        </div>
+
+        <div class="md:hidden mb-3 px-1">
+            <div class="flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 px-3 py-2 text-sm shadow-sm">
+                <span id="mobile-pack-progress" class="font-semibold text-gray-800 dark:text-gray-100">Tap any card to flip</span>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-800 shadow rounded p-4 text-center min-h-[400px]" id="pack-sim-area">
+            <!-- Opened cards will appear here -->
+        </div>
+    </div>
+    <!-- End Draft Area -->
+
+    <!-- Finish Area -->
+    <div class="hidden" id="finish-area">
+        <div class="mx-auto mb-5 max-w-3xl text-center">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-600 dark:text-blue-400">Pack sim complete</p>
+            <h4 class="mt-2 text-3xl font-black text-gray-950 dark:text-white">Your OnePieceDB Draft</h4>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mb-5 md:flex md:flex-wrap md:justify-center">
+                        <a href="#"
+               target="_blank"
+               rel="noopener sponsored"
+               class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-green-700 hover:shadow-md md:w-auto md:px-4"
+               id="tcgplayerMassEntryBtn"
+               style="display: none;">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                </svg>
+                <span class="md:hidden">Buy Cards</span>
+                <span class="hidden md:inline">Buy Cards on TCGplayer</span>
+            </a>
+            <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-purple-700 hover:shadow-md md:w-auto md:px-4" id="exportDraftBtn">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+                </svg>
+                Export Deck
+            </button>
+            <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-700 hover:shadow-md md:w-auto md:px-4" id="shareDraftPacksBtn">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clip-rule="evenodd"/>
+</svg>                <span class="md:hidden">Share</span>
+                <span class="hidden md:inline">Share Packs</span>
+            </button>
+            <button type="button" class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md md:w-auto md:px-4" id="returnToPackSelect">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
+</svg>                <span class="md:hidden">Return</span>
+                <span class="hidden md:inline">Return to Pack Select</span>
+            </button>
+        </div>
+    </div>
+    <!-- End Finish Area -->
+
+    <!-- Pulled Cards Progress -->
+    <div class="mt-6 hidden" id="pulled-cards">
+        <div x-data="{ open: false }" class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="border-b border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-700 dark:bg-gray-900/40">
+                <button @click="open = !open" class="flex w-full flex-col gap-3 text-left sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h5 class="flex items-center text-xl font-bold text-gray-900 dark:text-gray-100">
+                            <svg class="mr-2 h-5 w-5 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/>
+</svg>                            My Draft
+                        </h5>
+                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400" id="draft-summary-text">Cards you pulled will appear here.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-inset ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700">
+                            <span id="draft-total-count">0</span>&nbsp;cards
+                        </span>
+                        <span class="inline-flex items-center rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 ring-1 ring-inset ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700">
+                            <span id="draft-unique-count">0</span>&nbsp;unique
+                        </span>
+                        <svg x-bind:class="open ? 'rotate-180' : ''" class="h-5 w-5 flex-shrink-0 text-gray-500 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z" clip-rule="evenodd"/>
+</svg>                    </div>
+                </button>
+            </div>
+
+            <div x-show="open" x-collapse class="px-3 py-4 sm:px-4">
+                <div class="mb-5 flex justify-center">
+                    <button id="toggleViewModeButton" class="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition hover:bg-blue-700 md:px-4 md:py-2 md:text-base">
+                        Toggle View Mode <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0 0 21 18v-1.94l-2.69-2.689a1.5 1.5 0 0 0-2.12 0l-.88.879.97.97a.75.75 0 1 1-1.06 1.06l-5.16-5.159a1.5 1.5 0 0 0-2.12 0L3 16.061Zm10.125-7.81a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Z" clip-rule="evenodd"/>
+</svg>                    </button>
+                </div>
+                <div id="pulled-cards-container"></div>
+            </div>
+        </div>
+    </div>
+    <!-- End Pulled Cards Progress -->
+
+    
+    <div id="header-banner-desktop-2" class="ad-container"></div>
+    <script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'header-banner-desktop-2';
+            const renderVisibleOnly = false;
+            
+            function initHeaderBanner() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    window.adManager.createHeaderBannerDesktop(adId, renderVisibleOnly).catch(function(error) {
+                        console.warn('Failed to create header banner ad:', error);
+                    });
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initHeaderBanner, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initHeaderBanner);
+            } else {
+                initHeaderBanner();
+            }
+        })();
+    </script>
+
+    <div id="banner-block-unit-mobile-2" class="ad-container"></div>
+    <script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'banner-block-unit-mobile-2';
+            const renderVisibleOnly = false;
+            
+            function initBannerMobile() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    window.adManager.createBannerMobile(adId, renderVisibleOnly).catch(function(error) {
+                        console.warn('Failed to create mobile banner ad:', error);
+                    });
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initBannerMobile, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initBannerMobile);
+            } else {
+                initBannerMobile();
+            }
+        })();
+    </script>
+
+
+    <!-- Pull Notice -->
+    <div class="text-gray-500 dark:text-gray-400 text-sm text-center mt-6" id="pull-notice">
+        <span class="block">Virtual Pack pull odds may not be 1:1 reflective of real-life pull odds. We strive to match it closely but there can be no guarantee.</span>
+    </div>
+
+</div>
+
+<!-- Floating Div to Show Currently Selected Packs -->
+<div class="fixed bottom-5 right-0 bg-white dark:bg-gray-800 border-l-4 border-blue-600 rounded-l-xl shadow-2xl transition-all duration-300 ease-out w-56 z-50" id="selected-packs-area">
+    <div class="p-4">
+        <div class="flex items-center justify-between mb-3 cursor-pointer" id="float-menu-item">
+            <h6 class="font-bold text-sm text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M5.625 3.75a2.625 2.625 0 1 0 0 5.25h12.75a2.625 2.625 0 0 0 0-5.25H5.625ZM3.75 11.25a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75ZM3 15.75a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75ZM3.75 18.75a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z"/>
+</svg>                Selected Packs
+            </h6>
+            <svg id="float-menu-toggle" title="Expand Toggle" class="w-5 h-5 text-gray-500 transition-transform duration-200" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon"><title>Expand Toggle</title>
+  <path fill-rule="evenodd" d="M16.28 11.47a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 0 1-1.06-1.06L14.69 12 7.72 5.03a.75.75 0 0 1 1.06-1.06l7.5 7.5Z" clip-rule="evenodd"/>
+</svg>        </div>
+
+        <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-2 mb-3 overflow-y-auto scrollbar-thin dark:scrollbar-thumb-gray-900 dark:scrollbar-track-gray-700" id="selected-packs" style="height: 140px; min-height: 140px;">
+            <!-- Selected packs will appear here -->
+        </div>
+
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-3 space-y-2">
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-1 text-xs font-semibold shadow-sm" id="openPacks" title="Draft Mode - Click cards to flip">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+</svg>                    Draft
+                </button>
+                <button type="button" class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-1 text-xs font-semibold shadow-sm" id="autoOpen" title="Auto Open - Open all at once">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z"/>
+</svg>                    Auto
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" class="px-2 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center justify-center gap-1 text-xs" id="random_pack" title="Add Random Pack">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z" clip-rule="evenodd"/>
+</svg>                    Random
+                </button>
+                <button type="button" class="px-2 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center justify-center gap-1 text-xs" id="sort_packs" title="Toggle Sort (A-Z / Date)">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M6.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.25 4.81V16.5a.75.75 0 0 1-1.5 0V4.81L3.53 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5Zm9.53 4.28a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V7.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                    Sort
+                </button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" class="px-2 py-1.5 bg-purple-200 dark:bg-purple-700 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-300 dark:hover:bg-purple-600 transition flex items-center justify-center gap-1 text-xs" id="export_packs" title="Export Pack Config">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                    Export
+                </button>
+                <button type="button" class="px-2 py-1.5 bg-purple-200 dark:bg-purple-700 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-300 dark:hover:bg-purple-600 transition flex items-center justify-center gap-1 text-xs" id="import_packs" title="Import Pack Config">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.47 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06l-3.22-3.22V16.5a.75.75 0 0 1-1.5 0V4.81L8.03 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5ZM3 15.75a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                    Import
+                </button>
+            </div>
+            <button type="button" class="w-full px-2 py-1.5 bg-amber-200 dark:bg-amber-700 text-amber-700 dark:text-amber-200 rounded-lg hover:bg-amber-300 dark:hover:bg-amber-600 transition flex items-center justify-center gap-1 text-xs opacity-50 cursor-not-allowed" id="share_packs" title="Share Selected Packs" disabled>
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clip-rule="evenodd"/>
+</svg>                Share
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Sticky Selected Packs Actions -->
+<div class="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95" id="mobile-start-controls">
+    <div class="mx-auto max-w-lg rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl p-3">
+        <div class="mb-2 flex items-center justify-between text-sm">
+            <span class="font-semibold text-gray-900 dark:text-gray-100">Selected Packs</span>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-full bg-blue-600 text-white text-sm font-bold" id="mobile-selected-pack-count">0</span>
+                <button type="button" class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200" id="mobile-expand-selection" aria-expanded="false" aria-controls="mobile-selected-pack-details" title="Expand selected packs">
+                    <svg id="mobile-expand-selection-icon" class="w-5 h-5 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd"/>
+</svg>                </button>
+            </div>
+        </div>
+        <div id="mobile-selected-pack-details" class="hidden">
+            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-2 mb-3 overflow-y-auto scrollbar-thin dark:scrollbar-thumb-gray-900 dark:scrollbar-track-gray-700" id="selected-packs-mobile" style="height: 120px; min-height: 120px;">
+                <!-- Mobile selected packs list -->
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-2">
+                <button type="button" class="h-10 px-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center justify-center gap-1 text-sm font-medium" id="mobile-random-pack">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z" clip-rule="evenodd"/>
+</svg>                    Random
+                </button>
+                <button type="button" class="h-10 px-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center justify-center gap-1 text-sm font-medium" id="mobile-sort-packs">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M6.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.25 4.81V16.5a.75.75 0 0 1-1.5 0V4.81L3.53 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5Zm9.53 4.28a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V7.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                    Sort
+                </button>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-2 mb-2">
+                <button type="button" class="h-10 px-2 bg-purple-200 dark:bg-purple-700 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-300 dark:hover:bg-purple-600 transition flex items-center justify-center gap-1 text-sm font-medium" id="mobile-export-packs">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                    Export
+                </button>
+                <button type="button" class="h-10 px-2 bg-purple-200 dark:bg-purple-700 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-300 dark:hover:bg-purple-600 transition flex items-center justify-center gap-1 text-sm font-medium" id="mobile-import-packs">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.47 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06l-3.22-3.22V16.5a.75.75 0 0 1-1.5 0V4.81L8.03 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5ZM3 15.75a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                    Import
+                </button>
+                <button type="button" class="h-10 px-2 bg-amber-200 dark:bg-amber-700 text-amber-700 dark:text-amber-200 rounded-lg hover:bg-amber-300 dark:hover:bg-amber-600 transition flex items-center justify-center gap-1 text-sm font-medium opacity-50 cursor-not-allowed" id="mobile-share-packs" disabled>
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clip-rule="evenodd"/>
+</svg>                    Share
+                </button>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+            <button type="button" class="h-12 px-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2 font-semibold" id="mobile-open-packs">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+</svg>                Draft
+            </button>
+            <button type="button" class="h-12 px-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition flex items-center justify-center gap-2 font-semibold" id="mobile-auto-open">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path d="M5.055 7.06C3.805 6.347 2.25 7.25 2.25 8.69v8.122c0 1.44 1.555 2.343 2.805 1.628L12 14.471v2.34c0 1.44 1.555 2.343 2.805 1.628l7.108-4.061c1.26-.72 1.26-2.536 0-3.256l-7.108-4.061C13.555 6.346 12 7.249 12 8.689v2.34L5.055 7.061Z"/>
+</svg>                Auto
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Sticky Pack Controls -->
+<div class="md:hidden fixed bottom-0 inset-x-0 z-40 px-3 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 hidden" id="mobile-play-controls">
+    <div class="mx-auto max-w-lg rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-xl p-3">
+        <div class="grid grid-cols-2 gap-2">
+            <button type="button" class="h-12 px-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2 font-semibold" id="mobile-flip">
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67a.75.75 0 1 0 1.45.388Zm15.408 3.352a.75.75 0 0 0-.919.53 7.5 7.5 0 0 1-12.548 3.364l-1.902-1.903h3.183a.75.75 0 0 0 0-1.5H2.984a.75.75 0 0 0-.75.75v4.992a.75.75 0 0 0 1.5 0v-3.18l1.9 1.9a9 9 0 0 0 15.059-4.035.75.75 0 0 0-.53-.918Z" clip-rule="evenodd"/>
+</svg>                Flip Cards
+            </button>
+            <button type="button" class="h-12 px-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2 font-semibold opacity-50 cursor-not-allowed" id="mobile-next-pack" disabled>
+                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clip-rule="evenodd"/>
+</svg>                Open Next
+            </button>
+        </div>
+        <button type="button" class="mt-2 h-11 w-full px-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition flex items-center justify-center gap-2 font-medium" id="mobile-choose-packs">
+            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd"/>
+</svg>            Return to Pack Select
+        </button>
+    </div>
+</div>
+
+<!-- Confirm Modal -->
+<div x-data="{ open: false }" x-show="open" x-on:open-modal.window="open = true" x-on:close-modal.window="open = false"
+     class="fixed inset-0 z-50 overflow-y-auto hidden" id="simModal" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Return to Pack Selection</h3>
+                <p class="text-gray-700 dark:text-gray-300 mb-2">Are you sure you wish to return to the pack select screen?</p>
+                <p class="text-gray-700 dark:text-gray-300">Doing so will end your current draft.</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2">
+                <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition" id="returnToPackSelectConfirm">
+                    Return to Pack Select
+                </button>
+                <button type="button" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition" data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto Open Progress Modal -->
+<div class="fixed inset-0 z-50 overflow-y-auto hidden" id="autoOpenModal" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" aria-hidden="true"></div>
+
+        <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div class="px-4 pt-5 pb-4 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Opening Packs</h3>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-6 mb-4 overflow-hidden">
+                    <div class="bg-blue-600 h-6 rounded-full flex items-center justify-center text-white text-xs font-semibold transition-all duration-300"
+                         id="auto-open-progress"
+                         style="width: 0%;">
+                        <span id="auto-open-progress-text">0%</span>
+                    </div>
+                </div>
+
+                <!-- Status Text -->
+                <div id="auto-open-text" class="text-center text-gray-700 dark:text-gray-300 text-sm"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Export Deck Modal -->
+<div id="export-draft-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Export Draft</h3>
+            <button onclick="document.getElementById('export-draft-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-4">
+            <div class="flex gap-4 mb-3">
+                <label class="inline-flex items-center">
+                    <input type="radio" id="export-draft-format-text" name="export-draft-format" value="text" checked onchange="updateDraftExportFormat()" class="form-radio h-4 w-4 text-blue-600">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Text</span>
+                </label>
+                <label class="inline-flex items-center">
+                    <input type="radio" id="export-draft-format-tts" name="export-draft-format" value="tts" onchange="updateDraftExportFormat()" class="form-radio h-4 w-4 text-blue-600">
+                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">TTS (Tabletop Simulator)</span>
+                </label>
+            </div>
+            <textarea id="export-draft-textarea" readonly class="w-full h-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm resize-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('export-draft-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                Close
+            </button>
+            <button onclick="copyDraftExportText()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+                Copy to Clipboard
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Import Pack Config Modal -->
+<div id="import-packs-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Import Pack Config</h3>
+            <button onclick="document.getElementById('import-packs-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="mb-4">
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Paste your pack config below. Format: Pack Name|Quantity (one per line)</p>
+            <textarea id="import-packs-textarea" class="w-full h-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono text-sm resize-none" placeholder="Scarlet &amp; Violet|1&#10;Obsidian Flames|1&#10;Paldea Evolved|5"></textarea>
+            <div id="import-packs-error" class="mt-2 text-sm text-red-600 dark:text-red-400 hidden"></div>
+            <div id="import-packs-success" class="mt-2 text-sm text-green-600 dark:text-green-400 hidden"></div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('import-packs-modal').classList.add('hidden')" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors">
+                Cancel
+            </button>
+            <button onclick="importPackConfig()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center">
+                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-slot="icon">
+  <path fill-rule="evenodd" d="M11.47 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06l-3.22-3.22V16.5a.75.75 0 0 1-1.5 0V4.81L8.03 8.03a.75.75 0 0 1-1.06-1.06l4.5-4.5ZM3 15.75a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/>
+</svg>                Import
+            </button>
+        </div>
+    </div>
+</div>
+                            </div>
+                        </div>
+                        <div id="mobileSearch-modal" data-modal-placement="top-center" tabindex="-1" class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative p-4 w-full max-w-2xl max-h-full">
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <!-- Modal header -->
+            <div class="flex items-center justify-between p-3 border-b rounded-t dark:border-gray-600">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    OnePieceDB Card Search
+                </h3>
+                <button type="button" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="mobileSearch-modal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+            </div>
+            <!-- Modal body -->
+            <div class="p-4 md:p-5 space-y-4">
+                <div
+    x-data="autocomplete('/api/cards/search', 'name', 'name', '')"
+    class="relative"
+>
+    
+    <input
+        id="nav-search"
+        name="card_search"
+        x-model="query"
+        @input="fetchResults"
+        @keydown.arrow-down.prevent="highlightNext()"
+        @keydown.arrow-up.prevent="highlightPrev()"
+
+        @keydown.enter.prevent="
+    if (highlightIndex >= 0 && results[highlightIndex]) {
+        selectResult(results[highlightIndex].name);
+        window.location = '/card/' + results[highlightIndex].pretty_url;
+    } else if (query.length > 0) {
+        window.location = '/card-database?n=' + encodeURIComponent(query);
+    }
+"
+
+    @click.away="closeResults()"
+    class="
+                block w-full p-2.5 pl-2 sm:text-sm
+                bg-gray-50 border border-gray-300 text-gray-900
+                rounded-lg focus:ring-primary-500 focus:border-primary-500
+                dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400
+                dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500
+                 text-sm"
+    placeholder="Search"
+    autocomplete="off"
+    />
+
+    <!-- Autocomplete Dropdown -->
+    <ul
+        x-show="open"
+        x-cloak
+        class="absolute z-20 bg-white border border-gray-200 rounded-md shadow-lg
+               dark:bg-gray-700 dark:border-gray-600 mt-1 max-h-48 overflow-y-auto w-full scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+    >
+        <template x-for="(result, index) in results" :key="index">
+            <li
+                @mouseover="highlightIndex = index"
+                :class="{
+                    'bg-blue-500 text-white': highlightIndex === index,
+                    'text-gray-900 dark:text-white': highlightIndex !== index
+                }"
+                class="px-4 py-2 cursor-pointer hover:bg-blue-500 hover:text-white
+                       dark:hover:bg-blue-600 flex items-center"
+
+            @click="
+            selectResult(result.name);
+            if (result.pretty_url) {
+                window.location = '/card/' + result.pretty_url;
+            } else if (result.slug) {
+                window.location = '/card/' + result.slug;
+            }
+            "
+            >
+            <div class="relative w-10 h-10 overflow-hidden rounded-full mr-2">
+                <img
+                    x-show="result.crop_image_url"
+                    :src="result.crop_image_url"
+                    alt="Card"
+                    width="48" height="64"
+                class="absolute inset-0 w-full h-full object-cover object-center [image-rendering:crisp-edges] md:[image-rendering:auto]"
+                loading="lazy" decoding="async"
+                />
+            </div>
+                <div class="flex items-center gap-1 min-w-0">
+                    <span class="truncate min-w-0" x-text="result.name"></span>
+                    <span
+                        x-show="result.id"
+                        class="text-xs text-gray-500 whitespace-nowrap shrink-0"
+                        x-text="`(${result.id})`"
+                    ></span>
+                </div>
+            </li>
+        </template>
+    </ul>
+</div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    <link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/pack-sim-iK7x1YZw.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/toast-BqUYiFuB.js" /><link rel="modulepreload" as="script" href="https://onepiecedb.io/build/assets/collection-helper-CkxscDJy.js" /><script type="module" src="https://onepiecedb.io/build/assets/pack-sim-iK7x1YZw.js" data-navigate-track="reload"></script>    <script src="/livewire/livewire.min.js?id=40a765a4"   data-csrf="UML2g6PETCVRkXNWhIIxkHp2rHxeGCsfPLvUzrMc" data-update-uri="/livewire/update" data-navigate-once="true"></script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a03b4b6e78c0da1c',t:'MTc4MDExODQ3OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"04cae7b8696f4787982d53d19b9d3832","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+<footer class="bg-white shadow dark:bg-gray-800 antialiased" id="website-footer">
+    <div class="max-w-7xl mx-auto px-4 py-8 pb-2">
+
+        <div class="flex space-x-4 mb-2">
+            <a href="https://partner.tcgplayer.com/c/4913399/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com" target="_blank" rel="noopener noreferrer" class="inline-block">
+                <img src="https://onepiecedb.io/assets/images/vendor/tcgplayer_white.png" alt="TCGplayer" class="h-10" loading="lazy">
+            </a>
+            <a href="https://www.cardmarket.com/en/Digimon?utm_source=digimoncard&utm_medium=banner&utm_campaign=banner_logo" target="_blank" rel="noopener noreferrer" class="inline-block">
+                <img src="https://onepiecedb.io/assets/images/vendor/cardmarket_white.png" alt="Cardmarket" class="h-14" loading="lazy">
+            </a>
+        </div>
+
+        <!-- Main Footer Content -->
+        <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-6">
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Deck Tools</h3>
+                <ul class="space-y-2">
+                    <li><a href="https://onepiecedb.io/card-database" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Card Database</a></li>
+                    <li><a href="https://onepiecedb.io/deck-search" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Deck Search</a></li>
+                    <li><a href="https://onepiecedb.io/deckbuilder" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Deck Builder</a></li>
+                    <li><a href="https://onepiecedb.io/top" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Top Cards</a></li>
+                </ul>
+            </div>
+
+            <!-- About -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Misc</h3>
+                <ul class="space-y-2">
+                    <li><a href="https://onepiecedb.io/about" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">About Us</a></li>
+                    <li><a href="https://onepiecedb.io/cube" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Cube Draft</a></li>
+                    <li><a href="https://onepiecedb.io/forums" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Forums</a></li>
+                    <li><a href="https://onepiecedb.io/pack-sim" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Pack Simulator</a></li>
+                </ul>
+            </div>
+
+            <!-- Our Other Sites -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Our Other Sites</h3>
+                <div class="space-y-2">
+                    <a href="https://onepiecedb.io" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/logo.svg" alt="OnePieceDB" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        OnePieceDB
+                    </a>
+                    <a href="https://pokemoncard.io" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/assets/images/sites/pokemoncard_logo.png" alt="PokemonCard" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        PokemonCard
+                    </a>
+                    <a href="https://digimoncard.io" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/assets/images/sites/digimoncard_logo.png" alt="DigimonCard" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        DigimonCard
+                    </a>
+                    <a href="https://hearthcard.io" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/assets/images/sites/hearthcard_logo.png" alt="HearthCard" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        HearthCard
+                    </a>
+                    <a href="https://sorcerycard.io" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/assets/images/sites/sorcerycard_logo.png" alt="SorceryCard" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        SorceryCard
+                    </a>
+                    <a href="https://gametips.gg" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/assets/images/sites/gametips_logo.png" alt="GameTips" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        GameTips
+                    </a>
+                    <a href="https://ygoprodeck.com" target="_blank" rel="noopener noreferrer" class="flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <img src="https://onepiecedb.io/assets/images/sites/ygoprodeck_logo.png" alt="YGOProDeck" class="w-4 h-4 mr-2 rounded" loading="lazy">
+                        YGOPRODeck
+                    </a>
+                </div>
+            </div>
+
+            <!-- Social -->
+            <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2">Follow Us</h3>
+                <div class="flex space-x-4">
+                                            <a href="https://bsky.app/profile/onepiecedb.io" target="_blank" data-tooltip-target="tooltip-bluesky" class="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer dark:text-gray-400 dark:hover:text-white hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-600">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 512 512" aria-hidden="true">
+                                <path d="M111.8 62.2C170.2 105.9 233 194.7 256 242.4c23-47.6 85.8-136.4 144.2-180.2c42.1-31.6 110.3-56 110.3 21.8c0 15.5-8.9 130.5-14.1 149.2C478.2 298 412 314.6 353.1 304.5c102.9 17.5 129.1 75.5 72.5 133.5c-107.4 110.2-154.3-27.6-166.3-62.9l0 0c-1.7-4.9-2.6-7.8-3.3-7.8s-1.6 3-3.3 7.8l0 0c-12 35.3-59 173.1-166.3 62.9c-56.5-58-30.4-116 72.5-133.5C100 314.6 33.8 298 15.7 233.1C10.4 214.4 1.5 99.4 1.5 83.9c0-77.8 68.2-53.4 110.3-21.8z"/>
+                            </svg>
+                            <span class="sr-only">Bluesky</span>
+                        </a>
+                        <div id="tooltip-bluesky" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700">
+                            Follow us on Bluesky
+                            <div class="tooltip-arrow" data-popper-arrow></div>
+                        </div>
+                                                                                    <a href="https://discord.gg/FnuSkQxBHv" target="_blank" data-tooltip-target="tooltip-discord" class="inline-flex justify-center p-2 text-gray-500 rounded-lg cursor-pointer dark:text-gray-400 dark:hover:text-white hover:text-gray-900 hover:bg-gray-100 dark:hover:bg-gray-600">
+                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M18.942 5.556a16.299 16.299 0 0 0-4.126-1.297c-.178.321-.385.754-.529 1.097a15.175 15.175 0 0 0-4.573 0 11.583 11.583 0 0 0-.535-1.097 16.274 16.274 0 0 0-4.129 1.3c-2.611 3.946-3.319 7.794-2.965 11.587a16.494 16.494 0 0 0 5.061 2.593 12.65 12.65 0 0 0 1.084-1.785 10.689 10.689 0 0 1-1.707-.831c.143-.106.283-.217.418-.331 3.291 1.539 6.866 1.539 10.118 0 .137.114.277.225.418.331-.541.326-1.114.606-1.71.832a12.52 12.52 0 0 0 1.084 1.785 16.46 16.46 0 0 0 5.064-2.595c.415-4.396-.709-8.209-2.973-11.589zM8.678 14.813c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c.001 1.123-.793 2.045-1.798 2.045zm6.644 0c-.988 0-1.798-.922-1.798-2.045s.793-2.047 1.798-2.047 1.815.922 1.798 2.047c0 1.123-.793 2.045-1.798 2.045z"/>
+                            </svg>
+                            <span class="sr-only">Discord</span>
+                        </a>
+                        <div id="tooltip-discord" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-white bg-gray-900 rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip dark:bg-gray-700">
+                            Join us on Discord
+                            <div class="tooltip-arrow" data-popper-arrow></div>
+                        </div>
+                                    </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="border-t border-gray-200 dark:border-gray-700 pt-3">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        &copy; 2026-2026 <a href="/" class="hover:underline">OnePieceDB</a>. All rights reserved.
+                    </p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                        OnePieceDB is not produced by, endorsed by, supported by, or affiliated with Bandai or Eiichiro Oda.
+                    </p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Part of the <a href="https://cardcoderstudios.com" target="_blank" rel="noopener noreferrer" class="hover:underline">Card Coder Studios</a> collective.
+                    </p>
+
+                    <div id="ncmp-consent-link"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+        (function() {
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            const adId = 'anchor-ad';
+            const renderVisibleOnly = false;
+            
+            function initAnchorAd() {
+                attempts++;
+                if (window.adManager && window.adsEnabled) {
+                    window.adManager.createAnchorAd(adId, renderVisibleOnly).catch(function(error) {
+                        console.warn('Failed to create anchor ad:', error);
+                    });
+                } else if (attempts < maxAttempts) {
+                    setTimeout(initAnchorAd, 100);
+                } else {
+                    console.warn('AdManager not available after maximum attempts');
+                }
+            }
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initAnchorAd);
+            } else {
+                initAnchorAd();
+            }
+        })();
+    </script>
+
+</html>
+
+
