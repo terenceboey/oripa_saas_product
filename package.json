@@ -21,7 +21,8 @@
     "catalog:sync:pokemoncardio": "npm run catalog:sync:pokemoncardio -w @oripa/api",
     "catalog:import:pokemoncardio": "npm run catalog:import:pokemoncardio -w @oripa/api",
     "catalog:enrich:set-images": "npm run catalog:enrich:set-images -w @oripa/api",
-    "catalog:backfill:canonical": "npm run catalog:backfill:canonical -w @oripa/api"
+    "catalog:backfill:canonical": "npm run catalog:backfill:canonical -w @oripa/api",
+    "catalog:sync:tcgdex": "npm run catalog:sync:tcgdex -w @oripa/api"
   },
   "devDependencies": {
     "@types/node": "^22.15.30",

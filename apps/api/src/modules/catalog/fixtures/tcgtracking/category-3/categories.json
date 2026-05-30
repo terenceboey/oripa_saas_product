@@ -1,0 +1,444 @@
+{
+  "categories": [
+    {
+      "id": 1,
+      "name": "Magic",
+      "display_name": "Magic: The Gathering",
+      "product_count": 114344,
+      "set_count": 444,
+      "api_url": "/tcgapi/v1/1/sets"
+    },
+    {
+      "id": 2,
+      "name": "YuGiOh",
+      "display_name": "YuGiOh",
+      "product_count": 46746,
+      "set_count": 612,
+      "api_url": "/tcgapi/v1/2/sets"
+    },
+    {
+      "id": 3,
+      "name": "Pokemon",
+      "display_name": "Pokemon",
+      "product_count": 32073,
+      "set_count": 214,
+      "api_url": "/tcgapi/v1/3/sets"
+    },
+    {
+      "id": 7,
+      "name": "Epic",
+      "display_name": "Epic",
+      "product_count": 322,
+      "set_count": 2,
+      "api_url": "/tcgapi/v1/7/sets"
+    },
+    {
+      "id": 13,
+      "name": "WoW",
+      "display_name": "WoW",
+      "product_count": 4735,
+      "set_count": 52,
+      "api_url": "/tcgapi/v1/13/sets"
+    },
+    {
+      "id": 16,
+      "name": "Cardfight Vanguard",
+      "display_name": "Cardfight Vanguard",
+      "product_count": 25567,
+      "set_count": 266,
+      "api_url": "/tcgapi/v1/16/sets"
+    },
+    {
+      "id": 17,
+      "name": "Force of Will",
+      "display_name": "Force of Will",
+      "product_count": 13726,
+      "set_count": 99,
+      "api_url": "/tcgapi/v1/17/sets"
+    },
+    {
+      "id": 18,
+      "name": "Dice Masters",
+      "display_name": "Dice Masters",
+      "product_count": 2723,
+      "set_count": 39,
+      "api_url": "/tcgapi/v1/18/sets"
+    },
+    {
+      "id": 19,
+      "name": "Future Card BuddyFight",
+      "display_name": "Future Card BuddyFight",
+      "product_count": 7763,
+      "set_count": 96,
+      "api_url": "/tcgapi/v1/19/sets"
+    },
+    {
+      "id": 20,
+      "name": "Weiss Schwarz",
+      "display_name": "Weiss Schwarz",
+      "product_count": 30563,
+      "set_count": 169,
+      "api_url": "/tcgapi/v1/20/sets"
+    },
+    {
+      "id": 23,
+      "name": "Dragon Ball Z TCG",
+      "display_name": "Dragon Ball Z TCG",
+      "product_count": 1820,
+      "set_count": 9,
+      "api_url": "/tcgapi/v1/23/sets"
+    },
+    {
+      "id": 24,
+      "name": "Final Fantasy TCG",
+      "display_name": "Final Fantasy TCG",
+      "product_count": 5476,
+      "set_count": 36,
+      "api_url": "/tcgapi/v1/24/sets"
+    },
+    {
+      "id": 25,
+      "name": "UniVersus",
+      "display_name": "UniVersus",
+      "product_count": 8121,
+      "set_count": 58,
+      "api_url": "/tcgapi/v1/25/sets"
+    },
+    {
+      "id": 26,
+      "name": "Star Wars Destiny",
+      "display_name": "Star Wars: Destiny",
+      "product_count": 2267,
+      "set_count": 13,
+      "api_url": "/tcgapi/v1/26/sets"
+    },
+    {
+      "id": 27,
+      "name": "Dragon Ball Super CCG",
+      "display_name": "Dragon Ball Super: Masters",
+      "product_count": 11695,
+      "set_count": 101,
+      "api_url": "/tcgapi/v1/27/sets"
+    },
+    {
+      "id": 28,
+      "name": "Dragoborne",
+      "display_name": "Dragoborne",
+      "product_count": 686,
+      "set_count": 11,
+      "api_url": "/tcgapi/v1/28/sets"
+    },
+    {
+      "id": 30,
+      "name": "MetaX TCG",
+      "display_name": "MetaX TCG",
+      "product_count": 766,
+      "set_count": 5,
+      "api_url": "/tcgapi/v1/30/sets"
+    },
+    {
+      "id": 36,
+      "name": "Zombie World Order TCG",
+      "display_name": "Zombie World Order TCG",
+      "product_count": 72,
+      "set_count": 2,
+      "api_url": "/tcgapi/v1/36/sets"
+    },
+    {
+      "id": 37,
+      "name": "The Caster Chronicles",
+      "display_name": "The Caster Chronicles",
+      "product_count": 854,
+      "set_count": 12,
+      "api_url": "/tcgapi/v1/37/sets"
+    },
+    {
+      "id": 38,
+      "name": "My Little Pony CCG",
+      "display_name": "My Little Pony CCG",
+      "product_count": 38,
+      "set_count": 11,
+      "api_url": "/tcgapi/v1/38/sets"
+    },
+    {
+      "id": 47,
+      "name": "Exodus TCG",
+      "display_name": "Exodus TCG",
+      "product_count": 709,
+      "set_count": 8,
+      "api_url": "/tcgapi/v1/47/sets"
+    },
+    {
+      "id": 48,
+      "name": "Lightseekers TCG",
+      "display_name": "Lightseekers TCG",
+      "product_count": 1955,
+      "set_count": 3,
+      "api_url": "/tcgapi/v1/48/sets"
+    },
+    {
+      "id": 53,
+      "name": "Munchkin CCG",
+      "display_name": "Munchkin CCG",
+      "product_count": 603,
+      "set_count": 5,
+      "api_url": "/tcgapi/v1/53/sets"
+    },
+    {
+      "id": 54,
+      "name": "Warhammer Age of Sigmar Champions TCG",
+      "display_name": "Warhammer Age of Sigmar Champions TCG",
+      "product_count": 1184,
+      "set_count": 5,
+      "api_url": "/tcgapi/v1/54/sets"
+    },
+    {
+      "id": 55,
+      "name": "Architect TCG",
+      "display_name": "Architect TCG",
+      "product_count": 0,
+      "set_count": 0,
+      "api_url": "/tcgapi/v1/55/sets"
+    },
+    {
+      "id": 57,
+      "name": "Transformers TCG",
+      "display_name": "Transformers TCG",
+      "product_count": 733,
+      "set_count": 8,
+      "api_url": "/tcgapi/v1/57/sets"
+    },
+    {
+      "id": 58,
+      "name": "Bakugan TCG",
+      "display_name": "Bakugan TCG",
+      "product_count": 1650,
+      "set_count": 9,
+      "api_url": "/tcgapi/v1/58/sets"
+    },
+    {
+      "id": 59,
+      "name": "KeyForge",
+      "display_name": "KeyForge",
+      "product_count": 25,
+      "set_count": 10,
+      "api_url": "/tcgapi/v1/59/sets"
+    },
+    {
+      "id": 60,
+      "name": "Chrono Clash System",
+      "display_name": "Chrono Clash System",
+      "product_count": 107,
+      "set_count": 5,
+      "api_url": "/tcgapi/v1/60/sets"
+    },
+    {
+      "id": 61,
+      "name": "Argent Saga TCG",
+      "display_name": "Argent Saga TCG",
+      "product_count": 1000,
+      "set_count": 10,
+      "api_url": "/tcgapi/v1/61/sets"
+    },
+    {
+      "id": 62,
+      "name": "Flesh & Blood TCG",
+      "display_name": "Flesh and Blood TCG",
+      "product_count": 9833,
+      "set_count": 96,
+      "api_url": "/tcgapi/v1/62/sets"
+    },
+    {
+      "id": 63,
+      "name": "Digimon Card Game",
+      "display_name": "Digimon Card Game",
+      "product_count": 9140,
+      "set_count": 99,
+      "api_url": "/tcgapi/v1/63/sets"
+    },
+    {
+      "id": 64,
+      "name": "Alternate Souls",
+      "display_name": "Alternate Souls",
+      "product_count": 14,
+      "set_count": 2,
+      "api_url": "/tcgapi/v1/64/sets"
+    },
+    {
+      "id": 65,
+      "name": "Gate Ruler",
+      "display_name": "Gate Ruler",
+      "product_count": 1184,
+      "set_count": 11,
+      "api_url": "/tcgapi/v1/65/sets"
+    },
+    {
+      "id": 66,
+      "name": "MetaZoo",
+      "display_name": "MetaZoo",
+      "product_count": 3456,
+      "set_count": 41,
+      "api_url": "/tcgapi/v1/66/sets"
+    },
+    {
+      "id": 67,
+      "name": "WIXOSS",
+      "display_name": "WIXOSS",
+      "product_count": 4670,
+      "set_count": 30,
+      "api_url": "/tcgapi/v1/67/sets"
+    },
+    {
+      "id": 68,
+      "name": "One Piece Card Game",
+      "display_name": "One Piece Card Game",
+      "product_count": 6822,
+      "set_count": 75,
+      "api_url": "/tcgapi/v1/68/sets"
+    },
+    {
+      "id": 71,
+      "name": "Lorcana TCG",
+      "display_name": "Disney Lorcana",
+      "product_count": 3209,
+      "set_count": 18,
+      "api_url": "/tcgapi/v1/71/sets"
+    },
+    {
+      "id": 72,
+      "name": "Battle Spirits Saga",
+      "display_name": "Battle Spirits Saga",
+      "product_count": 1947,
+      "set_count": 20,
+      "api_url": "/tcgapi/v1/72/sets"
+    },
+    {
+      "id": 73,
+      "name": "Shadowverse Evolve",
+      "display_name": "Shadowverse: Evolve",
+      "product_count": 6350,
+      "set_count": 48,
+      "api_url": "/tcgapi/v1/73/sets"
+    },
+    {
+      "id": 74,
+      "name": "Grand Archive",
+      "display_name": "Grand Archive TCG",
+      "product_count": 4721,
+      "set_count": 44,
+      "api_url": "/tcgapi/v1/74/sets"
+    },
+    {
+      "id": 75,
+      "name": "Akora",
+      "display_name": "Akora TCG",
+      "product_count": 2285,
+      "set_count": 8,
+      "api_url": "/tcgapi/v1/75/sets"
+    },
+    {
+      "id": 76,
+      "name": "Kryptik TCG",
+      "display_name": "Kryptik TCG",
+      "product_count": 3208,
+      "set_count": 5,
+      "api_url": "/tcgapi/v1/76/sets"
+    },
+    {
+      "id": 77,
+      "name": "Sorcery Contested Realm",
+      "display_name": "Sorcery: Contested Realm",
+      "product_count": 3172,
+      "set_count": 7,
+      "api_url": "/tcgapi/v1/77/sets"
+    },
+    {
+      "id": 78,
+      "name": "Alpha Clash",
+      "display_name": "Alpha Clash",
+      "product_count": 1935,
+      "set_count": 18,
+      "api_url": "/tcgapi/v1/78/sets"
+    },
+    {
+      "id": 79,
+      "name": "Star Wars Unlimited",
+      "display_name": "Star Wars: Unlimited",
+      "product_count": 6996,
+      "set_count": 26,
+      "api_url": "/tcgapi/v1/79/sets"
+    },
+    {
+      "id": 80,
+      "name": "Dragon Ball Super Fusion World",
+      "display_name": "Dragon Ball Super: Fusion World",
+      "product_count": 3799,
+      "set_count": 48,
+      "api_url": "/tcgapi/v1/80/sets"
+    },
+    {
+      "id": 81,
+      "name": "Union Arena",
+      "display_name": "Union Arena",
+      "product_count": 5877,
+      "set_count": 70,
+      "api_url": "/tcgapi/v1/81/sets"
+    },
+    {
+      "id": 83,
+      "name": "Elestrals",
+      "display_name": "Elestrals",
+      "product_count": 2678,
+      "set_count": 49,
+      "api_url": "/tcgapi/v1/83/sets"
+    },
+    {
+      "id": 84,
+      "name": "Neopets Battledome",
+      "display_name": "Neopets Battledome",
+      "product_count": 0,
+      "set_count": 0,
+      "api_url": "/tcgapi/v1/84/sets"
+    },
+    {
+      "id": 85,
+      "name": "Pokemon Japan",
+      "display_name": "Pokemon Japan",
+      "product_count": 29955,
+      "set_count": 443,
+      "api_url": "/tcgapi/v1/85/sets"
+    },
+    {
+      "id": 86,
+      "name": "Gundam Card Game",
+      "display_name": "Gundam Card Game",
+      "product_count": 1472,
+      "set_count": 20,
+      "api_url": "/tcgapi/v1/86/sets"
+    },
+    {
+      "id": 87,
+      "name": "hololive OFFICIAL CARD GAME",
+      "display_name": "hololive OFFICIAL CARD GAME",
+      "product_count": 1416,
+      "set_count": 18,
+      "api_url": "/tcgapi/v1/87/sets"
+    },
+    {
+      "id": 88,
+      "name": "Godzilla Card Game",
+      "display_name": "Godzilla Card Game",
+      "product_count": 927,
+      "set_count": 8,
+      "api_url": "/tcgapi/v1/88/sets"
+    },
+    {
+      "id": 89,
+      "name": "Riftbound League of Legends Trading Card Game",
+      "display_name": "Riftbound: League of Legends Trading Card Game",
+      "product_count": 1203,
+      "set_count": 8,
+      "api_url": "/tcgapi/v1/89/sets"
+    }
+  ]
+}

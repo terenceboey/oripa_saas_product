@@ -8,3 +8,7 @@ coverage
 *.log
 .DS_Store
 npm-debug.log*
+*.tsbuildinfo
+.hermes/
+temp__*
+temp_static_*

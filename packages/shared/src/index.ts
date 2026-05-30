@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 const imageUrlSchema = z
   .string()
   .max(2048)
@@ -21,6 +22,7 @@ export const createVendorSchema = z.object({
 export const updateVendorProfileSchema = z.object({
   name: z.string().min(2).max(80),
 });
+
 export const updateVendorLogoSchema = z.object({
   logoImageUrl: imageUrlSchema,
   faviconImageUrl: imageUrlSchema.optional(),
@@ -61,6 +63,20 @@ export const updateVendorPlanSchema = z.object({
   planCode: z.enum(["BASIC", "ELITE"]),
 });
 
+const catalogPrizeRefSchema = z.object({
+  catalogItemId: z.string().min(1).max(120).optional(),
+  catalogSource: z.string().min(1).max(80).optional(),
+  catalogSourceItemId: z.string().min(1).max(160).optional(),
+  language: z.string().min(2).max(12).optional(),
+});
+
+const packPrizeItemSchema = catalogPrizeRefSchema.extend({
+  label: z.string().min(1).max(60),
+  estimatedValue: z.number().int().nonnegative(),
+  stock: z.number().int().positive(),
+  imageUrl: imageUrlSchema.optional(),
+});
+
 export const createPackSchema = z.object({
   title: z.string().min(2).max(120),
   packBannerImageUrl: imageUrlSchema.optional(),
@@ -79,23 +95,12 @@ export const createPackSchema = z.object({
     z.object({
       name: z.string().min(1).max(40),
       percentage: z.number().positive().max(100).optional(),
-      items: z.array(
-        z.object({
-          label: z.string().min(1).max(60),
-          estimatedValue: z.number().int().nonnegative(),
-          stock: z.number().int().positive(),
-          imageUrl: imageUrlSchema.optional(),
-        })
-      ).min(1).max(5000),
+      items: z.array(packPrizeItemSchema).min(1).max(5000),
     })
   ).min(1).max(10).optional(),
   prizes: z.array(
-    z.object({
-      label: z.string().min(1).max(60),
-      estimatedValue: z.number().int().nonnegative(),
+    packPrizeItemSchema.extend({
       weight: z.number().int().positive(),
-      stock: z.number().int().positive(),
-      imageUrl: imageUrlSchema.optional(),
     })
   ).min(1).max(5000).optional(),
 });
@@ -117,6 +122,22 @@ export const createBannerSchema = z.object({
   isActive: z.boolean().optional().default(true),
 });
 
+export const campaignCreativeStyleSchema = z.enum([
+  "premium_foil",
+  "neon_arcade",
+  "dark_luxury",
+  "clean_showcase",
+]);
+
+export const createCampaignCreativeSchema = z.object({
+  stylePreset: campaignCreativeStyleSchema.optional().default("premium_foil"),
+  aspectRatio: z.enum(["16:9", "1:1", "4:5"]).optional().default("16:9"),
+});
+
+export const publishCampaignCreativeSchema = z.object({
+  assetId: z.string().cuid(),
+});
+
 export const updateVendorLimitsSchema = z.object({
   maxPackItems: z.number().int().min(1).max(5000).optional(),
   maxDrawQuantity: z.number().int().min(1).max(5000).optional(),
@@ -134,4 +155,6 @@ export type CreatePackInput = z.infer<typeof createPackSchema>;
 export type UpdatePackInput = z.infer<typeof updatePackSchema>;
 export type DrawInput = z.infer<typeof drawSchema>;
 export type CreateBannerInput = z.infer<typeof createBannerSchema>;
+export type CreateCampaignCreativeInput = z.infer<typeof createCampaignCreativeSchema>;
+export type PublishCampaignCreativeInput = z.infer<typeof publishCampaignCreativeSchema>;
 export type UpdateVendorLimitsInput = z.infer<typeof updateVendorLimitsSchema>;

@@ -1,0 +1,284 @@
+=== git status ===
+ M README.md
+ M apps/api/package.json
+ M apps/api/scripts/sync-tcgtracking.ts
+ M apps/api/src/app.ts
+ M apps/api/src/modules/catalog/router.ts
+ M apps/api/src/modules/draws/router.ts
+ M apps/api/src/modules/packs/router.ts
+ M apps/web/app/vendor/page.tsx
+ D docs/traceability-schema.md
+ M package.json
+ M packages/shared/src/index.ts
+ M prisma/schema.prisma
+?? .hermes/
+?? PROJECTS.md
+?? apps/api/scripts/catalog-report.ts
+?? apps/api/scripts/sync-carddb-fast.ts
+?? apps/api/scripts/sync-carddb-sources.ts
+?? apps/api/scripts/sync-tcgdex.ts
+?? apps/api/scripts/tcgtracking-report.ts
+?? apps/api/scripts/test-campaign-creative-mvp.ts
+?? apps/api/scripts/test-carddb-sources-normalizer.ts
+?? apps/api/scripts/test-catalog-facets-suggest.ts
+?? apps/api/scripts/test-catalog-search-dedupe.ts
+?? apps/api/scripts/test-catalog-search-query.ts
+?? apps/api/scripts/test-draw-pool-integrity.ts
+?? apps/api/scripts/test-pack-immutability-guard.ts
+?? apps/api/scripts/test-pack-inventory-allocation.ts
+?? apps/api/scripts/test-pack-prize-catalog-snapshots.ts
+?? apps/api/scripts/test-pack-publish-freeze.ts
+?? apps/api/scripts/test-pack-template-publish.ts
+?? apps/api/scripts/test-sync-tcgtracking-guardrails.ts
+?? apps/api/scripts/test-tcgdex-normalizer.ts
+?? apps/api/scripts/test-tcgtracking-normalizer.ts
+?? apps/api/src/modules/catalog/card-db-sources-normalizer.ts
+?? apps/api/src/modules/catalog/facets.ts
+?? apps/api/src/modules/catalog/fixtures/
+?? apps/api/src/modules/catalog/search-dedupe.ts
+?? apps/api/src/modules/catalog/search-query.ts
+?? apps/api/src/modules/catalog/tcgdex-normalizer.ts
+?? apps/api/src/modules/catalog/tcgtracking-normalizer.ts
+?? apps/api/src/modules/creative/
+?? apps/api/src/modules/draws/pool-integrity.ts
+?? apps/api/src/modules/packs/immutability.ts
+?? apps/api/src/modules/packs/inventory-allocation.ts
+?? apps/api/src/modules/packs/pool-snapshot.ts
+?? apps/api/src/modules/packs/prize-snapshots.ts
+?? apps/api/src/modules/packs/templates-router.ts
+?? apps/api/src/modules/packs/templates.ts
+?? apps/web/scripts/
+?? docs/current-oripa-workflow.md
+?? "docs/legacy references/"
+?? docs/oripa-saas-reconciled-car-customer-stories-proposal.md
+?? docs/plans/
+?? docs/reference-artifacts/
+?? docs/runbooks/
+?? prisma/sql/
+?? scripts/
+
+=== diff stat ===
+ README.md                              |  10 +
+ apps/api/package.json                  |  18 +-
+ apps/api/scripts/sync-tcgtracking.ts   | 519 +++++++++++++++++++++++++--------
+ apps/api/src/app.ts                    |   4 +
+ apps/api/src/modules/catalog/router.ts | 179 +++++++++---
+ apps/api/src/modules/draws/router.ts   |  16 +-
+ apps/api/src/modules/packs/router.ts   | 276 ++++++++++++------
+ apps/web/app/vendor/page.tsx           | 268 ++++++++++++++++-
+ docs/traceability-schema.md            |  36 ---
+ package.json                           |   3 +-
+ packages/shared/src/index.ts           |  48 ++-
+ prisma/schema.prisma                   | 243 ++++++++++++++-
+ 12 files changed, 1273 insertions(+), 347 deletions(-)
+
+=== changed files ===
+apps/api/package.json
+apps/api/scripts/catalog-report.ts
+apps/api/scripts/sync-carddb-fast.ts
+apps/api/scripts/sync-carddb-sources.ts
+apps/api/scripts/sync-tcgdex.ts
+apps/api/scripts/sync-tcgtracking.ts
+apps/api/scripts/tcgtracking-report.ts
+apps/api/scripts/test-campaign-creative-mvp.ts
+apps/api/scripts/test-carddb-sources-normalizer.ts
+apps/api/scripts/test-catalog-facets-suggest.ts
+apps/api/scripts/test-catalog-search-dedupe.ts
+apps/api/scripts/test-catalog-search-query.ts
+apps/api/scripts/test-draw-pool-integrity.ts
+apps/api/scripts/test-pack-immutability-guard.ts
+apps/api/scripts/test-pack-inventory-allocation.ts
+apps/api/scripts/test-pack-prize-catalog-snapshots.ts
+apps/api/scripts/test-pack-publish-freeze.ts
+apps/api/scripts/test-pack-template-publish.ts
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts
+apps/api/scripts/test-tcgdex-normalizer.ts
+apps/api/scripts/test-tcgtracking-normalizer.ts
+apps/api/src/app.ts
+apps/api/src/modules/catalog/card-db-sources-normalizer.ts
+apps/api/src/modules/catalog/facets.ts
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets_1938.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets_1938_pricing.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets_1938_skus.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets_24688.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets_24688_pricing.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets_24688_skus.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/3_sets.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/categories.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/KEY_PATHS.md
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/manifest.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/products_180514.json
+apps/api/src/modules/catalog/fixtures/tcgtracking/category-3/products_692938.json
+apps/api/src/modules/catalog/router.ts
+apps/api/src/modules/catalog/search-dedupe.ts
+apps/api/src/modules/catalog/search-query.ts
+apps/api/src/modules/catalog/tcgdex-normalizer.ts
+apps/api/src/modules/catalog/tcgtracking-normalizer.ts
+apps/api/src/modules/creative/router.ts
+apps/api/src/modules/creative/service.ts
+apps/api/src/modules/draws/pool-integrity.ts
+apps/api/src/modules/draws/router.ts
+apps/api/src/modules/packs/immutability.ts
+apps/api/src/modules/packs/inventory-allocation.ts
+apps/api/src/modules/packs/pool-snapshot.ts
+apps/api/src/modules/packs/prize-snapshots.ts
+apps/api/src/modules/packs/router.ts
+apps/api/src/modules/packs/templates-router.ts
+apps/api/src/modules/packs/templates.ts
+apps/web/app/vendor/page.tsx
+apps/web/scripts/test-vendor-catalog-ux.ts
+docs/current-oripa-workflow.md
+docs/legacy references/collectorcrypt-car-and-customer-stories-proposal.md
+docs/legacy references/collectorcrypt-car-and-customer-stories-reviewed.md
+docs/legacy references/oripa-core-car-and-customer-stories.md
+docs/legacy references/oripa-saas-car-proposal.md
+docs/legacy references/oripa-saas-car-proposal-reviewed.md
+docs/legacy references/oripa-saas-customer-car-deep-research.md
+docs/legacy references/oripa-saas-customer-stories-deep-proposal.md
+docs/legacy references/oripa-saas-customer-stories-proposal.md
+docs/legacy references/oripa-saas-customer-stories-reviewed.md
+docs/legacy references/oripa-saas-phygitals-collectorcrypt-final-proposals.md
+docs/legacy references/oripa_saas.zip
+docs/legacy references/packs-com-car-and-customer-stories-proposal.md
+docs/legacy references/phygitals-car-and-customer-stories-proposal.md
+docs/legacy references/phygitals-car-and-customer-stories-reviewed.md
+docs/legacy references/reference-clove-pokemon-deep-dive.md
+docs/legacy references/reference-collectorcrypt-deep-dive.md
+docs/legacy references/reference-packs-com-deep-dive.md
+docs/legacy references/reference-packs-com-reverse-engineering-car-and-customer-stories.md
+docs/legacy references/reference-phygitals-collectorcrypt-reverse-engineering.md
+docs/legacy references/reference-phygitals-deep-dive.md
+docs/legacy references/traceability-schema.md
+docs/oripa-saas-reconciled-car-customer-stories-proposal.md
+docs/plans/audit-redteam-20260530/scope.txt
+docs/plans/campaign-banner-csv-to-creative-final-oracle-reconciled.md
+docs/plans/campaign-banner-csv-to-creative-oracle-input.md
+docs/plans/campaign-banner-csv-to-creative-oracle-reconciled-v2.md
+docs/plans/campaign-creative-generator-oracle-input.md
+docs/plans/campaign-creative-generator-oracle-review.md
+docs/plans/campaign-creative-generator-plan.md
+docs/plans/campaign-creative-mvp-kanban.md
+docs/plans/campaign-creative-reference-capture-oracle-question.md
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.html
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md
+docs/plans/catalog-db-architecture-oracle-evidence.md
+docs/plans/catalog-db-architecture-user-decisions-20260530.md
+docs/plans/catalogitem-inventory-by-source-game.csv
+docs/plans/catalogitem-pruning-inventory-20260530.md
+docs/plans/catalogitem-source-delta-samples.csv
+docs/plans/catalogitem-source-delta-summary.csv
+docs/plans/catalogitem-source-delta-tcgtracking-vs-dedicated-20260530.md
+docs/plans/catalogitem-tcgdex-oracle-review.md
+docs/plans/catalogitem-tcgdex-plan.md
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md
+docs/plans/catalogitem-tcgtracking-oracle-review.md
+docs/plans/catalogitem-tcgtracking-plan.md
+docs/plans/custom-pack-creator-oracle-review-gpt55pro-20260530.md
+docs/plans/custom-pack-creator-proposals-oracle-closed-20260530.zip
+docs/plans/custom-pack-creator-reverse-engineering-proposal-20260530.md
+docs/plans/custom-pack-creator-reverse-engineering-proposal-v2-oracle-closed-20260530.md
+docs/plans/oripa-custom-pack-creator-reconciled-proposal-20260530.md
+docs/plans/pokemoncard-io-quality-bar-oripa-architecture-plan-20260530.md
+docs/plans/pokemoncard-io-quality-bar-oripa-oracle-fallback-review-20260530.md
+docs/plans/pokemoncard-mvp-bounded-kanban-queue-20260530.md
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md
+docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md
+docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_STATUS.json
+docs/reference-artifacts/2026-05-28/collectorcrypt_gacha_api_tests.json
+docs/reference-artifacts/2026-05-28/collectorcrypt_stats.json
+docs/reference-artifacts/2026-05-28/collectorcrypt_status.json
+docs/reference-artifacts/2026-05-28/page_api_summary.json
+docs/reference-artifacts/2026-05-28/phygitals_available.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/cards-limit-5.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/cases-eternities.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/cases-eternities-stats.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/cases_limit-20.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/fixtures-sha256.txt
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/general-livefeed.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/api/packs.json
+docs/reference-artifacts/packs-com/20260529T070709+0700/client/bundle-sha256.txt
+docs/reference-artifacts/packs-com/20260529T070709+0700/manifest.md
+docs/runbooks/catalogitem-tcgtracking-import.md
+docs/traceability-schema.md
+.hermes/audits/collaborator-catalog-db-efficiency-audit.md
+package.json
+packages/shared/src/index.ts
+prisma/schema.prisma
+prisma/sql/catalogitem-tcgdex.sql
+prisma/sql/catalogitem-tcgtracking.sql
+prisma/sql/pack-publish-freeze.sql
+prisma/sql/pack-template-version-slot-mvp.sql
+prisma/sql/vendor-inventory-allocation-foundation.sql
+PROJECTS.md
+README.md
+scripts/catalogitem_inventory.js
+scripts/catalogitem_source_delta.js
+scripts/render_catalog_proposal_html.py
+
+=== board stats ===
+By status:
+  triage    0
+  todo      0
+  scheduled  0
+  ready     0
+  running   0
+  blocked   0
+  done      10
+
+By assignee:
+  coding                done=10
+
+=== final report sha ===
+94e38b3e12f75527cd12fc72980edcfb0d4239c4d3f3d9ea7bf8223ff1365774  docs/plans/pokemoncard-mvp-final-canary-report-20260530.md
+
+=== package scripts ===
+## package.json
+{
+  "dev": "concurrently -n api,web,worker -c blue,green,yellow \"npm run dev -w @oripa/api\" \"npm run dev -w @oripa/web\" \"npm run dev -w @oripa/worker\"",
+  "build": "npm run build -w @oripa/shared && npm run build -w @oripa/api && npm run build -w @oripa/web && npm run build -w @oripa/worker",
+  "lint": "npm run lint -w @oripa/api && npm run lint -w @oripa/web && npm run lint -w @oripa/worker",
+  "db:generate": "prisma generate --schema prisma/schema.prisma",
+  "db:studio": "prisma studio --schema prisma/schema.prisma --port 5555",
+  "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
+  "db:seed": "tsx prisma/seed.ts",
+  "catalog:sync:tcgtracking": "npm run catalog:sync:tcgtracking -w @oripa/api",
+  "catalog:sync:tcgdex": "npm run catalog:sync:tcgdex -w @oripa/api"
+}
+## apps/api/package.json
+{
+  "dev": "tsx watch src/index.ts",
+  "build": "tsc -p tsconfig.json",
+  "start": "node dist/index.js",
+  "lint": "node -e \"console.log('lint: add eslint config when ready')\"",
+  "catalog:sync:tcgtracking": "tsx scripts/sync-tcgtracking.ts",
+  "catalog:report": "tsx scripts/catalog-report.ts",
+  "catalog:sync:tcgdex": "tsx scripts/sync-tcgdex.ts",
+  "catalog:sync:carddb": "tsx scripts/sync-carddb-sources.ts",
+  "test:catalog:tcgdex": "tsx scripts/test-tcgdex-normalizer.ts",
+  "test:catalog:tcgtracking": "tsx scripts/test-tcgtracking-normalizer.ts",
+  "test:catalog:carddb": "tsx scripts/test-carddb-sources-normalizer.ts",
+  "test:catalog:search-dedupe": "tsx scripts/test-catalog-search-dedupe.ts",
+  "test:catalog:search-query": "tsx scripts/test-catalog-search-query.ts",
+  "test:packs:catalog-snapshots": "tsx scripts/test-pack-prize-catalog-snapshots.ts",
+  "test:packs:immutability": "tsx scripts/test-pack-immutability-guard.ts",
+  "test:packs:publish-freeze": "tsx scripts/test-pack-publish-freeze.ts",
+  "test:packs:inventory-allocation": "tsx scripts/test-pack-inventory-allocation.ts",
+  "test:packs:template-publish": "tsx scripts/test-pack-template-publish.ts",
+  "test:draws:pool-integrity": "tsx scripts/test-draw-pool-integrity.ts",
+  "test:catalog:tcgtracking:guardrails": "tsx scripts/test-sync-tcgtracking-guardrails.ts",
+  "test:creative:mvp": "tsx scripts/test-campaign-creative-mvp.ts"
+}
+## apps/web/package.json
+{
+  "dev": "next dev -p 3000",
+  "build": "next build",
+  "start": "next start -p 3000",
+  "lint": "node -e \"console.log('lint: add eslint config when ready')\""
+}
+## packages/shared/package.json
+{
+  "build": "tsc -p tsconfig.json"
+}

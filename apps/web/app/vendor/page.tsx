@@ -97,13 +97,38 @@ type Pack = {
   endsAt?: string | null;
   createdAt: string;
   prizes: Array<{
-    id: string;
-    label: string;
-    imageUrl?: string | null;
-    estimatedValue: number;
-    stock: number;
-    remainingStock: number;
+  id: string;
+  label: string;
+  imageUrl?: string | null;
+  estimatedValue: number;
+  stock: number;
+  remainingStock: number;
+  catalogItemId?: string | null;
+  catalogSource?: string | null;
+  catalogSourceItemId?: string | null;
+  language?: string | null;
   }>;
+};
+
+type CreativeAsset = {
+  id: string;
+  status: "PRIVATE_DRAFT" | "PUBLIC_IMMUTABLE" | "REJECTED";
+  title: string;
+  imageUrl: string;
+  targetUrl: string;
+  contentHash: string;
+  createdAt: string;
+};
+
+type CreativeJob = {
+  id: string;
+  packId: string;
+  status: "DRAFT" | "COMPLETED" | "FAILED" | "PUBLISH_BLOCKED" | "PUBLISHED";
+  stylePreset: string;
+  safePrompt: string;
+  errorMessage?: string | null;
+  createdAt: string;
+  assets: CreativeAsset[];
 };
 
 type ItemDraft = {
@@ -111,6 +136,35 @@ type ItemDraft = {
   estimatedValue: string;
   stock: string;
   imageUrl: string;
+  catalogItemId?: string;
+  catalogSource?: string;
+  catalogSourceItemId?: string;
+  language?: string;
+};
+
+type CatalogFilters = {
+  source: string;
+  language: string;
+  setId: string;
+  rarity: string;
+};
+
+type CatalogFacetOption = {
+  value: string;
+  count: number;
+};
+
+type CatalogSetFacet = {
+  id: string;
+  name?: string | null;
+  count: number;
+};
+
+type CatalogFacets = {
+  sources: CatalogFacetOption[];
+  languages: CatalogFacetOption[];
+  sets: CatalogSetFacet[];
+  rarities: CatalogFacetOption[];
 };
 
 type TierDraft = {
@@ -121,7 +175,11 @@ type TierDraft = {
 
 type CatalogSuggestion = {
   id: string;
+  source?: string | null;
+  sourceItemId?: string | null;
+  itemType?: string | null;
   game: string;
+  language?: string | null;
   name: string;
   setId?: string | null;
   cardNumber?: string | null;
@@ -169,6 +227,25 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
+const emptyCatalogFilters: CatalogFilters = { source: "", language: "", setId: "", rarity: "" };
+const emptyCatalogFacets: CatalogFacets = { sources: [], languages: [], sets: [], rarities: [] };
+
+function parseCatalogFilters(params: URLSearchParams): CatalogFilters {
+  return {
+    source: params.get("source") ?? "",
+    language: params.get("language") ?? "",
+    setId: params.get("setId") ?? "",
+    rarity: params.get("rarity") ?? "",
+  };
+}
+
+function appendCatalogFilters(url: URL, catalogFilters: CatalogFilters) {
+  if (catalogFilters.source) url.searchParams.set("source", catalogFilters.source);
+  if (catalogFilters.language) url.searchParams.set("language", catalogFilters.language);
+  if (catalogFilters.setId) url.searchParams.set("setId", catalogFilters.setId);
+  if (catalogFilters.rarity) url.searchParams.set("rarity", catalogFilters.rarity);
+}
+
 const DEFAULT_THEME = {
   storefrontPrimary: "#7A5CFA",
   storefrontSecondary: "#EEE7FF",
@@ -304,6 +381,7 @@ export default function VendorPage() {
   const [qrs, setQrs] = useState<VendorQr[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [packs, setPacks] = useState<Pack[]>([]);
+  const [creativeJobs, setCreativeJobs] = useState<CreativeJob[]>([]);
 
   const [vendorName, setVendorName] = useState("");
   const [vendorSlug, setVendorSlug] = useState("");
@@ -341,6 +419,8 @@ export default function VendorPage() {
   const [itemSearchQuery, setItemSearchQuery] = useState("");
   const [itemSuggestions, setItemSuggestions] = useState<CatalogSuggestion[]>([]);
   const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
+  const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
+  const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
   const [catalogGameFilter, setCatalogGameFilter] = useState("POKEMON");
   const catalogSearchCacheRef = useRef<Map<string, CatalogSuggestion[]>>(new Map());
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
@@ -396,7 +476,7 @@ export default function VendorPage() {
       }
 
       const vendorJson = await vendorRes.json();
-      const [limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
+      const [limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes, creativeJobsRes] = await Promise.all([
         fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
@@ -404,9 +484,10 @@ export default function VendorPage() {
         fetch(`${apiBase}/v1/vendor/banners`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/points/qr`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/creative-jobs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
       ]);
 
-      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
+      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !referralsRes.ok || !bannersRes.ok || !packsRes.ok || !creativeJobsRes.ok) {
         throw new Error("Failed to load vendor dashboard data");
       }
 
@@ -417,6 +498,7 @@ export default function VendorPage() {
       const qrJson = qrRes.ok ? await qrRes.json() : { qrs: [] };
       const bannersJson = await bannersRes.json();
       const packsJson = await packsRes.json();
+      const creativeJobsJson = await creativeJobsRes.json();
 
       const v = vendorJson.vendor ?? null;
       setVendor(v);
@@ -444,6 +526,7 @@ export default function VendorPage() {
       setQrs(qrJson.qrs ?? []);
       setBanners(bannersJson.banners ?? []);
       setPacks(packsJson.packs ?? []);
+      setCreativeJobs(creativeJobsJson.creativeJobs ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
@@ -481,11 +564,12 @@ export default function VendorPage() {
     const timer = window.setTimeout(() => {
       if (!isActive) return;
       setItemSuggestLoading(true);
-      const url = new URL(`${apiBase}/v1/catalog/search`);
-      url.searchParams.set("q", normalizedQuery);
+      const url = new URL(`${apiBase}/v1/catalog/suggest`);
+      url.searchParams.set("q", query);
       url.searchParams.set("limit", "8");
       url.searchParams.set("type", "card");
       url.searchParams.set("game", normalizedGameFilter);
+      appendCatalogFilters(url, catalogFilters);
 
       fetch(url.toString(), {
         headers: authHeaders(),
@@ -495,7 +579,7 @@ export default function VendorPage() {
       })
         .then(async (res) => {
           const payload = await res.json().catch(() => ({}));
-          if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
+          if (!res.ok) throw new Error(payload?.error ?? "Failed to suggest cards");
           const nextItems = (payload.items ?? []) as CatalogSuggestion[];
           if (!isActive) return;
           setItemSuggestions(nextItems);
@@ -517,13 +601,47 @@ export default function VendorPage() {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [authHeaders, itemSearchQuery, itemSearchTarget, catalogGameFilter]);
+  }, [authHeaders, catalogFilters, itemSearchQuery, itemSearchTarget, catalogGameFilter]);
+
+  useEffect(() => {
+    const url = new URL(`${apiBase}/v1/catalog/facets`);
+    url.searchParams.set("type", "card");
+    appendCatalogFilters(url, catalogFilters);
+
+    fetch(url.toString(), {
+      headers: authHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(async (res) => {
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload?.error ?? "Failed to load catalog facets");
+        setCatalogFacets((payload.facets ?? emptyCatalogFacets) as CatalogFacets);
+      })
+      .catch(() => {
+        setCatalogFacets(emptyCatalogFacets);
+      });
+  }, [authHeaders, catalogFilters]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     setActiveTab(parseTabValue(params.get("tab")));
+    setCatalogFilters(parseCatalogFilters(params));
   }, []);
+
+  function setCatalogFilterInUrl(field: keyof CatalogFilters, value: string) {
+    const nextFilters = { ...catalogFilters, [field]: value };
+    setCatalogFilters(nextFilters);
+    setItemSuggestions([]);
+    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
+      if (nextFilters[key]) params.set(key, nextFilters[key]);
+      else params.delete(key);
+    }
+    params.set("tab", "pack-studio");
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
 
   function setActiveTabInUrl(tab: ActiveTab) {
     setActiveTab(tab);
@@ -779,7 +897,7 @@ export default function VendorPage() {
         light: "#ffffff",
       },
     })
-      .then((url) => {
+      .then((url: string) => {
         if (mounted) setActiveQrDataUrl(url);
       })
       .catch(() => {
@@ -964,6 +1082,61 @@ export default function VendorPage() {
     }
   }
 
+  async function generateCreativeDraft(packId: string) {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}/creative-jobs`, {
+        method: "POST",
+        headers: {
+          ...authHeaders(),
+          "content-type": "application/json",
+          "x-idempotency-key": `creative-${packId}-${Date.now()}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ stylePreset: "premium_foil", aspectRatio: "16:9" }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(String(payload.error ?? "Failed to generate creative draft"));
+      setSuccess("Private creative draft generated. Publish is intentionally blocked until legal/storage gates clear.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to generate creative draft");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function attemptPublishCreative(jobId: string, assetId: string) {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`${apiBase}/v1/vendor/creative-jobs/${jobId}/publish`, {
+        method: "POST",
+        headers: { ...authHeaders(), "content-type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ assetId }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        setError(`Publish blocked: ${(payload.blockers ?? []).join(", ")}`);
+        await loadAll();
+        return;
+      }
+      if (!res.ok) throw new Error(String(payload.error ?? "Failed to publish creative"));
+      setSuccess("Creative published.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to publish creative");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function updateTier(index: number, field: keyof Omit<TierDraft, "items">, value: string) {
     setTiers((prev) => prev.map((tier, i) => (i === index ? { ...tier, [field]: value } : tier)));
   }
@@ -989,6 +1162,10 @@ export default function VendorPage() {
             ...item,
             label: nextLabel || suggestion.name,
             imageUrl: suggestion.imageLargeUrl || suggestion.imageThumbUrl || suggestion.imageBaseUrl || item.imageUrl || DEFAULT_CARD,
+            catalogItemId: suggestion.id,
+            catalogSource: suggestion.source ?? undefined,
+            catalogSourceItemId: suggestion.sourceItemId ?? undefined,
+            language: suggestion.language ?? undefined,
           };
         });
         return { ...tier, items };
@@ -1093,6 +1270,10 @@ export default function VendorPage() {
           estimatedValue: String(prize.estimatedValue),
           stock: String(prize.stock),
           imageUrl: prize.imageUrl ?? DEFAULT_CARD,
+          catalogItemId: prize.catalogItemId ?? undefined,
+          catalogSource: prize.catalogSource ?? undefined,
+          catalogSourceItemId: prize.catalogSourceItemId ?? undefined,
+          language: prize.language ?? undefined,
         })),
       },
     ]);
@@ -1134,6 +1315,10 @@ export default function VendorPage() {
             estimatedValue: Number(item.estimatedValue),
             stock: Number(item.stock),
             imageUrl: item.imageUrl.trim() ? item.imageUrl.trim() : undefined,
+            catalogItemId: item.catalogItemId,
+            catalogSource: item.catalogSource,
+            catalogSourceItemId: item.catalogSourceItemId,
+            language: item.language,
           })),
         })),
       };
@@ -1599,6 +1784,49 @@ export default function VendorPage() {
                 <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
               </label>
 
+              <section className="card" style={{ padding: 12 }}>
+                <h3>Catalog filters</h3>
+                <p className="muted tiny">Filters sync into the URL and constrain card typeahead results.</p>
+                <div className="pack-builder-grid">
+                  <label className="muted tiny">
+                    Source
+                    <select value={catalogFilters.source} onChange={(e) => setCatalogFilterInUrl("source", e.target.value)}>
+                      <option value="">All sources</option>
+                      {catalogFacets.sources.map((source) => (
+                        <option key={source.value} value={source.value}>{source.value} ({source.count})</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="muted tiny">
+                    Language
+                    <select value={catalogFilters.language} onChange={(e) => setCatalogFilterInUrl("language", e.target.value)}>
+                      <option value="">All languages</option>
+                      {catalogFacets.languages.map((language) => (
+                        <option key={language.value} value={language.value}>{language.value} ({language.count})</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="muted tiny">
+                    Set
+                    <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
+                      <option value="">All sets</option>
+                      {catalogFacets.sets.map((set) => (
+                        <option key={set.id} value={set.id}>{set.name || set.id} ({set.count})</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="muted tiny">
+                    Rarity
+                    <select value={catalogFilters.rarity} onChange={(e) => setCatalogFilterInUrl("rarity", e.target.value)}>
+                      <option value="">All rarities</option>
+                      {catalogFacets.rarities.map((rarity) => (
+                        <option key={rarity.value} value={rarity.value}>{rarity.value} ({rarity.count})</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              </section>
+
               <div className="tier-stack">
                 {tiers.map((tier, tierIndex) => (
                   <article key={`tier-${tierIndex}`} className="card tier-card">
@@ -1711,18 +1939,39 @@ export default function VendorPage() {
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Existing Packs</h2>
+            <p className="muted tiny">Creative MVP is pack-anchored: generated drafts use only this pack's prize images and a safe abstract background prompt.</p>
             <div className="result-list">
               {packs.map((pack) => (
                 <div className="result-row" key={pack.id}>
                   <span>{pack.title} ({pack.status})</span>
                   <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
                   <div className="actions">
+                    <button type="button" className="sort-pill" onClick={() => void generateCreativeDraft(pack.id)} disabled={saving || pack.prizes.length === 0}>Generate creative draft</button>
                     <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
                     <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
                     <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
                   </div>
                 </div>
               ))}
+            </div>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Private Creative Drafts</h2>
+            <p className="muted tiny">Publish is intentionally blocked in MVP until legal image-use approval, immutable storage, and publish-time revalidation are implemented.</p>
+            <div className="banner-admin-list">
+              {creativeJobs.flatMap((job) => job.assets.map((asset) => ({ job, asset }))).map(({ job, asset }) => (
+                <div className="banner-admin-row" key={asset.id}>
+                  <img src={asset.imageUrl} alt={asset.title} />
+                  <div>
+                    <strong>{asset.title}</strong>
+                    <div className="muted tiny">{job.status} | {job.stylePreset} | {asset.status}</div>
+                    <div className="muted tiny">Hash {asset.contentHash.slice(0, 12)}… | Prompt: {job.safePrompt}</div>
+                  </div>
+                  <button type="button" className="sort-pill" onClick={() => void attemptPublishCreative(job.id, asset.id)} disabled={saving}>Publish gate check</button>
+                </div>
+              ))}
+              {creativeJobs.length === 0 ? <p className="muted tiny">No creative drafts yet. Generate one from an existing pack.</p> : null}
             </div>
           </section>
         </>

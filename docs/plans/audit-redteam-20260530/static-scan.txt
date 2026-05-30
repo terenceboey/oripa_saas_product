@@ -1,0 +1,351 @@
+=== secret-ish tokens in changed files ===
+apps/web/app/vendor/page.tsx:53:  token: string;
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md:128:    typographyToken: string;
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md:129:    ctaToken: string;
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md:1020:53|  token: string;
+docs/plans/custom-pack-creator-reverse-engineering-proposal-20260530.md:63:GET /api/pack-sim/open?format=...&settype=...&sim_session_token=...
+docs/plans/custom-pack-creator-reverse-engineering-proposal-v2-oracle-closed-20260530.md:120:GET /api/pack-sim/open?format=...&settype=...&sim_session_token=...
+README.md:109:JWT_SECRET=REPLACE_WITH_STRONG_RANDOM_SECRET
+README.md:111:GOOGLE_CLIENT_SECRET=REPLACE_WITH_GOOGLE_CLIENT_SECRET
+=== dangerous eval/exec/innerHTML/shell/unsafe SQL patterns ===
+apps/api/scripts/sync-carddb-fast.ts:2:import { execFile } from "node:child_process";
+apps/api/scripts/sync-carddb-fast.ts:153:  await retry(`upsertSet:${row.sourceSetId}`, () => prisma.$executeRaw`
+apps/api/scripts/sync-carddb-fast.ts:187:  const before = await prisma.$queryRawUnsafe(`SELECT source, COUNT(*)::int AS count FROM "CatalogItem" WHERE source IN ('pokemoncard.io','onepiecedb.io','bulbapedia') GROUP BY source ORDER BY source`);
+apps/api/scripts/sync-carddb-fast.ts:192:  const afterItems = await prisma.$queryRawUnsafe(`SELECT source, COUNT(*)::int AS count FROM "CatalogItem" WHERE source IN ('pokemoncard.io','onepiecedb.io','bulbapedia') GROUP BY source ORDER BY source`);
+apps/api/scripts/sync-carddb-fast.ts:193:  const afterSets = await prisma.$queryRawUnsafe(`SELECT source, COUNT(*)::int AS count FROM "CatalogSet" WHERE source IN ('pokemoncard.io','onepiecedb.io','bulbapedia') GROUP BY source ORDER BY source`);
+apps/api/scripts/sync-carddb-sources.ts:2:import { execFile } from "node:child_process";
+apps/api/scripts/sync-carddb-sources.ts:243:  await withDbRetry(`upsertCatalogSet:${row.source}:${row.sourceSetId}`, () => prisma.$executeRaw`
+apps/api/scripts/sync-carddb-sources.ts:269:    await withDbRetry(`updateCatalogSetProductCounts:${source}:${sourceSetId}`, () => prisma.$executeRaw`
+apps/api/scripts/sync-carddb-sources.ts:306:    await withDbRetry(`linkCatalogSet:${row.source}:${row.sourceItemId}`, () => prisma.$executeRaw`
+scripts/catalogitem_inventory.js:35:  const total = await prisma.$queryRawUnsafe(`select count(*)::bigint as count from "CatalogItem"`);
+scripts/catalogitem_inventory.js:36:  const sourceTotals = await prisma.$queryRawUnsafe(`
+scripts/catalogitem_inventory.js:47:  const sourceGameTotals = await prisma.$queryRawUnsafe(`
+scripts/catalogitem_inventory.js:57:  const detailed = await prisma.$queryRawUnsafe(`
+scripts/catalogitem_inventory.js:64:  const gameTotals = await prisma.$queryRawUnsafe(`
+scripts/catalogitem_inventory.js:75:  const dupes = await prisma.$queryRawUnsafe(`
+scripts/catalogitem_source_delta.js:49:  const rows = await prisma.$queryRawUnsafe(`
+scripts/catalogitem_source_delta.js:102:    return (await prisma.$queryRawUnsafe(`
+=== live DB / migration guard markers ===
+apps/api/scripts/sync-carddb-fast.ts:183:  if (process.env.CARDDB_DB_ENV !== "staging" || process.env.CARDDB_DRY_RUN !== "false") {
+apps/api/scripts/sync-carddb-fast.ts:184:    throw new Error("Set CARDDB_DB_ENV=staging CARDDB_DRY_RUN=false for collaborator write");
+apps/api/scripts/sync-carddb-sources.ts:22:  dbEnv: "local" | "staging" | "production";
+apps/api/scripts/sync-carddb-sources.ts:78:const ALLOWED_DB_ENVS = new Set(["local", "staging", "production"]);
+apps/api/scripts/sync-carddb-sources.ts:107:function isRenderUrl(url: string | null): boolean {
+apps/api/scripts/sync-carddb-sources.ts:125:    throw new Error(`Invalid CARDDB_DB_ENV=${dbEnvRaw}; expected local|staging|production`);
+apps/api/scripts/sync-carddb-sources.ts:133:    allowLiveWrite: parseBoolean(env.CARDDB_ALLOW_LIVE_WRITE, false),
+apps/api/scripts/sync-carddb-sources.ts:143:    databaseUrl: asNonEmptyString(env.DATABASE_URL),
+apps/api/scripts/sync-carddb-sources.ts:146:  if (isRenderUrl(config.databaseUrl) && config.dbEnv === "local") {
+apps/api/scripts/sync-carddb-sources.ts:147:    throw new Error("Render DATABASE_URL cannot be used with CARDDB_DB_ENV=local. Set staging or production explicitly.");
+apps/api/scripts/sync-carddb-sources.ts:150:  if (!dryRun && config.dbEnv === "production" && !config.allowLiveWrite) {
+apps/api/scripts/sync-carddb-sources.ts:151:    throw new Error("Refusing production write: set CARDDB_ALLOW_LIVE_WRITE=true with CARDDB_DB_ENV=production.");
+apps/api/scripts/sync-tcgdex.ts:16:const ALLOW_LIVE_WRITE = process.env.TCGDEX_ALLOW_LIVE_WRITE === "true";
+apps/api/scripts/sync-tcgdex.ts:37:function isLiveRenderDatabase() {
+apps/api/scripts/sync-tcgdex.ts:38:  return /render\.com/i.test(process.env.DATABASE_URL ?? "");
+apps/api/scripts/sync-tcgdex.ts:127:  if (!DRY_RUN && isLiveRenderDatabase() && !ALLOW_LIVE_WRITE) {
+apps/api/scripts/sync-tcgdex.ts:129:      "Refusing to write TCGdex catalog rows to a Render DATABASE_URL without TCGDEX_ALLOW_LIVE_WRITE=true. Use dry-run first or point DATABASE_URL at staging/local.",
+apps/api/scripts/sync-tcgtracking.ts:27:  dbEnv: "local" | "staging" | "production";
+apps/api/scripts/sync-tcgtracking.ts:54:const ALLOWED_DB_ENVS = new Set(["local", "staging", "production"]);
+apps/api/scripts/sync-tcgtracking.ts:125:function isRenderUrl(url: string | null): boolean {
+apps/api/scripts/sync-tcgtracking.ts:133:    throw new Error(`Invalid TCGTRACKING_DB_ENV=${dbEnvRaw}; expected local|staging|production`);
+apps/api/scripts/sync-tcgtracking.ts:143:    allowLiveWrite: parseBoolean(env.TCGTRACKING_ALLOW_LIVE_WRITE, false),
+apps/api/scripts/sync-tcgtracking.ts:156:    databaseUrl: asString(env.DATABASE_URL),
+apps/api/scripts/sync-tcgtracking.ts:163:  if (isRenderUrl(config.databaseUrl) && config.dbEnv === "local") {
+apps/api/scripts/sync-tcgtracking.ts:164:    throw new Error("Render DATABASE_URL cannot be used with TCGTRACKING_DB_ENV=local. Set staging or production explicitly.");
+apps/api/scripts/sync-tcgtracking.ts:172:  if (config.dbEnv === "production" && !config.allowLiveWrite) {
+apps/api/scripts/sync-tcgtracking.ts:173:    throw new Error("Refusing production write: set TCGTRACKING_ALLOW_LIVE_WRITE=true with TCGTRACKING_DB_ENV=production.");
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:28:    DATABASE_URL: "postgres://localhost/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:38:        DATABASE_URL: "postgresql://oregon-postgres.render.com/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:40:    /Render DATABASE_URL cannot be used with TCGTRACKING_DB_ENV=local/,
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:47:        DATABASE_URL: "postgres://localhost/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:98:    DATABASE_URL: "postgres://localhost/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:107:    DATABASE_URL: "postgres://localhost/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:122:  const productionWritesBlocked = buildRuntimeConfig({
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:123:    TCGTRACKING_DB_ENV: "production",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:125:    TCGTRACKING_ALLOW_LIVE_WRITE: "false",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:126:    DATABASE_URL: "postgres://prod/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:128:  mustThrow(() => ensureWriteAllowed(productionWritesBlocked), /TCGTRACKING_ALLOW_LIVE_WRITE=true/);
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:133:    DATABASE_URL: "postgres://localhost/oripa",
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:140:    dbEnv: "staging" as const,
+apps/api/src/app.ts:50:  // Explicit preflight responder for credentialed cross-subdomain requests on Render.
+docs/current-oripa-workflow.md:43:Use this order unless a production blocker forces a narrower fix:
+docs/current-oripa-workflow.md:114:- Pilot imports are dry-run by default (`TCGTRACKING_DRY_RUN=true`) and live DB writes require explicit approval plus `TCGTRACKING_DB_ENV` (`local|staging|production`) with production gated by `TCGTRACKING_ALLOW_LIVE_WRITE=true`.
+docs/current-oripa-workflow.md:115:- Importer refuses category ids other than `3` for MVP and refuses `TCGTRACKING_DB_ENV=local` when `DATABASE_URL` points at Render.
+docs/legacy references/oripa-saas-car-proposal.md:21:- **Clove parity is not MVP parity.** RUSH tickets, multi-country fulfillment, HLS video production, Algolia, Statsig, and complex rank systems should be phased.
+docs/legacy references/oripa-saas-car-proposal.md:93:- **Challenge:** Modern Oripa customers expect draw excitement, but full video/HLS production can slow MVP delivery.
+docs/legacy references/oripa-saas-customer-stories-deep-proposal.md:95:Internal operator responsible for safe launch, tenant isolation, imports, settings, and production checks.
+docs/legacy references/oripa-saas-customer-stories-proposal.md:16:- Stories should be implementation-grounded in the existing monorepo architecture: Express + Prisma API, Next.js web, vendor scoping, JWT auth, wallet ledger, idempotent draws, fairness proofs, and Render deployment.
+docs/legacy references/oripa-saas-phygitals-collectorcrypt-final-proposals.md:144:Rendered prize-card visual claims require screenshot evidence and are **not** used as hard product requirements in this final proposal. The durable product lesson is from API/status/trace patterns: public pack codes, open/closed states, recent operational history, and chain-of-custody style records.
+docs/legacy references/phygitals-car-and-customer-stories-proposal.md:140:- **Result:** Recent-pulls widgets are safe for production.
+docs/legacy references/reference-clove-pokemon-deep-dive.md:547:- Render deployment scaffold.
+docs/legacy references/reference-clove-pokemon-deep-dive.md:632:It does not filter by authenticated user. In multi-user production, wallet reads must be `vendorId + actorUserId`, same as draw debit.
+docs/legacy references/reference-clove-pokemon-deep-dive.md:824:- Video/HLS production pipeline.
+docs/legacy references/reference-packs-com-deep-dive.md:268:- MVP can keep auth smaller, but if wallet/physical shipping exists, account security and address lifecycle are not optional for production.
+docs/legacy references/reference-packs-com-reverse-engineering-car-and-customer-stories.md:204:The Packs.com Help Center article states the following design; this document does not independently verify that the production implementation matches the article:
+docs/plans/campaign-banner-csv-to-creative-final-oracle-reconciled.md:83:- No production migration/write without explicit approval.
+docs/plans/campaign-banner-csv-to-creative-final-oracle-reconciled.md:711:### Phase 6 — real provider + production storage
+docs/plans/campaign-banner-csv-to-creative-final-oracle-reconciled.md:788:- Renderer cannot be abused via SVG/text injection.
+docs/plans/campaign-banner-csv-to-creative-oracle-input.md:87:- No direct production live DB writes/migrations without explicit approval.
+docs/plans/campaign-banner-csv-to-creative-oracle-input.md:361:- Cloudflare R2/S3 adapter for production;
+docs/plans/campaign-banner-csv-to-creative-oracle-input.md:394:- Decide CSV required columns for boss demo vs production.
+docs/plans/campaign-banner-csv-to-creative-oracle-input.md:441:- Render final banner from static/test background + exact CatalogItem card images + title/CTA.
+docs/plans/campaign-banner-csv-to-creative-oracle-input.md:477:4. CSV schema strictness: boss-demo card-name-only vs production requiring game/set/card_number.
+docs/plans/campaign-banner-csv-to-creative-oracle-reconciled-v2.md:83:- No production DB migration/write without explicit approval.
+docs/plans/campaign-banner-csv-to-creative-oracle-reconciled-v2.md:769:### Phase 6 — real provider + production storage
+docs/plans/campaign-creative-generator-oracle-review.md:7:CLEAN for architecture, BLOCKED for production launch until gates are resolved.
+docs/plans/campaign-creative-generator-oracle-review.md:28:- Add storage abstraction with local dev adapter and S3/R2-style production adapter.
+docs/plans/campaign-creative-generator-plan.md:3:Status: DRAFT — Oracle pass 1 complete. Architecture is clean; production launch is gated.
+docs/plans/campaign-creative-generator-plan.md:15:- Do not use live DB migrations or production writes until separately approved.
+docs/plans/campaign-creative-generator-plan.md:371:7. Render title/subtitle/CTA with deterministic fonts and safe zones.
+docs/plans/campaign-creative-generator-plan.md:413:- Render prompts from server templates only.
+docs/plans/campaign-creative-mvp-kanban.md:13:- No live DB migration or Render DB write.
+docs/plans/campaign-creative-reference-capture-oracle-question.md:30:   - Distill safe template families, composition rules, color/mood patterns, typography direction, CTA treatment, card/product staging rules, and negative prompts.
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md:5:Keep the Campaign Creative Generator architecture unchanged. Do **not** use Clove/competitor screenshots as GPT Image 2 inputs, production prompt references, compositor backgrounds, repo fixtures, seed data, or direct implementation references.
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md:68:forbidden_use: prompt_input, model_training, production_asset, template_fixture, direct_layout_copy
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md:85:- reference the competitor by name in production prompts or template keys.
+docs/plans/campaign-creative-reference-capture-oracle-reconciled.md:212:- live DB migrations or production write paths without existing migration/write gates
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:187:Keep existing `CatalogItem` during migration. The long-term model can either evolve the current table or introduce a new `CatalogItemV2`; the safer path is additive: add compatible normalized fields first, introduce projections, then migrate reads.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:620:Not production migration code; this is the intended query shape.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:676:Use `CONCURRENTLY` in real migrations where supported; examples below are architecture examples, not a production migration file.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:752:* Add drift checks to CI so repo schema cannot silently diverge from production again.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:754:**Gate:** Prisma schema introspection and application boot both succeed against staging clone.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:765:**Gate:** explain plans show trigram/prefix indexes used; P95 autocomplete latency meets product threshold on a production-sized clone.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:833:**Gate:** no production code path depends on old fields; historical pack displays are verified.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:1025:**Gate:** schema drift check in CI; staging introspection must match expected schema before deploy.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:1063:## Risk: index builds affect production
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal.md:1065:**Mitigation:** use concurrent index creation, stage on a production-sized clone, monitor locks, and deploy during low-traffic windows.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:181:Use `code` as the stable product/API value. Keep the old string `game` until all reads and writes migrate.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:896:Use PostgreSQL search with `pg_trgm`, expression indexes, and a narrow `CatalogSearchDocument` projection. Do not add OpenSearch/Typesense/Meilisearch for launch unless Postgres cannot meet P95 targets on a production-sized clone. The prior proposal states Postgres with trigram and full-text should be sufficient at current 220,905-row scale if projection and indexes are implemented.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:977:These are architecture examples, not a production migration file.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1036:These are intended query shapes, not production-ready migration code.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1241:Application boots against staging clone; schema introspection matches expected live-compatible schema.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1254:`EXPLAIN ANALYZE` on production-sized clone shows index usage and acceptable P95.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1352:No production code path depends on old fields; historical pack displays are verified.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1372:* External search infrastructure, unless Postgres fails measured P95 on production-sized clone.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1394:Evidence already shows live DB drift from repo Prisma. Gate: CI drift check and staging introspection before deploy.
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1424:## Risk: index builds impact production
+docs/plans/catalog-db-architecture-gpt55pro-oracle-proposal-v2.md:1426:Mitigation: `CREATE INDEX CONCURRENTLY`, production-sized clone, low-traffic rollout, rollback/abort procedure. The prior proposal also flags index build planning as a rollout gate.
+docs/plans/catalog-db-architecture-oracle-evidence.md:9:- No schema, migration, production data, or DB writes were performed.
+docs/plans/catalog-db-architecture-oracle-evidence.md:523:Important: do not propose destructive migrations as immediate actions. The final answer should be a proposal, not runnable production migration code.
+docs/plans/catalogitem-tcgdex-oracle-review.md:102:- `apps/api/scripts/sync-tcgdex.ts:37-38` treats any Render URL as live via regex.
+docs/plans/catalogitem-tcgdex-oracle-review.md:103:- `apps/api/scripts/sync-tcgdex.ts:127-131` refuses Render writes without allow flag but cannot distinguish staging vs production.
+docs/plans/catalogitem-tcgdex-oracle-review.md:108:- Add/log `TCGDEX_DB_ENV=local|staging|production`.
+docs/plans/catalogitem-tcgdex-oracle-review.md:109:- Refuse Render URL with `TCGDEX_DB_ENV=local`.
+docs/plans/catalogitem-tcgdex-oracle-review.md:110:- Require production writes to set `TCGDEX_DB_ENV=production TCGDEX_ALLOW_LIVE_WRITE=true`.
+docs/plans/catalogitem-tcgdex-oracle-review.md:111:- Require staging writes to set `TCGDEX_DB_ENV=staging`.
+docs/plans/catalogitem-tcgdex-oracle-review.md:155:8. Local QA, then staging, then production only with backup and explicit approval.
+docs/plans/catalogitem-tcgdex-oracle-review.md:168:2. **Importer command snippets still relied on defaults.** The plan now requires explicit `TCGDEX_DB_ENV` for every write-mode import and includes concrete local/staging/production dry-run and pilot commands.
+docs/plans/catalogitem-tcgdex-plan.md:38:9. Import guard must distinguish staging Render DB from production Render DB via explicit env, not only `/render\.com/`.
+docs/plans/catalogitem-tcgdex-plan.md:55:7. Importer implementation must add/log `TCGDEX_DB_ENV=local|staging|production`, refuse Render DB with `TCGDEX_DB_ENV=local`, require production writes to include `TCGDEX_DB_ENV=production TCGDEX_ALLOW_LIVE_WRITE=true`, and require staging writes to state `TCGDEX_DB_ENV=staging`.
+docs/plans/catalogitem-tcgdex-plan.md:57:9. Production/staging pilot commands must include explicit `TCGDEX_DB_ENV`. Live DB mutation still requires explicit approval plus backup/snapshot confirmation.
+docs/plans/catalogitem-tcgdex-plan.md:67:2. Every write-mode importer command must set `TCGDEX_DB_ENV` explicitly; staging/production dry-runs are explicit too.
+docs/plans/catalogitem-tcgdex-plan.md:275:TCGDEX_ALLOW_LIVE_WRITE=false       # must be true for production writes
+docs/plans/catalogitem-tcgdex-plan.md:276:TCGDEX_DB_ENV=local                 # local | staging | production; do not infer prod only from Render URL
+docs/plans/catalogitem-tcgdex-plan.md:292:- explicit refusal if `TCGDEX_DB_ENV=production` without `TCGDEX_ALLOW_LIVE_WRITE=true`
+docs/plans/catalogitem-tcgdex-plan.md:293:- explicit refusal for any Render `DATABASE_URL` with `TCGDEX_DB_ENV=local`; set `staging` or `production` explicitly
+docs/plans/catalogitem-tcgdex-plan.md:294:- explicit log of `TCGDEX_DB_ENV`; if staging uses Render, require `TCGDEX_DB_ENV=staging` instead of relying on URL regex only
+docs/plans/catalogitem-tcgdex-plan.md:295:- production write commands must include both `TCGDEX_DB_ENV=production` and `TCGDEX_ALLOW_LIVE_WRITE=true`; staging write commands must include `TCGDEX_DB_ENV=staging`
+docs/plans/catalogitem-tcgdex-plan.md:296:- for any `TCGDEX_DRY_RUN=false` execution, require `TCGDEX_DB_ENV` to be explicitly set to `local`, `staging`, or `production`; do not rely on the default for write mode
+docs/plans/catalogitem-tcgdex-plan.md:328:TCGDEX_DB_ENV=staging \
+docs/plans/catalogitem-tcgdex-plan.md:330:TCGDEX_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgdex-plan.md:799:2. Apply schema SQL to local/staging DB.
+docs/plans/catalogitem-tcgdex-plan.md:800:3. Run pilot import. Local write command, only with a local `DATABASE_URL`:
+docs/plans/catalogitem-tcgdex-plan.md:810:Staging write command, only against staging:
+docs/plans/catalogitem-tcgdex-plan.md:813:TCGDEX_DB_ENV=staging \
+docs/plans/catalogitem-tcgdex-plan.md:815:TCGDEX_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgdex-plan.md:846:**Objective:** Prove migrations/import/UI on staging before live.
+docs/plans/catalogitem-tcgdex-plan.md:849:1. Backup staging DB.
+docs/plans/catalogitem-tcgdex-plan.md:851:3. Deploy API/web branch to staging.
+docs/plans/catalogitem-tcgdex-plan.md:852:4. Run dry-run importer against staging config.
+docs/plans/catalogitem-tcgdex-plan.md:861:TCGDEX_DB_ENV=staging \
+docs/plans/catalogitem-tcgdex-plan.md:867:TCGDEX_DB_ENV=staging \
+docs/plans/catalogitem-tcgdex-plan.md:869:TCGDEX_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgdex-plan.md:890:TCGDEX_DB_ENV=production \
+docs/plans/catalogitem-tcgdex-plan.md:900:TCGDEX_DB_ENV=production \
+docs/plans/catalogitem-tcgdex-plan.md:902:TCGDEX_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgdex-plan.md:912:4. Run dry-run importer with explicit `TCGDEX_DB_ENV=production`.
+docs/plans/catalogitem-tcgdex-plan.md:913:5. Run 10-card pilot importer with explicit `TCGDEX_DB_ENV=production`.
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md:127:7|  url      = env("DATABASE_URL")
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md:2113:15|    "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md:2213:30|- Database migrations/scripts only after explicit live-DB approval when they affect Render/live data
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md:2360:43|Use this order unless a production blocker forces a narrower fix:
+docs/plans/catalogitem-tcgtracking-oracle-review.md:213:**Patch Task 15 and Task 16:** add a staging/production-source smoke check from the same environment that will run the importer. The plan warns direct API requests may be Cloudflare-blocked, but the runbook only proves local/staging dry-run behavior after implementation.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:219:- Run `TCGTRACKING_DRY_RUN=true` from the same Render/service shell that will run the write import.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:267:10. Run staging from the actual execution environment: source smoke → dry-run → tiny write → report → UI round-trip.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:375:Pass 1’s main blockers are otherwise materially patched in the plan: fixture-before-normalizer ordering is explicit; required-field behavior is deterministic; category `85` is hard-blocked for MVP; importer env/source-smoke guards are present; catalog ID validation is restricted to active `tcgtracking` Pokémon cards; vendor UI must persist/clear/round-trip `catalogItemId`; public endpoints omit nested and scalar catalog references; staging/production rollout requires source smoke, explicit env, backup, and approval; and pack reference/leak tests are specified.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:388:8. Run staging from the actual execution environment: source smoke → dry-run → tiny write → report → UI round-trip.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:389:9. Request live SQL/import approval only after backup/snapshot evidence and clean staging.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:417:- Dry-run default, pilot limits, explicit `TCGTRACKING_DB_ENV`, Render/live-write guardrails, same-environment source smoke.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:460:7. Run staging from the actual execution environment: source smoke → dry-run → tiny write → report → UI round-trip.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:461:8. Request live SQL/import approval only after backup/snapshot evidence and clean staging.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:475:The live-write/import guardrails are materially complete: dry-run defaults, explicit `TCGTRACKING_DB_ENV`, production live-write refusal without `TCGTRACKING_ALLOW_LIVE_WRITE=true`, Render DB protection, category `3` hard guard, no SKU-language row fanout, and same-environment source smoke before non-dry-run writes. The runbook requirements cover backup/snapshot, SQL timeouts, no PackPrize catalog reference SQL in this MVP, dry-run, tiny write pilot, SQL inspection, and non-destructive rollback via `isActive=false`.
+docs/plans/catalogitem-tcgtracking-oracle-review.md:479:The deferred sections do not create dangerous ambiguity. The plan repeatedly states that API/UI and pack-reference work are future-lane only, and the staging/production gates both require no pack API/UI behavior changes for this MVP. The production gate also keeps live SQL/import approval, backup/snapshot confirmation, same-environment smoke, explicit production env, pilot import, report, and rollback posture intact.
+docs/plans/catalogitem-tcgtracking-plan.md:66:3. Import guard must distinguish staging Render DB from production Render DB via explicit env, not only `/render\.com/`.
+docs/plans/catalogitem-tcgtracking-plan.md:86:1. Importer implementation must add/log `TCGTRACKING_DB_ENV=local|staging|production`, refuse Render DB with `TCGTRACKING_DB_ENV=local`, require production writes to include `TCGTRACKING_DB_ENV=production TCGTRACKING_ALLOW_LIVE_WRITE=true`, and require staging writes to state `TCGTRACKING_DB_ENV=staging`.
+docs/plans/catalogitem-tcgtracking-plan.md:88:3. Production/staging pilot commands must include explicit `TCGTRACKING_DB_ENV`. Live DB mutation still requires explicit approval plus backup/snapshot confirmation.
+docs/plans/catalogitem-tcgtracking-plan.md:95:1. Every write-mode importer command must set `TCGTRACKING_DB_ENV` explicitly; staging/production dry-runs are explicit too.
+docs/plans/catalogitem-tcgtracking-plan.md:394:TCGTRACKING_ALLOW_LIVE_WRITE=false       # must be true for production writes
+docs/plans/catalogitem-tcgtracking-plan.md:395:TCGTRACKING_DB_ENV=local                 # local | staging | production; do not infer prod only from Render URL
+docs/plans/catalogitem-tcgtracking-plan.md:412:- explicit refusal if `TCGTRACKING_DB_ENV=production` without `TCGTRACKING_ALLOW_LIVE_WRITE=true`
+docs/plans/catalogitem-tcgtracking-plan.md:413:- explicit refusal for any Render `DATABASE_URL` with `TCGTRACKING_DB_ENV=local`; set `staging` or `production` explicitly
+docs/plans/catalogitem-tcgtracking-plan.md:414:- explicit log of `TCGTRACKING_DB_ENV`; if staging uses Render, require `TCGTRACKING_DB_ENV=staging` instead of relying on URL regex only
+docs/plans/catalogitem-tcgtracking-plan.md:415:- production write commands must include both `TCGTRACKING_DB_ENV=production` and `TCGTRACKING_ALLOW_LIVE_WRITE=true`; staging write commands must include `TCGTRACKING_DB_ENV=staging`
+docs/plans/catalogitem-tcgtracking-plan.md:416:- for any `TCGTRACKING_DRY_RUN=false` execution, require `TCGTRACKING_DB_ENV` to be explicitly set to `local`, `staging`, or `production`; do not rely on the default for write mode
+docs/plans/catalogitem-tcgtracking-plan.md:457:TCGTRACKING_DB_ENV=staging \
+docs/plans/catalogitem-tcgtracking-plan.md:459:TCGTRACKING_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgtracking-plan.md:980:2. Apply schema SQL to local/staging DB.
+docs/plans/catalogitem-tcgtracking-plan.md:981:3. Run pilot import. Local write command, only with a local `DATABASE_URL`:
+docs/plans/catalogitem-tcgtracking-plan.md:992:Staging write command, only against staging:
+docs/plans/catalogitem-tcgtracking-plan.md:995:TCGTRACKING_DB_ENV=staging \
+docs/plans/catalogitem-tcgtracking-plan.md:997:TCGTRACKING_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgtracking-plan.md:1023:**Objective:** Prove migrations/import/UI on staging before live.
+docs/plans/catalogitem-tcgtracking-plan.md:1026:1. Backup staging DB.
+docs/plans/catalogitem-tcgtracking-plan.md:1028:3. Deploy only if needed for running the importer from staging; no pack API/UI behavior should change in this MVP.
+docs/plans/catalogitem-tcgtracking-plan.md:1029:4. Run source smoke/dry-run importer from the same staging/Render service shell that will run writes; log HTTP status/content-type/category/set/product-count/sample and refuse if non-JSON/Cloudflare/HTML/empty/missing fixture keys.
+docs/plans/catalogitem-tcgtracking-plan.md:1038:TCGTRACKING_DB_ENV=staging \
+docs/plans/catalogitem-tcgtracking-plan.md:1045:TCGTRACKING_DB_ENV=staging \
+docs/plans/catalogitem-tcgtracking-plan.md:1047:TCGTRACKING_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgtracking-plan.md:1069:TCGTRACKING_DB_ENV=production \
+docs/plans/catalogitem-tcgtracking-plan.md:1080:TCGTRACKING_DB_ENV=production \
+docs/plans/catalogitem-tcgtracking-plan.md:1082:TCGTRACKING_ALLOW_LIVE_WRITE=true \
+docs/plans/catalogitem-tcgtracking-plan.md:1093:4. Run source smoke/dry-run importer from the same production/Render service shell that will run writes; log HTTP status/content-type/category/set/product-count/sample and refuse if non-JSON/Cloudflare/HTML/empty/missing fixture keys.
+docs/plans/catalogitem-tcgtracking-plan.md:1094:5. Run 10-card pilot importer with explicit `TCGTRACKING_DB_ENV=production`.
+docs/plans/custom-pack-creator-oracle-review-gpt55pro-20260530.md:412:* **A JSON-only prize pool for production.** JSON config is fine for draft UX; paid draws need resolved rows, snapshots, hashes, and ledger linkage.
+docs/plans/custom-pack-creator-reverse-engineering-proposal-20260530.md:52:Interpretation: do not depend on scraping pokemoncard.io custom creator internals for production design. Use our already-ingested `pokemoncard.io` catalog source as data; design our own pack builder.
+docs/plans/custom-pack-creator-reverse-engineering-proposal-v2-oracle-closed-20260530.md:109:Interpretation: do not depend on scraping pokemoncard.io custom creator internals for production design. Use our already-ingested `pokemoncard.io` catalog source as data; design our own pack builder.
+docs/plans/oripa-custom-pack-creator-reconciled-proposal-20260530.md:86:- JSON-only prize pools for production paid draws.
+docs/plans/oripa-custom-pack-creator-reconciled-proposal-20260530.md:616:- Do not use Cloudflare-protected scraping as a production ingestion strategy.
+docs/plans/oripa-custom-pack-creator-reconciled-proposal-20260530.md:687:10. Source usage and image ingestion have terms/licensing approval before automated production ingestion.
+docs/plans/oripa-custom-pack-creator-reconciled-proposal-20260530.md:751:- JSON filters are never the only production representation of a paid draw pool.
+docs/plans/pokemoncard-io-quality-bar-oripa-architecture-plan-20260530.md:9:**Tech Stack:** Express API, Prisma, PostgreSQL/Render Postgres, `pg_trgm`, source-backed `CatalogItem`, Oripa `Pack`/`PackPrize`/fairness models, Next/vendor UI.
+docs/plans/pokemoncard-io-quality-bar-oripa-architecture-plan-20260530.md:835:2. Run against local/staging/collaborator DB explicitly.
+docs/plans/pokemoncard-io-quality-bar-oripa-architecture-plan-20260530.md:1017:1. Which DB target is the first performance target: local, staging/collaborator, or production?
+docs/plans/pokemoncard-mvp-bounded-kanban-queue-20260530.md:11:- No live/staging/prod DB writes without explicit approval.
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md:12:Important scope limit: this K9 pass did not write to live/staging/prod DB and did not apply migrations. The K0 schema preflight remains the live-DB gate: the configured `.env` points at Render Postgres, repo-to-live Prisma diff contained destructive operations, and live migration/application still requires explicit operator approval plus a reconciled migration plan.
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md:47:| 1 | Prisma/repo schema reconciled against current local/live-drift evidence with additive migrations/SQL only. | Locally code-valid; live application gated. | `npm exec -- prisma validate --schema prisma/schema.prisma` exit 0. K0 report `docs/plans/pokemoncard-mvp-schema-preflight-20260530.md` documents read-only live drift and warns not to run `prisma migrate` against configured Render DB yet. No migration was applied by K9. |
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md:66:- [x] No live/staging/prod DB writes were performed during K9.
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md:71:- [ ] If claiming production search performance, run approved read-only `EXPLAIN (ANALYZE, BUFFERS)` / latency probes on the target DB; K9 only proves local code/canary behavior.
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md:76:2. K0 live DB drift remains unresolved for deployment: current repo schema and configured Render DB differ in live-only catalog/storefront objects. Do not run auto-generated Prisma migrations against that DB.
+docs/plans/pokemoncard-mvp-final-canary-report-20260530.md:82:K9 produced this PR-readiness/canary packet only. It did not open a PR, push a branch, restart services, run migrations, or mutate any live/staging/prod database.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:9:Do not run `prisma migrate dev`, `prisma migrate deploy`, or the existing `prisma/sql/*.sql` against the configured DB yet.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:11:The repo Prisma schema is valid, but it is not reconciled with the configured live Render Postgres schema. A read-only Prisma diff from the configured DB to the repo schema would drop live catalog tables/columns/indexes, including `CatalogSet`, `CatalogItem.catalogSetId`, canonical catalog tables, storefront columns, and image columns. Any generated Prisma migration from the current repo schema would therefore be destructive unless the live-only objects are first represented or intentionally preserved.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:112:- `datasource db`: PostgreSQL, `DATABASE_URL`.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:151:  - Has explicit warning not to run against staging/production without approval and backup/snapshot.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:162:DATABASE_URL=postgresql://postgres:***@localhost:5432/oripa_saas?schema=public
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:165:Actual `.env` contains a `DATABASE_URL` whose host is remote Render Postgres:
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:174:Process environment did not already contain `DATABASE_URL`; Prisma CLI loaded `.env`.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:179:- The configured DB is not local; it is a Render Postgres host.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:184:- Read-only schema queries through Prisma Client succeeded against the configured Render Postgres URL.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:276:DATABASE_URL=$(node -e "require('dotenv').config(); process.stdout.write(process.env.DATABASE_URL || '')")
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:277:npm exec -- prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script > /tmp/oripa_k0_live_to_repo_diff.sql
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:362:1. Do not run auto-generated Prisma migrations against the configured Render DB.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:363:2. Do not run `npm run db:migrate` (`prisma migrate dev`) against `.env` as currently configured.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:380:9. For local development, create a separate local `DATABASE_URL` before running migrations. The current `.env` points at Render, not localhost.
+docs/plans/pokemoncard-mvp-schema-preflight-20260530.md:394:- `npm exec -- prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script` -> exit 0, generated 175-line review-only diff in `/tmp/oripa_k0_live_to_repo_diff.sql`; diff contains destructive operations and must not be applied.
+docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md:22:- Live Render DB mutations without explicit user approval plus backup/snapshot confirmation.
+docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md:53:7. Local QA gate: run test/build/dry-run/report checklist; local DB writes only if safely pointed at a local DB, never with the current live Render `.env`.
+docs/plans/queues/catalogitem-tcgtracking-import-mvp-20260529/QUEUE_SPEC.md:54:8. Staging rollout gate: prepare/execute only safe dry-run and evidence steps; block for any staging DB write approval/environment if not explicitly available.
+docs/runbooks/catalogitem-tcgtracking-import.md:28:echo "$DATABASE_URL"
+docs/runbooks/catalogitem-tcgtracking-import.md:35:Before any staging/production SQL apply or importer write run (`TCGTRACKING_DRY_RUN=false`), obtain and record:
+docs/runbooks/catalogitem-tcgtracking-import.md:37:- Explicit operator approval for target environment (`staging` or `production`)
+docs/runbooks/catalogitem-tcgtracking-import.md:48:psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f prisma/sql/catalogitem-tcgtracking.sql
+docs/runbooks/catalogitem-tcgtracking-import.md:96:TCGTRACKING_DB_ENV=staging \
+docs/runbooks/catalogitem-tcgtracking-import.md:98:TCGTRACKING_ALLOW_LIVE_WRITE=true \
+docs/runbooks/catalogitem-tcgtracking-import.md:105:Production uses the same shape with `TCGTRACKING_DB_ENV=production` and must still have explicit approval plus backup/snapshot.
+prisma/sql/catalogitem-tcgdex.sql:3:-- Do not run against production/live without operator approval and a backup/snapshot.
+prisma/sql/catalogitem-tcgtracking.sql:3:-- Do not run against staging/production without explicit approval and backup/snapshot.
+prisma/sql/pack-publish-freeze.sql:2:-- Do not run against staging/production without explicit approval and backup/snapshot.
+prisma/sql/pack-template-version-slot-mvp.sql:2:-- Do not run against staging/production without explicit approval and backup/snapshot.
+prisma/sql/vendor-inventory-allocation-foundation.sql:2:-- Do not run against live/staging/prod without the repo/live-schema drift gate approval.
+PROJECTS.md:30:- Database migrations/scripts only after explicit live-DB approval when they affect Render/live data
+README.md:1:# Oripa SaaS Starter (Render + Node/Express + Next + Prisma)
+README.md:23:   - Set `DATABASE_URL` to your Render Postgres **external** URL and append `?sslmode=require`
+README.md:29:   - `npx prisma db push --schema prisma/schema.prisma`
+README.md:43:   - `npx prisma db push`
+README.md:67:## Render Deployment Guide (Monorepo)
+README.md:69:This repo deploys as two Render Web Services from the same GitHub repo:
+README.md:76:2. In Render, create services from that same repo.
+README.md:77:3. If the repo is not visible in Render:
+README.md:78:   - reconnect GitHub in Render Account settings
+README.md:79:   - confirm Render app is installed for your org/repo
+README.md:93:`npm ci --include=dev && npx prisma generate && npx prisma db push && npm run build -w @oripa/shared && npm run build -w @oripa/api`
+README.md:104:NODE_ENV=production
+README.md:108:DATABASE_URL=postgresql://REPLACE_WITH_RENDER_POSTGRES_URL?sslmode=require
+README.md:135:NODE_ENV=production
+README.md:155:- `GOOGLE_CALLBACK_URL` in Render API env must match exactly.
+README.md:186:  - DB password / `DATABASE_URL`
+scripts/catalogitem_inventory.js:34:  const db = safeDbInfo(process.env.DATABASE_URL || '');
+scripts/catalogitem_source_delta.js:138:  const db = safeDbInfo(process.env.DATABASE_URL || '');
+=== TODO/FIXME/SKIP/ONLY/debug console ===
+apps/api/scripts/catalog-report.ts:32:  console.log(`\n[catalog-report] ${title}`);
+apps/api/scripts/catalog-report.ts:100:    console.log("(no rows)");
+apps/api/scripts/catalog-report.ts:103:    console.log(`source=${row.source} count=${asNumber(row.count)}`);
+apps/api/scripts/catalog-report.ts:108:    console.log("(no rows)");
+apps/api/scripts/catalog-report.ts:111:    console.log(`source=${row.source} itemType=${row.itemType} count=${asNumber(row.count)}`);
+apps/api/scripts/catalog-report.ts:116:    console.log("(no rows)");
+apps/api/scripts/catalog-report.ts:119:    console.log(
+apps/api/scripts/catalog-report.ts:136:  console.log(`duplicateGroups=${duplicateSourceKeys.length}`);
+apps/api/scripts/catalog-report.ts:138:    console.log(
+apps/api/scripts/catalog-report.ts:144:  console.log(`source=${SOURCE} missingImageCount=${asNumber(missingImageCount[0]?.missingImageCount ?? 0)}`);
+apps/api/scripts/catalog-report.ts:148:    console.log("(no rows)");
+apps/api/scripts/catalog-report.ts:151:    console.log(`source=${row.source} setId=${row.setId ?? "null"} count=${asNumber(row.count)}`);
+apps/api/scripts/sync-carddb-fast.ts:97:    console.log(`[fast-carddb] inserted source=${source} offset=${i} chunk=${chunk.length} inserted=${result.count}`);
+apps/api/scripts/sync-carddb-fast.ts:112:    if (page === 1 || page % 50 === 0 || page === lastPage) console.log(`[fast-carddb] fetched source=${source.key} page=${page}/${lastPage} rows=${normalized.length}`);
+apps/api/scripts/sync-carddb-fast.ts:115:  console.log(`[fast-carddb] source-complete source=${source.key} pages=${lastPage} normalized=${rows.length} inserted=${inserted}`);
+apps/api/scripts/sync-carddb-fast.ts:178:  console.log(`[fast-carddb] bulbapedia-complete normalizedSets=${sets.length} upsertedSets=${sets.length}`);
+apps/api/scripts/sync-carddb-fast.ts:188:  console.log(`[fast-carddb] before=${JSON.stringify(before)}`);
+apps/api/scripts/sync-carddb-fast.ts:194:  console.log(`[fast-carddb] results=${JSON.stringify({ results, bulbapedia })}`);
+apps/api/scripts/sync-carddb-fast.ts:195:  console.log(`[fast-carddb] afterItems=${JSON.stringify(afterItems)}`);
+apps/api/scripts/sync-carddb-fast.ts:196:  console.log(`[fast-carddb] afterSets=${JSON.stringify(afterSets)}`);
+apps/api/scripts/sync-carddb-sources.ts:337:  console.log(
+apps/api/scripts/sync-carddb-sources.ts:350:    console.log(`[carddb-sync] page source=${source.key} page=${page}/${lastPage} cards=${cards.length} total=${payload.total ?? "unknown"}`);
+apps/api/scripts/sync-carddb-sources.ts:371:        console.log(
+apps/api/scripts/sync-carddb-sources.ts:387:  console.log(
+apps/api/scripts/sync-carddb-sources.ts:461:  console.log(`[carddb-sync] bulbapedia parsed sets=${sets.length}`);
+apps/api/scripts/sync-carddb-sources.ts:466:      console.log(`[carddb-sync] bulbapedia sample name=${set.name} releaseDate=${set.releaseDate?.toISOString().slice(0, 10) ?? "null"}`);
+apps/api/scripts/sync-carddb-sources.ts:473:  console.log(
+apps/api/scripts/sync-carddb-sources.ts:481:  console.log(
+apps/api/scripts/sync-carddb-sources.ts:508:  console.log(
+apps/api/scripts/sync-tcgdex.ts:143:  console.log(
+apps/api/scripts/sync-tcgdex.ts:157:      console.log(`[tcgdex-sync] set=${setId} cards=${cardRefs.length}`);
+apps/api/scripts/sync-tcgdex.ts:181:              console.log(`[tcgdex-sync] dry-run sample ${JSON.stringify({
+apps/api/scripts/sync-tcgdex.ts:210:  console.log(
+apps/api/scripts/sync-tcgtracking.ts:206:  console.log(
+apps/api/scripts/sync-tcgtracking.ts:351:  console.log(`[tcgtracking-sync] source smoke productCount=${smokeResult.productCount} set=${setId}`);
+apps/api/scripts/sync-tcgtracking.ts:372:  console.log(
+apps/api/scripts/sync-tcgtracking.ts:386:      console.log(`[tcgtracking-sync] set-progress set=${setId} index=${config.startSetIndex + idx} products=${products.length}`);
+apps/api/scripts/sync-tcgtracking.ts:423:            console.log(
+apps/api/scripts/sync-tcgtracking.ts:442:  console.log(
+apps/api/scripts/sync-tcgtracking.ts:445:  console.log(
+apps/api/scripts/sync-tcgtracking.ts:448:  console.log(
+apps/api/scripts/tcgtracking-report.ts:37:  console.log("[tcgtracking-report] CatalogItem source-backed import report");
+apps/api/scripts/tcgtracking-report.ts:38:  console.log(`source=${SOURCE}`);
+apps/api/scripts/tcgtracking-report.ts:39:  console.log(`total=${total}`);
+apps/api/scripts/tcgtracking-report.ts:40:  console.log(`active=${active}`);
+apps/api/scripts/tcgtracking-report.ts:41:  console.log(`missingImage=${missingImage}`);
+apps/api/scripts/tcgtracking-report.ts:42:  console.log(`missingLocalId=${missingLocalId}`);
+apps/api/scripts/tcgtracking-report.ts:43:  console.log(`missingSourcePayload=${missingSourcePayload}`);
+apps/api/scripts/tcgtracking-report.ts:45:  console.log("[tcgtracking-report] top sets");
+apps/api/scripts/tcgtracking-report.ts:47:    console.log(`setId=${set.setId ?? "null"} setName=${set.setName ?? "null"} count=${set._count._all}`);
+apps/api/scripts/tcgtracking-report.ts:50:  console.log("[tcgtracking-report] samples");
+apps/api/scripts/tcgtracking-report.ts:52:    console.log(
+apps/api/scripts/test-campaign-creative-mvp.ts:72:console.log("creative MVP service guardrails passed", {
+apps/api/scripts/test-carddb-sources-normalizer.ts:102:console.log("carddb source normalizer tests passed");
+apps/api/scripts/test-catalog-facets-suggest.ts:98:console.log("catalog facets/suggest tests passed");
+apps/api/scripts/test-catalog-search-dedupe.ts:115:console.log("catalog search dedupe tests passed");
+apps/api/scripts/test-catalog-search-query.ts:78:console.log("catalog search query tests passed");
+apps/api/scripts/test-draw-pool-integrity.ts:105:console.log("draw pool integrity tests passed");
+apps/api/scripts/test-pack-immutability-guard.ts:58:console.log("pack immutability guard tests passed");
+apps/api/scripts/test-pack-inventory-allocation.ts:225:  console.log("pack inventory allocation tests passed");
+apps/api/scripts/test-pack-prize-catalog-snapshots.ts:217:  console.log("pack prize catalog snapshot tests passed");
+apps/api/scripts/test-pack-publish-freeze.ts:220:console.log("pack publish/freeze tests passed");
+apps/api/scripts/test-pack-template-publish.ts:183:console.log("pack template publish tests passed");
+apps/api/scripts/test-sync-tcgtracking-guardrails.ts:191:  console.log("tcgtracking sync guardrail tests passed");
+apps/api/scripts/test-tcgdex-normalizer.ts:61:console.log("tcgdex normalizer tests passed");
+apps/api/scripts/test-tcgtracking-normalizer.ts:160:console.log("tcgtracking normalizer tests passed");
+apps/web/scripts/test-vendor-catalog-ux.ts:20:console.log("vendor catalog UX source probe passed");
+docs/plans/catalogitem-tcgtracking-oracle-evidence.md:2142:9|    "lint": "node -e \"console.log('lint: add eslint config when ready')\"",
+scripts/catalogitem_inventory.js:91:  console.log(out);
+scripts/catalogitem_inventory.js:92:  console.log(path.join(outDir, 'catalogitem-inventory-by-source-game.csv'));
+scripts/catalogitem_source_delta.js:190:  console.log(mdPath);
+scripts/catalogitem_source_delta.js:191:  console.log(path.join(outDir, 'catalogitem-source-delta-summary.csv'));
+scripts/catalogitem_source_delta.js:192:  console.log(path.join(outDir, 'catalogitem-source-delta-samples.csv'));

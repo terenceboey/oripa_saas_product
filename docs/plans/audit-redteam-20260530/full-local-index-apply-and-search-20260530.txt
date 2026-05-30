@@ -1,0 +1,130 @@
+=== apply expression/search indexes to full local DB ===
+CREATE EXTENSION
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:24: NOTICE:  relation "CatalogSet" already exists, skipping
+CREATE TABLE
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:26: NOTICE:  column "catalogSetId" of relation "CatalogItem" already exists, skipping
+ALTER TABLE
+DO
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:39: NOTICE:  relation "CatalogSet_source_sourceSetId_key" already exists, skipping
+CREATE INDEX
+CREATE INDEX
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:40: NOTICE:  relation "CatalogSet_game_isActive_idx" already exists, skipping
+CREATE INDEX
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:41: NOTICE:  relation "CatalogSet_source_isActive_idx" already exists, skipping
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:42: NOTICE:  relation "CatalogSet_setCode_idx" already exists, skipping
+CREATE INDEX
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:43: NOTICE:  relation "CatalogSet_name_idx" already exists, skipping
+CREATE INDEX
+CREATE INDEX
+psql:/tmp/catalogitem-live-schema-reconcile-search-indexes.sql:44: NOTICE:  relation "CatalogItem_catalogSetId_isActive_idx" already exists, skipping
+CREATE INDEX
+=== analyze catalog ===
+ANALYZE
+=== verify trigram index ===
+            indexname            |                                                  indexdef
+---------------------------------+-------------------------------------------------------------------------------------------------------------
+ CatalogItem_lower_name_trgm_idx | CREATE INDEX "CatalogItem_lower_name_trgm_idx" ON public."CatalogItem" USING gin (lower(name) gin_trgm_ops)
+(1 row)
+
+=== search explain probes ===
+--- term=charizard ---
+                                                                           QUERY PLAN
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=197.82..197.85 rows=10 width=416) (actual time=2.708..2.712 rows=40.00 loops=1)
+   Buffers: shared hit=304 read=212
+   ->  Sort  (cost=197.82..197.85 rows=10 width=416) (actual time=2.707..2.709 rows=40.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'charizard'::text) THEN 0 WHEN (lower(name) ~~ 'charizard%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: top-N heapsort  Memory: 65kB
+         Buffers: shared hit=304 read=212
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=99.01..197.66 rows=10 width=416) (actual time=0.475..2.420 rows=609.00 loops=1)
+               Recheck Cond: (lower(name) ~~ '%charizard%'::text)
+               Filter: ("isActive" AND (game = 'POKEMON'::text))
+               Rows Removed by Filter: 124
+               Heap Blocks: exact=468
+               Buffers: shared hit=298 read=212
+               ->  Bitmap Index Scan on "CatalogItem_lower_name_trgm_idx"  (cost=0.00..99.01 rows=25 width=0) (actual time=0.441..0.441 rows=733.00 loops=1)
+                     Index Cond: (lower(name) ~~ '%charizard%'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=42
+ Planning:
+   Buffers: shared hit=364
+ Planning Time: 0.912 ms
+ Execution Time: 2.786 ms
+(20 rows)
+
+--- term=pikachu ---
+                                                                          QUERY PLAN
+---------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=2129.84..2129.94 rows=40 width=416) (actual time=4.579..4.582 rows=40.00 loops=1)
+   Buffers: shared hit=606 read=313
+   ->  Sort  (cost=2129.84..2130.38 rows=215 width=416) (actual time=4.578..4.580 rows=40.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'pikachu'::text) THEN 0 WHEN (lower(name) ~~ 'pikachu%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: top-N heapsort  Memory: 65kB
+         Buffers: shared hit=606 read=313
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=71.73..2123.05 rows=215 width=416) (actual time=0.515..4.046 rows=1247.00 loops=1)
+               Recheck Cond: (lower(name) ~~ '%pikachu%'::text)
+               Filter: ("isActive" AND (game = 'POKEMON'::text))
+               Rows Removed by Filter: 337
+               Heap Blocks: exact=889
+               Buffers: shared hit=600 read=313
+               ->  Bitmap Index Scan on "CatalogItem_lower_name_trgm_idx"  (cost=0.00..71.68 rows=564 width=0) (actual time=0.441..0.442 rows=1584.00 loops=1)
+                     Index Cond: (lower(name) ~~ '%pikachu%'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=24
+ Planning:
+   Buffers: shared hit=354
+ Planning Time: 1.005 ms
+ Execution Time: 4.667 ms
+(20 rows)
+
+--- term=mew ---
+                                                                                    QUERY PLAN
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=5072.51..5072.61 rows=40 width=416) (actual time=5.522..5.526 rows=40.00 loops=1)
+   Buffers: shared hit=330 read=228
+   ->  Sort  (cost=5072.51..5075.09 rows=1034 width=416) (actual time=5.521..5.523 rows=40.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'mew'::text) THEN 0 WHEN (lower(name) ~~ 'mew%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: top-N heapsort  Memory: 62kB
+         Buffers: shared hit=330 read=228
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=1421.50..5039.83 rows=1034 width=416) (actual time=3.332..5.167 rows=724.00 loops=1)
+               Recheck Cond: ((lower(name) ~~ '%mew%'::text) AND (game = 'POKEMON'::text) AND "isActive")
+               Heap Blocks: exact=422
+               Buffers: shared hit=324 read=228
+               ->  BitmapAnd  (cost=1421.50..1421.50 rows=1034 width=0) (actual time=3.298..3.298 rows=0.00 loops=1)
+                     Buffers: shared hit=12 read=118
+                     ->  Bitmap Index Scan on "CatalogItem_lower_name_trgm_idx"  (cost=0.00..30.65 rows=2715 width=0) (actual time=0.093..0.093 rows=972.00 loops=1)
+                           Index Cond: (lower(name) ~~ '%mew%'::text)
+                           Index Searches: 1
+                           Buffers: shared hit=4
+                     ->  Bitmap Index Scan on "CatalogItem_itemType_game_isActive_idx"  (cost=0.00..1390.09 rows=102523 width=0) (actual time=3.113..3.113 rows=103765.00 loops=1)
+                           Index Cond: ((game = 'POKEMON'::text) AND ("isActive" = true))
+                           Index Searches: 3
+                           Buffers: shared hit=8 read=118
+ Planning:
+   Buffers: shared hit=354
+ Planning Time: 0.853 ms
+ Execution Time: 5.606 ms
+(24 rows)
+
+--- term=nonexistentzz ---
+                                                                               QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=249.61..249.64 rows=10 width=416) (actual time=0.219..0.220 rows=0.00 loops=1)
+   Buffers: shared hit=48
+   ->  Sort  (cost=249.61..249.64 rows=10 width=416) (actual time=0.218..0.219 rows=0.00 loops=1)
+         Sort Key: (CASE WHEN (lower(name) = 'nonexistentzz'::text) THEN 0 WHEN (lower(name) ~~ 'nonexistentzz%'::text) THEN 1 ELSE 2 END), name, source, "sourceItemId"
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=48
+         ->  Bitmap Heap Scan on "CatalogItem"  (cost=150.80..249.45 rows=10 width=416) (actual time=0.203..0.203 rows=0.00 loops=1)
+               Recheck Cond: (lower(name) ~~ '%nonexistentzz%'::text)
+               Filter: ("isActive" AND (game = 'POKEMON'::text))
+               Buffers: shared hit=42
+               ->  Bitmap Index Scan on "CatalogItem_lower_name_trgm_idx"  (cost=0.00..150.80 rows=25 width=0) (actual time=0.198..0.199 rows=0.00 loops=1)
+                     Index Cond: (lower(name) ~~ '%nonexistentzz%'::text)
+                     Index Searches: 1
+                     Buffers: shared hit=42
+ Planning:
+   Buffers: shared hit=354
+ Planning Time: 0.936 ms
+ Execution Time: 0.293 ms
+(18 rows)

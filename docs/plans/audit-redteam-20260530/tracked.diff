@@ -1,0 +1,2190 @@
+diff --git a/README.md b/README.md
+index f1e1d20..c575730 100644
+--- a/README.md
++++ b/README.md
+@@ -1,5 +1,15 @@
+ # Oripa SaaS Starter (Render + Node/Express + Next + Prisma)
+
++## Current Product / Engineering Workflow
++
++Use `PROJECTS.md` and `docs/current-oripa-workflow.md` for the current Oripa SaaS workflow.
++
++Canonical CAR + Customer Stories source:
++
++- `docs/oripa-saas-reconciled-car-customer-stories-proposal.md`
++
++Older source-family docs under `docs/legacy references/` are provenance only unless a ticket explicitly needs source verification.
++
+ This starter gives you a Shopify-style multi-tenant base:
+ - `apps/api`: Express API with tenant middleware and transactional draw endpoint
+ - `apps/web`: Next.js vendor storefront/dashboard shell
+diff --git a/apps/api/package.json b/apps/api/package.json
+index 062aec3..bfe504f 100644
+--- a/apps/api/package.json
++++ b/apps/api/package.json
+@@ -7,7 +7,23 @@
+     "build": "tsc -p tsconfig.json",
+     "start": "node dist/index.js",
+     "lint": "node -e \"console.log('lint: add eslint config when ready')\"",
+-    "catalog:sync:tcgtracking": "tsx scripts/sync-tcgtracking.ts"
++    "catalog:sync:tcgtracking": "tsx scripts/sync-tcgtracking.ts",
++    "catalog:report": "tsx scripts/catalog-report.ts",
++    "catalog:sync:tcgdex": "tsx scripts/sync-tcgdex.ts",
++    "catalog:sync:carddb": "tsx scripts/sync-carddb-sources.ts",
++    "test:catalog:tcgdex": "tsx scripts/test-tcgdex-normalizer.ts",
++    "test:catalog:tcgtracking": "tsx scripts/test-tcgtracking-normalizer.ts",
++    "test:catalog:carddb": "tsx scripts/test-carddb-sources-normalizer.ts",
++    "test:catalog:search-dedupe": "tsx scripts/test-catalog-search-dedupe.ts",
++    "test:catalog:search-query": "tsx scripts/test-catalog-search-query.ts",
++    "test:packs:catalog-snapshots": "tsx scripts/test-pack-prize-catalog-snapshots.ts",
++    "test:packs:immutability": "tsx scripts/test-pack-immutability-guard.ts",
++    "test:packs:publish-freeze": "tsx scripts/test-pack-publish-freeze.ts",
++    "test:packs:inventory-allocation": "tsx scripts/test-pack-inventory-allocation.ts",
++    "test:packs:template-publish": "tsx scripts/test-pack-template-publish.ts",
++    "test:draws:pool-integrity": "tsx scripts/test-draw-pool-integrity.ts",
++    "test:catalog:tcgtracking:guardrails": "tsx scripts/test-sync-tcgtracking-guardrails.ts",
++    "test:creative:mvp": "tsx scripts/test-campaign-creative-mvp.ts"
+   },
+   "dependencies": {
+     "@oripa/shared": "0.1.0",
+diff --git a/apps/api/scripts/sync-tcgtracking.ts b/apps/api/scripts/sync-tcgtracking.ts
+index 9db63be..c8f7008 100644
+--- a/apps/api/scripts/sync-tcgtracking.ts
++++ b/apps/api/scripts/sync-tcgtracking.ts
+@@ -1,6 +1,16 @@
++import fs from "node:fs";
++import path from "node:path";
+ import { prisma } from "../src/lib/prisma";
++import {
++  mergeNormalizeStats,
++  normalizeTcgtrackingProductForCatalog,
++  type CatalogItemProjection,
++  type NormalizeStats,
++  type TcgTrackingProduct,
++  type TcgTrackingSetContext,
++} from "../src/modules/catalog/tcgtracking-normalizer";
+
+-type TcgTrackingSet = {
++type TcgTrackingSet = TcgTrackingSetContext & {
+   id?: number | string;
+   set_id?: number | string;
+   name?: string;
+@@ -9,28 +19,88 @@ type TcgTrackingSet = {
+   set_abbr?: string;
+ };
+
+-type TcgTrackingProduct = {
+-  id?: number | string;
+-  product_id?: number | string;
+-  name?: string;
+-  clean_name?: string;
+-  set_name?: string;
+-  set_abbr?: string;
+-  number?: string | number;
+-  rarity?: string;
+-  image_url?: string;
++export type RuntimeConfig = {
++  baseUrl: string;
++  categoryId: string;
++  dryRun: boolean;
++  allowLiveWrite: boolean;
++  dbEnv: "local" | "staging" | "production";
++  language: string;
++  game: string;
++  maxSets: number;
++  maxCards: number;
++  startSetIndex: number;
++  continueOnError: boolean;
++  retryCount: number;
++  retryDelayMs: number;
++  requestTimeoutMs: number;
++  fetchFullCards: boolean;
++  allowFixtureFallback: boolean;
++  databaseUrl: string | null;
++};
++
++type SmokeInput = {
++  status: number;
++  contentType: string | null;
++  url: string;
++  payload: unknown;
++};
++
++type SmokeResult = {
++  ok: true;
++  productCount: number;
++};
++
++const ALLOWED_DB_ENVS = new Set(["local", "staging", "production"]);
++
++type ApprovedTcgtrackingCategory = {
++  categoryId: string;
++  game: string;
++  language: string;
++  label: string;
++};
++
++export const APPROVED_TCGTRACKING_CATEGORIES: Record<string, ApprovedTcgtrackingCategory> = {
++  "1": { categoryId: "1", game: "MAGIC", language: "en", label: "Magic: The Gathering" },
++  "2": { categoryId: "2", game: "YUGIOH", language: "en", label: "Yu-Gi-Oh!" },
++  "3": { categoryId: "3", game: "POKEMON", language: "en", label: "Pokémon EN" },
++  "16": { categoryId: "16", game: "CARDFIGHT_VANGUARD", language: "en", label: "Cardfight!! Vanguard" },
++  "17": { categoryId: "17", game: "FORCE_OF_WILL", language: "en", label: "Force of Will" },
++  "20": { categoryId: "20", game: "WEISS_SCHWARZ", language: "en", label: "Weiss Schwarz" },
++  "24": { categoryId: "24", game: "FINAL_FANTASY", language: "en", label: "Final Fantasy TCG" },
++  "25": { categoryId: "25", game: "UNIVERSUS", language: "en", label: "UniVersus" },
++  "27": { categoryId: "27", game: "DRAGON_BALL_SUPER", language: "en", label: "Dragon Ball Super" },
++  "62": { categoryId: "62", game: "FLESH_AND_BLOOD", language: "en", label: "Flesh and Blood" },
++  "63": { categoryId: "63", game: "DIGIMON", language: "en", label: "Digimon Card Game" },
++  "66": { categoryId: "66", game: "METAZOO", language: "en", label: "MetaZoo" },
++  "67": { categoryId: "67", game: "WIXOSS", language: "en", label: "WIXOSS" },
++  "68": { categoryId: "68", game: "ONE_PIECE", language: "en", label: "One Piece Card Game" },
++  "71": { categoryId: "71", game: "LORCANA", language: "en", label: "Disney Lorcana" },
++  "72": { categoryId: "72", game: "BATTLE_SPIRITS_SAGA", language: "en", label: "Battle Spirits Saga" },
++  "73": { categoryId: "73", game: "SHADOWVERSE_EVOLVE", language: "en", label: "Shadowverse Evolve" },
++  "74": { categoryId: "74", game: "GRAND_ARCHIVE", language: "en", label: "Grand Archive" },
++  "75": { categoryId: "75", game: "AKORA", language: "en", label: "Akora" },
++  "76": { categoryId: "76", game: "KRYPTIK", language: "en", label: "Kryptik TCG" },
++  "77": { categoryId: "77", game: "SORCERY_CONTESTED_REALM", language: "en", label: "Sorcery: Contested Realm" },
++  "78": { categoryId: "78", game: "ALPHA_CLASH", language: "en", label: "Alpha Clash" },
++  "79": { categoryId: "79", game: "STAR_WARS_UNLIMITED", language: "en", label: "Star Wars Unlimited" },
++  "80": { categoryId: "80", game: "DRAGON_BALL_SUPER_FUSION_WORLD", language: "en", label: "Dragon Ball Super Fusion World" },
++  "81": { categoryId: "81", game: "UNION_ARENA", language: "en", label: "Union Arena" },
++  "83": { categoryId: "83", game: "ELESTRALS", language: "en", label: "Elestrals" },
++  "85": { categoryId: "85", game: "POKEMON", language: "ja", label: "Pokémon Japan" },
++  "86": { categoryId: "86", game: "GUNDAM", language: "en", label: "Gundam Card Game" },
++  "87": { categoryId: "87", game: "HOLOLIVE", language: "en", label: "hololive OFFICIAL CARD GAME" },
++  "88": { categoryId: "88", game: "GODZILLA", language: "en", label: "Godzilla Card Game" },
++  "89": { categoryId: "89", game: "RIFTBOUND", language: "en", label: "Riftbound: League of Legends TCG" },
+ };
+
+-const SOURCE = "tcgtracking";
+-const GAME = "POKEMON";
+-const LANGUAGE = "en";
+-const BASE_URL = process.env.TCGTRACKING_BASE_URL ?? "https://tcgtracking.com/tcgapi/v1";
+-const CATEGORY_ID = process.env.TCGTRACKING_CATEGORY_ID ?? "3"; // Pokemon
+-const MAX_SETS = Number(process.env.TCGTRACKING_MAX_SETS ?? "0");
+-const START_SET_INDEX = Math.max(0, Number(process.env.TCGTRACKING_START_SET_INDEX ?? "0"));
+-const CONTINUE_ON_ERROR = process.env.TCGTRACKING_CONTINUE_ON_ERROR === "true";
+-const RETRY_COUNT = Math.max(0, Number(process.env.TCGTRACKING_RETRY_COUNT ?? "2"));
+-const RETRY_DELAY_MS = Math.max(0, Number(process.env.TCGTRACKING_RETRY_DELAY_MS ?? "1000"));
++export function getApprovedTcgtrackingCategory(categoryId: string): ApprovedTcgtrackingCategory {
++  const category = APPROVED_TCGTRACKING_CATEGORIES[categoryId];
++  if (!category) {
++    throw new Error(`Unsupported TCGTracking category ${categoryId}; add it to APPROVED_TCGTRACKING_CATEGORIES after source/key/language review.`);
++  }
++  return category;
++}
+
+ function asString(value: unknown): string | null {
+   if (value === null || value === undefined) return null;
+@@ -42,27 +112,125 @@ function parseSetId(raw: TcgTrackingSet): string | null {
+   return asString(raw.id) ?? asString(raw.set_id);
+ }
+
+-function parseProductId(raw: TcgTrackingProduct): string | null {
+-  return asString(raw.id) ?? asString(raw.product_id);
++function parseBoolean(value: string | undefined, fallback: boolean): boolean {
++  if (value === undefined) return fallback;
++  return value.toLowerCase() === "true";
+ }
+
+-async function fetchJson(url: string) {
+-  const response = await fetch(url, {
+-    headers: {
+-      accept: "application/json",
+-      "user-agent": "oripa-saas-catalog-sync/1.0",
+-    },
+-  });
++function parseIntOr(value: string | undefined, fallback: number): number {
++  const parsed = Number(value);
++  return Number.isFinite(parsed) ? parsed : fallback;
++}
++
++function isRenderUrl(url: string | null): boolean {
++  return Boolean(url && /render\.com/i.test(url));
++}
++
++export function buildRuntimeConfig(env: NodeJS.ProcessEnv): RuntimeConfig {
++  const dryRun = parseBoolean(env.TCGTRACKING_DRY_RUN, true);
++  const dbEnvRaw = asString(env.TCGTRACKING_DB_ENV) ?? "local";
++  if (!ALLOWED_DB_ENVS.has(dbEnvRaw)) {
++    throw new Error(`Invalid TCGTRACKING_DB_ENV=${dbEnvRaw}; expected local|staging|production`);
++  }
++  const dbEnv = dbEnvRaw as RuntimeConfig["dbEnv"];
++  const categoryId = asString(env.TCGTRACKING_CATEGORY_ID) ?? "3";
++  const category = getApprovedTcgtrackingCategory(categoryId);
++
++  const config: RuntimeConfig = {
++    baseUrl: asString(env.TCGTRACKING_BASE_URL) ?? "https://tcgtracking.com/tcgapi/v1",
++    categoryId,
++    dryRun,
++    allowLiveWrite: parseBoolean(env.TCGTRACKING_ALLOW_LIVE_WRITE, false),
++    dbEnv,
++    language: asString(env.TCGTRACKING_LANGUAGE) ?? category.language,
++    game: asString(env.TCGTRACKING_GAME) ?? category.game,
++    maxSets: Math.max(0, parseIntOr(env.TCGTRACKING_MAX_SETS, 0)),
++    maxCards: Math.max(0, parseIntOr(env.TCGTRACKING_MAX_CARDS, 0)),
++    startSetIndex: Math.max(0, parseIntOr(env.TCGTRACKING_START_SET_INDEX, 0)),
++    continueOnError: parseBoolean(env.TCGTRACKING_CONTINUE_ON_ERROR, false),
++    retryCount: Math.max(0, parseIntOr(env.TCGTRACKING_RETRY_COUNT, 2)),
++    retryDelayMs: Math.max(0, parseIntOr(env.TCGTRACKING_RETRY_DELAY_MS, 1000)),
++    requestTimeoutMs: Math.max(1000, parseIntOr(env.TCGTRACKING_REQUEST_TIMEOUT_MS, 15000)),
++    fetchFullCards: parseBoolean(env.TCGTRACKING_FETCH_FULL_CARDS, false),
++    allowFixtureFallback: parseBoolean(env.TCGTRACKING_ALLOW_FIXTURE_FALLBACK, false),
++    databaseUrl: asString(env.DATABASE_URL),
++  };
+
+-  if (!response.ok) {
+-    throw new Error(`TCGTracking request failed (${response.status}) url=${url}`);
++  if (!dryRun && !env.TCGTRACKING_DB_ENV) {
++    throw new Error("TCGTRACKING_DB_ENV must be explicitly set for non-dry-run execution.");
+   }
+
+-  return response.json() as Promise<unknown>;
++  if (isRenderUrl(config.databaseUrl) && config.dbEnv === "local") {
++    throw new Error("Render DATABASE_URL cannot be used with TCGTRACKING_DB_ENV=local. Set staging or production explicitly.");
++  }
++
++  return config;
++}
++
++export function ensureWriteAllowed(config: RuntimeConfig) {
++  if (config.dryRun) return;
++  if (config.dbEnv === "production" && !config.allowLiveWrite) {
++    throw new Error("Refusing production write: set TCGTRACKING_ALLOW_LIVE_WRITE=true with TCGTRACKING_DB_ENV=production.");
++  }
++}
++
++function looksCloudflareOrHtml(input: SmokeInput): boolean {
++  const contentType = (input.contentType ?? "").toLowerCase();
++  if (contentType.includes("text/html")) return true;
++  const text = typeof input.payload === "string" ? input.payload.toLowerCase() : "";
++  return text.includes("cloudflare") || text.includes("<html");
++}
++
++export function validateSmokePayload(input: SmokeInput, config: RuntimeConfig): SmokeResult {
++  if (input.status < 200 || input.status >= 300) {
++    throw new Error(`Smoke check failed status=${input.status} url=${input.url}`);
++  }
++  const contentType = (input.contentType ?? "").toLowerCase();
++  if (!contentType.includes("application/json") || looksCloudflareOrHtml(input)) {
++    throw new Error(`Smoke check failed: non-JSON/Cloudflare/html response url=${input.url} contentType=${input.contentType}`);
++  }
++
++  const payload = input.payload;
++  let count = 0;
++  if (Array.isArray(payload)) count = payload.length;
++  else if (payload && typeof payload === "object" && Array.isArray((payload as { sets?: unknown[] }).sets)) {
++    count = (payload as { sets: unknown[] }).sets.length;
++  } else if (payload && typeof payload === "object" && Array.isArray((payload as { products?: unknown[] }).products)) {
++    count = (payload as { products: unknown[] }).products.length;
++  }
++
++  if (count <= 0) {
++    throw new Error(`Smoke check failed: empty or missing expected keys url=${input.url}`);
++  }
++
++  console.log(
++    `[tcgtracking-sync] smoke ok dbEnv=${config.dbEnv} status=${input.status} contentType=${input.contentType} url=${input.url} category=${config.categoryId} productCount=${count}`,
++  );
++  return { ok: true, productCount: count };
++}
++
++export function buildSyncSummaryLine(input: {
++  sets: number;
++  cards: number;
++  normalized: number;
++  upserted: number;
++  failures: number;
++  durationSec: number;
++}): string {
++  return `[tcgtracking-sync] completed sets=${input.sets} cards=${input.cards} normalized=${input.normalized} upserted=${input.upserted} failures=${input.failures} duration=${input.durationSec}s`;
++}
++
++function fixtureDir() {
++  return path.resolve(__dirname, "../src/modules/catalog/fixtures/tcgtracking/category-3");
++}
++
++function readFixtureJson<T>(filename: string): T {
++  const filePath = path.join(fixtureDir(), filename);
++  return JSON.parse(fs.readFileSync(filePath, "utf8")) as T;
+ }
+
+-async function fetchSets(): Promise<TcgTrackingSet[]> {
+-  const payload = await fetchJson(`${BASE_URL}/${CATEGORY_ID}/sets`);
++function loadFixtureSets(): TcgTrackingSet[] {
++  const payload = readFixtureJson<unknown>("3_sets.json");
+   if (Array.isArray(payload)) return payload as TcgTrackingSet[];
+   if (payload && typeof payload === "object" && Array.isArray((payload as { sets?: unknown }).sets)) {
+     return (payload as { sets: TcgTrackingSet[] }).sets;
+@@ -70,144 +238,237 @@ async function fetchSets(): Promise<TcgTrackingSet[]> {
+   return [];
+ }
+
+-async function fetchProducts(setId: string): Promise<TcgTrackingProduct[]> {
+-  const payload = await fetchJson(`${BASE_URL}/${CATEGORY_ID}/sets/${setId}`);
+-  if (Array.isArray(payload)) return payload as TcgTrackingProduct[];
+-  if (payload && typeof payload === "object" && Array.isArray((payload as { products?: unknown }).products)) {
+-    return (payload as { products: TcgTrackingProduct[] }).products;
++function loadFixtureSetProducts(setId: string): TcgTrackingProduct[] {
++  const payload = readFixtureJson<{ products?: unknown[] }>(`3_sets_${setId}.json`);
++  return Array.isArray(payload.products) ? (payload.products as TcgTrackingProduct[]) : [];
++}
++
++async function fetchJson(url: string, config: RuntimeConfig) {
++  const controller = new AbortController();
++  const timeout = setTimeout(() => controller.abort(), config.requestTimeoutMs);
++  const response = await fetch(url, {
++    signal: controller.signal,
++    headers: { accept: "application/json", "user-agent": "oripa-saas-catalog-sync/1.0" },
++  }).finally(() => clearTimeout(timeout));
++
++  const contentType = response.headers.get("content-type");
++  const raw = await response.text();
++  let payload: unknown = raw;
++  try {
++    payload = raw ? (JSON.parse(raw) as unknown) : null;
++  } catch {
++    payload = raw;
++  }
++
++  return { status: response.status, contentType, payload, url };
++}
++
++function shouldUseLocalFixtureFallback(config: RuntimeConfig): boolean {
++  return config.dbEnv === "local" && config.allowFixtureFallback;
++}
++
++async function fetchSets(config: RuntimeConfig): Promise<TcgTrackingSet[]> {
++  try {
++    const result = await fetchJson(`${config.baseUrl}/${config.categoryId}/sets`, config);
++    validateSmokePayload(result, config);
++    const { payload } = result;
++    if (Array.isArray(payload)) return payload as TcgTrackingSet[];
++    if (payload && typeof payload === "object" && Array.isArray((payload as { sets?: unknown }).sets)) {
++      return (payload as { sets: TcgTrackingSet[] }).sets;
++    }
++    return [];
++  } catch (error) {
++    if (shouldUseLocalFixtureFallback(config)) {
++      console.warn(`[tcgtracking-sync] set list fallback to fixtures (NON-AUTHORITATIVE local test mode) due to fetch failure: ${String(error)}`);
++      return loadFixtureSets();
++    }
++    throw error;
++  }
++}
++
++async function fetchProducts(setId: string, config: RuntimeConfig): Promise<TcgTrackingProduct[]> {
++  try {
++    const result = await fetchJson(`${config.baseUrl}/${config.categoryId}/sets/${setId}`, config);
++    if (result.status < 200 || result.status >= 300) {
++      throw new Error(`TCGTracking request failed (${result.status}) url=${result.url}`);
++    }
++    if (looksCloudflareOrHtml(result)) {
++      throw new Error(`TCGTracking request failed: Cloudflare/HTML response url=${result.url}`);
++    }
++
++    if (Array.isArray(result.payload)) return result.payload as TcgTrackingProduct[];
++    if (result.payload && typeof result.payload === "object" && Array.isArray((result.payload as { products?: unknown }).products)) {
++      return (result.payload as { products: TcgTrackingProduct[] }).products;
++    }
++    return [];
++  } catch (error) {
++    if (shouldUseLocalFixtureFallback(config)) {
++      console.warn(`[tcgtracking-sync] set=${setId} fallback to fixtures (NON-AUTHORITATIVE local test mode) due to fetch failure: ${String(error)}`);
++      return loadFixtureSetProducts(setId);
++    }
++    throw error;
+   }
+-  return [];
+ }
+
+-function sleep(ms: number) {
+-  return new Promise((resolve) => setTimeout(resolve, ms));
++async function sleep(ms: number) {
++  await new Promise((resolve) => setTimeout(resolve, ms));
+ }
+
+-async function fetchProductsWithRetry(setId: string): Promise<TcgTrackingProduct[]> {
++async function fetchProductsWithRetry(setId: string, config: RuntimeConfig): Promise<TcgTrackingProduct[]> {
+   let lastError: unknown;
+-  for (let attempt = 0; attempt <= RETRY_COUNT; attempt += 1) {
++  for (let attempt = 0; attempt <= config.retryCount; attempt += 1) {
+     try {
+-      return await fetchProducts(setId);
++      return await fetchProducts(setId, config);
+     } catch (error) {
+       lastError = error;
+-      if (attempt >= RETRY_COUNT) break;
+-      const delay = RETRY_DELAY_MS * (attempt + 1);
+-      console.warn(`[tcgtracking-sync] retry set=${setId} attempt=${attempt + 1}/${RETRY_COUNT} delayMs=${delay}`);
++      if (attempt >= config.retryCount) break;
++      const delay = config.retryDelayMs * (attempt + 1);
++      console.warn(`[tcgtracking-sync] retry set=${setId} attempt=${attempt + 1}/${config.retryCount} delayMs=${delay}`);
+       await sleep(delay);
+     }
+   }
+   throw lastError;
+ }
+
+-async function main() {
++async function upsertRow(row: CatalogItemProjection) {
++  await prisma.catalogItem.upsert({
++    where: {
++      source_sourceItemId_language: {
++        source: row.source,
++        sourceItemId: row.sourceItemId,
++        language: row.language,
++      },
++    },
++    update: row,
++    create: row,
++  });
++}
++
++async function runSourceSmokeIfNeeded(config: RuntimeConfig, setId: string) {
++  if (config.dryRun || shouldUseLocalFixtureFallback(config)) return;
++  const smoke = await fetchJson(`${config.baseUrl}/${config.categoryId}/sets/${setId}`, config);
++  const smokeResult = validateSmokePayload(smoke, config);
++  console.log(`[tcgtracking-sync] source smoke productCount=${smokeResult.productCount} set=${setId}`);
++}
++
++export async function runSync(config: RuntimeConfig): Promise<void> {
++  ensureWriteAllowed(config);
++
+   const startedAt = Date.now();
+-  const allSets = await fetchSets();
+-  const sets = allSets.slice(START_SET_INDEX);
++  const allSets = await fetchSets(config);
++  const sets = allSets.slice(config.startSetIndex);
+
+   let totalSets = 0;
+-  let totalProducts = 0;
++  let totalCards = 0;
++  let totalNormalized = 0;
+   let totalUpserted = 0;
+-  let failedSets = 0;
++  let failures = 0;
++  const statsBag: NormalizeStats[] = [];
++  const seenSourceKeys = new Set<string>();
++  let duplicateSourceKeyCount = 0;
++  let missingImageCount = 0;
++  let dryRunSamples = 0;
+
+   console.log(
+-    `[tcgtracking-sync] start category=${CATEGORY_ID} totalSets=${allSets.length} startIndex=${START_SET_INDEX} maxSets=${MAX_SETS || "all"} continueOnError=${CONTINUE_ON_ERROR}`,
++    `[tcgtracking-sync] start dbEnv=${config.dbEnv} category=${config.categoryId} dryRun=${config.dryRun} language=${config.language} game=${config.game} totalSets=${allSets.length} startIndex=${config.startSetIndex} maxSets=${config.maxSets || "all"} maxCards=${config.maxCards || "all"} allowFixtureFallback=${config.allowFixtureFallback}`,
+   );
+
+   for (let idx = 0; idx < sets.length; idx += 1) {
+-    if (MAX_SETS > 0 && totalSets >= MAX_SETS) break;
++    if (config.maxSets > 0 && totalSets >= config.maxSets) break;
+     const rawSet = sets[idx];
+     const setId = parseSetId(rawSet);
+     if (!setId) continue;
+
+     try {
+-      const products = await fetchProductsWithRetry(setId);
++      await runSourceSmokeIfNeeded(config, setId);
++      const products = await fetchProductsWithRetry(setId, config);
+       totalSets += 1;
++      console.log(`[tcgtracking-sync] set-progress set=${setId} index=${config.startSetIndex + idx} products=${products.length}`);
++
++      for (const product of products) {
++        if (config.maxCards > 0 && totalCards >= config.maxCards) break;
++        totalCards += 1;
+
+-      for (const rawProduct of products) {
+-        const sourceItemId = parseProductId(rawProduct);
+-        const name = asString(rawProduct.name) ?? asString(rawProduct.clean_name);
+-        if (!sourceItemId || !name) continue;
+-
+-        const setName = asString(rawProduct.set_name) ?? asString(rawSet.name) ?? asString(rawSet.set_name);
+-        const cardNumber = asString(rawProduct.number);
+-        const rarity = asString(rawProduct.rarity);
+-        const image = asString(rawProduct.image_url);
+-
+-        const searchText = [name, setName ?? "", cardNumber ?? "", rarity ?? "", "pokemon", "card"]
+-          .join(" ")
+-          .toLowerCase()
+-          .trim();
+-
+-        await prisma.catalogItem.upsert({
+-          where: {
+-            source_sourceItemId_language: {
+-              source: SOURCE,
+-              sourceItemId,
+-              language: LANGUAGE,
+-            },
+-          },
+-          update: {
+-            itemType: "CARD",
+-            game: GAME,
+-            name,
+-            setId,
+-            setName,
+-            cardNumber,
+-            rarity,
+-            imageBaseUrl: image,
+-            imageThumbUrl: image,
+-            imageLargeUrl: image,
+-            searchText,
+-            isActive: true,
+-          },
+-          create: {
+-            source: SOURCE,
+-            sourceItemId,
+-            itemType: "CARD",
+-            game: GAME,
+-            language: LANGUAGE,
+-            name,
+-            setId,
+-            setName,
+-            cardNumber,
+-            rarity,
+-            imageBaseUrl: image,
+-            imageThumbUrl: image,
+-            imageLargeUrl: image,
+-            searchText,
+-            isActive: true,
+-          },
++        const normalized = normalizeTcgtrackingProductForCatalog(product, {
++          language: config.language,
++          game: config.game,
++          categoryId: config.categoryId,
++          set: rawSet,
++          sourceContext: { importer: "sync-tcgtracking", dbEnv: config.dbEnv },
+         });
++        statsBag.push(normalized.stats);
+
+-        totalProducts += 1;
++        if (!normalized.row) {
++          console.warn(
++            `[tcgtracking-sync] skip set=${setId} productId=${asString((product as { id?: unknown }).id) ?? "unknown"} reason=${normalized.skippedReason ?? "unknown"}`,
++          );
++          continue;
++        }
++
++        totalNormalized += 1;
++
++        const dedupeKey = `${normalized.row.source}|${normalized.row.sourceItemId}|${normalized.row.language}`;
++        if (seenSourceKeys.has(dedupeKey)) {
++          duplicateSourceKeyCount += 1;
++        } else {
++          seenSourceKeys.add(dedupeKey);
++        }
++        if (!normalized.row.imageLargeUrl && !normalized.row.imageThumbUrl) {
++          missingImageCount += 1;
++        }
++
++        if (config.dryRun) {
++          if (dryRunSamples < 5) {
++            dryRunSamples += 1;
++            console.log(
++              `[tcgtracking-sync] dry-run sample ${dryRunSamples}/5 sourceItemId=${normalized.row.sourceItemId} name=${normalized.row.name} setId=${normalized.row.setId ?? "null"} localId=${normalized.row.localId ?? "null"}`,
++            );
++          }
++          continue;
++        }
++
++        await upsertRow(normalized.row);
+         totalUpserted += 1;
+       }
+-
+-      const absoluteSetIndex = START_SET_INDEX + idx;
+-      console.log(
+-        `[tcgtracking-sync] set=${setId} products=${products.length} scannedSets=${totalSets} absoluteSetIndex=${absoluteSetIndex}`,
+-      );
+     } catch (error) {
+-      failedSets += 1;
+-      const absoluteSetIndex = START_SET_INDEX + idx;
+-      console.error(`[tcgtracking-sync] set failed setId=${setId} absoluteSetIndex=${absoluteSetIndex}`, error);
+-      if (!CONTINUE_ON_ERROR) {
+-        throw error;
+-      }
++      failures += 1;
++      console.error(`[tcgtracking-sync] set failed setId=${setId}`, error);
++      if (!config.continueOnError) throw error;
+     }
+   }
+
++  const merged = mergeNormalizeStats(statsBag);
+   const durationSec = Math.round((Date.now() - startedAt) / 1000);
+   console.log(
+-    `[tcgtracking-sync] completed sets=${totalSets} products=${totalProducts} upserted=${totalUpserted} failedSets=${failedSets} duration=${durationSec}s`,
++    `[tcgtracking-sync] normalize-stats missing_id=${merged.missing_id} missing_name=${merged.missing_name} missing_image=${merged.missing_image} missing_set_metadata=${merged.missing_set_metadata} non_card_product=${merged.non_card_product} rows_written=${merged.rows_written} rows_skipped=${merged.rows_skipped}`,
++  );
++  console.log(
++    `[tcgtracking-sync] quality-check duplicate_source_keys=${duplicateSourceKeyCount} missing_image_rows=${missingImageCount}`,
++  );
++  console.log(
++    buildSyncSummaryLine({
++      sets: totalSets,
++      cards: totalCards,
++      normalized: totalNormalized,
++      upserted: config.dryRun ? 0 : totalUpserted,
++      failures,
++      durationSec,
++    }),
+   );
+ }
+
+-main()
+-  .catch((error) => {
++async function main() {
++  const config = buildRuntimeConfig(process.env);
++  try {
++    await runSync(config);
++  } finally {
++    await prisma.$disconnect();
++  }
++}
++
++if (process.env.TCGTRACKING_SYNC_TEST_MODE !== "1") {
++  main().catch((error) => {
+     console.error("[tcgtracking-sync] failed:", error);
+     process.exitCode = 1;
+-  })
+-  .finally(async () => {
+-    await prisma.$disconnect();
+   });
++}
+diff --git a/apps/api/src/app.ts b/apps/api/src/app.ts
+index c550435..7f966cf 100644
+--- a/apps/api/src/app.ts
++++ b/apps/api/src/app.ts
+@@ -7,11 +7,13 @@ import { vendorResolver } from "./middleware/vendor";
+ import { healthRouter } from "./modules/health/router";
+ import { vendorRouter } from "./modules/vendors/router";
+ import { packRouter } from "./modules/packs/router";
++import { packTemplateRouter } from "./modules/packs/templates-router";
+ import { drawRouter } from "./modules/draws/router";
+ import { walletRouter } from "./modules/wallet/router";
+ import { bannerRouter } from "./modules/banners/router";
+ import { authRouter } from "./modules/auth/router";
+ import { catalogRouter } from "./modules/catalog/router";
++import { creativeRouter } from "./modules/creative/router";
+
+ export function createApp() {
+   const app = express();
+@@ -81,11 +83,13 @@ export function createApp() {
+   app.use(healthRouter);
+   app.use(vendorRouter);
+   app.use(packRouter);
++  app.use(packTemplateRouter);
+   app.use(drawRouter);
+   app.use(walletRouter);
+   app.use(bannerRouter);
+   app.use(authRouter);
+   app.use(catalogRouter);
++  app.use(creativeRouter);
+
+   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+     const message = err instanceof Error ? err.message : "Internal server error";
+diff --git a/apps/api/src/modules/catalog/router.ts b/apps/api/src/modules/catalog/router.ts
+index 4c3d738..937337c 100644
+--- a/apps/api/src/modules/catalog/router.ts
++++ b/apps/api/src/modules/catalog/router.ts
+@@ -4,14 +4,46 @@ import { z } from "zod";
+ import { prisma } from "../../lib/prisma";
+ import { VendorRequest } from "../../middleware/vendor";
+ import { getRequestUserId, getVendorMembershipRole } from "../../lib/rbac";
++import { collapseCatalogSearchItems } from "./search-dedupe";
++import {
++  attachCatalogSearchPayloads,
++  buildCatalogSearchWhere,
++  sortCatalogSearchCandidates,
++  stripCatalogSearchPayload,
++} from "./search-query";
++import {
++  buildCatalogFacetWhere,
++  buildCatalogSuggestWhere,
++  toCatalogFacetResponse,
++  toCatalogSuggestionResponse,
++} from "./facets";
+
+ export const catalogRouter = Router();
+
+-const searchQuerySchema = z.object({
+-  q: z.string().trim().min(2).max(120),
+-  limit: z.coerce.number().int().min(1).max(30).optional().default(10),
++const catalogFilterSchema = z.object({
+   type: z.enum(["card", "sealed", "all"]).optional().default("card"),
+   game: z.string().trim().max(40).optional().default("POKEMON"),
++  language: z.string().trim().min(1).max(16).optional(),
++  source: z.string().trim().min(1).max(80).optional(),
++  setId: z.string().trim().min(1).max(120).optional(),
++  setName: z.string().trim().min(1).max(160).optional(),
++  rarity: z.string().trim().min(1).max(120).optional(),
++});
++
++const searchQuerySchema = catalogFilterSchema.extend({
++  q: z.string().trim().min(2).max(120),
++  limit: z.coerce.number().int().min(1).max(30).optional().default(10),
++  localId: z.string().trim().min(1).max(80).optional(),
++  cardNumber: z.string().trim().min(1).max(80).optional(),
++});
++
++const facetQuerySchema = catalogFilterSchema.extend({
++  limit: z.coerce.number().int().min(1).max(5000).optional().default(1000),
++});
++
++const suggestQuerySchema = catalogFilterSchema.extend({
++  q: z.string().trim().min(1).max(120),
++  limit: z.coerce.number().int().min(1).max(20).optional().default(8),
+ });
+
+ async function requireVendorReadAccess(req: VendorRequest, res: any) {
+@@ -32,6 +64,72 @@ async function requireVendorReadAccess(req: VendorRequest, res: any) {
+   return { vendorId: req.vendorId, actorUserId, role };
+ }
+
++const catalogSearchSelect = {
++  id: true,
++  source: true,
++  sourceItemId: true,
++  itemType: true,
++  game: true,
++  language: true,
++  name: true,
++  setId: true,
++  setName: true,
++  localId: true,
++  cardNumber: true,
++  rarity: true,
++  imageThumbUrl: true,
++  imageLargeUrl: true,
++  imageBaseUrl: true,
++  searchText: true,
++} as const;
++
++catalogRouter.get("/v1/catalog/facets", async (req: VendorRequest, res) => {
++  const auth = await requireVendorReadAccess(req, res);
++  if (!auth) return;
++
++  const parsed = facetQuerySchema.safeParse(req.query);
++  if (!parsed.success) {
++    return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
++  }
++
++  const { limit, ...filters } = parsed.data;
++  const rows = await prisma.catalogItem.findMany({
++    where: buildCatalogFacetWhere(filters),
++    select: {
++      source: true,
++      language: true,
++      setId: true,
++      setName: true,
++      rarity: true,
++    },
++    orderBy: [{ source: "asc" }, { setId: "asc" }, { rarity: "asc" }],
++    take: limit,
++  });
++
++  return res.json(toCatalogFacetResponse(rows));
++});
++
++catalogRouter.get("/v1/catalog/suggest", async (req: VendorRequest, res) => {
++  const auth = await requireVendorReadAccess(req, res);
++  if (!auth) return;
++
++  const parsed = suggestQuerySchema.safeParse(req.query);
++  if (!parsed.success) {
++    return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
++  }
++
++  const { q, limit, ...filters } = parsed.data;
++  const rows = await prisma.catalogItem.findMany({
++    where: buildCatalogSuggestWhere({ ...filters, q }),
++    orderBy: [{ name: "asc" }, { source: "asc" }, { sourceItemId: "asc" }],
++    select: catalogSearchSelect,
++    take: Math.min(limit * 4, 80),
++  });
++
++  const responseItems = toCatalogSuggestionResponse(rows, q).items.slice(0, limit);
++  return res.json({ items: responseItems });
++});
++
+ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
+   const auth = await requireVendorReadAccess(req, res);
+   if (!auth) return;
+@@ -41,7 +139,7 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
+     return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
+   }
+
+-  const { q, limit, type, game } = parsed.data;
++  const { q, limit, type, game, language, source, setId, setName, rarity, localId, cardNumber } = parsed.data;
+   const typeFilter =
+     type === "card"
+       ? CatalogItemType.CARD
+@@ -49,51 +147,38 @@ catalogRouter.get("/v1/catalog/search", async (req: VendorRequest, res) => {
+         ? CatalogItemType.SEALED_PRODUCT
+         : undefined;
+
+-  const byNameStarts = await prisma.catalogItem.findMany({
+-    where: {
+-      isActive: true,
+-      game,
+-      ...(typeFilter ? { itemType: typeFilter } : {}),
+-      name: { startsWith: q, mode: "insensitive" },
+-    },
+-    orderBy: [{ name: "asc" }],
+-    take: limit,
++  const where = buildCatalogSearchWhere({
++    q,
++    game,
++    typeFilter,
++    language,
++    source,
++    setId,
++    setName,
++    rarity,
++    localId,
++    cardNumber,
+   });
++  const candidateLimit = Math.min(limit * 4, 120);
+
+-  const remaining = Math.max(0, limit - byNameStarts.length);
+-  let byContains: typeof byNameStarts = [];
+-
+-  if (remaining > 0) {
+-    byContains = await prisma.catalogItem.findMany({
+-      where: {
+-        isActive: true,
+-        game,
+-        ...(typeFilter ? { itemType: typeFilter } : {}),
+-        name: { contains: q, mode: "insensitive" },
+-        id: { notIn: byNameStarts.map((row) => row.id) },
+-      },
+-      orderBy: [{ name: "asc" }],
+-      take: remaining,
+-    });
+-  }
++  const candidates = await prisma.catalogItem.findMany({
++    where,
++    orderBy: [{ name: "asc" }, { source: "asc" }, { sourceItemId: "asc" }],
++    select: catalogSearchSelect,
++    take: candidateLimit,
++  });
++
++  const payloadRows = candidates.length
++    ? await prisma.catalogItem.findMany({
++        where: { id: { in: candidates.map((candidate) => candidate.id) } },
++        select: { id: true, sourcePayload: true },
++      })
++    : [];
++
++  const responseItems = collapseCatalogSearchItems(sortCatalogSearchCandidates(q, attachCatalogSearchPayloads(candidates, payloadRows)))
++    .slice(0, limit)
++    .map(stripCatalogSearchPayload);
+
+-  const items = [...byNameStarts, ...byContains].map((row) => ({
+-    id: row.id,
+-    source: row.source,
+-    sourceItemId: row.sourceItemId,
+-    itemType: row.itemType,
+-    game: row.game,
+-    language: row.language,
+-    name: row.name,
+-    setId: row.setId,
+-    setName: row.setName,
+-    cardNumber: row.cardNumber,
+-    rarity: row.rarity,
+-    imageThumbUrl: row.imageThumbUrl,
+-    imageLargeUrl: row.imageLargeUrl,
+-    imageBaseUrl: row.imageBaseUrl,
+-  }));
+-
+-  return res.json({ items });
++  return res.json({ items: responseItems });
+ });
+
+diff --git a/apps/api/src/modules/draws/router.ts b/apps/api/src/modules/draws/router.ts
+index fb25c7c..46f675c 100644
+--- a/apps/api/src/modules/draws/router.ts
++++ b/apps/api/src/modules/draws/router.ts
+@@ -5,6 +5,7 @@ import { prisma } from "../../lib/prisma";
+ import { VendorRequest } from "../../middleware/vendor";
+ import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
+ import { getRequestUserId } from "../../lib/rbac";
++import { resolveDrawPoolIntegrity } from "./pool-integrity";
+
+ const ALGORITHM_VERSION = "hmac_sha256_v1";
+
+@@ -185,20 +186,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
+         remainingStock: prize.remainingStock,
+       }));
+
+-      const poolSnapshotJson = {
+-        packId: pack.id,
+-        at: new Date().toISOString(),
+-        rows: prizeState
+-          .slice()
+-          .sort((a, b) => a.id.localeCompare(b.id))
+-          .map((row) => ({
+-            id: row.id,
+-            label: row.label,
+-            weight: row.weight,
+-            remainingStock: row.remainingStock,
+-          })),
+-      };
+-      const poolSnapshotHash = sha256Hex(JSON.stringify(poolSnapshotJson));
++      const { poolSnapshotHash, poolSnapshotJson } = resolveDrawPoolIntegrity(pack, packPrizes);
+
+       const serverSeed = randomBytes(32).toString("hex");
+       const serverSeedHash = sha256Hex(serverSeed);
+diff --git a/apps/api/src/modules/packs/router.ts b/apps/api/src/modules/packs/router.ts
+index fdd0cd3..db281d7 100644
+--- a/apps/api/src/modules/packs/router.ts
++++ b/apps/api/src/modules/packs/router.ts
+@@ -4,19 +4,78 @@ import { Prisma } from "@prisma/client";
+ import { prisma } from "../../lib/prisma";
+ import { VendorRequest } from "../../middleware/vendor";
+ import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
++import {
++  CatalogPrizeResolutionError,
++  resolvePackPrizeRows,
++  type CatalogItemLookup,
++  type ResolvedPackPrizeRow,
++} from "./prize-snapshots";
++import { packPrizeMutationErrorResponse, shouldRejectPackPrizeMutation } from "./immutability";
++import {
++  PackPublishFreezeError,
++  publishFreezeErrorResponse,
++  resolvePublishFreezeData,
++} from "./pool-snapshot";
++import {
++  PackInventoryAllocationError,
++  packInventoryAllocationErrorResponse,
++  reserveInventoryForPackPublish,
++} from "./inventory-allocation";
+
+ export const packRouter = Router();
+-const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
+-
+-type CreatePrizeRow = {
+-  label: string;
+-  imageUrl: string;
+-  weight: number;
+-  stock: number;
+-  remainingStock: number;
+-  estimatedValue: number;
++
++type CreatePrizeRow = ResolvedPackPrizeRow;
++
++const catalogItemSelect = {
++  id: true,
++  source: true,
++  sourceItemId: true,
++  itemType: true,
++  game: true,
++  language: true,
++  name: true,
++  setId: true,
++  setName: true,
++  localId: true,
++  cardNumber: true,
++  rarity: true,
++  imageBaseUrl: true,
++  imageThumbUrl: true,
++  imageLargeUrl: true,
++} as const;
++
++const prismaCatalogLookup: CatalogItemLookup = {
++  async findCatalogItemsByIds(ids: string[]) {
++    if (ids.length === 0) return [];
++    return prisma.catalogItem.findMany({ where: { id: { in: ids }, isActive: true }, select: catalogItemSelect });
++  },
++  async findCatalogItemBySourceRef(ref: { source: string; sourceItemId: string; language?: string }) {
++    return prisma.catalogItem.findFirst({
++      where: { source: ref.source, sourceItemId: ref.sourceItemId, language: ref.language ?? "en", isActive: true },
++      select: catalogItemSelect,
++    });
++  },
+ };
+
++const packPrizeCreateData = (row: CreatePrizeRow) => ({
++  label: row.label,
++  imageUrl: row.imageUrl,
++  imageLargeUrl: row.imageLargeUrl,
++  setId: row.setId,
++  setName: row.setName,
++  localId: row.localId,
++  cardNumber: row.cardNumber,
++  rarity: row.rarity,
++  catalogItemId: row.catalogItemId,
++  catalogSource: row.catalogSource,
++  catalogSourceItemId: row.catalogSourceItemId,
++  ...(row.catalogSnapshot ? { catalogSnapshot: row.catalogSnapshot as Prisma.InputJsonValue } : {}),
++  weight: row.weight,
++  stock: row.stock,
++  remainingStock: row.remainingStock,
++  estimatedValue: row.estimatedValue,
++});
++
+ function decoratePackWithRates(pack: { prizes: Array<{ weight: number }> } & Record<string, unknown>) {
+   const totalWeight = pack.prizes.reduce((sum, prize) => sum + prize.weight, 0);
+   return {
+@@ -28,84 +87,42 @@ function decoratePackWithRates(pack: { prizes: Array<{ weight: number }> } & Rec
+   };
+ }
+
+-function buildPrizeRows(data: {
++async function buildPrizeRows(data: {
+   tiers?: Array<{
+     name: string;
+     percentage?: number;
+-    items: Array<{ label: string; estimatedValue: number; stock: number; imageUrl?: string }>;
++    items: Array<{
++      label: string;
++      estimatedValue: number;
++      stock: number;
++      imageUrl?: string;
++      catalogItemId?: string;
++      catalogSource?: string;
++      catalogSourceItemId?: string;
++      language?: string;
++    }>;
++  }>;
++  prizes?: Array<{
++    label: string;
++    imageUrl?: string;
++    weight: number;
++    stock: number;
++    estimatedValue: number;
++    catalogItemId?: string;
++    catalogSource?: string;
++    catalogSourceItemId?: string;
++    language?: string;
+   }>;
+-  prizes?: Array<{ label: string; imageUrl?: string; weight: number; stock: number; estimatedValue: number }>;
+ }) {
+-  let prizeRows: CreatePrizeRow[] = [];
+-
+-  if (data.tiers && data.tiers.length > 0) {
+-    const tiers = data.tiers;
+-
+-    const tiersWithPercent = tiers.filter((tier) => typeof tier.percentage === "number");
+-    const fixedPercentTotal = tiersWithPercent.reduce((sum, tier) => sum + (tier.percentage ?? 0), 0);
+-    if (fixedPercentTotal > 100) {
+-      throw new Error("Tier percentages exceed 100%");
+-    }
+-
+-    const tiersWithoutPercent = tiers.filter((tier) => typeof tier.percentage !== "number");
+-    const remainingPercent = Math.max(0, 100 - fixedPercentTotal);
+-    const fallbackTierPercent = tiersWithoutPercent.length > 0 ? remainingPercent / tiersWithoutPercent.length : 0;
+-
+-    for (const tier of tiers) {
+-      const tierPercent = tier.percentage ?? fallbackTierPercent;
+-      const perItemPercent = tier.items.length > 0 ? tierPercent / tier.items.length : 0;
+-      const itemWeight = Math.max(1, Math.round(perItemPercent * 100));
+-
+-      for (const item of tier.items) {
+-        prizeRows.push({
+-          label: `${tier.name} - ${item.label}`,
+-          imageUrl: item.imageUrl ?? DEFAULT_POKEMON_CARD_IMAGE,
+-          weight: itemWeight,
+-          stock: item.stock,
+-          remainingStock: item.stock,
+-          estimatedValue: item.estimatedValue,
+-        });
+-      }
+-    }
+-  } else if (data.prizes && data.prizes.length > 0) {
+-    prizeRows = data.prizes.map((prize) => ({
+-      label: prize.label,
+-      imageUrl: prize.imageUrl ?? DEFAULT_POKEMON_CARD_IMAGE,
+-      weight: prize.weight,
+-      stock: prize.stock,
+-      remainingStock: prize.stock,
+-      estimatedValue: prize.estimatedValue,
+-    }));
+-  } else {
+-    prizeRows = [
+-      {
+-        label: "A Tier - Chase",
+-        imageUrl: DEFAULT_POKEMON_CARD_IMAGE,
+-        weight: 10,
+-        stock: 1,
+-        remainingStock: 1,
+-        estimatedValue: 1000,
+-      },
+-      {
+-        label: "B Tier - Mid",
+-        imageUrl: DEFAULT_POKEMON_CARD_IMAGE,
+-        weight: 50,
+-        stock: 10,
+-        remainingStock: 10,
+-        estimatedValue: 250,
+-      },
+-      {
+-        label: "C Tier - Base",
+-        imageUrl: DEFAULT_POKEMON_CARD_IMAGE,
+-        weight: 200,
+-        stock: 100,
+-        remainingStock: 100,
+-        estimatedValue: 50,
+-      },
+-    ];
+-  }
++  return resolvePackPrizeRows(data, prismaCatalogLookup);
++}
+
+-  return prizeRows;
++function catalogPrizeResolutionResponse(error: unknown) {
++  if (!(error instanceof CatalogPrizeResolutionError)) return null;
++  return {
++    error: "Invalid catalog prize reference",
++    message: error.message,
++  };
+ }
+
+ async function requirePackRole(req: VendorRequest, res: any, allowStaffReadOnly = false) {
+@@ -188,6 +205,10 @@ async function createVendorPack(req: VendorRequest, res: any) {
+     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+   }
+
++  if (parsed.data.status === "LIVE") {
++    return res.status(400).json({ error: "Use the publish endpoint to freeze and publish packs" });
++  }
++
+   const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
+   const maxPackItems = settings?.maxPackItems ?? 50;
+   const maxPackTiers = settings?.maxPackTiers ?? 5;
+@@ -197,7 +218,14 @@ async function createVendorPack(req: VendorRequest, res: any) {
+     return res.status(400).json({ error: `plan limit exceeded: max ${maxPackTiers} tiers` });
+   }
+
+-  const prizeRows = buildPrizeRows(parsed.data);
++  let prizeRows: CreatePrizeRow[];
++  try {
++    prizeRows = await buildPrizeRows(parsed.data);
++  } catch (error) {
++    const catalogError = catalogPrizeResolutionResponse(error);
++    if (catalogError) return res.status(400).json(catalogError);
++    throw error;
++  }
+
+   if (prizeRows.length > maxPackItems) {
+     return res.status(400).json({ error: `vendor limit exceeded: max ${maxPackItems} items allowed in one draw pool` });
+@@ -221,7 +249,7 @@ async function createVendorPack(req: VendorRequest, res: any) {
+       drawLimitResetTimezone: parsed.data.drawLimitResetTimezone,
+       prizes: {
+         createMany: {
+-          data: prizeRows,
++          data: prizeRows.map(packPrizeCreateData),
+         },
+       },
+     },
+@@ -248,6 +276,14 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
+   const existing = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId, isActive: true } });
+   if (!existing) return res.status(404).json({ error: "Pack not found" });
+
++  if (shouldRejectPackPrizeMutation(existing.status, parsed.data)) {
++    return res.status(409).json(packPrizeMutationErrorResponse(existing.status));
++  }
++
++  if (existing.status === "DRAFT" && parsed.data.status === "LIVE") {
++    return res.status(400).json({ error: "Use the publish endpoint to freeze and publish packs" });
++  }
++
+   const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
+   const maxPackItems = settings?.maxPackItems ?? 50;
+   const maxPackTiers = settings?.maxPackTiers ?? 5;
+@@ -259,7 +295,13 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
+     if (tierCount > maxPackTiers) {
+       return res.status(400).json({ error: `plan limit exceeded: max ${maxPackTiers} tiers` });
+     }
+-    replacementPrizeRows = buildPrizeRows(parsed.data);
++    try {
++      replacementPrizeRows = await buildPrizeRows(parsed.data);
++    } catch (error) {
++      const catalogError = catalogPrizeResolutionResponse(error);
++      if (catalogError) return res.status(400).json(catalogError);
++      throw error;
++    }
+     if (replacementPrizeRows.length > maxPackItems) {
+       return res.status(400).json({ error: `vendor limit exceeded: max ${maxPackItems} items allowed in one draw pool` });
+     }
+@@ -271,12 +313,7 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
+       await tx.packPrize.createMany({
+         data: replacementPrizeRows.map((row) => ({
+           packId: existing.id,
+-          label: row.label,
+-          imageUrl: row.imageUrl,
+-          weight: row.weight,
+-          stock: row.stock,
+-          remainingStock: row.stock,
+-          estimatedValue: row.estimatedValue,
++          ...packPrizeCreateData(row),
+         })),
+       });
+     }
+@@ -305,6 +342,65 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
+   return res.json({ pack: decoratePackWithRates(updatedPack) });
+ });
+
++packRouter.patch("/v1/vendor/packs/:packId/publish", async (req: VendorRequest, res) => {
++  const auth = await requirePackRole(req, res);
++  if (!auth) return;
++  const packId = String(req.params.packId || "").trim();
++  if (!packId) return res.status(400).json({ error: "packId is required" });
++
++  const body = (req.body ?? {}) as Record<string, unknown>;
++  const bodyIdempotencyKey = typeof body.publishIdempotencyKey === "string" ? body.publishIdempotencyKey : undefined;
++  const headerIdempotencyKey = typeof req.headers["x-idempotency-key"] === "string" ? req.headers["x-idempotency-key"] : undefined;
++  const idempotencyKey = (headerIdempotencyKey ?? bodyIdempotencyKey ?? "").trim() || null;
++
++  const pack = await prisma.pack.findFirst({
++    where: { id: packId, vendorId: auth.vendorId, isActive: true },
++    include: { prizes: true },
++  });
++  if (!pack) return res.status(404).json({ error: "Pack not found" });
++
++  try {
++    const publishData = resolvePublishFreezeData(pack, pack.prizes, {
++      actorUserId: auth.actorUserId,
++      now: new Date(),
++      idempotencyKey,
++    });
++
++    if (!publishData) {
++      return res.json({ pack: decoratePackWithRates(pack), published: false, idempotent: true });
++    }
++
++    const updated = await prisma.$transaction(async (tx) => {
++      if (pack.pricePoints > 0) {
++        await reserveInventoryForPackPublish(tx, {
++          vendorId: auth.vendorId,
++          packId: pack.id,
++          prizes: pack.prizes,
++          now: new Date(),
++        });
++      }
++
++      return tx.pack.update({
++        where: { id: pack.id },
++        data: publishData,
++        include: { prizes: true },
++      });
++    });
++
++    return res.json({ pack: decoratePackWithRates(updated), published: true, idempotent: false });
++  } catch (error) {
++    if (error instanceof PackPublishFreezeError) {
++      const status = error.reason === "already_published" || error.reason === "pool_hash_mismatch" ? 409 : 400;
++      return res.status(status).json(publishFreezeErrorResponse(error.reason));
++    }
++    if (error instanceof PackInventoryAllocationError) {
++      const status = error.reason === "concurrent_inventory_conflict" ? 409 : 400;
++      return res.status(status).json(packInventoryAllocationErrorResponse(error.reason));
++    }
++    throw error;
++  }
++});
++
+ packRouter.patch("/v1/vendor/packs/:packId/archive", async (req: VendorRequest, res) => {
+   const auth = await requirePackRole(req, res);
+   if (!auth) return;
+diff --git a/apps/web/app/vendor/page.tsx b/apps/web/app/vendor/page.tsx
+index 09ce610..4e09d9b 100644
+--- a/apps/web/app/vendor/page.tsx
++++ b/apps/web/app/vendor/page.tsx
+@@ -81,20 +81,74 @@ type Pack = {
+   endsAt?: string | null;
+   createdAt: string;
+   prizes: Array<{
+-    id: string;
+-    label: string;
+-    imageUrl?: string | null;
+-    estimatedValue: number;
+-    stock: number;
+-    remainingStock: number;
++  id: string;
++  label: string;
++  imageUrl?: string | null;
++  estimatedValue: number;
++  stock: number;
++  remainingStock: number;
++  catalogItemId?: string | null;
++  catalogSource?: string | null;
++  catalogSourceItemId?: string | null;
++  language?: string | null;
+   }>;
+ };
+
++type CreativeAsset = {
++  id: string;
++  status: "PRIVATE_DRAFT" | "PUBLIC_IMMUTABLE" | "REJECTED";
++  title: string;
++  imageUrl: string;
++  targetUrl: string;
++  contentHash: string;
++  createdAt: string;
++};
++
++type CreativeJob = {
++  id: string;
++  packId: string;
++  status: "DRAFT" | "COMPLETED" | "FAILED" | "PUBLISH_BLOCKED" | "PUBLISHED";
++  stylePreset: string;
++  safePrompt: string;
++  errorMessage?: string | null;
++  createdAt: string;
++  assets: CreativeAsset[];
++};
++
+ type ItemDraft = {
+   label: string;
+   estimatedValue: string;
+   stock: string;
+   imageUrl: string;
++  catalogItemId?: string;
++  catalogSource?: string;
++  catalogSourceItemId?: string;
++  language?: string;
++};
++
++type CatalogFilters = {
++  source: string;
++  language: string;
++  setId: string;
++  rarity: string;
++};
++
++type CatalogFacetOption = {
++  value: string;
++  count: number;
++};
++
++type CatalogSetFacet = {
++  id: string;
++  name?: string | null;
++  count: number;
++};
++
++type CatalogFacets = {
++  sources: CatalogFacetOption[];
++  languages: CatalogFacetOption[];
++  sets: CatalogSetFacet[];
++  rarities: CatalogFacetOption[];
+ };
+
+ type TierDraft = {
+@@ -125,6 +179,24 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+ const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
+ const clientPageHeader = { "x-client-page": "/vendor" };
+ type ActiveTab = "BUSINESS" | "PACKS";
++const emptyCatalogFilters: CatalogFilters = { source: "", language: "", setId: "", rarity: "" };
++const emptyCatalogFacets: CatalogFacets = { sources: [], languages: [], sets: [], rarities: [] };
++
++function parseCatalogFilters(params: URLSearchParams): CatalogFilters {
++  return {
++    source: params.get("source") ?? "",
++    language: params.get("language") ?? "",
++    setId: params.get("setId") ?? "",
++    rarity: params.get("rarity") ?? "",
++  };
++}
++
++function appendCatalogFilters(url: URL, catalogFilters: CatalogFilters) {
++  if (catalogFilters.source) url.searchParams.set("source", catalogFilters.source);
++  if (catalogFilters.language) url.searchParams.set("language", catalogFilters.language);
++  if (catalogFilters.setId) url.searchParams.set("setId", catalogFilters.setId);
++  if (catalogFilters.rarity) url.searchParams.set("rarity", catalogFilters.rarity);
++}
+
+ function parseTabValue(tab: string | null): ActiveTab {
+   if (tab === "pack-studio") return "PACKS";
+@@ -188,6 +260,7 @@ export default function VendorPage() {
+   const [qrs, setQrs] = useState<VendorQr[]>([]);
+   const [banners, setBanners] = useState<Banner[]>([]);
+   const [packs, setPacks] = useState<Pack[]>([]);
++  const [creativeJobs, setCreativeJobs] = useState<CreativeJob[]>([]);
+
+   const [vendorName, setVendorName] = useState("");
+   const [vendorSlug, setVendorSlug] = useState("");
+@@ -221,6 +294,8 @@ export default function VendorPage() {
+   const [itemSearchQuery, setItemSearchQuery] = useState("");
+   const [itemSuggestions, setItemSuggestions] = useState<CatalogSuggestion[]>([]);
+   const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
++  const [catalogFilters, setCatalogFilters] = useState<CatalogFilters>(emptyCatalogFilters);
++  const [catalogFacets, setCatalogFacets] = useState<CatalogFacets>(emptyCatalogFacets);
+
+   const [loading, setLoading] = useState(true);
+   const [saving, setSaving] = useState(false);
+@@ -265,7 +340,7 @@ export default function VendorPage() {
+       }
+
+       const vendorJson = await vendorRes.json();
+-      const [limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes] = await Promise.all([
++      const [limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes, creativeJobsRes] = await Promise.all([
+         fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+         fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+         fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+@@ -273,9 +348,10 @@ export default function VendorPage() {
+         fetch(`${apiBase}/v1/vendor/banners`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+         fetch(`${apiBase}/v1/vendor/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+         fetch(`${apiBase}/v1/vendor/points/qr`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
++        fetch(`${apiBase}/v1/vendor/creative-jobs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+       ]);
+
+-      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok) {
++      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !bannersRes.ok || !packsRes.ok || !creativeJobsRes.ok) {
+         throw new Error("Failed to load vendor dashboard data");
+       }
+
+@@ -286,6 +362,7 @@ export default function VendorPage() {
+       const qrJson = qrRes.ok ? await qrRes.json() : { qrs: [] };
+       const bannersJson = await bannersRes.json();
+       const packsJson = await packsRes.json();
++      const creativeJobsJson = await creativeJobsRes.json();
+
+       const v = vendorJson.vendor ?? null;
+       setVendor(v);
+@@ -302,6 +379,7 @@ export default function VendorPage() {
+       setQrs(qrJson.qrs ?? []);
+       setBanners(bannersJson.banners ?? []);
+       setPacks(packsJson.packs ?? []);
++      setCreativeJobs(creativeJobsJson.creativeJobs ?? []);
+     } catch (err) {
+       setError(err instanceof Error ? err.message : "Failed to load data");
+     } finally {
+@@ -326,10 +404,11 @@ export default function VendorPage() {
+
+     const timer = window.setTimeout(() => {
+       setItemSuggestLoading(true);
+-      const url = new URL(`${apiBase}/v1/catalog/search`);
++      const url = new URL(`${apiBase}/v1/catalog/suggest`);
+       url.searchParams.set("q", query);
+       url.searchParams.set("limit", "8");
+       url.searchParams.set("type", "card");
++      appendCatalogFilters(url, catalogFilters);
+
+       fetch(url.toString(), {
+         headers: authHeaders(),
+@@ -338,7 +417,7 @@ export default function VendorPage() {
+       })
+         .then(async (res) => {
+           const payload = await res.json().catch(() => ({}));
+-          if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
++          if (!res.ok) throw new Error(payload?.error ?? "Failed to suggest cards");
+           setItemSuggestions((payload.items ?? []) as CatalogSuggestion[]);
+         })
+         .catch(() => {
+@@ -350,14 +429,48 @@ export default function VendorPage() {
+     }, 300);
+
+     return () => window.clearTimeout(timer);
+-  }, [authHeaders, itemSearchQuery, itemSearchTarget]);
++  }, [authHeaders, catalogFilters, itemSearchQuery, itemSearchTarget]);
++
++  useEffect(() => {
++    const url = new URL(`${apiBase}/v1/catalog/facets`);
++    url.searchParams.set("type", "card");
++    appendCatalogFilters(url, catalogFilters);
++
++    fetch(url.toString(), {
++      headers: authHeaders(),
++      credentials: "include",
++      cache: "no-store",
++    })
++      .then(async (res) => {
++        const payload = await res.json().catch(() => ({}));
++        if (!res.ok) throw new Error(payload?.error ?? "Failed to load catalog facets");
++        setCatalogFacets((payload.facets ?? emptyCatalogFacets) as CatalogFacets);
++      })
++      .catch(() => {
++        setCatalogFacets(emptyCatalogFacets);
++      });
++  }, [authHeaders, catalogFilters]);
+
+   useEffect(() => {
+     if (typeof window === "undefined") return;
+     const params = new URLSearchParams(window.location.search);
+     setActiveTab(parseTabValue(params.get("tab")));
++    setCatalogFilters(parseCatalogFilters(params));
+   }, []);
+
++  function setCatalogFilterInUrl(field: keyof CatalogFilters, value: string) {
++    const nextFilters = { ...catalogFilters, [field]: value };
++    setCatalogFilters(nextFilters);
++    setItemSuggestions([]);
++    const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
++    for (const key of Object.keys(emptyCatalogFilters) as Array<keyof CatalogFilters>) {
++      if (nextFilters[key]) params.set(key, nextFilters[key]);
++      else params.delete(key);
++    }
++    params.set("tab", "pack-studio");
++    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
++  }
++
+   function setActiveTabInUrl(tab: ActiveTab) {
+     setActiveTab(tab);
+     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+@@ -534,7 +647,7 @@ export default function VendorPage() {
+         light: "#ffffff",
+       },
+     })
+-      .then((url) => {
++      .then((url: string) => {
+         if (mounted) setActiveQrDataUrl(url);
+       })
+       .catch(() => {
+@@ -600,6 +713,61 @@ export default function VendorPage() {
+     }
+   }
+
++  async function generateCreativeDraft(packId: string) {
++    setSaving(true);
++    setError(null);
++    setSuccess(null);
++
++    try {
++      const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}/creative-jobs`, {
++        method: "POST",
++        headers: {
++          ...authHeaders(),
++          "content-type": "application/json",
++          "x-idempotency-key": `creative-${packId}-${Date.now()}`,
++        },
++        credentials: "include",
++        body: JSON.stringify({ stylePreset: "premium_foil", aspectRatio: "16:9" }),
++      });
++      const payload = await res.json().catch(() => ({}));
++      if (!res.ok) throw new Error(String(payload.error ?? "Failed to generate creative draft"));
++      setSuccess("Private creative draft generated. Publish is intentionally blocked until legal/storage gates clear.");
++      await loadAll();
++    } catch (err) {
++      setError(err instanceof Error ? err.message : "Failed to generate creative draft");
++    } finally {
++      setSaving(false);
++    }
++  }
++
++  async function attemptPublishCreative(jobId: string, assetId: string) {
++    setSaving(true);
++    setError(null);
++    setSuccess(null);
++
++    try {
++      const res = await fetch(`${apiBase}/v1/vendor/creative-jobs/${jobId}/publish`, {
++        method: "POST",
++        headers: { ...authHeaders(), "content-type": "application/json" },
++        credentials: "include",
++        body: JSON.stringify({ assetId }),
++      });
++      const payload = await res.json().catch(() => ({}));
++      if (res.status === 409) {
++        setError(`Publish blocked: ${(payload.blockers ?? []).join(", ")}`);
++        await loadAll();
++        return;
++      }
++      if (!res.ok) throw new Error(String(payload.error ?? "Failed to publish creative"));
++      setSuccess("Creative published.");
++      await loadAll();
++    } catch (err) {
++      setError(err instanceof Error ? err.message : "Failed to publish creative");
++    } finally {
++      setSaving(false);
++    }
++  }
++
+   function updateTier(index: number, field: keyof Omit<TierDraft, "items">, value: string) {
+     setTiers((prev) => prev.map((tier, i) => (i === index ? { ...tier, [field]: value } : tier)));
+   }
+@@ -625,6 +793,10 @@ export default function VendorPage() {
+             ...item,
+             label: nextLabel || suggestion.name,
+             imageUrl: suggestion.imageLargeUrl || suggestion.imageThumbUrl || suggestion.imageBaseUrl || item.imageUrl || DEFAULT_CARD,
++            catalogItemId: suggestion.id,
++            catalogSource: suggestion.source,
++            catalogSourceItemId: suggestion.sourceItemId,
++            language: suggestion.language,
+           };
+         });
+         return { ...tier, items };
+@@ -727,6 +899,10 @@ export default function VendorPage() {
+           estimatedValue: String(prize.estimatedValue),
+           stock: String(prize.stock),
+           imageUrl: prize.imageUrl ?? DEFAULT_CARD,
++          catalogItemId: prize.catalogItemId ?? undefined,
++          catalogSource: prize.catalogSource ?? undefined,
++          catalogSourceItemId: prize.catalogSourceItemId ?? undefined,
++          language: prize.language ?? undefined,
+         })),
+       },
+     ]);
+@@ -767,6 +943,10 @@ export default function VendorPage() {
+             estimatedValue: Number(item.estimatedValue),
+             stock: Number(item.stock),
+             imageUrl: item.imageUrl.trim() ? item.imageUrl.trim() : undefined,
++            catalogItemId: item.catalogItemId,
++            catalogSource: item.catalogSource,
++            catalogSourceItemId: item.catalogSourceItemId,
++            language: item.language,
+           })),
+         })),
+       };
+@@ -1073,6 +1253,49 @@ export default function VendorPage() {
+                 <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
+               </label>
+
++              <section className="card" style={{ padding: 12 }}>
++                <h3>Catalog filters</h3>
++                <p className="muted tiny">Filters sync into the URL and constrain card typeahead results.</p>
++                <div className="pack-builder-grid">
++                  <label className="muted tiny">
++                    Source
++                    <select value={catalogFilters.source} onChange={(e) => setCatalogFilterInUrl("source", e.target.value)}>
++                      <option value="">All sources</option>
++                      {catalogFacets.sources.map((source) => (
++                        <option key={source.value} value={source.value}>{source.value} ({source.count})</option>
++                      ))}
++                    </select>
++                  </label>
++                  <label className="muted tiny">
++                    Language
++                    <select value={catalogFilters.language} onChange={(e) => setCatalogFilterInUrl("language", e.target.value)}>
++                      <option value="">All languages</option>
++                      {catalogFacets.languages.map((language) => (
++                        <option key={language.value} value={language.value}>{language.value} ({language.count})</option>
++                      ))}
++                    </select>
++                  </label>
++                  <label className="muted tiny">
++                    Set
++                    <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
++                      <option value="">All sets</option>
++                      {catalogFacets.sets.map((set) => (
++                        <option key={set.id} value={set.id}>{set.name || set.id} ({set.count})</option>
++                      ))}
++                    </select>
++                  </label>
++                  <label className="muted tiny">
++                    Rarity
++                    <select value={catalogFilters.rarity} onChange={(e) => setCatalogFilterInUrl("rarity", e.target.value)}>
++                      <option value="">All rarities</option>
++                      {catalogFacets.rarities.map((rarity) => (
++                        <option key={rarity.value} value={rarity.value}>{rarity.value} ({rarity.count})</option>
++                      ))}
++                    </select>
++                  </label>
++                </div>
++              </section>
++
+               <div className="tier-stack">
+                 {tiers.map((tier, tierIndex) => (
+                   <article key={`tier-${tierIndex}`} className="card tier-card">
+@@ -1177,12 +1400,14 @@ export default function VendorPage() {
+
+           <section className="card" style={{ marginTop: 12 }}>
+             <h2>Existing Packs</h2>
++            <p className="muted tiny">Creative MVP is pack-anchored: generated drafts use only this pack's prize images and a safe abstract background prompt.</p>
+             <div className="result-list">
+               {packs.map((pack) => (
+                 <div className="result-row" key={pack.id}>
+                   <span>{pack.title} ({pack.status})</span>
+                   <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
+                   <div className="actions">
++                    <button type="button" className="sort-pill" onClick={() => void generateCreativeDraft(pack.id)} disabled={saving || pack.prizes.length === 0}>Generate creative draft</button>
+                     <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
+                     <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
+                     <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
+@@ -1191,6 +1416,25 @@ export default function VendorPage() {
+               ))}
+             </div>
+           </section>
++
++          <section className="card" style={{ marginTop: 12 }}>
++            <h2>Private Creative Drafts</h2>
++            <p className="muted tiny">Publish is intentionally blocked in MVP until legal image-use approval, immutable storage, and publish-time revalidation are implemented.</p>
++            <div className="banner-admin-list">
++              {creativeJobs.flatMap((job) => job.assets.map((asset) => ({ job, asset }))).map(({ job, asset }) => (
++                <div className="banner-admin-row" key={asset.id}>
++                  <img src={asset.imageUrl} alt={asset.title} />
++                  <div>
++                    <strong>{asset.title}</strong>
++                    <div className="muted tiny">{job.status} | {job.stylePreset} | {asset.status}</div>
++                    <div className="muted tiny">Hash {asset.contentHash.slice(0, 12)}… | Prompt: {job.safePrompt}</div>
++                  </div>
++                  <button type="button" className="sort-pill" onClick={() => void attemptPublishCreative(job.id, asset.id)} disabled={saving}>Publish gate check</button>
++                </div>
++              ))}
++              {creativeJobs.length === 0 ? <p className="muted tiny">No creative drafts yet. Generate one from an existing pack.</p> : null}
++            </div>
++          </section>
+         </>
+       ) : null}
+
+diff --git a/docs/traceability-schema.md b/docs/traceability-schema.md
+deleted file mode 100644
+index 73fec30..0000000
+--- a/docs/traceability-schema.md
++++ /dev/null
+@@ -1,36 +0,0 @@
+-﻿# Traceability-First Database Notes
+-
+-## Implemented Core
+-
+-- Immutable wallet ledger (`WalletEntry`) with `balanceBefore`, `balanceAfter`, `requestId`, `idempotencyScopeKey`, `actorUserId`.
+-- Draw transaction trace (`DrawOrder`, `DrawResult`) with `requestId`, sequence, RNG metadata.
+-- Tenant revenue ledger (`TenantRevenueLedger`) with point and currency snapshots.
+-- Auditing and event replay foundation (`AuditLog`, `OutboxEvent`).
+-- Idempotency redesigned (`IdempotencyKey`) using `scopeKey` for operation-safe dedupe.
+-- Role and tenancy model (`User`, `Role`, `UserRole`, `TenantMembership`, `TenantSettings`).
+-
+-## Payment-Provider-Ready Key Fields
+-
+-Keep these fields populated from day one, even before provider integration is turned on:
+-
+-- `TopupOrder.provider` and `TopupOrder.providerOrderRef`
+-- `PaymentTransaction.provider` and `PaymentTransaction.providerPaymentRef`
+-- `PaymentTransaction.rawPayload` (store normalized provider webhook payload)
+-- `PaymentTransaction.status` (state machine for reconciliation)
+-- `TopupOrder.idempotencyScopeKey`
+-- `TopupOrder.requestId`
+-- `WalletEntry.referenceType` and `WalletEntry.referenceId`
+-- `WalletEntry.metadata` for provider settlement metadata
+-- `TenantRevenueLedger.conversionRate`, `amountCurrency`, `currencyCode`
+-- `AuditLog.requestId`, `ipAddress`, `userAgent`
+-
+-## Recommended Next Hardening Steps
+-
+-1. Add HMAC webhook verification table for replay protection (`webhook_events`).
+-2. Add payout tables (`payout_requests`, `payout_transactions`) when tenant cash-out starts.
+-3. Add `version` field checks (optimistic locking) for mutable tenant configs.
+-4. Add reconciliation jobs:
+-   - wallet balance vs wallet ledger
+-   - draw orders vs wallet debits
+-   - revenue ledger vs draw totals
+-5. Add database-level RLS once auth is finalized.
+diff --git a/package.json b/package.json
+index d2354de..e3f680b 100644
+--- a/package.json
++++ b/package.json
+@@ -14,7 +14,8 @@
+     "db:studio": "prisma studio --schema prisma/schema.prisma --port 5555",
+     "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
+     "db:seed": "tsx prisma/seed.ts",
+-    "catalog:sync:tcgtracking": "npm run catalog:sync:tcgtracking -w @oripa/api"
++    "catalog:sync:tcgtracking": "npm run catalog:sync:tcgtracking -w @oripa/api",
++    "catalog:sync:tcgdex": "npm run catalog:sync:tcgdex -w @oripa/api"
+   },
+   "devDependencies": {
+     "@types/node": "^22.15.30",
+diff --git a/packages/shared/src/index.ts b/packages/shared/src/index.ts
+index 8e3d45d..c583af1 100644
+--- a/packages/shared/src/index.ts
++++ b/packages/shared/src/index.ts
+@@ -34,6 +34,20 @@ export const updateVendorPlanSchema = z.object({
+   planCode: z.enum(["BASIC", "ELITE"]),
+ });
+
++const catalogPrizeRefSchema = z.object({
++  catalogItemId: z.string().min(1).max(120).optional(),
++  catalogSource: z.string().min(1).max(80).optional(),
++  catalogSourceItemId: z.string().min(1).max(160).optional(),
++  language: z.string().min(2).max(12).optional(),
++});
++
++const packPrizeItemSchema = catalogPrizeRefSchema.extend({
++  label: z.string().min(1).max(60),
++  estimatedValue: z.number().int().nonnegative(),
++  stock: z.number().int().positive(),
++  imageUrl: z.string().url().optional(),
++});
++
+ export const createPackSchema = z.object({
+   title: z.string().min(2).max(120),
+   pricePoints: z.number().int().positive(),
+@@ -51,23 +65,11 @@ export const createPackSchema = z.object({
+     z.object({
+       name: z.string().min(1).max(40),
+       percentage: z.number().positive().max(100).optional(),
+-      items: z.array(
+-        z.object({
+-          label: z.string().min(1).max(60),
+-          estimatedValue: z.number().int().nonnegative(),
+-          stock: z.number().int().positive(),
+-          imageUrl: z.string().url().optional(),
+-        })
+-      ).min(1).max(5000),
++      items: z.array(packPrizeItemSchema).min(1).max(5000),
+     })
+   ).min(1).max(10).optional(),
+-  prizes: z.array(
+-    z.object({
+-      label: z.string().min(1).max(60),
+-      estimatedValue: z.number().int().nonnegative(),
++  prizes: z.array(packPrizeItemSchema.extend({
+       weight: z.number().int().positive(),
+-      stock: z.number().int().positive(),
+-      imageUrl: z.string().url().optional(),
+     })
+   ).min(1).max(5000).optional(),
+ });
+@@ -89,6 +91,22 @@ export const createBannerSchema = z.object({
+   isActive: z.boolean().optional().default(true),
+ });
+
++export const campaignCreativeStyleSchema = z.enum([
++  "premium_foil",
++  "neon_arcade",
++  "dark_luxury",
++  "clean_showcase",
++]);
++
++export const createCampaignCreativeSchema = z.object({
++  stylePreset: campaignCreativeStyleSchema.optional().default("premium_foil"),
++  aspectRatio: z.enum(["16:9", "1:1", "4:5"]).optional().default("16:9"),
++});
++
++export const publishCampaignCreativeSchema = z.object({
++  assetId: z.string().cuid(),
++});
++
+ export const updateVendorLimitsSchema = z.object({
+   maxPackItems: z.number().int().min(1).max(5000).optional(),
+   maxDrawQuantity: z.number().int().min(1).max(5000).optional(),
+@@ -104,4 +122,6 @@ export type CreatePackInput = z.infer<typeof createPackSchema>;
+ export type UpdatePackInput = z.infer<typeof updatePackSchema>;
+ export type DrawInput = z.infer<typeof drawSchema>;
+ export type CreateBannerInput = z.infer<typeof createBannerSchema>;
++export type CreateCampaignCreativeInput = z.infer<typeof createCampaignCreativeSchema>;
++export type PublishCampaignCreativeInput = z.infer<typeof publishCampaignCreativeSchema>;
+ export type UpdateVendorLimitsInput = z.infer<typeof updateVendorLimitsSchema>;
+diff --git a/prisma/schema.prisma b/prisma/schema.prisma
+index 16a9601..401bb3b 100644
+--- a/prisma/schema.prisma
++++ b/prisma/schema.prisma
+@@ -74,6 +74,32 @@ enum PackStatus {
+   ARCHIVED
+ }
+
++enum PackSourceTemplateType {
++  CATALOG_TEMPLATE
++  VENDOR_TEMPLATE
++  MANUAL
++  LEGACY
++}
++
++enum PackTemplateVersionStatus {
++  DRAFT
++  PUBLISHED
++  ARCHIVED
++}
++
++enum VendorInventoryStatus {
++  ACTIVE
++  ARCHIVED
++  DAMAGED
++  SOLD_OUT
++}
++
++enum PackPrizeInventoryAllocationStatus {
++  HELD
++  COMMITTED
++  RELEASED
++}
++
+ enum DrawLimitMode {
+   NONE
+   ONCE_PER_CUSTOMER
+@@ -87,6 +113,20 @@ enum VendorPointGrantQrStatus {
+   CANCELLED
+ }
+
++enum CreativeJobStatus {
++  DRAFT
++  COMPLETED
++  FAILED
++  PUBLISH_BLOCKED
++  PUBLISHED
++}
++
++enum CreativeAssetStatus {
++  PRIVATE_DRAFT
++  PUBLIC_IMMUTABLE
++  REJECTED
++}
++
+ enum CatalogItemType {
+   CARD
+   SEALED_PRODUCT
+@@ -123,6 +163,12 @@ model Vendor {
+   fairnessSelections  DrawFairnessSelection[]
+   referralSignups     VendorReferralSignup[]
+   pointGrantQrs       VendorPointGrantQr[]
++  creativeJobs        CreativeJob[]
++  creativeAssets      CreativeAsset[]
++  inventoryItems      VendorInventoryItem[]
++  packTemplates       PackTemplate[]
++  packTemplateVersions PackTemplateVersion[]
++  packPrizeInventoryAllocations PackPrizeInventoryAllocation[]
+ }
+
+ model User {
+@@ -217,9 +263,17 @@ model Pack {
+   isNew          Boolean      @default(true)
+   limitedLabel   String?
+   importantNotes String?
+-  status         PackStatus   @default(DRAFT)
+-  drawLimitMode  DrawLimitMode @default(NONE)
+-  drawLimitValue Int?
++  status                  PackStatus             @default(DRAFT)
++  sourceTemplateType      PackSourceTemplateType @default(MANUAL)
++  sourceTemplateId        String?
++  sourceTemplateVersionId String?
++  poolSnapshotHash        String?
++  poolSnapshotVersion     Int                    @default(1)
++  publishedFromTemplateAt DateTime?
++  publishedByUserId       String?
++  publishIdempotencyKey   String?
++  drawLimitMode           DrawLimitMode          @default(NONE)
++  drawLimitValue          Int?
+   drawLimitResetTimezone String? @default("Asia/Singapore")
+   isActive       Boolean      @default(true)
+   startsAt       DateTime?
+@@ -232,15 +286,28 @@ model Pack {
+   drawOrders     DrawOrder[]
+   drawResults    DrawResult[]
+   fairnessProofs DrawFairnessProof[]
++  creativeJobs   CreativeJob[]
++  inventoryAllocations PackPrizeInventoryAllocation[]
+
+   @@index([vendorId, isActive])
++  @@index([vendorId, status, poolSnapshotHash])
+ }
+
+ model PackPrize {
+   id             String       @id @default(cuid())
+   packId         String
++  catalogItemId  String?
++  catalogSource  String?
++  catalogSourceItemId String?
++  catalogSnapshot Json?
+   label          String
+   imageUrl       String?
++  imageLargeUrl  String?
++  setId          String?
++  setName        String?
++  localId        String?
++  cardNumber     String?
++  rarity         String?
+   estimatedValue Int
+   weight         Int
+   stock          Int
+@@ -250,8 +317,124 @@ model PackPrize {
+   pack           Pack         @relation(fields: [packId], references: [id], onDelete: Cascade)
+   draws          PackDraw[]
+   drawResults    DrawResult[]
++  inventoryAllocations PackPrizeInventoryAllocation[]
+
+   @@index([packId])
++  @@index([catalogItemId])
++}
++
++model PackTemplate {
++  id              String                @id @default(cuid())
++  vendorId        String
++  title           String
++  description     String?
++  activeVersionId String?
++  isActive        Boolean               @default(true)
++  createdAt       DateTime              @default(now())
++  updatedAt       DateTime              @updatedAt
++  Vendor          Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
++  versions        PackTemplateVersion[]
++
++  @@index([vendorId, isActive])
++}
++
++model PackTemplateVersion {
++  id                     String                    @id @default(cuid())
++  templateId             String
++  vendorId               String
++  version                Int
++  status                 PackTemplateVersionStatus @default(DRAFT)
++  title                  String
++  pricePoints            Int
++  totalStock             Int
++  isNew                  Boolean                   @default(true)
++  limitedLabel           String?
++  importantNotes         String?
++  drawLimitMode          DrawLimitMode             @default(NONE)
++  drawLimitValue         Int?
++  drawLimitResetTimezone String?                   @default("Asia/Singapore")
++  startsAt               DateTime?
++  endsAt                 DateTime?
++  createdAt              DateTime                  @default(now())
++  updatedAt              DateTime                  @updatedAt
++  Vendor                 Vendor                    @relation(fields: [vendorId], references: [id], onDelete: Cascade)
++  template               PackTemplate              @relation(fields: [templateId], references: [id], onDelete: Cascade)
++  slots                  PackTemplateSlot[]
++
++  @@unique([templateId, version])
++  @@index([vendorId, status])
++}
++
++model PackTemplateSlot {
++  id                  String              @id @default(cuid())
++  templateVersionId   String
++  sortOrder           Int                 @default(0)
++  label               String
++  imageUrl            String?
++  imageLargeUrl       String?
++  setId               String?
++  setName             String?
++  localId             String?
++  cardNumber          String?
++  rarity              String?
++  catalogItemId       String?
++  catalogSource       String?
++  catalogSourceItemId String?
++  catalogSnapshot     Json?
++  estimatedValue      Int
++  weight              Int
++  stock               Int
++  createdAt           DateTime            @default(now())
++  updatedAt           DateTime            @updatedAt
++  templateVersion     PackTemplateVersion @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
++
++  @@index([templateVersionId, sortOrder])
++  @@index([catalogItemId])
++}
++
++model VendorInventoryItem {
++  id             String                @id @default(cuid())
++  vendorId       String
++  catalogItemId  String?
++  customItemId   String?
++  title          String
++  condition      String?
++  gradeCompany   String?
++  grade          String?
++  certNumber     String?
++  imageUrl       String?
++  quantityTotal  Int
++  quantityHeld   Int                   @default(0)
++  quantitySold   Int                   @default(0)
++  status         VendorInventoryStatus @default(ACTIVE)
++  createdAt      DateTime              @default(now())
++  updatedAt      DateTime              @updatedAt
++  Vendor         Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
++  allocations    PackPrizeInventoryAllocation[]
++
++  @@index([vendorId, status])
++  @@index([vendorId, catalogItemId])
++  @@index([vendorId, title])
++}
++
++model PackPrizeInventoryAllocation {
++  id                    String                             @id @default(cuid())
++  vendorId              String
++  packId                String
++  packPrizeId           String
++  vendorInventoryItemId String
++  quantityAllocated     Int
++  status                PackPrizeInventoryAllocationStatus @default(HELD)
++  createdAt             DateTime                           @default(now())
++  updatedAt             DateTime                           @updatedAt
++  Vendor                Vendor                             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
++  pack                  Pack                               @relation(fields: [packId], references: [id], onDelete: Cascade)
++  packPrize             PackPrize                          @relation(fields: [packPrizeId], references: [id], onDelete: Cascade)
++  vendorInventoryItem   VendorInventoryItem                 @relation(fields: [vendorInventoryItemId], references: [id], onDelete: Restrict)
++
++  @@unique([packPrizeId, vendorInventoryItemId])
++  @@index([vendorId, vendorInventoryItemId])
++  @@index([packId, status])
+ }
+
+ model PackDraw {
+@@ -536,6 +719,8 @@ model OutboxEvent {
+ model VendorBanner {
+   id        String   @id @default(cuid())
+   vendorId  String
++  creativeAssetId String?
++  creativeHash String?
+   title     String
+   imageUrl  String
+   targetUrl String?
+@@ -546,6 +731,54 @@ model VendorBanner {
+   Vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+   @@index([vendorId, isActive, sortOrder])
++  @@index([creativeAssetId])
++}
++
++model CreativeJob {
++  id              String            @id @default(cuid())
++  vendorId        String
++  packId          String
++  status          CreativeJobStatus @default(DRAFT)
++  stylePreset     String
++  aspectRatio     String            @default("16:9")
++  safePrompt      String
++  forbiddenTerms  Json
++  packSnapshot    Json
++  prizeSnapshot   Json
++  errorMessage    String?
++  actorUserId     String?
++  requestId       String?
++  createdAt       DateTime          @default(now())
++  updatedAt       DateTime          @updatedAt
++  Vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
++  pack            Pack              @relation(fields: [packId], references: [id], onDelete: Cascade)
++  assets          CreativeAsset[]
++
++  @@index([vendorId, status, createdAt])
++  @@index([packId, createdAt])
++}
++
++model CreativeAsset {
++  id              String              @id @default(cuid())
++  vendorId        String
++  creativeJobId   String
++  status          CreativeAssetStatus @default(PRIVATE_DRAFT)
++  title           String
++  imageUrl        String
++  targetUrl       String
++  contentHash     String
++  storageKey      String?
++  width           Int                 @default(1600)
++  height          Int                 @default(900)
++  metadata        Json?
++  createdAt       DateTime            @default(now())
++  updatedAt       DateTime            @updatedAt
++  Vendor          Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
++  creativeJob     CreativeJob         @relation(fields: [creativeJobId], references: [id], onDelete: Cascade)
++
++  @@index([vendorId, status, createdAt])
++  @@index([creativeJobId])
++  @@unique([creativeJobId, contentHash])
+ }
+
+ model VendorReferralSignup {
+@@ -592,12 +825,14 @@ model CatalogItem {
+   name           String
+   setId          String?
+   setName        String?
++  localId        String?
+   cardNumber     String?
+   rarity         String?
+   imageBaseUrl   String?
+   imageThumbUrl  String?
+   imageLargeUrl  String?
+   searchText     String
++  sourcePayload  Json?
+   isActive       Boolean         @default(true)
+   createdAt      DateTime        @default(now())
+   updatedAt      DateTime        @updatedAt
+@@ -605,5 +840,7 @@ model CatalogItem {
+   @@unique([source, sourceItemId, language])
+   @@index([itemType, game, isActive])
+   @@index([source, isActive])
++  @@index([game, language, isActive])
++  @@index([setId])
+   @@index([name])
+ }

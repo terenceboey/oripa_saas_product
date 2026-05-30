@@ -5,6 +5,8 @@ import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
 import { getRequestUserId } from "../../lib/rbac";
+import { resolveDrawPoolIntegrity } from "./pool-integrity";
+import { commitInventoryAllocationForPrizeDraw } from "../packs/inventory-allocation";
 
 const ALGORITHM_VERSION = "hmac_sha256_v1";
 
@@ -185,20 +187,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
         remainingStock: prize.remainingStock,
       }));
 
-      const poolSnapshotJson = {
-        packId: pack.id,
-        at: new Date().toISOString(),
-        rows: prizeState
-          .slice()
-          .sort((a, b) => a.id.localeCompare(b.id))
-          .map((row) => ({
-            id: row.id,
-            label: row.label,
-            weight: row.weight,
-            remainingStock: row.remainingStock,
-          })),
-      };
-      const poolSnapshotHash = sha256Hex(JSON.stringify(poolSnapshotJson));
+      const { poolSnapshotHash, poolSnapshotJson } = resolveDrawPoolIntegrity(pack, packPrizes);
 
       const serverSeed = randomBytes(32).toString("hex");
       const serverSeedHash = sha256Hex(serverSeed);
@@ -271,6 +260,11 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
           await tx.packPrize.update({
             where: { id: selected.id },
             data: { remainingStock: { decrement: 1 } },
+          });
+          await commitInventoryAllocationForPrizeDraw(tx, {
+            vendorId,
+            packId: pack.id,
+            packPrizeId: selected.id,
           });
 
           const inMemoryRow = prizeState.find((row) => row.id === selected.id);

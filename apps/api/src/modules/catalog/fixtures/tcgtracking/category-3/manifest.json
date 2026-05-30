@@ -1,0 +1,21 @@
+{
+  "capture_method": "r.jina.ai mirror due Cloudflare 403 on direct access",
+  "set_id": 24688,
+  "product_id": 692938,
+  "files": [
+    "3_sets.json",
+    "3_sets_1938.json",
+    "3_sets_1938_pricing.json",
+    "3_sets_1938_skus.json",
+    "3_sets_24688.json",
+    "3_sets_24688_pricing.json",
+    "3_sets_24688_skus.json",
+    "categories.json",
+    "manifest.json",
+    "products_180514.json",
+    "products_692938.json"
+  ],
+  "selected_fixture_set_id": 1938,
+  "selected_fixture_product_id": 180514,
+  "notes": "set 24688 captured initially but mostly sealed products with null number/rarity; set 1938 added for card-shaped fields"
+}

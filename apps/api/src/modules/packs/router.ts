@@ -6,6 +6,24 @@ import { parse } from "csv-parse/sync";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import {
+  CatalogPrizeResolutionError,
+  resolvePackPrizeRows,
+  type CatalogItemLookup,
+  type ResolvedPackPrizeRow,
+} from "./prize-snapshots";
+import { packPrizeMutationErrorResponse, shouldRejectPackPrizeMutation } from "./immutability";
+import {
+  PackPublishFreezeError,
+  publishFreezeErrorResponse,
+  resolvePublishFreezeData,
+} from "./pool-snapshot";
+import {
+  PackInventoryAllocationError,
+  packInventoryAllocationErrorResponse,
+  releaseHeldInventoryForPack,
+  reserveInventoryForPackPublish,
+} from "./inventory-allocation";
 
 export const packRouter = Router();
 const csvUpload = multer({
@@ -17,14 +35,57 @@ const uploadCsvSingle = csvUpload.single("file") as any;
 const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner-desktop.webp";
 
-type CreatePrizeRow = {
-  label: string;
-  imageUrl: string;
-  weight: number;
-  stock: number;
-  remainingStock: number;
-  estimatedValue: number;
+type CreatePrizeRow = ResolvedPackPrizeRow;
+
+const catalogItemSelect = {
+  id: true,
+  source: true,
+  sourceItemId: true,
+  itemType: true,
+  game: true,
+  language: true,
+  name: true,
+  setId: true,
+  setName: true,
+  localId: true,
+  cardNumber: true,
+  rarity: true,
+  imageBaseUrl: true,
+  imageThumbUrl: true,
+  imageLargeUrl: true,
+} as const;
+
+const prismaCatalogLookup: CatalogItemLookup = {
+  async findCatalogItemsByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    return prisma.catalogItem.findMany({ where: { id: { in: ids }, isActive: true }, select: catalogItemSelect });
+  },
+  async findCatalogItemBySourceRef(ref: { source: string; sourceItemId: string; language?: string }) {
+    return prisma.catalogItem.findFirst({
+      where: { source: ref.source, sourceItemId: ref.sourceItemId, language: ref.language ?? "en", isActive: true },
+      select: catalogItemSelect,
+    });
+  },
 };
+
+const packPrizeCreateData = (row: CreatePrizeRow) => ({
+  label: row.label,
+  imageUrl: row.imageUrl,
+  imageLargeUrl: row.imageLargeUrl,
+  setId: row.setId,
+  setName: row.setName,
+  localId: row.localId,
+  cardNumber: row.cardNumber,
+  rarity: row.rarity,
+  catalogItemId: row.catalogItemId,
+  catalogSource: row.catalogSource,
+  catalogSourceItemId: row.catalogSourceItemId,
+  ...(row.catalogSnapshot ? { catalogSnapshot: row.catalogSnapshot as Prisma.InputJsonValue } : {}),
+  weight: row.weight,
+  stock: row.stock,
+  remainingStock: row.remainingStock,
+  estimatedValue: row.estimatedValue,
+});
 
 type CsvImportRow = {
   rowNumber: number;
@@ -168,84 +229,42 @@ function decoratePackWithRates(pack: { prizes: Array<{ weight: number }> } & Rec
   };
 }
 
-function buildPrizeRows(data: {
+async function buildPrizeRows(data: {
   tiers?: Array<{
     name: string;
     percentage?: number;
-    items: Array<{ label: string; estimatedValue: number; stock: number; imageUrl?: string }>;
+    items: Array<{
+      label: string;
+      estimatedValue: number;
+      stock: number;
+      imageUrl?: string;
+      catalogItemId?: string;
+      catalogSource?: string;
+      catalogSourceItemId?: string;
+      language?: string;
+    }>;
   }>;
-  prizes?: Array<{ label: string; imageUrl?: string; weight: number; stock: number; estimatedValue: number }>;
+  prizes?: Array<{
+    label: string;
+    imageUrl?: string;
+    weight: number;
+    stock: number;
+    estimatedValue: number;
+    catalogItemId?: string;
+    catalogSource?: string;
+    catalogSourceItemId?: string;
+    language?: string;
+  }>;
 }) {
-  let prizeRows: CreatePrizeRow[] = [];
+  return resolvePackPrizeRows(data, prismaCatalogLookup);
+}
 
-  if (data.tiers && data.tiers.length > 0) {
-    const tiers = data.tiers;
-
-    const tiersWithPercent = tiers.filter((tier) => typeof tier.percentage === "number");
-    const fixedPercentTotal = tiersWithPercent.reduce((sum, tier) => sum + (tier.percentage ?? 0), 0);
-    if (fixedPercentTotal > 100) {
-      throw new Error("Tier percentages exceed 100%");
-    }
-
-    const tiersWithoutPercent = tiers.filter((tier) => typeof tier.percentage !== "number");
-    const remainingPercent = Math.max(0, 100 - fixedPercentTotal);
-    const fallbackTierPercent = tiersWithoutPercent.length > 0 ? remainingPercent / tiersWithoutPercent.length : 0;
-
-    for (const tier of tiers) {
-      const tierPercent = tier.percentage ?? fallbackTierPercent;
-      const perItemPercent = tier.items.length > 0 ? tierPercent / tier.items.length : 0;
-      const itemWeight = Math.max(1, Math.round(perItemPercent * 100));
-
-      for (const item of tier.items) {
-        prizeRows.push({
-          label: `${tier.name} - ${item.label}`,
-          imageUrl: item.imageUrl ?? DEFAULT_POKEMON_CARD_IMAGE,
-          weight: itemWeight,
-          stock: item.stock,
-          remainingStock: item.stock,
-          estimatedValue: item.estimatedValue,
-        });
-      }
-    }
-  } else if (data.prizes && data.prizes.length > 0) {
-    prizeRows = data.prizes.map((prize) => ({
-      label: prize.label,
-      imageUrl: prize.imageUrl ?? DEFAULT_POKEMON_CARD_IMAGE,
-      weight: prize.weight,
-      stock: prize.stock,
-      remainingStock: prize.stock,
-      estimatedValue: prize.estimatedValue,
-    }));
-  } else {
-    prizeRows = [
-      {
-        label: "A Tier - Chase",
-        imageUrl: DEFAULT_POKEMON_CARD_IMAGE,
-        weight: 10,
-        stock: 1,
-        remainingStock: 1,
-        estimatedValue: 1000,
-      },
-      {
-        label: "B Tier - Mid",
-        imageUrl: DEFAULT_POKEMON_CARD_IMAGE,
-        weight: 50,
-        stock: 10,
-        remainingStock: 10,
-        estimatedValue: 250,
-      },
-      {
-        label: "C Tier - Base",
-        imageUrl: DEFAULT_POKEMON_CARD_IMAGE,
-        weight: 200,
-        stock: 100,
-        remainingStock: 100,
-        estimatedValue: 50,
-      },
-    ];
-  }
-
-  return prizeRows;
+function catalogPrizeResolutionResponse(error: unknown) {
+  if (!(error instanceof CatalogPrizeResolutionError)) return null;
+  return {
+    error: "Invalid catalog prize reference",
+    message: error.message,
+  };
 }
 
 async function requirePackRole(req: VendorRequest, res: any, allowStaffReadOnly = false) {
@@ -422,6 +441,10 @@ async function createVendorPack(req: VendorRequest, res: any) {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
+  if (parsed.data.status === "LIVE") {
+    return res.status(400).json({ error: "Use the publish endpoint to freeze and publish packs" });
+  }
+
   const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const maxPackItems = settings?.maxPackItems ?? 50;
   const maxPackTiers = settings?.maxPackTiers ?? 5;
@@ -431,7 +454,14 @@ async function createVendorPack(req: VendorRequest, res: any) {
     return res.status(400).json({ error: `plan limit exceeded: max ${maxPackTiers} tiers` });
   }
 
-  const prizeRows = buildPrizeRows(parsed.data);
+  let prizeRows: CreatePrizeRow[];
+  try {
+    prizeRows = await buildPrizeRows(parsed.data);
+  } catch (error) {
+    const catalogError = catalogPrizeResolutionResponse(error);
+    if (catalogError) return res.status(400).json(catalogError);
+    throw error;
+  }
 
   if (prizeRows.length > maxPackItems) {
     return res.status(400).json({ error: `vendor limit exceeded: max ${maxPackItems} items allowed in one draw pool` });
@@ -456,7 +486,7 @@ async function createVendorPack(req: VendorRequest, res: any) {
       drawLimitResetTimezone: parsed.data.drawLimitResetTimezone,
       prizes: {
         createMany: {
-          data: prizeRows,
+          data: prizeRows.map(packPrizeCreateData),
         },
       },
     },
@@ -480,8 +510,18 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
-  const existing = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId, isActive: true } });
+  const existing = await prisma.pack.findFirst({
+    where: { id: packId, vendorId: auth.vendorId, isActive: true, status: { not: "ARCHIVED" } },
+  });
   if (!existing) return res.status(404).json({ error: "Pack not found" });
+
+  if (shouldRejectPackPrizeMutation(existing.status, parsed.data)) {
+    return res.status(409).json(packPrizeMutationErrorResponse(existing.status));
+  }
+
+  if (existing.status === "DRAFT" && parsed.data.status === "LIVE") {
+    return res.status(400).json({ error: "Use the publish endpoint to freeze and publish packs" });
+  }
 
   const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const maxPackItems = settings?.maxPackItems ?? 50;
@@ -494,51 +534,130 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
     if (tierCount > maxPackTiers) {
       return res.status(400).json({ error: `plan limit exceeded: max ${maxPackTiers} tiers` });
     }
-    replacementPrizeRows = buildPrizeRows(parsed.data);
+    try {
+      replacementPrizeRows = await buildPrizeRows(parsed.data);
+    } catch (error) {
+      const catalogError = catalogPrizeResolutionResponse(error);
+      if (catalogError) return res.status(400).json(catalogError);
+      throw error;
+    }
     if (replacementPrizeRows.length > maxPackItems) {
       return res.status(400).json({ error: `vendor limit exceeded: max ${maxPackItems} items allowed in one draw pool` });
     }
   }
 
-  const updatedPack = await prisma.$transaction(async (tx) => {
-    if (replacementPrizeRows) {
-      await tx.packPrize.deleteMany({ where: { packId: existing.id } });
-      await tx.packPrize.createMany({
-        data: replacementPrizeRows.map((row) => ({
-          packId: existing.id,
-          label: row.label,
-          imageUrl: row.imageUrl,
-          weight: row.weight,
-          stock: row.stock,
-          remainingStock: row.stock,
-          estimatedValue: row.estimatedValue,
-        })),
-      });
-    }
+  let updatedPack;
+  try {
+    updatedPack = await prisma.$transaction(async (tx) => {
+      if (replacementPrizeRows) {
+        const committedAllocationCount = await tx.packPrizeInventoryAllocation.count({
+          where: { vendorId: auth.vendorId, packId: existing.id, status: "COMMITTED" },
+        });
+        if (committedAllocationCount > 0) {
+          throw new PackInventoryAllocationError(
+            "partial_existing_allocation",
+            `Pack ${existing.id} has committed inventory allocation rows and cannot replace prizes`
+          );
+        }
+        await releaseHeldInventoryForPack(tx, { vendorId: auth.vendorId, packId: existing.id });
+        await tx.packPrize.deleteMany({ where: { packId: existing.id } });
+        await tx.packPrize.createMany({
+          data: replacementPrizeRows.map((row) => ({
+            packId: existing.id,
+            ...packPrizeCreateData(row),
+          })),
+        });
+      }
 
-    return tx.pack.update({
-      where: { id: existing.id },
-      data: {
-        title: parsed.data.title,
-        packBannerImageUrl: parsed.data.packBannerImageUrl,
-        pricePoints: parsed.data.pricePoints,
-        totalStock: parsed.data.totalStock,
-        remainingStock: parsed.data.totalStock,
-        startsAt: parsed.data.startsAt ? new Date(parsed.data.startsAt) : undefined,
-        endsAt: parsed.data.endsAt ? new Date(parsed.data.endsAt) : undefined,
-        isNew: parsed.data.isNew,
-        limitedLabel: parsed.data.limitedLabel,
-        status: parsed.data.status,
-        importantNotes: parsed.data.importantNotes,
-        drawLimitMode: parsed.data.drawLimitMode,
-        drawLimitValue: parsed.data.drawLimitValue,
-        drawLimitResetTimezone: parsed.data.drawLimitResetTimezone,
-      },
-      include: { prizes: true },
+      return tx.pack.update({
+        where: { id: existing.id },
+        data: {
+          title: parsed.data.title,
+          packBannerImageUrl: parsed.data.packBannerImageUrl,
+          pricePoints: parsed.data.pricePoints,
+          totalStock: parsed.data.totalStock,
+          remainingStock: parsed.data.totalStock,
+          startsAt: parsed.data.startsAt ? new Date(parsed.data.startsAt) : undefined,
+          endsAt: parsed.data.endsAt ? new Date(parsed.data.endsAt) : undefined,
+          isNew: parsed.data.isNew,
+          limitedLabel: parsed.data.limitedLabel,
+          status: parsed.data.status,
+          importantNotes: parsed.data.importantNotes,
+          drawLimitMode: parsed.data.drawLimitMode,
+          drawLimitValue: parsed.data.drawLimitValue,
+          drawLimitResetTimezone: parsed.data.drawLimitResetTimezone,
+        },
+        include: { prizes: true },
+      });
     });
-  });
+  } catch (error) {
+    if (error instanceof PackInventoryAllocationError) {
+      const status = error.reason === "concurrent_inventory_conflict" ? 409 : 400;
+      return res.status(status).json(packInventoryAllocationErrorResponse(error.reason));
+    }
+    throw error;
+  }
 
   return res.json({ pack: decoratePackWithRates(updatedPack) });
+});
+
+packRouter.patch("/v1/vendor/packs/:packId/publish", async (req: VendorRequest, res) => {
+  const auth = await requirePackRole(req, res);
+  if (!auth) return;
+  const packId = String(req.params.packId || "").trim();
+  if (!packId) return res.status(400).json({ error: "packId is required" });
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const bodyIdempotencyKey = typeof body.publishIdempotencyKey === "string" ? body.publishIdempotencyKey : undefined;
+  const headerIdempotencyKey = typeof req.headers["x-idempotency-key"] === "string" ? req.headers["x-idempotency-key"] : undefined;
+  const idempotencyKey = (headerIdempotencyKey ?? bodyIdempotencyKey ?? "").trim() || null;
+
+  const pack = await prisma.pack.findFirst({
+    where: { id: packId, vendorId: auth.vendorId, isActive: true },
+    include: { prizes: true },
+  });
+  if (!pack) return res.status(404).json({ error: "Pack not found" });
+
+  try {
+    const publishData = resolvePublishFreezeData(pack, pack.prizes, {
+      actorUserId: auth.actorUserId,
+      now: new Date(),
+      idempotencyKey,
+    });
+
+    if (!publishData) {
+      return res.json({ pack: decoratePackWithRates(pack), published: false, idempotent: true });
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      if (pack.pricePoints > 0) {
+        await reserveInventoryForPackPublish(tx, {
+          vendorId: auth.vendorId,
+          packId: pack.id,
+          prizes: pack.prizes,
+          now: new Date(),
+        });
+      }
+
+      return tx.pack.update({
+        where: { id: pack.id },
+        data: publishData,
+        include: { prizes: true },
+      });
+    });
+
+    return res.json({ pack: decoratePackWithRates(updated), published: true, idempotent: false });
+  } catch (error) {
+    if (error instanceof PackPublishFreezeError) {
+      const status = error.reason === "already_published" || error.reason === "pool_hash_mismatch" ? 409 : 400;
+      return res.status(status).json(publishFreezeErrorResponse(error.reason));
+    }
+    if (error instanceof PackInventoryAllocationError) {
+      const status = error.reason === "concurrent_inventory_conflict" ? 409 : 400;
+      return res.status(status).json(packInventoryAllocationErrorResponse(error.reason));
+    }
+    throw error;
+  }
 });
 
 packRouter.patch("/v1/vendor/packs/:packId/archive", async (req: VendorRequest, res) => {
@@ -550,10 +669,13 @@ packRouter.patch("/v1/vendor/packs/:packId/archive", async (req: VendorRequest, 
   const pack = await prisma.pack.findFirst({ where: { id: packId, vendorId: auth.vendorId, isActive: true } });
   if (!pack) return res.status(404).json({ error: "Pack not found" });
 
-  const updated = await prisma.pack.update({
-    where: { id: packId },
-    data: { status: "ARCHIVED" },
-    include: { prizes: true },
+  const updated = await prisma.$transaction(async (tx) => {
+    await releaseHeldInventoryForPack(tx, { vendorId: auth.vendorId, packId });
+    return tx.pack.update({
+      where: { id: packId },
+      data: { status: "ARCHIVED" },
+      include: { prizes: true },
+    });
   });
 
   return res.json({ pack: decoratePackWithRates(updated) });
@@ -570,10 +692,13 @@ packRouter.delete("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
 
   const drawOrderCount = await prisma.drawOrder.count({ where: { packId } });
   if (drawOrderCount > 0) {
-    const retired = await prisma.pack.update({
-      where: { id: packId },
-      data: { status: "ARCHIVED", isActive: false },
-      include: { prizes: true },
+    const retired = await prisma.$transaction(async (tx) => {
+      await releaseHeldInventoryForPack(tx, { vendorId: auth.vendorId, packId });
+      return tx.pack.update({
+        where: { id: packId },
+        data: { status: "ARCHIVED", isActive: false },
+        include: { prizes: true },
+      });
     });
     return res.status(200).json({
       mode: "retired",
@@ -587,10 +712,13 @@ packRouter.delete("/v1/vendor/packs/:packId", async (req: VendorRequest, res) =>
     return res.status(204).send();
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2003") {
-      const retired = await prisma.pack.update({
-        where: { id: packId },
-        data: { status: "ARCHIVED", isActive: false },
-        include: { prizes: true },
+      const retired = await prisma.$transaction(async (tx) => {
+        await releaseHeldInventoryForPack(tx, { vendorId: auth.vendorId, packId });
+        return tx.pack.update({
+          where: { id: packId },
+          data: { status: "ARCHIVED", isActive: false },
+          include: { prizes: true },
+        });
       });
       return res.status(200).json({
         mode: "retired",

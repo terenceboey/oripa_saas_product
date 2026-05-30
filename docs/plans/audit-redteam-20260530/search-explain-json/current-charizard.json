@@ -1,0 +1,197 @@
+[
+  {
+    "Plan": {
+      "Node Type": "Limit",
+      "Parallel Aware": false,
+      "Async Capable": false,
+      "Startup Cost": 42523.93,
+      "Total Cost": 42527.31,
+      "Plan Rows": 29,
+      "Plan Width": 244,
+      "Actual Startup Time": 65.536,
+      "Actual Total Time": 70.407,
+      "Actual Rows": 40.00,
+      "Actual Loops": 1,
+      "Disabled": false,
+      "Shared Hit Blocks": 78,
+      "Shared Read Blocks": 17203,
+      "Shared Dirtied Blocks": 0,
+      "Shared Written Blocks": 11161,
+      "Local Hit Blocks": 0,
+      "Local Read Blocks": 0,
+      "Local Dirtied Blocks": 0,
+      "Local Written Blocks": 0,
+      "Temp Read Blocks": 0,
+      "Temp Written Blocks": 0,
+      "Plans": [
+        {
+          "Node Type": "Gather Merge",
+          "Parent Relationship": "Outer",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 42523.93,
+          "Total Cost": 42527.31,
+          "Plan Rows": 29,
+          "Plan Width": 244,
+          "Actual Startup Time": 65.535,
+          "Actual Total Time": 70.402,
+          "Actual Rows": 40.00,
+          "Actual Loops": 1,
+          "Disabled": false,
+          "Workers Planned": 2,
+          "Workers Launched": 2,
+          "Shared Hit Blocks": 78,
+          "Shared Read Blocks": 17203,
+          "Shared Dirtied Blocks": 0,
+          "Shared Written Blocks": 11161,
+          "Local Hit Blocks": 0,
+          "Local Read Blocks": 0,
+          "Local Dirtied Blocks": 0,
+          "Local Written Blocks": 0,
+          "Temp Read Blocks": 0,
+          "Temp Written Blocks": 0,
+          "Plans": [
+            {
+              "Node Type": "Sort",
+              "Parent Relationship": "Outer",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 41523.91,
+              "Total Cost": 41523.94,
+              "Plan Rows": 12,
+              "Plan Width": 244,
+              "Actual Startup Time": 63.693,
+              "Actual Total Time": 63.695,
+              "Actual Rows": 37.33,
+              "Actual Loops": 3,
+              "Disabled": false,
+              "Sort Key": ["(CASE WHEN (lower(name) = 'charizard'::text) THEN 0 WHEN (lower(name) ~~ 'charizard%'::text) THEN 1 WHEN (lower(name) ~~ '%charizard%'::text) THEN 2 ELSE 3 END)", "name"],
+              "Sort Method": "top-N heapsort",
+              "Sort Space Used": 43,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 78,
+              "Shared Read Blocks": 17203,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 11161,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Workers": [
+                {
+                  "Worker Number": 0,
+                  "Sort Method": "top-N heapsort",
+                  "Sort Space Used": 50,
+                  "Sort Space Type": "Memory"
+                },
+                {
+                  "Worker Number": 1,
+                  "Sort Method": "top-N heapsort",
+                  "Sort Space Used": 55,
+                  "Sort Space Type": "Memory"
+                }
+              ],
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Heap Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": true,
+                  "Async Capable": false,
+                  "Relation Name": "CatalogItem",
+                  "Alias": "CatalogItem",
+                  "Startup Cost": 1346.67,
+                  "Total Cost": 41523.69,
+                  "Plan Rows": 12,
+                  "Plan Width": 244,
+                  "Actual Startup Time": 4.012,
+                  "Actual Total Time": 63.498,
+                  "Actual Rows": 314.00,
+                  "Actual Loops": 3,
+                  "Disabled": false,
+                  "Recheck Cond": "((game = 'POKEMON'::text) AND \"isActive\")",
+                  "Rows Removed by Index Recheck": 0,
+                  "Filter": "((name ~~* 'charizard%'::text) OR (name ~~* '%charizard%'::text) OR (\"searchText\" ~~* '%charizard%'::text))",
+                  "Rows Removed by Filter": 34274,
+                  "Exact Heap Blocks": 5019,
+                  "Lossy Heap Blocks": 0,
+                  "Shared Hit Blocks": 48,
+                  "Shared Read Blocks": 17203,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 11161,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Workers": [
+                    {
+                      "Worker Number": 0,
+                      "Exact Heap Blocks": 6116,
+                      "Lossy Heap Blocks": 0
+                    },
+                    {
+                      "Worker Number": 1,
+                      "Exact Heap Blocks": 5972,
+                      "Lossy Heap Blocks": 0
+                    }
+                  ],
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Index Name": "CatalogItem_itemType_game_isActive_idx",
+                      "Startup Cost": 0.00,
+                      "Total Cost": 1346.66,
+                      "Plan Rows": 103781,
+                      "Plan Width": 0,
+                      "Actual Startup Time": 3.960,
+                      "Actual Total Time": 3.960,
+                      "Actual Rows": 103765.00,
+                      "Actual Loops": 1,
+                      "Disabled": false,
+                      "Index Cond": "((game = 'POKEMON'::text) AND (\"isActive\" = true))",
+                      "Index Searches": 3,
+                      "Shared Hit Blocks": 8,
+                      "Shared Read Blocks": 96,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Workers": [
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "Planning": {
+      "Shared Hit Blocks": 291,
+      "Shared Read Blocks": 1,
+      "Shared Dirtied Blocks": 4,
+      "Shared Written Blocks": 0,
+      "Local Hit Blocks": 0,
+      "Local Read Blocks": 0,
+      "Local Dirtied Blocks": 0,
+      "Local Written Blocks": 0,
+      "Temp Read Blocks": 0,
+      "Temp Written Blocks": 0
+    },
+    "Planning Time": 0.717,
+    "Triggers": [
+    ],
+    "Execution Time": 70.450
+  }
+]

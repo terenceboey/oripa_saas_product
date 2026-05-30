@@ -1,0 +1,5311 @@
+{
+  "set_id": 1938,
+  "set_name": "Alternate Art Promos",
+  "set_abbr": "PR",
+  "set_released": "2026-04-14",
+  "product_count": 57,
+  "data_modified": "2026-04-21T07:08:16-04:00",
+  "file_generated": "2026-04-22T04:30:42-04:00",
+  "pricing_url": "/tcgapi/v1/3/sets/1938/pricing",
+  "products": [
+    {
+      "id": 148226,
+      "name": "Premium Trainer's XY Collection",
+      "clean_name": "Premium Trainers XY Collection",
+      "number": null,
+      "rarity": null,
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148226_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148226%2Fpokemon-alternate-art-promos-premium-trainers-xy-collection",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": null
+    },
+    {
+      "id": 180514,
+      "name": "Alolan Exeggutor - 2a/131",
+      "clean_name": "Alolan Exeggutor 2a 131",
+      "number": "002a/131",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/180514_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F180514%2Fpokemon-alternate-art-promos-alolan-exeggutor-2a-131",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 364325,
+      "cardtrader_id": 119581,
+      "cardtrader": [
+        {
+          "id": 119581,
+          "name": "Alolan Exeggutor",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "002a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            364325
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119581/preview_alolan-exeggutor-holo-promo-2a-131-forbidden-light-promos-119581.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 180514,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 164234,
+      "name": "Entei GX - 10a/73",
+      "clean_name": "Entei GX 10a 73",
+      "number": "010a/073",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/164234_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F164234%2Fpokemon-alternate-art-promos-entei-gx-10a-73",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 127521,
+      "cardtrader": [
+        {
+          "id": 127521,
+          "name": "Entei GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Shining Legends Promos",
+          "expansion_code": "pslg",
+          "collector_number": "10a/73",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/127521/preview_entei-gx-holo-promo-10a-73-shining-legends-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 164234,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 189786,
+      "name": "Sceptile - 10a/168",
+      "clean_name": "Sceptile 10a 168",
+      "number": "010a/168",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/189786_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F189786%2Fpokemon-alternate-art-promos-sceptile-10a-168",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112841,
+      "cardtrader": [
+        {
+          "id": 112841,
+          "name": "Sceptile",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Celestial Storm Promos",
+          "expansion_code": "pces",
+          "collector_number": "10a/168",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112841/preview_sceptile-holo-promo-10a-168-celestial-storm-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 189786,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 186106,
+      "name": "Charmander - 18a/147",
+      "clean_name": "Charmander 18a 147",
+      "number": "018a/147",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/186106_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F186106%2Fpokemon-alternate-art-promos-charmander-18a-147",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112267,
+      "cardtrader": [
+        {
+          "id": 112267,
+          "name": "Charmander",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "18a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112267/preview_charmander-holo-promo-18a-147-burning-shadows-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 186106,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 197853,
+      "name": "Alolan Sandshrew - 19a/145",
+      "clean_name": "Alolan Sandshrew 19a 145",
+      "number": "019a/145",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/197853_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F197853%2Fpokemon-alternate-art-promos-alolan-sandshrew-19a-145",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 120582,
+      "cardtrader": [
+        {
+          "id": 120582,
+          "name": "Alolan Sandshrew",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "19a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120582/preview_alolan-sandshrew-holo-promo-19a-145-guardians-rising-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 197853,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 148388,
+      "name": "Slowking - 21/122 (Cosmos Holo)",
+      "clean_name": "Slowking 21 122 Cosmos Holo",
+      "number": "021/122",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148388_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148388%2Fpokemon-alternate-art-promos-slowking-21-122-cosmos-holo",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 110601,
+      "cardtrader": [
+        {
+          "id": 110601,
+          "name": "Slowking",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "021/122h",
+          "rarity": "Fixed",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/110601/preview_slowking-holo-promo-21-122-breakpoint-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148388,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 174488,
+      "name": "Alolan Vulpix - 21a/145",
+      "clean_name": "Alolan Vulpix 21a 145",
+      "number": "021a/145",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/174488_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F174488%2Fpokemon-alternate-art-promos-alolan-vulpix-21a-145",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 468924,
+      "cardtrader_id": 120585,
+      "cardtrader": [
+        {
+          "id": 120585,
+          "name": "Alolan Vulpix",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "21a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            468924
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120585/preview_alolan-vulpix-non-holo-promo-21a-145-guardians-rising-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 174488,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 131696,
+      "name": "M Manectric EX - 24a/119",
+      "clean_name": "M Manectric EX 24a 119",
+      "number": "024a/119",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/131696_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F131696%2Fpokemon-alternate-art-promos-m-manectric-ex-24a-119",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 124707,
+      "cardtrader": [
+        {
+          "id": 124707,
+          "name": "M Manectric ex",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Phantom Forces Promos",
+          "expansion_code": "pphf",
+          "collector_number": "24a/119",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/124707/preview_m-manectric-ex-holo-promo-24a-119-phantom-forces-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 131696,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 211603,
+      "name": "Oshawott - 27/114 (Cosmos Holo)",
+      "clean_name": "Oshawott 27 114 Cosmos Holo",
+      "number": "027/114",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/211603_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F211603%2Fpokemon-alternate-art-promos-oshawott-27-114-cosmos-holo",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": null
+    },
+    {
+      "id": 131697,
+      "name": "Jolteon EX - 28a/83",
+      "clean_name": "Jolteon EX 28a 83",
+      "number": "028a/083",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/131697_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F131697%2Fpokemon-alternate-art-promos-jolteon-ex-28a-83",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 120067,
+      "cardtrader": [
+        {
+          "id": 120067,
+          "name": "Jolteon EX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Generations Promos",
+          "expansion_code": "pgen",
+          "collector_number": "28a/83",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120067/preview_jolteon-ex-holo-promo-28a-83-generations-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 131697,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1938
+        }
+      ]
+    },
+    {
+      "id": 179371,
+      "name": "Tapu Fini GX - 39a/147",
+      "clean_name": "Tapu Fini GX 39a 147",
+      "number": "039a/147",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/179371_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F179371%2Fpokemon-alternate-art-promos-tapu-fini-gx-39a-147",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112274,
+      "cardtrader": [
+        {
+          "id": 112274,
+          "name": "Tapu Fini GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "39a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112274/preview_tapu-fini-gx-holo-promo-39a-147-burning-shadows-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 179371,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 184219,
+      "name": "Altaria - 40a/70",
+      "clean_name": "Altaria 40a 70",
+      "number": "040a/070",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/184219_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F184219%2Fpokemon-alternate-art-promos-altaria-40a-70",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 114400,
+      "cardtrader": [
+        {
+          "id": 114400,
+          "name": "Altaria",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Dragon Majesty Promos",
+          "expansion_code": "pdrm",
+          "collector_number": "40a/70",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/114400/preview_altaria-holo-promo-40a-70-dragon-majesty-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 184219,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1938
+        }
+      ]
+    },
+    {
+      "id": 148348,
+      "name": "Regirock EX - 43a/124",
+      "clean_name": "Regirock EX 43a 124",
+      "number": "043a/124",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148348_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148348%2Fpokemon-alternate-art-promos-regirock-ex-43a-124",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 119100,
+      "cardtrader": [
+        {
+          "id": 119100,
+          "name": "Regirock EX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Fates Collide",
+          "expansion_code": "fco",
+          "collector_number": "043a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119100/preview_regirock-ex-holo-promo-43a-124-fates-collide-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148348,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1780
+        }
+      ]
+    },
+    {
+      "id": 191907,
+      "name": "Garbodor - 51a/145 (Cosmos Holo)",
+      "clean_name": "Garbodor 51a 145 Cosmos Holo",
+      "number": "051a/145",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/191907_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F191907%2Fpokemon-alternate-art-promos-garbodor-51a-145-cosmos-holo",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 120588,
+      "cardtrader": [
+        {
+          "id": 120588,
+          "name": "Garbodor",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "51a",
+          "rarity": "Rare",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120588/preview_garbodor-pokemon-league-51a-145-guardians-rising-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 191907,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 131698,
+      "name": "Zygarde EX - 54a/124",
+      "clean_name": "Zygarde EX 54a 124",
+      "number": "054a/124",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/131698_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F131698%2Fpokemon-alternate-art-promos-zygarde-ex-54a-124",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 119102,
+      "cardtrader": [
+        {
+          "id": 119102,
+          "name": "Zygarde EX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Fates Collide",
+          "expansion_code": "fco",
+          "collector_number": "54a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119102/preview_zygarde-ex-holo-promo-54a-124-fates-collide-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 131698,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1780
+        }
+      ]
+    },
+    {
+      "id": 131695,
+      "name": "M Lucario EX - 55a/111",
+      "clean_name": "M Lucario EX 55a 111",
+      "number": "055a/111",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/131695_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F131695%2Fpokemon-alternate-art-promos-m-lucario-ex-55a-111",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 119900,
+      "cardtrader": [
+        {
+          "id": 119900,
+          "name": "M Lucario ex",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Furious Fists",
+          "expansion_code": "ffi",
+          "collector_number": "55a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119900/preview_m-lucario-ex-full-art-55a-111-furious-fists.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 131695,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1481
+        }
+      ]
+    },
+    {
+      "id": 179367,
+      "name": "Tapu Lele GX - 60a/145",
+      "clean_name": "Tapu Lele GX 60a 145",
+      "number": "060a/145",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/179367_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F179367%2Fpokemon-alternate-art-promos-tapu-lele-gx-60a-145",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 120596,
+      "cardtrader": [
+        {
+          "id": 120596,
+          "name": "Tapu Lele GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "60a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120596/preview_tapu-lele-gx-holo-promo-60a-145-guardians-rising-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 179367,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 155599,
+      "name": "Guzzlord GX - 63a/111",
+      "clean_name": "Guzzlord GX 63a 111",
+      "number": "063a/111",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/155599_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F155599%2Fpokemon-alternate-art-promos-guzzlord-gx-63a-111",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 113570,
+      "cardtrader": [
+        {
+          "id": 113570,
+          "name": "Guzzlord GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Crimson Invasion Promos",
+          "expansion_code": "pcin",
+          "collector_number": "63a/111",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/113570/preview_guzzlord-gx-holo-promo-63a-111-crimson-invasion-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 155599,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 148340,
+      "name": "Aegislash EX - 65a/119",
+      "clean_name": "Aegislash EX 65a 119",
+      "number": "065a/119",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148340_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148340%2Fpokemon-alternate-art-promos-aegislash-ex-65a-119",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 124712,
+      "cardtrader": [
+        {
+          "id": 124712,
+          "name": "Aegislash EX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Phantom Forces Promos",
+          "expansion_code": "pphf",
+          "collector_number": "065a/119",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/124712/preview_aegislash-ex-holo-promo-65a-119-phantom-forces-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148340,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 148351,
+      "name": "Team Flare Grunt - 73a/83",
+      "clean_name": "Team Flare Grunt 73a 83",
+      "number": "073a/083",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148351_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148351%2Fpokemon-alternate-art-promos-team-flare-grunt-73a-83",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 120072,
+      "cardtrader": [
+        {
+          "id": 120072,
+          "name": "Team Flare Grunt",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Generations Promos",
+          "expansion_code": "pgen",
+          "collector_number": "73a/83",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120072/preview_team-flare-grunt-holo-promo-73a-83-generations-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148351,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1938
+        }
+      ]
+    },
+    {
+      "id": 148342,
+      "name": "Hex Maniac - 75a/98",
+      "clean_name": "Hex Maniac 75a 98",
+      "number": "075a/098",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148342_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148342%2Fpokemon-alternate-art-promos-hex-maniac-75a-98",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 311409,
+      "cardtrader_id": 110038,
+      "cardtrader": [
+        {
+          "id": 110038,
+          "name": "Hex Maniac",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Miscellaneous Promos",
+          "expansion_code": "pr",
+          "collector_number": "75a/98",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            311409
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/110038/preview_hex-maniac-holo-promo-75a-98-ancient-origins-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148342,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 198529,
+      "name": "Zoroark GX - 77a/73",
+      "clean_name": "Zoroark GX 77a 73",
+      "number": "077a/073",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/198529_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F198529%2Fpokemon-alternate-art-promos-zoroark-gx-77a-73",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 450888,
+      "cardtrader_id": 127529,
+      "cardtrader": [
+        {
+          "id": 127529,
+          "name": "Zoroark GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Shining Legends Promos",
+          "expansion_code": "pslg",
+          "collector_number": "77a/73",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            450888
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/127529/preview_zoroark-gx-holo-promo-77a-73-shining-legends-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 198529,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 148350,
+      "name": "Shaymin EX - 77a/108",
+      "clean_name": "Shaymin EX 77a 108",
+      "number": "077a/108",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148350_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148350%2Fpokemon-alternate-art-promos-shaymin-ex-77a-108",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 126734,
+      "cardtrader": [
+        {
+          "id": 126734,
+          "name": "Shaymin EX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Roaring Skies Promos",
+          "expansion_code": "pros",
+          "collector_number": "77a/108",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/126734/preview_shaymin-ex-holo-promo-77a-108-roaring-skies-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148350,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 226132,
+      "name": "Jirachi GX - 79a/236",
+      "clean_name": "Jirachi GX 79a 236",
+      "number": "079a/236",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/226132_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F226132%2Fpokemon-alternate-art-promos-jirachi-gx-79a-236",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 523095,
+      "cardtrader_id": 278872,
+      "cardtrader": [
+        {
+          "id": 278872,
+          "name": "Jirachi GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "79a",
+          "rarity": "Fixed",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            523095
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/278872/preview_jirachi-gx-79a-theme-deck-blisters-exclusives.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 226132,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 184331,
+      "name": "Regigigas - 84a/111",
+      "clean_name": "Regigigas 84a 111",
+      "number": "084a/111",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/184331_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F184331%2Fpokemon-alternate-art-promos-regigigas-84a-111",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 113581,
+      "cardtrader": [
+        {
+          "id": 113581,
+          "name": "Regigigas",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Crimson Invasion Promos",
+          "expansion_code": "pcin",
+          "collector_number": "84a/111",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/113581/preview_regigigas-holo-promo-84a-111-crimson-invasion-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 184331,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 212993,
+      "name": "Heatran - 88/156 (Prerelease)",
+      "clean_name": "Heatran 88 156 Prerelease",
+      "number": "088/156",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/212993_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F212993%2Fpokemon-alternate-art-promos-heatran-88-156-prerelease",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 130382,
+      "cardtrader": [
+        {
+          "id": 130382,
+          "name": "Heatran",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Prerelease Promos",
+          "expansion_code": "pre-poke",
+          "collector_number": "088",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/130382/preview_heatran-holo-promo-88-156-ultra-prism-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 212993,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 148339,
+      "name": "Blacksmith - 88a/106",
+      "clean_name": "Blacksmith 88a 106",
+      "number": "088a/106",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148339_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148339%2Fpokemon-alternate-art-promos-blacksmith-88a-106",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 119325,
+      "cardtrader": [
+        {
+          "id": 119325,
+          "name": "Blacksmith",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "088a/106",
+          "rarity": "Fixed",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119325/preview_blacksmith-non-holo-promo-88-106-flashfire-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148339,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 162041,
+      "name": "Darkrai GX - 88a/147",
+      "clean_name": "Darkrai GX 88a 147",
+      "number": "088a/147",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/162041_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F162041%2Fpokemon-alternate-art-promos-darkrai-gx-88a-147",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112285,
+      "cardtrader": [
+        {
+          "id": 112285,
+          "name": "Darkrai GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Burning Shadows Promos",
+          "expansion_code": "pbus",
+          "collector_number": "88a/147",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112285/preview_darkrai-gx-holo-promo-88a-147-burning-shadows-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 162041,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 133816,
+      "name": "Trainers' Mail - 92a/108 (Holo)",
+      "clean_name": "Trainers Mail 92a 108 Holo",
+      "number": "092a/108",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/133816_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F133816%2Fpokemon-alternate-art-promos-trainers-mail-92a-108-holo",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 126735,
+      "cardtrader": [
+        {
+          "id": 126735,
+          "name": "Trainers' Mail",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Roaring Skies Promos",
+          "expansion_code": "pros",
+          "collector_number": "92a/108sh",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/126735/preview_trainers-mail-sheen-holo-promo-92a-108-roaring-skies-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 133816,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 133815,
+      "name": "Trainers' Mail - 92a/108 (Non-Holo)",
+      "clean_name": "Trainers Mail 92a 108 Non Holo",
+      "number": "092a/108",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/133815_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F133815%2Fpokemon-alternate-art-promos-trainers-mail-92a-108-non-holo",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 126736,
+      "cardtrader": [
+        {
+          "id": 126736,
+          "name": "Trainers' Mail",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Roaring Skies Promos",
+          "expansion_code": "pros",
+          "collector_number": "92a/108",
+          "rarity": "Uncommon",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/126736/preview_trainers-mail-non-holo-promo-92a-108-roaring-skies-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 133815,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 177113,
+      "name": "Sylveon GX - 92a/145",
+      "clean_name": "Sylveon GX 92a 145",
+      "number": "092a/145",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/177113_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F177113%2Fpokemon-alternate-art-promos-sylveon-gx-92a-145",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 120601,
+      "cardtrader": [
+        {
+          "id": 120601,
+          "name": "Sylveon GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "92a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120601/preview_sylveon-gx-holo-promo-92a-145-theme-deck-blisters-exclusives.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 177113,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 171033,
+      "name": "Kirlia - 92a/147",
+      "clean_name": "Kirlia 92a 147",
+      "number": "092a/147",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/171033_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F171033%2Fpokemon-alternate-art-promos-kirlia-92a-147",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112286,
+      "cardtrader": [
+        {
+          "id": 112286,
+          "name": "Kirlia",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Burning Shadows Promos",
+          "expansion_code": "pbus",
+          "collector_number": "92a/147",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112286/preview_kirlia-holo-promo-92a-147-burning-shadows-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 171033,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 177167,
+      "name": "Delinquent - 98a/122",
+      "clean_name": "Delinquent 98a 122",
+      "number": "098a/122",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/177167_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F177167%2Fpokemon-alternate-art-promos-delinquent-98a-122",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 782672,
+      "cardtrader_id": 110608,
+      "cardtrader": [
+        {
+          "id": 110608,
+          "name": "Delinquent",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "BREAKpoint Promos",
+          "expansion_code": "pbkp",
+          "collector_number": "98a/122",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            782672
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/110608/preview_delinquent-holo-promo-98a-122-breakpoint-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 177167,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 148341,
+      "name": "Delinquent - 98b/122 (Full Art)",
+      "clean_name": "Delinquent 98b 122 Full Art",
+      "number": "098b/122",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148341_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148341%2Fpokemon-alternate-art-promos-delinquent-98b-122-full-art",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 311410,
+      "cardtrader_id": 110610,
+      "cardtrader": [
+        {
+          "id": 110610,
+          "name": "Delinquent",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "BREAKpoint Promos",
+          "expansion_code": "pbkp",
+          "collector_number": "98b/122",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            311410
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/110610/preview_delinquent-holo-promo-98b-122-breakpoint-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148341,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 179380,
+      "name": "Eevee - 101a/149",
+      "clean_name": "Eevee 101a 149",
+      "number": "101a/149",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/179380_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F179380%2Fpokemon-alternate-art-promos-eevee-101a-149",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 366834,
+      "cardtrader_id": 251297,
+      "cardtrader": [
+        {
+          "id": 251297,
+          "name": "Eevee",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Sun & Moon",
+          "expansion_code": "sum",
+          "collector_number": "101a/149",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            366834
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/251297/preview_eevee-101-149-sun-moon-251297.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 179380,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1863
+        }
+      ]
+    },
+    {
+      "id": 148347,
+      "name": "N (Supporter) - 105a/124",
+      "clean_name": "N Supporter 105a 124",
+      "number": "105a/124",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148347_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148347%2Fpokemon-alternate-art-promos-n-supporter-105a-124",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 300302,
+      "cardtrader_id": 119111,
+      "cardtrader": [
+        {
+          "id": 119111,
+          "name": "N",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Fates Collide",
+          "expansion_code": "fco",
+          "collector_number": "105a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            300302
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119111/preview_n-ultra-rare-105a-124-fates-collide.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148347,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1780
+        }
+      ]
+    },
+    {
+      "id": 161362,
+      "name": "Porygon-Z - 105a/147",
+      "clean_name": "Porygon Z 105a 147",
+      "number": "105a/147",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/161362_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F161362%2Fpokemon-alternate-art-promos-porygon-z-105a-147",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112289,
+      "cardtrader": [
+        {
+          "id": 112289,
+          "name": "Porygon-Z",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Burning Shadows Promos",
+          "expansion_code": "pbus",
+          "collector_number": "105a/147",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112289/preview_porygon-z-holo-promo-105a-147-burning-shadows-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 161362,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 133813,
+      "name": "Professor Sycamore - 107a/122 (Holofoil)",
+      "clean_name": "Professor Sycamore 107a 122 Holofoil",
+      "number": "107a/122",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/133813_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F133813%2Fpokemon-alternate-art-promos-professor-sycamore-107a-122-holofoil",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 110613,
+      "cardtrader": [
+        {
+          "id": 110613,
+          "name": "Professor Sycamore",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "BREAKpoint Promos",
+          "expansion_code": "pbkp",
+          "collector_number": "107a/122sh",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/110613/preview_professor-sycamore-sheen-holo-promo-107a-122-breakpoint-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 133813,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 133814,
+      "name": "Professor Sycamore - 107a/122 (Non-Holo)",
+      "clean_name": "Professor Sycamore 107a 122 Non Holo",
+      "number": "107a/122",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/133814_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F133814%2Fpokemon-alternate-art-promos-professor-sycamore-107a-122-non-holo",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 110614,
+      "cardtrader": [
+        {
+          "id": 110614,
+          "name": "Professor Sycamore",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "BREAKpoint Promos",
+          "expansion_code": "pbkp",
+          "collector_number": "107a/122",
+          "rarity": "Uncommon",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/110614/preview_professor-sycamore-non-holo-promo-107a-122-breakpoint-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 133814,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 148349,
+      "name": "Shauna - 111a/124",
+      "clean_name": "Shauna 111a 124",
+      "number": "111a/124",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148349_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148349%2Fpokemon-alternate-art-promos-shauna-111a-124",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 119112,
+      "cardtrader": [
+        {
+          "id": 119112,
+          "name": "Shauna",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Fates Collide",
+          "expansion_code": "fco",
+          "collector_number": "111a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/119112/preview_shauna-holo-promo-111a-124-fates-collide-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148349,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1780
+        }
+      ]
+    },
+    {
+      "id": 226129,
+      "name": "Togepi & Cleffa & Igglybuff GX - 143a/236",
+      "clean_name": "Togepi and Cleffa and Igglybuff GX 143a 236",
+      "number": "143a/236",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/226129_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F226129%2Fpokemon-alternate-art-promos-togepi-and-cleffa-and-igglybuff-gx-143a-236",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": null
+    },
+    {
+      "id": 177166,
+      "name": "Professor's Letter - 146a/162",
+      "clean_name": "Professors Letter 146a 162",
+      "number": "146a/162",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/177166_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F177166%2Fpokemon-alternate-art-promos-professors-letter-146a-162",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 270613,
+      "cardtrader": [
+        {
+          "id": 270613,
+          "name": "Professor's Letter",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Miscellaneous Promos",
+          "expansion_code": "pr",
+          "collector_number": "146a/162",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/270613/preview_professor-s-letter-alternate-art-promo-146a-162-alternate-art-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 177166,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 200203,
+      "name": "Tate & Liza - 148a/168",
+      "clean_name": "Tate and Liza 148a 168",
+      "number": "148a/168",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/200203_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F200203%2Fpokemon-alternate-art-promos-tate-and-liza-148a-168",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 112860,
+      "cardtrader": [
+        {
+          "id": 112860,
+          "name": "Tate & Liza",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Celestial Storm Promos",
+          "expansion_code": "pces",
+          "collector_number": "148a/168",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112860/preview_tate-liza-holo-promo-148a-168-celestial-storm-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 200203,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 216702,
+      "name": "Pokemon Communication - 152b/181",
+      "clean_name": "Pokemon Communication 152b 181",
+      "number": "152b/181",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/216702_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216702%2Fpokemon-alternate-art-promos-pokemon-communication-152b-181",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 134929,
+      "cardtrader": [
+        {
+          "id": 134929,
+          "name": "Pokémon Communication",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Miscellaneous Promos",
+          "expansion_code": "pr",
+          "collector_number": "152b",
+          "rarity": "Uncommon",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/134929/preview_pokemon-communication-152b-181-team-up-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 216702,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 198530,
+      "name": "Metagross GX - 157a/145",
+      "clean_name": "Metagross GX 157a 145",
+      "number": "157a/145",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/198530_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F198530%2Fpokemon-alternate-art-promos-metagross-gx-157a-145",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 450878,
+      "cardtrader_id": 120619,
+      "cardtrader": [
+        {
+          "id": 120619,
+          "name": "Metagross GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "157a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            450878
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/120619/preview_metagross-gx-holo-promo-157a-145-guardians-rising-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 198530,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 202638,
+      "name": "Rayquaza GX - 177a/168",
+      "clean_name": "Rayquaza GX 177a 168",
+      "number": "177a/168",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/202638_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F202638%2Fpokemon-alternate-art-promos-rayquaza-gx-177a-168",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 450883,
+      "cardtrader_id": 112861,
+      "cardtrader": [
+        {
+          "id": 112861,
+          "name": "Rayquaza GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Celestial Storm Promos",
+          "expansion_code": "pces",
+          "collector_number": "177a/168",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            450883
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/112861/preview_rayquaza-gx-holo-promo-177a-168-celestial-storm-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 202638,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1539
+        }
+      ]
+    },
+    {
+      "id": 216705,
+      "name": "Pokegear 3.0 - 182b/214",
+      "clean_name": "Pokegear 30 182b 214",
+      "number": "182b/214",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/216705_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216705%2Fpokemon-alternate-art-promos-pokegear-30-182b-214",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 134928,
+      "cardtrader": [
+        {
+          "id": 134928,
+          "name": "Pokégear 3.0",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Unbroken Bonds",
+          "expansion_code": "unb",
+          "collector_number": "182b",
+          "rarity": "Uncommon",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/134928/preview_pokegear-3-0-182b-214-unbroken-bonds-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 216705,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2420
+        }
+      ]
+    },
+    {
+      "id": 200204,
+      "name": "Sightseer - 189a/214",
+      "clean_name": "Sightseer 189a 214",
+      "number": "189a/214",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/200204_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F200204%2Fpokemon-alternate-art-promos-sightseer-189a-214",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 562700,
+      "cardtrader_id": 122736,
+      "cardtrader": [
+        {
+          "id": 122736,
+          "name": "Sightseer",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Miscellaneous Promos",
+          "expansion_code": "pr",
+          "collector_number": "189a/214",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            562700
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/122736/preview_sightseer-alternate-art-promo-189a-214-lost-thunder-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 200204,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2374
+        }
+      ]
+    },
+    {
+      "id": 216699,
+      "name": "Dedenne GX - 195a/214",
+      "clean_name": "Dedenne GX 195a 214",
+      "number": "195a/214",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/216699_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216699%2Fpokemon-alternate-art-promos-dedenne-gx-195a-214",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 134926,
+      "cardtrader": [
+        {
+          "id": 134926,
+          "name": "Dedenne GX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Unbroken Bonds",
+          "expansion_code": "unb",
+          "collector_number": "195a",
+          "rarity": "Ultra Rare",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/134926/preview_dedenne-gx-rare-ultra-195a-214-unbroken-bonds-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 216699,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 2420
+        }
+      ]
+    },
+    {
+      "id": 216707,
+      "name": "Reset Stamp - 206a/236",
+      "clean_name": "Reset Stamp 206a 236",
+      "number": "206a/236",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/216707_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F216707%2Fpokemon-alternate-art-promos-reset-stamp-206a-236",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 134930,
+      "cardtrader": [
+        {
+          "id": 134930,
+          "name": "Reset Stamp",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "Theme Deck & Blisters Exclusives",
+          "expansion_code": "deckexclusives",
+          "collector_number": "206a",
+          "rarity": "Uncommon",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/134930/preview_reset-stamp-trainer-s-toolkit-special-print-206a-236-theme-deck-blisters-exclusives.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 216707,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1840
+        }
+      ]
+    },
+    {
+      "id": 173381,
+      "name": "Tapu Koko - SM30a",
+      "clean_name": "Tapu Koko SM30a",
+      "number": "SM30a",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/173381_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F173381%2Fpokemon-alternate-art-promos-tapu-koko-sm30a",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 358590,
+      "cardtrader_id": 126780,
+      "cardtrader": [
+        {
+          "id": 126780,
+          "name": "Tapu Koko",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "SM Black Star Promos",
+          "expansion_code": "smbs",
+          "collector_number": "SM30a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            },
+            {
+              "name": "pokemon_reverse",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            358590
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/126780/preview_tapu-koko-holo-promo-sm30a-sm-black-star-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 173381,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1861
+        }
+      ]
+    },
+    {
+      "id": 148352,
+      "name": "Yveltal EX - XY150a",
+      "clean_name": "Yveltal EX XY150a",
+      "number": "XY150a",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148352_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148352%2Fpokemon-alternate-art-promos-yveltal-ex-xy150a",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 311267,
+      "cardtrader_id": 132225,
+      "cardtrader": [
+        {
+          "id": 132225,
+          "name": "Yveltal EX",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "XY Black Star Promos",
+          "expansion_code": "xybsp",
+          "collector_number": "XY150a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            311267
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/132225/preview_yveltal-ex-holo-promo-xy150a-xy-black-star-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148352,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1451
+        }
+      ]
+    },
+    {
+      "id": 148344,
+      "name": "Karen - XY177a",
+      "clean_name": "Karen XY177a",
+      "number": "XY177a",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148344_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148344%2Fpokemon-alternate-art-promos-karen-xy177a",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 311408,
+      "cardtrader_id": 132260,
+      "cardtrader": [
+        {
+          "id": 132260,
+          "name": "Karen",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "XY Black Star Promos",
+          "expansion_code": "xybsp",
+          "collector_number": "XY177a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            311408
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/132260/preview_karen-holo-promo-xy177a-xy-black-star-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148344,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1451
+        }
+      ]
+    },
+    {
+      "id": 148345,
+      "name": "M Camerupt EX - XY198a",
+      "clean_name": "M Camerupt EX XY198a",
+      "number": "XY198a",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148345_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148345%2Fpokemon-alternate-art-promos-m-camerupt-ex-xy198a",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 132282,
+      "cardtrader": [
+        {
+          "id": 132282,
+          "name": "M Camerupt ex",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "XY Black Star Promos",
+          "expansion_code": "xybsp",
+          "collector_number": "XY198a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/132282/preview_m-camerupt-ex-holo-promo-xy198a-xy-black-star-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148345,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1451
+        }
+      ]
+    },
+    {
+      "id": 148346,
+      "name": "M Sharpedo EX - XY200a",
+      "clean_name": "M Sharpedo EX XY200a",
+      "number": "XY200a",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148346_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148346%2Fpokemon-alternate-art-promos-m-sharpedo-ex-xy200a",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": null,
+      "cardtrader_id": 132285,
+      "cardtrader": [
+        {
+          "id": 132285,
+          "name": "M Sharpedo ex",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "XY Black Star Promos",
+          "expansion_code": "xybsp",
+          "collector_number": "XY200a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/132285/preview_m-sharpedo-ex-holo-promo-xy200a-xy-black-star-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148346,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1451
+        }
+      ]
+    },
+    {
+      "id": 148343,
+      "name": "Jirachi - XY67a",
+      "clean_name": "Jirachi XY67a",
+      "number": "XY67a",
+      "rarity": "Promo",
+      "image_url": "https://tcgplayer-cdn.tcgplayer.com/product/148343_200w.jpg",
+      "image_count": 1,
+      "tcgplayer_url": "https://partner.tcgplayer.com/c/6207277/1830156/21018?u=https%3A%2F%2Fwww.tcgplayer.com%2Fproduct%2F148343%2Fpokemon-alternate-art-promos-jirachi-xy67a",
+      "manapool_url": null,
+      "scryfall_id": null,
+      "mtgjson_uuid": null,
+      "cardmarket_id": 311403,
+      "cardtrader_id": 132124,
+      "cardtrader": [
+        {
+          "id": 132124,
+          "name": "Jirachi",
+          "match_type": "tcgplayer",
+          "match_confidence": 95,
+          "expansion": "XY Black Star Promos",
+          "expansion_code": "xybsp",
+          "collector_number": "XY67a",
+          "rarity": "Promo",
+          "finishes": [
+            "normal"
+          ],
+          "languages": [
+            "en",
+            "fr",
+            "de",
+            "it",
+            "kr",
+            "pt",
+            "ru",
+            "es"
+          ],
+          "properties": [
+            {
+              "name": "condition",
+              "type": "string",
+              "default_value": "Near Mint",
+              "possible_values": [
+                "Near Mint",
+                "Slightly Played",
+                "Moderately Played",
+                "Played",
+                "Poor"
+              ]
+            },
+            {
+              "name": "signed",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "altered",
+              "type": "boolean",
+              "default_value": "false",
+              "possible_values": [
+                true,
+                false
+              ]
+            },
+            {
+              "name": "pokemon_language",
+              "type": "string",
+              "default_value": "en",
+              "possible_values": [
+                "en",
+                "fr",
+                "de",
+                "it",
+                "kr",
+                "pt",
+                "ru",
+                "es"
+              ]
+            }
+          ],
+          "cardmarket_ids": [
+            311403
+          ],
+          "image_url": "https://cardtrader.com/uploads/blueprints/image/132124/preview_jirachi-holo-promo-xy67a-xy-black-star-promos.jpg",
+          "scryfall_id": null,
+          "tcg_player_id": 148343,
+          "game_id": 5,
+          "category_id": 73,
+          "category_name": "Pokémon Singles",
+          "product_type": "single",
+          "group_id": 1451
+        }
+      ]
+    }
+  ]
+}
