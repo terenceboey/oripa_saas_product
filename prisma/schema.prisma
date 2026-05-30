@@ -596,6 +596,7 @@ model CatalogItem {
   id             String          @id @default(cuid())
   source         String
   sourceItemId   String
+  catalogSetId   String?
   localId        String?
   sourcePayload  Json?
   itemType       CatalogItemType @default(CARD)
@@ -613,9 +614,60 @@ model CatalogItem {
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  catalogSet     CatalogSet?     @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
 
   @@unique([source, sourceItemId, language])
   @@index([itemType, game, isActive])
   @@index([source, isActive])
   @@index([name])
+  @@index([catalogSetId, isActive])
+}
+
+model CatalogSet {
+  id               String      @id @default(cuid())
+  source           String
+  sourceSetId      String
+  game             String
+  setCode          String?
+  name             String
+  releaseDate      DateTime?
+  productCount     Int?
+  symbolImageUrl   String?
+  logoImageUrl     String?
+  bannerImageUrl   String?
+  isSupplemental   Boolean     @default(false)
+  searchText       String
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  cards            CatalogItem[]
+  sealedProducts   CatalogSealedProduct[]
+
+  @@unique([source, sourceSetId, game])
+  @@index([game, isActive, releaseDate])
+  @@index([game, isActive, name])
+}
+
+model CatalogSealedProduct {
+  id               String      @id @default(cuid())
+  source           String
+  sourceProductId  String
+  catalogSetId     String?
+  game             String
+  language         String      @default("en")
+  name             String
+  cleanName        String?
+  imageUrl         String?
+  imageCount       Int?
+  isPresale        Boolean     @default(false)
+  presaleReleaseDate DateTime?
+  searchText       String
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  catalogSet       CatalogSet? @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
+
+  @@unique([source, sourceProductId, language, game])
+  @@index([catalogSetId, isActive])
+  @@index([game, isActive, name])
 }

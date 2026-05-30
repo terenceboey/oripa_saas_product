@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
@@ -121,14 +121,9 @@ type TierDraft = {
 
 type CatalogSuggestion = {
   id: string;
-  source: string;
-  sourceItemId: string;
-  itemType: "CARD" | "SEALED_PRODUCT";
   game: string;
-  language: string;
   name: string;
   setId?: string | null;
-  setName?: string | null;
   cardNumber?: string | null;
   rarity?: string | null;
   imageThumbUrl?: string | null;
@@ -346,6 +341,8 @@ export default function VendorPage() {
   const [itemSearchQuery, setItemSearchQuery] = useState("");
   const [itemSuggestions, setItemSuggestions] = useState<CatalogSuggestion[]>([]);
   const [itemSuggestLoading, setItemSuggestLoading] = useState(false);
+  const [catalogGameFilter, setCatalogGameFilter] = useState("POKEMON");
+  const catalogSearchCacheRef = useRef<Map<string, CatalogSuggestion[]>>(new Map());
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
   const [uploadingVendorLogo, setUploadingVendorLogo] = useState(false);
@@ -463,39 +460,64 @@ export default function VendorPage() {
   useEffect(() => {
     const target = itemSearchTarget;
     const query = itemSearchQuery.trim();
-    if (!target || query.length < 2) {
+    if (!target || query.length < 3) {
       setItemSuggestions([]);
       setItemSuggestLoading(false);
       return;
     }
 
+    const normalizedQuery = query.toLowerCase();
+    const normalizedGameFilter = catalogGameFilter.trim().toUpperCase() || "ALL";
+    const cacheKey = `card:${normalizedGameFilter}:${normalizedQuery}:8`;
+    const cached = catalogSearchCacheRef.current.get(cacheKey);
+    if (cached) {
+      setItemSuggestions(cached);
+      setItemSuggestLoading(false);
+      return;
+    }
+
+    let isActive = true;
+    const controller = new AbortController();
     const timer = window.setTimeout(() => {
+      if (!isActive) return;
       setItemSuggestLoading(true);
       const url = new URL(`${apiBase}/v1/catalog/search`);
-      url.searchParams.set("q", query);
+      url.searchParams.set("q", normalizedQuery);
       url.searchParams.set("limit", "8");
       url.searchParams.set("type", "card");
+      url.searchParams.set("game", normalizedGameFilter);
 
       fetch(url.toString(), {
         headers: authHeaders(),
         credentials: "include",
         cache: "no-store",
+        signal: controller.signal,
       })
         .then(async (res) => {
           const payload = await res.json().catch(() => ({}));
           if (!res.ok) throw new Error(payload?.error ?? "Failed to search cards");
-          setItemSuggestions((payload.items ?? []) as CatalogSuggestion[]);
+          const nextItems = (payload.items ?? []) as CatalogSuggestion[];
+          if (!isActive) return;
+          setItemSuggestions(nextItems);
+          catalogSearchCacheRef.current.set(cacheKey, nextItems);
         })
-        .catch(() => {
+        .catch((error: unknown) => {
+          if (!isActive) return;
+          if (error instanceof DOMException && error.name === "AbortError") return;
           setItemSuggestions([]);
         })
         .finally(() => {
+          if (!isActive) return;
           setItemSuggestLoading(false);
         });
     }, 300);
 
-    return () => window.clearTimeout(timer);
-  }, [authHeaders, itemSearchQuery, itemSearchTarget]);
+    return () => {
+      isActive = false;
+      controller.abort();
+      window.clearTimeout(timer);
+    };
+  }, [authHeaders, itemSearchQuery, itemSearchTarget, catalogGameFilter]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1463,6 +1485,16 @@ export default function VendorPage() {
               </label>
             </div>
             {csvImportSummary ? <p className="muted tiny" style={{ marginTop: 8 }}>{csvImportSummary}</p> : null}
+            <label className="muted tiny" style={{ marginTop: 8, display: "inline-flex", flexDirection: "column", gap: 6 }}>
+              Catalog game search scope
+              <select value={catalogGameFilter} onChange={(e) => setCatalogGameFilter(e.target.value)}>
+                <option value="POKEMON">Pokemon</option>
+                <option value="ONE PIECE">One Piece</option>
+                <option value="YU-GI-OH!">Yu-Gi-Oh!</option>
+                <option value="DRAGON BALL">Dragon Ball</option>
+                <option value="ALL">All games</option>
+              </select>
+            </label>
 
             <form className="pack-builder" onSubmit={submitPack}>
               <div className="pack-builder-grid">
@@ -1608,7 +1640,7 @@ export default function VendorPage() {
                             {itemSearchTarget?.tierIndex === tierIndex && itemSearchTarget?.itemIndex === itemIndex ? (
                               <div className="card" style={{ marginTop: 6, padding: 8, maxHeight: 220, overflowY: "auto" }}>
                                 {itemSuggestLoading ? <div className="muted tiny">Searching cards...</div> : null}
-                                {!itemSuggestLoading && itemSuggestions.length === 0 && itemSearchQuery.trim().length >= 2 ? (
+                                {!itemSuggestLoading && itemSuggestions.length === 0 && itemSearchQuery.trim().length >= 3 ? (
                                   <div className="muted tiny">No matching cards found.</div>
                                 ) : null}
                                 {!itemSuggestLoading && itemSuggestions.map((suggestion) => (

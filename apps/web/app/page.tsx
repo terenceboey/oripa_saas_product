@@ -291,6 +291,7 @@ export default function HomePage() {
           {user ? (
             <button type="button" className="sort-pill" onClick={logout}>Logout</button>
           ) : null}
+          <a className="sort-pill" href="/setlists">Setlists</a>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
       </header>

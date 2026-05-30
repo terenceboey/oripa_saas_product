@@ -13,6 +13,7 @@ import { walletRouter } from "./modules/wallet/router";
 import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
 import { catalogRouter } from "./modules/catalog/router";
+import { setlistRouter } from "./modules/setlists/router";
 import { mediaRouter } from "./modules/media/router";
 import { ensureUploadRoot } from "./lib/image-pipeline";
 
@@ -99,6 +100,7 @@ export function createApp() {
   app.use(bannerRouter);
   app.use(authRouter);
   app.use(catalogRouter);
+  app.use(setlistRouter);
   app.use(mediaRouter);
 
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
