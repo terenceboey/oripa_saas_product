@@ -144,6 +144,30 @@ assert.equal(magicRow.row?.game, "MAGIC");
 assert.match(magicRow.row?.searchText ?? "", /magic card tcgtracking/);
 assert.doesNotMatch(magicRow.row?.searchText ?? "", /pokemon/);
 
+const onePieceLeader = normalizeTcgtrackingProductForCatalog(
+  {
+    productId: 777,
+    name: "Monkey.D.Luffy",
+    imageUrl: "https://example.test/luffy.jpg",
+    extendedData: [
+      { name: "Rarity", value: "L" },
+      { name: "Card Type", value: "Leader" },
+      { name: "Color", value: "Red" },
+      { name: "Attribute", value: "Strike" },
+    ],
+  },
+  { language: "en", game: "ONE_PIECE", categoryId: "68", set: { id: "op01", name: "Romance Dawn", abbreviation: "OP-01" } },
+);
+assert.ok(onePieceLeader.row, "expected TCGCSV extendedData-only card labels to normalize as a card");
+assert.equal(onePieceLeader.row?.sourceItemId, "68:777");
+assert.equal(onePieceLeader.row?.rarity, "L");
+assert.equal(onePieceLeader.row?.cardType, "Leader");
+assert.equal(onePieceLeader.row?.color, "Red");
+assert.equal(onePieceLeader.row?.attribute, "Strike");
+assert.equal(onePieceLeader.row?.imageThumbUrl, "https://example.test/luffy.jpg");
+assert.match(onePieceLeader.row?.searchText ?? "", /leader/);
+assert.equal((onePieceLeader.row?.sourcePayload as Record<string, unknown>).sourceCategoryId, "68");
+
 const expectedKeys: Array<keyof NormalizeStats> = [
   "missing_id",
   "missing_name",

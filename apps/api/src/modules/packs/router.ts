@@ -10,6 +10,7 @@ import {
   CatalogPrizeResolutionError,
   resolvePackPrizeRows,
   type CatalogItemLookup,
+  type CatalogItemSnapshotSource,
   type ResolvedPackPrizeRow,
 } from "./prize-snapshots";
 import { packPrizeMutationErrorResponse, shouldRejectPackPrizeMutation } from "./immutability";
@@ -97,7 +98,9 @@ type CsvImportRow = {
   setId?: string;
   cardNumber?: string;
   catalogItemId?: string;
+  catalogSource?: string;
   sourceItemId?: string;
+  language?: string;
   imageUrl?: string;
   game: string;
 };
@@ -143,7 +146,9 @@ function parseCsvRows(fileBuffer: Buffer) {
     const setId = pickField(normalized, ["set_id", "set"]) || undefined;
     const cardNumber = pickField(normalized, ["card_number", "number"]) || undefined;
     const catalogItemId = pickField(normalized, ["catalog_item_id"]) || undefined;
+    const catalogSource = pickField(normalized, ["catalog_source", "source"]) || undefined;
     const sourceItemId = pickField(normalized, ["source_item_id"]) || undefined;
+    const language = pickField(normalized, ["language", "lang"]) || undefined;
     const imageUrl = pickField(normalized, ["image_url"]) || undefined;
     const game = (pickField(normalized, ["game"]) || "POKEMON").toUpperCase();
 
@@ -157,7 +162,9 @@ function parseCsvRows(fileBuffer: Buffer) {
       setId,
       cardNumber,
       catalogItemId,
+      catalogSource: catalogSource || (sourceItemId ? "tcgtracking" : undefined),
       sourceItemId,
+      language: language || undefined,
       imageUrl,
       game,
     } as CsvImportRow;
@@ -166,56 +173,80 @@ function parseCsvRows(fileBuffer: Buffer) {
 
 async function resolveCatalogItemForRow(
   row: CsvImportRow,
-  cache: Map<string, { imageLargeUrl: string | null; imageThumbUrl: string | null; imageBaseUrl: string | null } | null>
-) {
+  cache: Map<string, CatalogItemSnapshotSource | null>
+): Promise<{ item: CatalogItemSnapshotSource | null; error?: string }> {
   const key = JSON.stringify({
     catalogItemId: row.catalogItemId,
+    catalogSource: row.catalogSource,
     sourceItemId: row.sourceItemId,
+    language: row.language,
     setId: row.setId,
     cardNumber: row.cardNumber,
     itemLabel: row.itemLabel,
     game: row.game,
   });
-  if (cache.has(key)) return cache.get(key) ?? null;
+  if (cache.has(key)) return { item: cache.get(key) ?? null };
 
-  let found = null as { imageLargeUrl: string | null; imageThumbUrl: string | null; imageBaseUrl: string | null } | null;
+  let byCatalogId: CatalogItemSnapshotSource | null = null;
   if (row.catalogItemId) {
-    found = await prisma.catalogItem.findUnique({
+    byCatalogId = await prisma.catalogItem.findUnique({
       where: { id: row.catalogItemId },
-      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+      select: catalogItemSelect,
     });
+    if (!byCatalogId) {
+      return { item: null, error: `Catalog item not found: ${row.catalogItemId}` };
+    }
   }
 
-  if (!found && row.sourceItemId) {
-    found = await prisma.catalogItem.findFirst({
-      where: { source: "tcgtracking", sourceItemId: row.sourceItemId, game: row.game, isActive: true },
-      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+  let bySourceRef: CatalogItemSnapshotSource | null = null;
+  if (row.sourceItemId) {
+    const catalogSource = row.catalogSource ?? "tcgtracking";
+    bySourceRef = await prisma.catalogItem.findFirst({
+      where: {
+        source: catalogSource,
+        sourceItemId: row.sourceItemId,
+        language: row.language ?? "en",
+        isActive: true,
+      },
+      select: catalogItemSelect,
     });
+    if (!bySourceRef) {
+      return { item: null, error: `Catalog item not found: ${catalogSource}/${row.sourceItemId}/${row.language ?? "en"}` };
+    }
   }
+
+  if (byCatalogId && bySourceRef && byCatalogId.id !== bySourceRef.id) {
+    return {
+      item: null,
+      error: `catalog_item_id ${row.catalogItemId} conflicts with ${row.catalogSource ?? "tcgtracking"}/${row.sourceItemId}/${row.language ?? "en"}`,
+    };
+  }
+
+  let found = byCatalogId ?? bySourceRef;
 
   if (!found && row.setId && row.cardNumber) {
     found = await prisma.catalogItem.findFirst({
       where: { game: row.game, setId: row.setId, cardNumber: row.cardNumber, isActive: true },
-      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+      select: catalogItemSelect,
     });
   }
 
   if (!found && row.setId) {
     found = await prisma.catalogItem.findFirst({
       where: { game: row.game, setId: row.setId, name: { equals: row.itemLabel, mode: "insensitive" }, isActive: true },
-      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+      select: catalogItemSelect,
     });
   }
 
   if (!found) {
     found = await prisma.catalogItem.findFirst({
       where: { game: row.game, name: { equals: row.itemLabel, mode: "insensitive" }, isActive: true },
-      select: { imageLargeUrl: true, imageThumbUrl: true, imageBaseUrl: true },
+      select: catalogItemSelect,
     });
   }
 
   cache.set(key, found);
-  return found;
+  return { item: found };
 }
 
 function decoratePackWithRates(pack: { prizes: Array<{ weight: number }> } & Record<string, unknown>) {
@@ -378,21 +409,44 @@ packRouter.post("/v1/vendor/packs/import-csv", uploadCsvSingle, async (req: Vend
     return res.status(400).json({ error: `plan limit exceeded: max ${maxPackTiers} tiers allowed` });
   }
 
-  const tierMap = new Map<string, { name: string; percentage?: number; items: Array<{ label: string; estimatedValue: number; stock: number; imageUrl: string }> }>();
+  const tierMap = new Map<
+    string,
+    {
+      name: string;
+      percentage?: number;
+      items: Array<{
+        label: string;
+        estimatedValue: number;
+        stock: number;
+        imageUrl: string;
+        catalogItemId?: string;
+        catalogSource?: string;
+        catalogSourceItemId?: string;
+        language?: string;
+      }>;
+    }
+  >();
   const unmatchedRows: Array<{ rowNumber: number; itemLabel: string; setId?: string; cardNumber?: string; reason: string }> = [];
-  const cache = new Map<string, { imageLargeUrl: string | null; imageThumbUrl: string | null; imageBaseUrl: string | null } | null>();
+  const cache = new Map<string, CatalogItemSnapshotSource | null>();
   let matchedCount = 0;
 
   for (const row of rows) {
-    const found = row.imageUrl ? null : await resolveCatalogItemForRow(row, cache);
-    const imageUrl = row.imageUrl || found?.imageLargeUrl || found?.imageThumbUrl || found?.imageBaseUrl || DEFAULT_POKEMON_CARD_IMAGE;
-    if (!row.imageUrl && !found) {
+    const resolved = await resolveCatalogItemForRow(row, cache);
+    if (resolved.error) {
+      validationErrors.push({ rowNumber: row.rowNumber, message: resolved.error });
+      continue;
+    }
+    const found = resolved.item;
+    const imageUrl = found?.imageThumbUrl || found?.imageBaseUrl || found?.imageLargeUrl || row.imageUrl || DEFAULT_POKEMON_CARD_IMAGE;
+    if (!found) {
       unmatchedRows.push({
         rowNumber: row.rowNumber,
         itemLabel: row.itemLabel,
         setId: row.setId,
         cardNumber: row.cardNumber,
-        reason: "No exact catalog match found. Using default image.",
+        reason: row.imageUrl
+          ? "No exact catalog match found. Keeping provided image as manual prize."
+          : "No exact catalog match found. Using default image.",
       });
     } else {
       matchedCount += 1;
@@ -411,8 +465,19 @@ packRouter.post("/v1/vendor/packs/import-csv", uploadCsvSingle, async (req: Vend
       estimatedValue: row.estimatedValue,
       stock: row.stock,
       imageUrl,
+      ...(found
+        ? {
+            catalogItemId: found.id,
+            catalogSource: found.source,
+            catalogSourceItemId: found.sourceItemId,
+            language: found.language,
+          }
+        : {}),
     });
     tierMap.set(row.tierName, currentTier);
+  }
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ error: "Invalid CSV rows", validationErrors });
   }
 
   const tiers = Array.from(tierMap.values());
@@ -427,7 +492,17 @@ packRouter.post("/v1/vendor/packs/import-csv", uploadCsvSingle, async (req: Vend
     unmatchedRows,
     csvTemplate: {
       requiredHeaders: ["tier_name", "item_label", "estimated_value", "stock"],
-      optionalHeaders: ["tier_percentage", "set_id", "card_number", "catalog_item_id", "source_item_id", "image_url", "game"],
+      optionalHeaders: [
+        "tier_percentage",
+        "set_id",
+        "card_number",
+        "catalog_item_id",
+        "catalog_source",
+        "source_item_id",
+        "language",
+        "image_url",
+        "game",
+      ],
     },
   });
 });
