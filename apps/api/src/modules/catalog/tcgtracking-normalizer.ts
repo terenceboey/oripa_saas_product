@@ -15,16 +15,21 @@ export type TcgTrackingSetContext = {
 export type TcgTrackingProduct = {
   id?: unknown;
   product_id?: unknown;
+  productId?: unknown;
   name?: unknown;
   clean_name?: unknown;
+  cleanName?: unknown;
   number?: unknown;
   ext_number?: unknown;
   rarity?: unknown;
   ext_rarity?: unknown;
   image_url?: unknown;
+  imageUrl?: unknown;
   category_id?: unknown;
   group_id?: unknown;
   cardtrader?: Array<{ product_type?: unknown; collector_number?: unknown }>;
+  extendedData?: unknown;
+  extended_data?: unknown;
   [key: string]: unknown;
 };
 
@@ -40,6 +45,9 @@ export type CatalogItemProjection = {
   setName: string | null;
   cardNumber: string | null;
   rarity: string | null;
+  cardType: string | null;
+  color: string | null;
+  attribute: string | null;
   imageBaseUrl: string | null;
   imageThumbUrl: string | null;
   imageLargeUrl: string | null;
@@ -77,8 +85,40 @@ function hasCardShape(product: TcgTrackingProduct): boolean {
   if (productType === "single") return true;
 
   const number = asNonEmptyString(product.number) ?? asNonEmptyString(product.ext_number);
-  const rarity = asNonEmptyString(product.rarity) ?? asNonEmptyString(product.ext_rarity);
-  return Boolean(number || rarity);
+  const labels = extractExtendedDataLabels(product);
+  const rarity = asNonEmptyString(product.rarity) ?? asNonEmptyString(product.ext_rarity) ?? labels.rarity;
+  return Boolean(number || rarity || labels.cardType || labels.color || labels.attribute);
+}
+
+function extractExtendedDataLabels(product: TcgTrackingProduct): {
+  rarity: string | null;
+  cardType: string | null;
+  color: string | null;
+  attribute: string | null;
+} {
+  const raw = product.extendedData ?? product.extended_data;
+  const labels: Record<string, unknown> = {};
+
+  if (Array.isArray(raw)) {
+    for (const item of raw) {
+      if (!item || typeof item !== "object") continue;
+      const entry = item as Record<string, unknown>;
+      const key = asNonEmptyString(entry.name) ?? asNonEmptyString(entry.displayName) ?? asNonEmptyString(entry.key);
+      if (!key) continue;
+      labels[key.toLowerCase()] = entry.value ?? entry.displayValue ?? entry.text;
+    }
+  } else if (raw && typeof raw === "object") {
+    for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+      labels[key.toLowerCase()] = value;
+    }
+  }
+
+  return {
+    rarity: asNonEmptyString(labels.rarity),
+    cardType: asNonEmptyString(labels["card type"]) ?? asNonEmptyString(labels.cardtype) ?? asNonEmptyString(labels.type),
+    color: asNonEmptyString(labels.color),
+    attribute: asNonEmptyString(labels.attribute),
+  };
 }
 
 export function buildTcgtrackingSearchText(input: {
@@ -88,6 +128,9 @@ export function buildTcgtrackingSearchText(input: {
   setAbbr?: string | null;
   cardNumber?: string | null;
   rarity?: string | null;
+  cardType?: string | null;
+  color?: string | null;
+  attribute?: string | null;
   game?: string | null;
 }): string {
   return [
@@ -97,6 +140,9 @@ export function buildTcgtrackingSearchText(input: {
     input.setAbbr,
     input.cardNumber,
     input.rarity,
+    input.cardType,
+    input.color,
+    input.attribute,
     input.game ?? POKEMON_GAME,
     "card",
     TCGTRACKING_SOURCE,
@@ -131,14 +177,14 @@ export function normalizeTcgtrackingProductForCatalog(
     rows_skipped: 0,
   };
 
-  const rawSourceItemId = asNonEmptyString(product.id) ?? asNonEmptyString(product.product_id);
+  const rawSourceItemId = asNonEmptyString(product.id) ?? asNonEmptyString(product.product_id) ?? asNonEmptyString(product.productId);
   if (!rawSourceItemId) {
     stats.missing_id += 1;
     stats.rows_skipped += 1;
     return { row: null, stats, skippedReason: "missing_id" };
   }
 
-  const name = asNonEmptyString(product.name) ?? asNonEmptyString(product.clean_name);
+  const name = asNonEmptyString(product.name) ?? asNonEmptyString(product.clean_name) ?? asNonEmptyString(product.cleanName);
   if (!name) {
     stats.missing_name += 1;
     stats.rows_skipped += 1;
@@ -165,8 +211,12 @@ export function normalizeTcgtrackingProductForCatalog(
   }
 
   const cardNumber = asNonEmptyString(product.number) ?? asNonEmptyString(product.ext_number);
-  const rarity = asNonEmptyString(product.rarity) ?? asNonEmptyString(product.ext_rarity);
-  const image = asNonEmptyString(product.image_url);
+  const labels = extractExtendedDataLabels(product);
+  const rarity = asNonEmptyString(product.rarity) ?? asNonEmptyString(product.ext_rarity) ?? labels.rarity;
+  const cardType = labels.cardType;
+  const color = labels.color;
+  const attribute = labels.attribute;
+  const image = asNonEmptyString(product.image_url) ?? asNonEmptyString(product.imageUrl);
   if (!image) stats.missing_image += 1;
 
   const row: CatalogItemProjection = {
@@ -181,16 +231,21 @@ export function normalizeTcgtrackingProductForCatalog(
     setName,
     cardNumber,
     rarity,
+    cardType,
+    color,
+    attribute,
     imageBaseUrl: image,
     imageThumbUrl: image,
     imageLargeUrl: image,
-    searchText: buildTcgtrackingSearchText({ name, setName, setId, setAbbr, cardNumber, rarity, game: options.game ?? POKEMON_GAME }),
+    searchText: buildTcgtrackingSearchText({ name, setName, setId, setAbbr, cardNumber, rarity, cardType, color, attribute, game: options.game ?? POKEMON_GAME }),
     isActive: true,
     sourcePayload: {
       source: TCGTRACKING_SOURCE,
       sourceItemId,
       rawSourceItemId,
       categoryId: options.categoryId ?? null,
+      sourceCategoryId: options.categoryId ?? null,
+      labels: { rarity, cardType, color, attribute },
       raw: product,
       set: options.set ?? null,
       pricing: options.pricing ?? null,

@@ -47,10 +47,6 @@ function textMatches(q: string) {
   ];
 }
 
-function shouldApplyGameFilter(game?: string) {
-  return Boolean(game && game !== "ALL");
-}
-
 async function findCardCandidates(client: CatalogSearchClient, input: AdapterInput, take: number): Promise<CatalogSearchCandidate[]> {
   return client.$queryRaw<CatalogSearchCandidate[]>(buildCardSql(input, take));
 }
@@ -61,11 +57,11 @@ function buildCardSql(input: AdapterInput, take: number): Prisma.Sql {
   const prefixNeedle = `${needle}%`;
   const clauses: Prisma.Sql[] = [
     Prisma.sql`"isActive" = true`,
+    Prisma.sql`game = ${input.game}`,
     Prisma.sql`lower("name") LIKE ${containsNeedle}`,
     Prisma.sql`"itemType" = ${"CARD"}::"CatalogItemType"`,
   ];
 
-  if (shouldApplyGameFilter(input.game)) clauses.push(Prisma.sql`game = ${input.game}`);
   if (input.language) clauses.push(Prisma.sql`language = ${input.language}`);
   if (input.source) clauses.push(Prisma.sql`source = ${input.source}`);
   if (input.setId) clauses.push(Prisma.sql`"setId" = ${input.setId}`);
@@ -77,6 +73,9 @@ function buildCardSql(input: AdapterInput, take: number): Prisma.Sql {
   return Prisma.sql`
     SELECT
       id,
+      'catalog_item' AS "entityType",
+      'CARD' AS "catalogClass",
+      true AS "prizeableNow",
       source,
       "sourceItemId",
       "itemType",
@@ -111,7 +110,7 @@ async function findSealedCandidates(client: CatalogSearchClient, input: AdapterI
   const rows = await client.catalogSealedProduct.findMany({
     where: {
       isActive: true,
-      ...(shouldApplyGameFilter(input.game) ? { game: input.game } : {}),
+      game: input.game,
       ...(input.language ? { language: input.language } : {}),
       ...(input.source ? { source: input.source } : {}),
       ...(input.setId ? { catalogSet: { sourceSetId: input.setId } } : {}),
@@ -125,6 +124,9 @@ async function findSealedCandidates(client: CatalogSearchClient, input: AdapterI
 
   return rows.map((row) => ({
     id: row.id,
+    entityType: "catalog_sealed_product",
+    catalogClass: "SEALED_PRODUCT",
+    prizeableNow: true,
     source: row.source,
     sourceItemId: row.sourceProductId,
     itemType: "SEALED_PRODUCT",
@@ -147,7 +149,7 @@ async function findSetCandidates(client: CatalogSearchClient, input: AdapterInpu
   const rows = await client.catalogSet.findMany({
     where: {
       isActive: true,
-      ...(shouldApplyGameFilter(input.game) ? { game: input.game } : {}),
+      game: input.game,
       ...(input.source ? { source: input.source } : {}),
       ...(input.setId ? { sourceSetId: input.setId } : {}),
       ...(input.setName ? { name: containsInsensitive(input.setName) } : {}),
@@ -161,6 +163,9 @@ async function findSetCandidates(client: CatalogSearchClient, input: AdapterInpu
     const imageUrl = row.logoImageUrl ?? row.symbolImageUrl ?? row.bannerImageUrl;
     return {
       id: row.id,
+      entityType: "catalog_set",
+      catalogClass: "SET",
+      prizeableNow: false,
       source: row.source,
       sourceItemId: row.sourceSetId,
       itemType: "SET",

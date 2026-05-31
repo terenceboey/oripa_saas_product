@@ -848,6 +848,9 @@ model CatalogItem {
   setName        String?
   cardNumber     String?
   rarity         String?
+  cardType       String?
+  color          String?
+  attribute      String?
   imageBaseUrl   String?
   imageThumbUrl  String?
   imageLargeUrl  String?
@@ -868,7 +871,9 @@ model CatalogSet {
   id               String      @id @default(cuid())
   source           String
   sourceSetId      String
+  sourceCategoryId String?
   game             String
+  language         String      @default("en")
   setCode          String?
   name             String
   releaseDate      DateTime?
@@ -877,6 +882,9 @@ model CatalogSet {
   logoImageUrl     String?
   bannerImageUrl   String?
   isSupplemental   Boolean     @default(false)
+  groupKind        String?
+  sourcePayload    Json?
+  reviewStatus     String?
   searchText       String
   isActive         Boolean     @default(true)
   createdAt        DateTime    @default(now())
@@ -893,6 +901,7 @@ model CatalogSealedProduct {
   id               String      @id @default(cuid())
   source           String
   sourceProductId  String
+  sourceCategoryId String?
   catalogSetId     String?
   game             String
   language         String      @default("en")
@@ -902,6 +911,8 @@ model CatalogSealedProduct {
   imageCount       Int?
   isPresale        Boolean     @default(false)
   presaleReleaseDate DateTime?
+  productKind      String?
+  sourcePayload    Json?
   searchText       String
   isActive         Boolean     @default(true)
   createdAt        DateTime    @default(now())

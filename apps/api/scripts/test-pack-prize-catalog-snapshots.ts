@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createPackSchema } from "../../../packages/shared/src";
 import {
   CatalogPrizeResolutionError,
@@ -192,8 +193,22 @@ async function main() {
   assert.equal(tierRows[0].label, "A Tier - Pikachu");
   assert.equal(tierRows[0].catalogItemId, catalogPikachu.id);
   assert.equal(tierRows[0].cardNumber, "58/102");
-  assert.equal(tierRows[0].imageUrl, "https://images.example/pikachu-base.png");
+  assert.equal(tierRows[0].imageUrl, "https://images.example/pikachu-base.png", "catalog image must override client/import image for source-backed prizes");
   assert.equal(tierRows[0].weight, 1000);
+
+  const routerSource = readFileSync(new URL("../src/modules/packs/router.ts", import.meta.url), "utf8");
+  assert.match(routerSource, /catalogSource\??: string;/, "CSV import row should parse catalogSource");
+  assert.match(routerSource, /language\??: string;/, "CSV import row should parse language");
+  assert.match(routerSource, /pickField\(normalized, \["catalog_source", "source"\]\)/, "CSV import should accept catalog_source/source headers");
+  assert.match(routerSource, /pickField\(normalized, \["language", "lang"\]\)/, "CSV import should accept language/lang headers");
+  assert.match(routerSource, /sourceItemId \? "tcgtracking" : undefined/, "CSV source_item_id should default catalog_source to tcgtracking");
+  assert.match(routerSource, /catalogItemId: found\.id/, "CSV preview tier items must propagate catalogItemId");
+  assert.match(routerSource, /catalogSource: found\.source/, "CSV preview tier items must propagate catalogSource");
+  assert.match(routerSource, /catalogSourceItemId: found\.sourceItemId/, "CSV preview tier items must propagate catalogSourceItemId");
+  assert.match(routerSource, /language: found\.language/, "CSV preview tier items must propagate language");
+  assert.match(routerSource, /catalog_item_id.*conflicts with/s, "CSV import should reject contradictory catalog refs");
+  assert.match(routerSource, /"catalog_source"/, "CSV template should expose catalog_source");
+  assert.match(routerSource, /"language"/, "CSV template should expose language");
 
   await assert.rejects(
     () =>

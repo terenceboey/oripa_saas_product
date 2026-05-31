@@ -4,6 +4,9 @@ import { getSourceRank, type CatalogItemClass } from "./source-priority";
 
 export type CatalogSearchMergeInput = {
   id: string;
+  entityType?: string;
+  catalogClass?: string;
+  prizeableNow?: boolean;
   source: string;
   sourceItemId: string;
   itemType: string;
@@ -94,7 +97,13 @@ function dedupeKey(row: CatalogSearchMergeInput): string | null {
 
 function toResponseItem(row: CatalogSearchMergeInput): CatalogSearchResponseItem {
   const { sourcePayload: _sourcePayload, ...response } = row;
-  return { ...response, mergedSourceItems: [] };
+  return {
+    ...response,
+    entityType: response.entityType ?? "catalog_item",
+    catalogClass: response.catalogClass ?? response.itemType,
+    prizeableNow: response.prizeableNow ?? response.itemType === "CARD",
+    mergedSourceItems: [],
+  };
 }
 
 export function collapseCatalogSearchItems(rows: CatalogSearchMergeInput[]): CatalogSearchResponseItem[] {
