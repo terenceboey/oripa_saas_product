@@ -840,6 +840,9 @@ model CatalogItem {
   catalogSetId   String?
   localId        String?
   sourcePayload  Json?
+  cardType       String?
+  color          String?
+  attribute      String?
   itemType       CatalogItemType @default(CARD)
   game           String          @default("POKEMON")
   language       String          @default("en")
@@ -868,6 +871,11 @@ model CatalogSet {
   id               String      @id @default(cuid())
   source           String
   sourceSetId      String
+  sourceCategoryId String?
+  language         String      @default("en")
+  groupKind        String?
+  reviewStatus     String?
+  sourcePayload    Json?
   game             String
   setCode          String?
   name             String
@@ -893,6 +901,9 @@ model CatalogSealedProduct {
   id               String      @id @default(cuid())
   source           String
   sourceProductId  String
+  sourceCategoryId String?
+  productKind      String?
+  sourcePayload    Json?
   catalogSetId     String?
   game             String
   language         String      @default("en")
