@@ -8,6 +8,7 @@ import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 import {
   CATALOG_GAME_OPTIONS,
+  CATALOG_ITEM_CLASS_OPTIONS,
   type CatalogSuggestion,
   useVendorCatalogSearch,
 } from "../../lib/use-vendor-catalog-search";
@@ -384,6 +385,7 @@ export default function VendorPage() {
     setCardSearchQuery,
     catalogResults,
     catalogResultsLoading,
+    catalogResultsLoadingMore,
     catalogSearchError,
     catalogFacetError,
     setOptionQuery,
@@ -394,18 +396,25 @@ export default function VendorPage() {
     catalogFacets,
     catalogGameFilter,
     setCatalogGameFilter,
+    catalogItemClass,
+    setCatalogItemClass,
     filteredSetFacetOptions,
     filteredRarityFacetOptions,
-    setCatalogFilterInUrl,
+    setCatalogFilter,
     resetCatalogFilters,
     setCatalogResults,
+    catalogCanSearch,
+    catalogHasMore,
+    loadMoreCatalogResults,
   } = useVendorCatalogSearch({
     apiBase,
     authHeaders,
-    pathname,
-    router,
-    initialGameFilter: "POKEMON",
+    initialGameFilter: "",
+    initialItemClass: "CARD",
   });
+  const gameSelected = Boolean(catalogGameFilter);
+  const setSelected = Boolean(catalogFilters.setId);
+  const isCardPicker = catalogItemClass === "CARD";
 
   async function resolveVendorHomeHost() {
     const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
@@ -1702,35 +1711,48 @@ export default function VendorPage() {
                       <button type="button" className="sort-pill" onClick={resetCatalogFilters}>Reset Filters</button>
                     </div>
                   </div>
-                  <label className="muted tiny">
-                    Search cards
-                    <input
-                      value={cardSearchQuery}
-                      onChange={(e) => setCardSearchQuery(e.target.value)}
-                      placeholder="Search by card name..."
-                    />
-                  </label>
                   <div className="pack-builder-grid">
                     <label className="muted tiny">
                       Game
                       <select value={catalogGameFilter} onChange={(e) => setCatalogGameFilter(e.target.value)}>
+                        <option value="">Select game</option>
                         {CATALOG_GAME_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
                         ))}
                       </select>
                     </label>
                     <label className="muted tiny">
+                      Product type
+                      <select value={catalogItemClass} onChange={(e) => setCatalogItemClass(e.target.value as "CARD" | "SEALED_PRODUCT")} disabled={!gameSelected}>
+                        {CATALOG_ITEM_CLASS_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="muted tiny">
+                      Search cards
+                      <input
+                        value={cardSearchQuery}
+                        onChange={(e) => setCardSearchQuery(e.target.value)}
+                        placeholder={gameSelected ? "Optional: refine by name..." : "Select game first"}
+                        disabled={!gameSelected}
+                      />
+                    </label>
+                  </div>
+                  <div className="pack-builder-grid">
+                    <label className="muted tiny">
                       Filter set options
                       <input
                         value={setOptionQuery}
                         onChange={(e) => setSetOptionQuery(e.target.value)}
                         placeholder="Type to filter set dropdown..."
+                        disabled={!gameSelected}
                       />
                     </label>
                     <label className="muted tiny">
                       Card set
-                      <select value={catalogFilters.setId} onChange={(e) => setCatalogFilterInUrl("setId", e.target.value)}>
-                        <option value="">All sets</option>
+                      <select value={catalogFilters.setId} onChange={(e) => setCatalogFilter("setId", e.target.value)} disabled={!gameSelected}>
+                        <option value="">{isCardPicker ? "Select set (recommended)" : "Select set"}</option>
                         {filteredSetFacetOptions.map((set) => (
                           <option key={set.id} value={set.id}>{set.name || set.id} ({set.count})</option>
                         ))}
@@ -1743,11 +1765,16 @@ export default function VendorPage() {
                         value={rarityOptionQuery}
                         onChange={(e) => setRarityOptionQuery(e.target.value)}
                         placeholder="Type to filter rarity dropdown..."
+                        disabled={!gameSelected || !isCardPicker || !setSelected}
                       />
                     </label>
                     <label className="muted tiny">
                       Rarity
-                      <select value={catalogFilters.rarity} onChange={(e) => setCatalogFilterInUrl("rarity", e.target.value)}>
+                      <select
+                        value={catalogFilters.rarity}
+                        onChange={(e) => setCatalogFilter("rarity", e.target.value)}
+                        disabled={!gameSelected || !isCardPicker || !setSelected}
+                      >
                         <option value="">All rarities</option>
                         {filteredRarityFacetOptions.map((rarity) => (
                           <option key={rarity.value} value={rarity.value}>{rarity.value} ({rarity.count})</option>
@@ -1759,7 +1786,7 @@ export default function VendorPage() {
                   <div className="pack-builder-grid">
                     <label className="muted tiny">
                       Source
-                      <select value={catalogFilters.source} onChange={(e) => setCatalogFilterInUrl("source", e.target.value)}>
+                      <select value={catalogFilters.source} onChange={(e) => setCatalogFilter("source", e.target.value)} disabled={!gameSelected}>
                         <option value="">All sources</option>
                         {catalogFacets.sources.map((source) => (
                           <option key={source.value} value={source.value}>{source.value} ({source.count})</option>
@@ -1768,7 +1795,7 @@ export default function VendorPage() {
                     </label>
                     <label className="muted tiny">
                       Language
-                      <select value={catalogFilters.language} onChange={(e) => setCatalogFilterInUrl("language", e.target.value)}>
+                      <select value={catalogFilters.language} onChange={(e) => setCatalogFilter("language", e.target.value)} disabled={!gameSelected}>
                         <option value="">All languages</option>
                         {catalogFacets.languages.map((language) => (
                           <option key={language.value} value={language.value}>{language.value} ({language.count})</option>
@@ -1786,9 +1813,15 @@ export default function VendorPage() {
                       Card search failed: {catalogSearchError}
                     </div>
                   ) : null}
-                  {catalogResultsLoading ? <p className="muted tiny">Searching cards...</p> : null}
-                  {!catalogResultsLoading && cardSearchQuery.trim().length >= 2 && catalogResults.length === 0 ? (
-                    <p className="muted tiny">No cards found for this search.</p>
+                  {!gameSelected ? (
+                    <p className="muted tiny">Select a game to enable set, rarity, and source filters.</p>
+                  ) : null}
+                  {gameSelected && !catalogCanSearch ? (
+                    <p className="muted tiny">Select a set to load results instantly, or type in search to browse by name.</p>
+                  ) : null}
+                  {catalogResultsLoading ? <p className="muted tiny">Loading catalog results...</p> : null}
+                  {!catalogResultsLoading && catalogCanSearch && catalogResults.length === 0 ? (
+                    <p className="muted tiny">No results found for the selected filters.</p>
                   ) : null}
                   <div className="catalog-result-grid">
                     {catalogResults.map((suggestion) => (
@@ -1806,6 +1839,13 @@ export default function VendorPage() {
                       </button>
                     ))}
                   </div>
+                  {catalogHasMore ? (
+                    <div className="actions" style={{ marginTop: 8 }}>
+                      <button type="button" className="sort-pill" onClick={() => void loadMoreCatalogResults()} disabled={catalogResultsLoadingMore || catalogResultsLoading}>
+                        {catalogResultsLoadingMore ? "Loading more..." : "Load 50 more"}
+                      </button>
+                    </div>
+                  ) : null}
                 </section>
               </div>
 

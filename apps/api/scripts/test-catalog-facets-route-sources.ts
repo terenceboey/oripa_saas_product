@@ -78,7 +78,7 @@ async function main() {
     const port = (server.address() as AddressInfo).port;
     const token = jwt.sign({ sub: "user-1", email: "owner@example.com" }, process.env.JWT_SECRET ?? "change-me");
     const response = await fetch(
-      `http://127.0.0.1:${port}/v1/catalog/facets?type=card&game=POKEMON&limit=30`,
+      `http://127.0.0.1:${port}/v1/catalog/facets?type=card&game=POKEMON&setId=sv3pt5&limit=30`,
       {
         headers: {
           authorization: `Bearer ${token}`,

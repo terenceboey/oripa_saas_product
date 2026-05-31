@@ -54,14 +54,11 @@ async function main() {
           imageLargeUrl: "large.jpg",
           imageBaseUrl: "base.jpg",
           searchText: "charizard ex",
+          sourcePayload: { raw: { id: "src-1" } },
+          rarityOrder: 2,
+          nameSort: "charizard ex",
         },
       ];
-    }),
-  );
-
-  restores.push(
-    patchMethod((prisma as any).catalogItem, "findMany", async () => {
-      return [];
     }),
   );
 
@@ -71,8 +68,9 @@ async function main() {
   try {
     const port = (server.address() as AddressInfo).port;
     const token = jwt.sign({ sub: "user-1", email: "owner@example.com" }, process.env.JWT_SECRET ?? "change-me");
+
     const response = await fetch(
-      `http://127.0.0.1:${port}/v1/catalog/search?q=charizard&limit=10&type=card&game=ALL`,
+      `http://127.0.0.1:${port}/v1/catalog/search?game=POKEMON&itemClass=CARD&setId=sv3pt5&limit=50`,
       {
         headers: {
           authorization: `Bearer ${token}`,
@@ -86,17 +84,42 @@ async function main() {
     assert.equal(Array.isArray(payload.items), true);
     assert.equal(payload.items.length, 1);
     assert.equal(payload.items[0].name, "Charizard ex");
-    assert.equal(capturedSql.includes("game ="), false);
+    assert.equal(payload.nextCursor, null);
+    assert.equal(capturedSql.includes("\"setId\" ="), true);
+    assert.equal(capturedSql.includes("lower(name) LIKE"), false);
+
+    const idleResponse = await fetch(
+      `http://127.0.0.1:${port}/v1/catalog/search?game=POKEMON&itemClass=CARD&limit=50`,
+      {
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-vendor-host": "demo.localhost",
+        },
+      },
+    );
+    const idlePayload = await idleResponse.json().catch(() => ({}));
+    assert.equal(idleResponse.status, 200);
+    assert.deepEqual(idlePayload.items, []);
+
+    const invalidGameResponse = await fetch(
+      `http://127.0.0.1:${port}/v1/catalog/search?game=YUGIOH&itemClass=CARD&setId=sv3pt5&limit=50`,
+      {
+        headers: {
+          authorization: `Bearer ${token}`,
+          "x-vendor-host": "demo.localhost",
+        },
+      },
+    );
+    assert.equal(invalidGameResponse.status, 400);
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
     for (const restore of restores.reverse()) restore();
   }
 
-  console.log("catalog search route game=ALL test passed");
+  console.log("catalog search route hierarchy test passed");
 }
 
 main().catch((error) => {
   console.error(error);
   process.exit(1);
 });
-
