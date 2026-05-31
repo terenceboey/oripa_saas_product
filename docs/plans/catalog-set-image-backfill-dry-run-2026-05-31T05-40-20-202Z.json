@@ -1,0 +1,723 @@
+{
+  "dryRun": true,
+  "dbEnv": "local",
+  "allowLiveWrite": false,
+  "maxUpdates": 0,
+  "totalSets": 2827,
+  "missingBefore": 1940,
+  "plannedUpdates": 1,
+  "attemptedUpdates": 1,
+  "changed": 0,
+  "skipped": 1939,
+  "before": [
+    {
+      "source": "tcgtracking",
+      "game": "YUGIOH",
+      "language": "en",
+      "total": 605,
+      "with_image": 0,
+      "missing": 605
+    },
+    {
+      "source": "tcgtracking",
+      "game": "POKEMON",
+      "language": "ja",
+      "total": 447,
+      "with_image": 3,
+      "missing": 444
+    },
+    {
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "total": 263,
+      "with_image": 0,
+      "missing": 263
+    },
+    {
+      "source": "tcgtracking",
+      "game": "WEISS_SCHWARZ",
+      "language": "en",
+      "total": 163,
+      "with_image": 0,
+      "missing": 163
+    },
+    {
+      "source": "tcgtracking",
+      "game": "DRAGON_BALL_SUPER",
+      "language": "en",
+      "total": 101,
+      "with_image": 0,
+      "missing": 101
+    },
+    {
+      "source": "tcgtracking",
+      "game": "FLESH_AND_BLOOD",
+      "language": "en",
+      "total": 94,
+      "with_image": 0,
+      "missing": 94
+    },
+    {
+      "source": "tcgtracking",
+      "game": "POKEMON_JAPAN",
+      "language": "en",
+      "total": 446,
+      "with_image": 353,
+      "missing": 93
+    },
+    {
+      "source": "tcgtracking",
+      "game": "ONE_PIECE",
+      "language": "en",
+      "total": 76,
+      "with_image": 0,
+      "missing": 76
+    },
+    {
+      "source": "onepiecedb.io",
+      "game": "ONE_PIECE",
+      "language": "en",
+      "total": 51,
+      "with_image": 0,
+      "missing": 51
+    },
+    {
+      "source": "tcgtracking",
+      "game": "LORCANA",
+      "language": "en",
+      "total": 18,
+      "with_image": 0,
+      "missing": 18
+    },
+    {
+      "source": "pokemoncard.io",
+      "game": "POKEMON",
+      "language": "en",
+      "total": 196,
+      "with_image": 182,
+      "missing": 14
+    },
+    {
+      "source": "bulbapedia",
+      "game": "POKEMON",
+      "language": "en",
+      "total": 144,
+      "with_image": 133,
+      "missing": 11
+    },
+    {
+      "source": "tcgtracking",
+      "game": "RIFTBOUND",
+      "language": "en",
+      "total": 7,
+      "with_image": 0,
+      "missing": 7
+    },
+    {
+      "source": "tcgtracking",
+      "game": "POKEMON",
+      "language": "en",
+      "total": 216,
+      "with_image": 216,
+      "missing": 0
+    }
+  ],
+  "after": [
+    {
+      "source": "tcgtracking",
+      "game": "YUGIOH",
+      "language": "en",
+      "total": 605,
+      "with_image": 0,
+      "missing": 605
+    },
+    {
+      "source": "tcgtracking",
+      "game": "POKEMON",
+      "language": "ja",
+      "total": 447,
+      "with_image": 3,
+      "missing": 444
+    },
+    {
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "total": 263,
+      "with_image": 0,
+      "missing": 263
+    },
+    {
+      "source": "tcgtracking",
+      "game": "WEISS_SCHWARZ",
+      "language": "en",
+      "total": 163,
+      "with_image": 0,
+      "missing": 163
+    },
+    {
+      "source": "tcgtracking",
+      "game": "DRAGON_BALL_SUPER",
+      "language": "en",
+      "total": 101,
+      "with_image": 0,
+      "missing": 101
+    },
+    {
+      "source": "tcgtracking",
+      "game": "FLESH_AND_BLOOD",
+      "language": "en",
+      "total": 94,
+      "with_image": 0,
+      "missing": 94
+    },
+    {
+      "source": "tcgtracking",
+      "game": "POKEMON_JAPAN",
+      "language": "en",
+      "total": 446,
+      "with_image": 353,
+      "missing": 93
+    },
+    {
+      "source": "tcgtracking",
+      "game": "ONE_PIECE",
+      "language": "en",
+      "total": 76,
+      "with_image": 0,
+      "missing": 76
+    },
+    {
+      "source": "onepiecedb.io",
+      "game": "ONE_PIECE",
+      "language": "en",
+      "total": 51,
+      "with_image": 0,
+      "missing": 51
+    },
+    {
+      "source": "tcgtracking",
+      "game": "LORCANA",
+      "language": "en",
+      "total": 18,
+      "with_image": 0,
+      "missing": 18
+    },
+    {
+      "source": "pokemoncard.io",
+      "game": "POKEMON",
+      "language": "en",
+      "total": 196,
+      "with_image": 182,
+      "missing": 14
+    },
+    {
+      "source": "bulbapedia",
+      "game": "POKEMON",
+      "language": "en",
+      "total": 144,
+      "with_image": 133,
+      "missing": 11
+    },
+    {
+      "source": "tcgtracking",
+      "game": "RIFTBOUND",
+      "language": "en",
+      "total": 7,
+      "with_image": 0,
+      "missing": 7
+    },
+    {
+      "source": "tcgtracking",
+      "game": "POKEMON",
+      "language": "en",
+      "total": 216,
+      "with_image": 216,
+      "missing": 0
+    }
+  ],
+  "updatesByProvider": {
+    "existing_catalogset_exact_name": 1
+  },
+  "sampleUpdates": [
+    {
+      "id": "cmpt0ofkp03exq0jfi8gqpjm9",
+      "source": "tcgtracking",
+      "game": "POKEMON",
+      "language": "ja",
+      "name": "Scarlet & Violet Energies",
+      "setCode": null,
+      "symbolImageUrl": "https://images.pokemontcg.io/sve/symbol.png",
+      "logoImageUrl": "https://images.pokemontcg.io/sve/logo.png",
+      "bannerImageUrl": null,
+      "provenance": {
+        "importer": "populate_catalog_set_images",
+        "provider": "existing_catalogset_exact_name",
+        "confidence": "same_game_exact_normalized_name",
+        "reasons": [
+          "matched existing CatalogSet exact normalized name with unique image tuple"
+        ],
+        "sourceName": "Scarlet & Violet Energies",
+        "sourceSetId": "sve",
+        "sourceRowId": "cset_5b791e0853e1e3e47795498565d18cbc3ba24ce1",
+        "source": "pokemoncard.io",
+        "sourceCategoryId": null,
+        "updatedAt": "2026-05-31T05:40:19.829Z"
+      },
+      "raw": null
+    }
+  ],
+  "sampleSkipped": [
+    {
+      "id": "cmpt3cv7h0001q0bqwbxq61t8",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT01: Descent of the King of Knights",
+      "setCode": "BT01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3cwe90005q0bq65q1vbas",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT02: Onslaught of Dragon Souls",
+      "setCode": "BT02",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3cum20000q0bqjvx77qfd",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT03: Demonic Lord Invasion",
+      "setCode": "BT03",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3cz2f000eq0bqur2p7uu5",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT04: Eclipse of Illusionary Shadows",
+      "setCode": "BT04",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3czd4000fq0bq85mps0f9",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT05: Awakening of Twin Blades",
+      "setCode": "BT05",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3czns000gq0bqwuvp4qfe",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT06: Breaker of Limits",
+      "setCode": "BT06",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3czyg000hq0bqmyr9v0l0",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT07: Rampage of the Beast King",
+      "setCode": "BT07",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d093000iq0bq4zko61hu",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT08: Blue Storm Armada",
+      "setCode": "BT08",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d0js000jq0bq8knx6r5k",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT09: Clash of Knights & Dragons",
+      "setCode": "BT09",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d0ug000kq0bqbv3dcxzn",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT10: Triumphant Return of the King of Knights",
+      "setCode": "BT10",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d156000lq0bqszmpb9fg",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT11: Seal Dragons Unleashed",
+      "setCode": "BT11",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d3t9000uq0bqdbgawh6l",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT12: Binding Force of the Black Rings",
+      "setCode": "BT12",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d4pb000xq0bqn959oy1t",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT13: Catastrophic Outbreak",
+      "setCode": "BT13",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d6h80012q0bq8m4lhoxs",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT14: Brilliant Strike",
+      "setCode": "BT14",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d72k0014q0bqowt2ein4",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT15: Infinite Rebirth",
+      "setCode": "BT15",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d95d001bq0bqkykp0xdq",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT16: Legion of Dragons and Blades ver.E",
+      "setCode": "BT16",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3d9g1001cq0bqj6my80zg",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "BT17: Blazing Perdition ver.E",
+      "setCode": "BT17",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3em6u005oq0bq7ppbn0ze",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "Bushiroad Event Cards",
+      "setCode": "EVENT",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3djan0028q0bq9twpn1yy",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "Clan Cards",
+      "setCode": "CLN",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3eutv006eq0bqzjhl0ixo",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT01: Genesis of the Five Greats",
+      "setCode": "D-BT01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3evpy006hq0bq2tt602yy",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT02: A Brush with the Legends",
+      "setCode": "D-BT02",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3exsq006oq0bqeszbppiu",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT03: Advance of Intertwined Stars",
+      "setCode": "D-BT03",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3eyou006rq0bqwgbcaqjm",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT04: Awakening of Chakrabarthi",
+      "setCode": "D-BT04",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3f0h2006xq0bq82mkehp6",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT05: Triumphant Return of the Brave Heroes",
+      "setCode": "D-BT05",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3f3g10077q0bq0otjrm05",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT06: Blazing Dragon Reborn",
+      "setCode": "D-BT06",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3f41g0079q0bq8o29y8bf",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT07: Raging Flames Against Emerald Storm",
+      "setCode": "D-BT07",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dhiq0023q0bqk8qdnxc1",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT08: Minerva Rising",
+      "setCode": "D-BT08",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3duln0039q0bqf2q9cv42",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT09: Dragontree Invasion",
+      "setCode": "D-BT09",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dvsd003dq0bq1f1v9qc5",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT10: Dragon Masquerade",
+      "setCode": "D-BT10",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dwz1003hq0bq71t41irw",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT11: Clash of the Heroes",
+      "setCode": "D-BT11",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dxkd003jq0bq37g168d2",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT12: Evenfall Onslaught",
+      "setCode": "D-BT12",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3e08i003sq0bqnqxkw42u",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-BT13: Flight of Chakrabarthi",
+      "setCode": "D-BT13",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dy5p003lq0bq6hvk4fc7",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-CS01: Deluxe Collector's Set 01: Vanguard Deluxe",
+      "setCode": "D-CS01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3ewm0006kq0bqzul9vyrf",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-LBT01: Lyrical Melody",
+      "setCode": "D-LBT01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3ezkz006uq0bqzy64zfqg",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-LBT02: Lyrical Monasterio ~It's a New School Term!~",
+      "setCode": "D-LBT02",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3f3qr0078q0bqd2egpvof",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-LBT03: Lyrical Monasterio ~Summertime Memories!~",
+      "setCode": "D-LBT03",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dzch003pq0bq57xv8hmq",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-LBT04: Lyrical Monasterio ~Trick or Trick!~",
+      "setCode": "D-LBT04",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3ewba006jq0bqiibzdjhd",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-LTD01: Ahoy! Lyrical Monasterio!",
+      "setCode": "D-LTD01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3ev4j006fq0bq9nmz4un3",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D Promo Cards",
+      "setCode": "D-PR",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3f0rs006yq0bqhdua18c1",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-PS01: P Clan Collection 2022",
+      "setCode": "D-PS01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dwod003gq0bqhq1325ao",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-PV01: History Collection",
+      "setCode": "D-PV01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3et1r0069q0bqymwtvwlq",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SD01: Yu-yu Kondo -Holy Dragon-",
+      "setCode": "D-SD01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3etcj006aq0bqxwandtaj",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SD02: Danji Momoyama -Tyrant Tiger-",
+      "setCode": "D-SD02",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3etn8006bq0bqa3zwvqog",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SD03: Tohya Ebata -Apex Ruler-",
+      "setCode": "D-SD03",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3etxw006cq0bqkmgbmd1s",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SD04: Megumi Okura -Sylvan King-",
+      "setCode": "D-SD04",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3euj4006dq0bqjfydb5tw",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SD05: Tomari Seto -Aurora Valkyrie-",
+      "setCode": "D-SD05",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3exi1006nq0bqp4xc53do",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SD06: Mirei Minae -Sealed Blaze Maiden-",
+      "setCode": "D-SD06",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3evfa006gq0bqsvd82gwi",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SS01: Festival Collection 2021",
+      "setCode": "D-SS01",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3f12j006zq0bqxy2d7r73",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SS02: Festival Collection 2022",
+      "setCode": "D-SS02",
+      "reason": "no deterministic source-backed image candidate"
+    },
+    {
+      "id": "cmpt3dhte0024q0bq5ggl8ib6",
+      "source": "tcgtracking",
+      "game": "CARDFIGHT_VANGUARD",
+      "language": "en",
+      "name": "D-SS03: Stride Deckset -Chronojet-",
+      "setCode": "D-SS03",
+      "reason": "no deterministic source-backed image candidate"
+    }
+  ]
+}

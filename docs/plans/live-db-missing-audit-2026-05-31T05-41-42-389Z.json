@@ -1,0 +1,3446 @@
+{
+  "stamp": "2026-05-31T05-41-42-389Z",
+  "dbHost": "dpg-d8btgo6gvqtc73e24rsg-a.singapore-postgres.render.com",
+  "scope": "read-only live DB audit; no writes",
+  "sections": {
+    "db": {
+      "fingerprint": [
+        {
+          "database": "oripa_sg",
+          "user": "oripa_sg_user",
+          "server_addr": "10.24.92.107/32",
+          "server_port": 5432,
+          "audited_at": "2026-05-31T05:41:46.367Z",
+          "version": "PostgreSQL 18.4 (Debian 18.4-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+        }
+      ],
+      "tableCounts": [
+        {
+          "table_name": "CanonicalSearchDoc",
+          "rows": 249860
+        },
+        {
+          "table_name": "CatalogItem",
+          "rows": 246170
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "rows": 245844
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "rows": 3588
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "rows": 2963
+        },
+        {
+          "table_name": "CatalogSet",
+          "rows": 2827
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "rows": 1053
+        },
+        {
+          "table_name": "User",
+          "rows": 11
+        },
+        {
+          "table_name": "UserRole",
+          "rows": 11
+        },
+        {
+          "table_name": "WalletAccount",
+          "rows": 11
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "rows": 10
+        },
+        {
+          "table_name": "PackPrize",
+          "rows": 6
+        },
+        {
+          "table_name": "VendorRevenueLedger",
+          "rows": 6
+        },
+        {
+          "table_name": "WalletEntry",
+          "rows": 4
+        },
+        {
+          "table_name": "AuditLog",
+          "rows": 3
+        },
+        {
+          "table_name": "DrawOrder",
+          "rows": 3
+        },
+        {
+          "table_name": "DrawResult",
+          "rows": 3
+        },
+        {
+          "table_name": "IdempotencyKey",
+          "rows": 3
+        },
+        {
+          "table_name": "OutboxEvent",
+          "rows": 3
+        },
+        {
+          "table_name": "PackDraw",
+          "rows": 3
+        },
+        {
+          "table_name": "VendorBanner",
+          "rows": 3
+        },
+        {
+          "table_name": "Pack",
+          "rows": 2
+        },
+        {
+          "table_name": "Role",
+          "rows": 2
+        },
+        {
+          "table_name": "VendorMembership",
+          "rows": 2
+        },
+        {
+          "table_name": "VendorPointGrantQr",
+          "rows": 2
+        },
+        {
+          "table_name": "DrawFairnessProof",
+          "rows": 1
+        },
+        {
+          "table_name": "DrawFairnessSelection",
+          "rows": 1
+        },
+        {
+          "table_name": "Vendor",
+          "rows": 1
+        },
+        {
+          "table_name": "VendorSettings",
+          "rows": 1
+        },
+        {
+          "table_name": "_prisma_migrations",
+          "rows": 1
+        },
+        {
+          "table_name": "CreativeAsset",
+          "rows": 0
+        },
+        {
+          "table_name": "CreativeJob",
+          "rows": 0
+        },
+        {
+          "table_name": "PackPrizeInventoryAllocation",
+          "rows": 0
+        },
+        {
+          "table_name": "PackTemplate",
+          "rows": 0
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "rows": 0
+        },
+        {
+          "table_name": "PackTemplateVersion",
+          "rows": 0
+        },
+        {
+          "table_name": "PaymentTransaction",
+          "rows": 0
+        },
+        {
+          "table_name": "TopupOrder",
+          "rows": 0
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "rows": 0
+        },
+        {
+          "table_name": "VendorReferralSignup",
+          "rows": 0
+        }
+      ],
+      "columns": [
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "gameId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "setId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "sourceCardId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "displayName",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "cardNumber",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "rarity",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "language",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "imageThumbUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "imageLargeUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "imageBaseUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "searchText",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogCard",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "code",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "sortOrder",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogGame",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "gameId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "sourceSetId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "slug",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "setCode",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "series",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "releaseDate",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "totalCards",
+          "data_type": "integer",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "printedTotal",
+          "data_type": "integer",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "symbolImageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "logoImageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "bannerImageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "gameId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "setId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "sourceProductId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "displayName",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "language",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "imageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "imageThumbUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "searchText",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "entityType",
+          "data_type": "USER-DEFINED",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "entityId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "gameId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "setId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "displayName",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "tokens",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "imageThumbUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "popularityScore",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "sourceItemId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "itemType",
+          "data_type": "USER-DEFINED",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "game",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "language",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "setId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "setName",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "cardNumber",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "rarity",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "imageBaseUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "imageThumbUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "imageLargeUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "searchText",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "localId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "sourcePayload",
+          "data_type": "jsonb",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "catalogSetId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "cardType",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "color",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogItem",
+          "column_name": "attribute",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "sourceProductId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "catalogSetId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "game",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "language",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "cleanName",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "imageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "imageCount",
+          "data_type": "integer",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "isPresale",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "presaleReleaseDate",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "searchText",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "sourceCategoryId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "productKind",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSealedProduct",
+          "column_name": "sourcePayload",
+          "data_type": "jsonb",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "sourceSetId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "game",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "setCode",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "releaseDate",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "productCount",
+          "data_type": "integer",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "symbolImageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "logoImageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "bannerImageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "isSupplemental",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "searchText",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "isActive",
+          "data_type": "boolean",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "sourceCategoryId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "language",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "groupKind",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "sourcePayload",
+          "data_type": "jsonb",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "CatalogSet",
+          "column_name": "reviewStatus",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "packId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "label",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "imageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "estimatedValue",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "weight",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "stock",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "remainingStock",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "cardNumber",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "catalogItemId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "catalogSnapshot",
+          "data_type": "jsonb",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "catalogSource",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "catalogSourceItemId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "imageLargeUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "localId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "rarity",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "setId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackPrize",
+          "column_name": "setName",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "templateVersionId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "sortOrder",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "label",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "imageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "imageLargeUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "setId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "setName",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "localId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "cardNumber",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "rarity",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "catalogItemId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "catalogSource",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "catalogSourceItemId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "catalogSnapshot",
+          "data_type": "jsonb",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "estimatedValue",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "weight",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "stock",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "PackTemplateSlot",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "id",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "vendorId",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "catalogItemId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "customItemId",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "condition",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "gradeCompany",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "grade",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "certNumber",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "imageUrl",
+          "data_type": "text",
+          "is_nullable": "YES"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "quantityTotal",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "quantityHeld",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "quantitySold",
+          "data_type": "integer",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "status",
+          "data_type": "USER-DEFINED",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "createdAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        },
+        {
+          "table_name": "VendorInventoryItem",
+          "column_name": "updatedAt",
+          "data_type": "timestamp without time zone",
+          "is_nullable": "NO"
+        }
+      ]
+    },
+    "catalogItems": {
+      "totals": [
+        {
+          "total": 246170,
+          "active": 246170,
+          "inactive": 0,
+          "missing_any_image": 0,
+          "missing_search_text": 0,
+          "missing_source_payload": 29634,
+          "missing_catalog_set_link": 0
+        }
+      ],
+      "bySourceGame": [
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 2488,
+          "missing_image": 0,
+          "missing_rarity": 0,
+          "missing_card_number": 0,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-30T04:39:44.872Z",
+          "last_updated": "2026-05-31T01:53:47.477Z"
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 22451,
+          "missing_image": 0,
+          "missing_rarity": 883,
+          "missing_card_number": 0,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-30T03:32:11.491Z",
+          "last_updated": "2026-05-31T01:52:41.260Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "CARDFIGHT_VANGUARD",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 25043,
+          "missing_image": 0,
+          "missing_rarity": 31,
+          "missing_card_number": 46,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:02:18.729Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "DRAGON_BALL_SUPER",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 11692,
+          "missing_image": 0,
+          "missing_rarity": 0,
+          "missing_card_number": 418,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:09:50.891Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "FLESH_AND_BLOOD",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 9628,
+          "missing_image": 0,
+          "missing_rarity": 3,
+          "missing_card_number": 122,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:11:45.842Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "LORCANA",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 3048,
+          "missing_image": 0,
+          "missing_rarity": 0,
+          "missing_card_number": 40,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:39:51.046Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 6593,
+          "missing_image": 0,
+          "missing_rarity": 0,
+          "missing_card_number": 6591,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:38:58.149Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 29379,
+          "missing_image": 0,
+          "missing_rarity": 113,
+          "missing_card_number": 25859,
+          "missing_source_payload": 77,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-28T21:19:51.172Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON",
+          "language": "ja",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 29662,
+          "missing_image": 0,
+          "missing_rarity": 1990,
+          "missing_card_number": 29660,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:16:34.610Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON_JAPAN",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 29557,
+          "missing_image": 0,
+          "missing_rarity": 2005,
+          "missing_card_number": 2397,
+          "missing_source_payload": 29557,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T20:22:16.076Z",
+          "last_updated": "2026-05-30T01:47:47.346Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "RIFTBOUND",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 1158,
+          "missing_image": 0,
+          "missing_rarity": 0,
+          "missing_card_number": 2,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:40:20.372Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "WEISS_SCHWARZ",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 29907,
+          "missing_image": 0,
+          "missing_rarity": 27,
+          "missing_card_number": 215,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T12:06:53.812Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        },
+        {
+          "source": "tcgtracking",
+          "game": "YUGIOH",
+          "language": "en",
+          "itemType": "CARD",
+          "isActive": true,
+          "total": 45564,
+          "missing_image": 0,
+          "missing_rarity": 0,
+          "missing_card_number": 113,
+          "missing_source_payload": 0,
+          "missing_catalog_set_link": 0,
+          "first_created": "2026-05-29T11:51:20.997Z",
+          "last_updated": "2026-05-31T01:46:31.266Z"
+        }
+      ],
+      "duplicates": [],
+      "orphanSetLinks": [
+        {
+          "total": 0
+        }
+      ],
+      "tcgcsvQuality": [],
+      "suspiciousRows": []
+    },
+    "catalogSets": {
+      "bySourceGame": [
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "total": 144,
+          "active": 144,
+          "missing_any_image": 11,
+          "missing_source_category_id": 144,
+          "missing_product_count": 144,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "total": 51,
+          "active": 51,
+          "missing_any_image": 51,
+          "missing_source_category_id": 51,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "total": 196,
+          "active": 196,
+          "missing_any_image": 14,
+          "missing_source_category_id": 196,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "CARDFIGHT_VANGUARD",
+          "language": "en",
+          "total": 263,
+          "active": 263,
+          "missing_any_image": 263,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "DRAGON_BALL_SUPER",
+          "language": "en",
+          "total": 101,
+          "active": 101,
+          "missing_any_image": 101,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "FLESH_AND_BLOOD",
+          "language": "en",
+          "total": 94,
+          "active": 94,
+          "missing_any_image": 94,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "LORCANA",
+          "language": "en",
+          "total": 18,
+          "active": 18,
+          "missing_any_image": 18,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "total": 76,
+          "active": 76,
+          "missing_any_image": 76,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON",
+          "language": "en",
+          "total": 216,
+          "active": 216,
+          "missing_any_image": 0,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON",
+          "language": "ja",
+          "total": 447,
+          "active": 447,
+          "missing_any_image": 443,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON_JAPAN",
+          "language": "en",
+          "total": 446,
+          "active": 446,
+          "missing_any_image": 93,
+          "missing_source_category_id": 446,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "RIFTBOUND",
+          "language": "en",
+          "total": 7,
+          "active": 7,
+          "missing_any_image": 7,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "WEISS_SCHWARZ",
+          "language": "en",
+          "total": 163,
+          "active": 163,
+          "missing_any_image": 163,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "YUGIOH",
+          "language": "en",
+          "total": 605,
+          "active": 605,
+          "missing_any_image": 605,
+          "missing_source_category_id": 0,
+          "missing_product_count": 0,
+          "missing_group_kind": 0,
+          "missing_review_status": 0,
+          "missing_source_payload": 0
+        }
+      ],
+      "duplicates": [],
+      "emptySets": [
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "empty_sets": 144
+        }
+      ],
+      "samplesMissingImages": [
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "ex-power-keepers",
+          "name": "EX Power Keepers",
+          "groupKind": "supplemental",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "ex-ruby-sapphire",
+          "name": "EX Ruby & Sapphire",
+          "groupKind": "supplemental",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "ex-team-rocket-returns",
+          "name": "EX Team Rocket Returns",
+          "groupKind": "supplemental",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mcdonald-s-collection-2013",
+          "name": "McDonald's Collection 2013",
+          "groupKind": "mcdonalds_promo",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mcdonald-s-collection-2023",
+          "name": "McDonald's Collection 2023",
+          "groupKind": "mcdonalds_promo",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mcdonald-s-collection-2024",
+          "name": "McDonald's Collection 2024",
+          "groupKind": "mcdonalds_promo",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mee-basic-energies",
+          "name": "MEE Basic Energies",
+          "groupKind": "energy_collection",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "sve-basic-energies",
+          "name": "SVE Basic Energies",
+          "groupKind": "energy_collection",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "trick-or-trade-2022",
+          "name": "Trick or Trade 2022",
+          "groupKind": "seasonal_collection",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "trick-or-trade-2023",
+          "name": "Trick or Trade 2023",
+          "groupKind": "seasonal_collection",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "bulbapedia",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "trick-or-trade-2024",
+          "name": "Trick or Trade 2024",
+          "groupKind": "seasonal_collection",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": null
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST14",
+          "name": "3D2Y",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP07",
+          "name": "500 Years In The Future",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST06",
+          "name": "Absolute Justice",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST22",
+          "name": "Ace & Newgate",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP15",
+          "name": "Adventure on Kami's Island",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP11",
+          "name": "A Fist Of Divine Speed",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST04",
+          "name": "Animal Kingdom",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "EB02",
+          "name": "Anime 25th Collection",
+          "groupKind": "collection_or_bundle",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 61
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP05",
+          "name": "Awakening of the New Era",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 118
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST07",
+          "name": "Big Mom Pirates",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST27",
+          "name": "BLACK Marshall.D.Teach",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST19",
+          "name": "BLACK Smoker",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST25",
+          "name": "BLUE Buggy",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST17",
+          "name": "BLUE Donquixote Doflamingo",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP13",
+          "name": "Carrying On His Will",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 120
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST29",
+          "name": "Egghead",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "EB04",
+          "name": "Egghead Crisis",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 61
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP09",
+          "name": "Emperors In The New World",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 118
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST21",
+          "name": "EX Gear 5",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST24",
+          "name": "GREEN Jewelry Bonney",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST16",
+          "name": "GREEN Uta",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST28",
+          "name": "GREEN/YELLOW Yamato",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "EB03",
+          "name": "Heroines Edition",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 62
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP04",
+          "name": "Kingdoms of Intrigue",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP12",
+          "name": "Legacy of the Master",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 118
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "EB01",
+          "name": "Memorial Collection",
+          "groupKind": "collection_or_bundle",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 61
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST08",
+          "name": "Monkey.D.Luffy",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 15
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST05",
+          "name": "ONE PIECE FILM edition",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP02",
+          "name": "Paramount War",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 121
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP03",
+          "name": "Pillars of Strength",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 123
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "P",
+          "name": "Promos",
+          "groupKind": "promo",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 97
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST26",
+          "name": "PURPLE/BLACK Monkey.D.Luffy",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST18",
+          "name": "PURPLE Monkey.D.Luffy",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST15",
+          "name": "RED Edward.Newgate",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST23",
+          "name": "RED Shanks",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP01",
+          "name": "Romance Dawn",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 121
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP10",
+          "name": "Royal Blood",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST01",
+          "name": "Straw Hat Crew",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP14",
+          "name": "The Azure Sea's Seven",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 120
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "PRB01",
+          "name": "The Best",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 1
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "PRB02",
+          "name": "The Best Vol.2",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 18
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST03",
+          "name": "The Seven Warlords of the Sea",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP08",
+          "name": "Two Legends",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST13",
+          "name": "Ultra Deck: The Three Brothers",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 19
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST10",
+          "name": "Ultra Deck: The Three Captains",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST11",
+          "name": "Uta",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "OP06",
+          "name": "Wings of the Captain",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 119
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST02",
+          "name": "Worst Generation",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST09",
+          "name": "Yamato",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 15
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST20",
+          "name": "YELLOW Charlotte Katakuri",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 5
+        },
+        {
+          "source": "onepiecedb.io",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "sourceSetId": "ST12",
+          "name": "Zoro and Sanji",
+          "groupKind": "starter_deck",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 17
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "cbpo",
+          "name": "Crimson Blaze",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 69
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "egpo",
+          "name": "Eevee Grove",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 69
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "ecpo",
+          "name": "Extradimensional Crisis",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 69
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mcd23",
+          "name": "McDonald's Collection 2023",
+          "groupKind": "mcdonalds_promo",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 15
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mcd24",
+          "name": "McDonald's Collection 2024",
+          "groupKind": "mcdonalds_promo",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 15
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "mspo",
+          "name": "Mega Shine",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 69
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "pwpo",
+          "name": "Paldean Wonders",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 91
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "pdpo",
+          "name": "Paradox Drive",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 74
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "clb",
+          "name": "Pokémon TCG Classic - Blastoise",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 34
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "clc",
+          "name": "Pokémon TCG Classic - Charizard",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 34
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "clv",
+          "name": "Pokémon TCG Classic - Venusaur",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 34
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "papo",
+          "name": "Pulsing Aura",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 155
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "tlpo",
+          "name": "Triumphant Light",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 75
+        },
+        {
+          "source": "pokemoncard.io",
+          "game": "POKEMON",
+          "language": "en",
+          "sourceSetId": "wosaspo",
+          "name": "Wisdom of Sea and Sky",
+          "groupKind": "main_expansion",
+          "reviewStatus": "legacy_metadata_only_needs_review",
+          "productCount": 161
+        },
+        {
+          "source": "tcgtracking",
+          "game": "CARDFIGHT_VANGUARD",
+          "language": "en",
+          "sourceSetId": "16:1115",
+          "name": "BT01: Descent of the King of Knights",
+          "groupKind": "main_expansion",
+          "reviewStatus": "auto_classified",
+          "productCount": 94
+        },
+        {
+          "source": "tcgtracking",
+          "game": "CARDFIGHT_VANGUARD",
+          "language": "en",
+          "sourceSetId": "16:1119",
+          "name": "BT02: Onslaught of Dragon Souls",
+          "groupKind": "main_expansion",
+          "reviewStatus": "auto_classified",
+          "productCount": 94
+        },
+        {
+          "source": "tcgtracking",
+          "game": "CARDFIGHT_VANGUARD",
+          "language": "en",
+          "sourceSetId": "16:1114",
+          "name": "BT03: Demonic Lord Invasion",
+          "groupKind": "main_expansion",
+          "reviewStatus": "auto_classified",
+          "productCount": 96
+        },
+        {
+          "source": "tcgtracking",
+          "game": "CARDFIGHT_VANGUARD",
+          "language": "en",
+          "sourceSetId": "16:1132",
+          "name": "BT04: Eclipse of Illusionary Shadows",
+          "groupKind": "main_expansion",
+          "reviewStatus": "auto_classified",
+          "productCount": 96
+        }
+      ]
+    },
+    "sealedProducts": {
+      "bySourceGame": [
+        {
+          "source": "tcgtracking",
+          "game": "ONE_PIECE",
+          "language": "en",
+          "total": 261,
+          "active": 261,
+          "missing_image": 0,
+          "missing_catalog_set_link": 0,
+          "missing_product_kind": 0,
+          "missing_clean_name": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON",
+          "language": "en",
+          "total": 2771,
+          "active": 2771,
+          "missing_image": 0,
+          "missing_catalog_set_link": 0,
+          "missing_product_kind": 45,
+          "missing_clean_name": 1,
+          "missing_source_payload": 45
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON",
+          "language": "ja",
+          "total": 278,
+          "active": 278,
+          "missing_image": 0,
+          "missing_catalog_set_link": 0,
+          "missing_product_kind": 0,
+          "missing_clean_name": 0,
+          "missing_source_payload": 0
+        },
+        {
+          "source": "tcgtracking",
+          "game": "POKEMON_JAPAN",
+          "language": "en",
+          "total": 278,
+          "active": 278,
+          "missing_image": 0,
+          "missing_catalog_set_link": 0,
+          "missing_product_kind": 278,
+          "missing_clean_name": 0,
+          "missing_source_payload": 278
+        }
+      ],
+      "duplicates": [],
+      "orphanSetLinks": [
+        {
+          "total": 0
+        }
+      ]
+    },
+    "vendorInventory": {
+      "totals": [
+        {
+          "total": 0,
+          "quantity_total": null,
+          "quantity_held": null,
+          "quantity_sold": null,
+          "missing_catalog_or_custom_ref": null,
+          "missing_image": null,
+          "slab_like": null,
+          "slab_like_missing_cert": null,
+          "invalid_quantity_rows": null,
+          "negative_quantity_rows": null
+        }
+      ],
+      "byStatus": [],
+      "orphanCatalogLinks": [
+        {
+          "total": 0
+        }
+      ]
+    },
+    "packPrizes": {
+      "totals": [
+        {
+          "total": 6,
+          "catalog_linked": 0,
+          "unlinked_manual": 6,
+          "linked_missing_snapshot": 0,
+          "missing_image": 0,
+          "missing_set_id": 6,
+          "missing_card_number": 6,
+          "missing_rarity": 6,
+          "invalid_stock_rows": 0
+        }
+      ],
+      "byPackStatus": [
+        {
+          "status": "ARCHIVED",
+          "prize_rows": 6,
+          "catalog_linked": 0,
+          "missing_image": 0
+        }
+      ],
+      "orphanCatalogLinks": [
+        {
+          "total": 0
+        }
+      ],
+      "unresolvedSourceRefs": [
+        {
+          "total": 0
+        }
+      ],
+      "samples": [
+        {
+          "id": "cmppxdr7m0000kf1sgfkxbynx",
+          "status": "ARCHIVED",
+          "label": "A Tier - A Tier - charizard",
+          "catalogItemId": null,
+          "catalogSource": null,
+          "catalogSourceItemId": null,
+          "has_snapshot": false,
+          "imageUrl": "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg",
+          "remainingStock": 1,
+          "stock": 1
+        },
+        {
+          "id": "cmppxdr7m0001kf1s89a1nf20",
+          "status": "ARCHIVED",
+          "label": "A Tier - B Tier - dinosaur",
+          "catalogItemId": null,
+          "catalogSource": null,
+          "catalogSourceItemId": null,
+          "has_snapshot": false,
+          "imageUrl": "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg",
+          "remainingStock": 1,
+          "stock": 1
+        },
+        {
+          "id": "cmppxdr7m0002kf1s423jyv0a",
+          "status": "ARCHIVED",
+          "label": "A Tier - C Tier - blastooise",
+          "catalogItemId": null,
+          "catalogSource": null,
+          "catalogSourceItemId": null,
+          "has_snapshot": false,
+          "imageUrl": "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg",
+          "remainingStock": 1,
+          "stock": 1
+        },
+        {
+          "id": "cmpp7cz10000htmjgix0ft9t0",
+          "status": "ARCHIVED",
+          "label": "SAR",
+          "catalogItemId": null,
+          "catalogSource": null,
+          "catalogSourceItemId": null,
+          "has_snapshot": false,
+          "imageUrl": "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg",
+          "remainingStock": 5,
+          "stock": 5
+        },
+        {
+          "id": "cmpp7cz10000itmjgdszbg75e",
+          "status": "ARCHIVED",
+          "label": "AR",
+          "catalogItemId": null,
+          "catalogSource": null,
+          "catalogSourceItemId": null,
+          "has_snapshot": false,
+          "imageUrl": "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg",
+          "remainingStock": 150,
+          "stock": 150
+        },
+        {
+          "id": "cmpp7cz10000jtmjgod4onv26",
+          "status": "ARCHIVED",
+          "label": "R",
+          "catalogItemId": null,
+          "catalogSource": null,
+          "catalogSourceItemId": null,
+          "has_snapshot": false,
+          "imageUrl": "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg",
+          "remainingStock": 843,
+          "stock": 845
+        }
+      ]
+    },
+    "packTemplates": {
+      "totals": [
+        {
+          "total": 0,
+          "catalog_linked": null,
+          "unlinked_manual": null,
+          "linked_missing_snapshot": null,
+          "missing_image": null
+        }
+      ],
+      "versionsByStatus": []
+    },
+    "searchInfra": {
+      "extensions": [
+        {
+          "extname": "pg_stat_statements",
+          "extversion": "1.12"
+        },
+        {
+          "extname": "pg_trgm",
+          "extversion": "1.6"
+        },
+        {
+          "extname": "plpgsql",
+          "extversion": "1.0"
+        }
+      ],
+      "indexes": [
+        {
+          "tablename": "CanonicalCatalogCard",
+          "indexname": "CanonicalCatalogCard_gameId_rarity_idx",
+          "indexdef": "CREATE INDEX \"CanonicalCatalogCard_gameId_rarity_idx\" ON public.\"CanonicalCatalogCard\" USING btree (\"gameId\", rarity)"
+        },
+        {
+          "tablename": "CanonicalCatalogCard",
+          "indexname": "CanonicalCatalogCard_gameId_setId_name_idx",
+          "indexdef": "CREATE INDEX \"CanonicalCatalogCard_gameId_setId_name_idx\" ON public.\"CanonicalCatalogCard\" USING btree (\"gameId\", \"setId\", name)"
+        },
+        {
+          "tablename": "CanonicalCatalogCard",
+          "indexname": "CanonicalCatalogCard_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"CanonicalCatalogCard_pkey\" ON public.\"CanonicalCatalogCard\" USING btree (id)"
+        },
+        {
+          "tablename": "CanonicalCatalogCard",
+          "indexname": "CanonicalCatalogCard_source_sourceCardId_language_gameId_key",
+          "indexdef": "CREATE UNIQUE INDEX \"CanonicalCatalogCard_source_sourceCardId_language_gameId_key\" ON public.\"CanonicalCatalogCard\" USING btree (source, \"sourceCardId\", language, \"gameId\")"
+        },
+        {
+          "tablename": "CanonicalCatalogSet",
+          "indexname": "CanonicalCatalogSet_gameId_name_idx",
+          "indexdef": "CREATE INDEX \"CanonicalCatalogSet_gameId_name_idx\" ON public.\"CanonicalCatalogSet\" USING btree (\"gameId\", name)"
+        },
+        {
+          "tablename": "CanonicalCatalogSet",
+          "indexname": "CanonicalCatalogSet_gameId_releaseDate_idx",
+          "indexdef": "CREATE INDEX \"CanonicalCatalogSet_gameId_releaseDate_idx\" ON public.\"CanonicalCatalogSet\" USING btree (\"gameId\", \"releaseDate\")"
+        },
+        {
+          "tablename": "CanonicalCatalogSet",
+          "indexname": "CanonicalCatalogSet_gameId_source_sourceSetId_key",
+          "indexdef": "CREATE UNIQUE INDEX \"CanonicalCatalogSet_gameId_source_sourceSetId_key\" ON public.\"CanonicalCatalogSet\" USING btree (\"gameId\", source, \"sourceSetId\")"
+        },
+        {
+          "tablename": "CanonicalCatalogSet",
+          "indexname": "CanonicalCatalogSet_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"CanonicalCatalogSet_pkey\" ON public.\"CanonicalCatalogSet\" USING btree (id)"
+        },
+        {
+          "tablename": "CanonicalSearchDoc",
+          "indexname": "CanonicalSearchDoc_displayName_idx",
+          "indexdef": "CREATE INDEX \"CanonicalSearchDoc_displayName_idx\" ON public.\"CanonicalSearchDoc\" USING btree (\"displayName\")"
+        },
+        {
+          "tablename": "CanonicalSearchDoc",
+          "indexname": "CanonicalSearchDoc_entityType_entityId_gameId_key",
+          "indexdef": "CREATE UNIQUE INDEX \"CanonicalSearchDoc_entityType_entityId_gameId_key\" ON public.\"CanonicalSearchDoc\" USING btree (\"entityType\", \"entityId\", \"gameId\")"
+        },
+        {
+          "tablename": "CanonicalSearchDoc",
+          "indexname": "CanonicalSearchDoc_entityType_isActive_idx",
+          "indexdef": "CREATE INDEX \"CanonicalSearchDoc_entityType_isActive_idx\" ON public.\"CanonicalSearchDoc\" USING btree (\"entityType\", \"isActive\")"
+        },
+        {
+          "tablename": "CanonicalSearchDoc",
+          "indexname": "CanonicalSearchDoc_gameId_setId_isActive_idx",
+          "indexdef": "CREATE INDEX \"CanonicalSearchDoc_gameId_setId_isActive_idx\" ON public.\"CanonicalSearchDoc\" USING btree (\"gameId\", \"setId\", \"isActive\")"
+        },
+        {
+          "tablename": "CanonicalSearchDoc",
+          "indexname": "CanonicalSearchDoc_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"CanonicalSearchDoc_pkey\" ON public.\"CanonicalSearchDoc\" USING btree (id)"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_catalogSetId_isActive_idx",
+          "indexdef": "CREATE INDEX \"CatalogItem_catalogSetId_isActive_idx\" ON public.\"CatalogItem\" USING btree (\"catalogSetId\", \"isActive\")"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_itemType_game_isActive_idx",
+          "indexdef": "CREATE INDEX \"CatalogItem_itemType_game_isActive_idx\" ON public.\"CatalogItem\" USING btree (\"itemType\", game, \"isActive\")"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_lower_name_trgm_idx",
+          "indexdef": "CREATE INDEX \"CatalogItem_lower_name_trgm_idx\" ON public.\"CatalogItem\" USING gin (lower(name) gin_trgm_ops)"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_name_idx",
+          "indexdef": "CREATE INDEX \"CatalogItem_name_idx\" ON public.\"CatalogItem\" USING btree (name)"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"CatalogItem_pkey\" ON public.\"CatalogItem\" USING btree (id)"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_source_isActive_idx",
+          "indexdef": "CREATE INDEX \"CatalogItem_source_isActive_idx\" ON public.\"CatalogItem\" USING btree (source, \"isActive\")"
+        },
+        {
+          "tablename": "CatalogItem",
+          "indexname": "CatalogItem_source_sourceItemId_language_key",
+          "indexdef": "CREATE UNIQUE INDEX \"CatalogItem_source_sourceItemId_language_key\" ON public.\"CatalogItem\" USING btree (source, \"sourceItemId\", language)"
+        },
+        {
+          "tablename": "CatalogSealedProduct",
+          "indexname": "CatalogSealedProduct_catalogSetId_isActive_idx",
+          "indexdef": "CREATE INDEX \"CatalogSealedProduct_catalogSetId_isActive_idx\" ON public.\"CatalogSealedProduct\" USING btree (\"catalogSetId\", \"isActive\")"
+        },
+        {
+          "tablename": "CatalogSealedProduct",
+          "indexname": "CatalogSealedProduct_game_isActive_name_idx",
+          "indexdef": "CREATE INDEX \"CatalogSealedProduct_game_isActive_name_idx\" ON public.\"CatalogSealedProduct\" USING btree (game, \"isActive\", name)"
+        },
+        {
+          "tablename": "CatalogSealedProduct",
+          "indexname": "CatalogSealedProduct_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"CatalogSealedProduct_pkey\" ON public.\"CatalogSealedProduct\" USING btree (id)"
+        },
+        {
+          "tablename": "CatalogSealedProduct",
+          "indexname": "CatalogSealedProduct_source_sourceProductId_language_game_key",
+          "indexdef": "CREATE UNIQUE INDEX \"CatalogSealedProduct_source_sourceProductId_language_game_key\" ON public.\"CatalogSealedProduct\" USING btree (source, \"sourceProductId\", language, game)"
+        },
+        {
+          "tablename": "CatalogSet",
+          "indexname": "CatalogSet_game_isActive_name_idx",
+          "indexdef": "CREATE INDEX \"CatalogSet_game_isActive_name_idx\" ON public.\"CatalogSet\" USING btree (game, \"isActive\", name)"
+        },
+        {
+          "tablename": "CatalogSet",
+          "indexname": "CatalogSet_game_isActive_releaseDate_idx",
+          "indexdef": "CREATE INDEX \"CatalogSet_game_isActive_releaseDate_idx\" ON public.\"CatalogSet\" USING btree (game, \"isActive\", \"releaseDate\")"
+        },
+        {
+          "tablename": "CatalogSet",
+          "indexname": "CatalogSet_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"CatalogSet_pkey\" ON public.\"CatalogSet\" USING btree (id)"
+        },
+        {
+          "tablename": "CatalogSet",
+          "indexname": "CatalogSet_source_sourceSetId_game_key",
+          "indexdef": "CREATE UNIQUE INDEX \"CatalogSet_source_sourceSetId_game_key\" ON public.\"CatalogSet\" USING btree (source, \"sourceSetId\", game)"
+        },
+        {
+          "tablename": "PackPrize",
+          "indexname": "PackPrize_catalogItemId_idx",
+          "indexdef": "CREATE INDEX \"PackPrize_catalogItemId_idx\" ON public.\"PackPrize\" USING btree (\"catalogItemId\")"
+        },
+        {
+          "tablename": "PackPrize",
+          "indexname": "PackPrize_packId_idx",
+          "indexdef": "CREATE INDEX \"PackPrize_packId_idx\" ON public.\"PackPrize\" USING btree (\"packId\")"
+        },
+        {
+          "tablename": "PackPrize",
+          "indexname": "PackPrize_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"PackPrize_pkey\" ON public.\"PackPrize\" USING btree (id)"
+        },
+        {
+          "tablename": "VendorInventoryItem",
+          "indexname": "VendorInventoryItem_pkey",
+          "indexdef": "CREATE UNIQUE INDEX \"VendorInventoryItem_pkey\" ON public.\"VendorInventoryItem\" USING btree (id)"
+        },
+        {
+          "tablename": "VendorInventoryItem",
+          "indexname": "VendorInventoryItem_vendorId_catalogItemId_idx",
+          "indexdef": "CREATE INDEX \"VendorInventoryItem_vendorId_catalogItemId_idx\" ON public.\"VendorInventoryItem\" USING btree (\"vendorId\", \"catalogItemId\")"
+        },
+        {
+          "tablename": "VendorInventoryItem",
+          "indexname": "VendorInventoryItem_vendorId_status_idx",
+          "indexdef": "CREATE INDEX \"VendorInventoryItem_vendorId_status_idx\" ON public.\"VendorInventoryItem\" USING btree (\"vendorId\", status)"
+        },
+        {
+          "tablename": "VendorInventoryItem",
+          "indexname": "VendorInventoryItem_vendorId_title_idx",
+          "indexdef": "CREATE INDEX \"VendorInventoryItem_vendorId_title_idx\" ON public.\"VendorInventoryItem\" USING btree (\"vendorId\", title)"
+        }
+      ],
+      "relationSizes": [
+        {
+          "relname": "CatalogItem",
+          "total_size": "962 MB",
+          "bytes": 1009065984
+        },
+        {
+          "relname": "CanonicalSearchDoc",
+          "total_size": "118 MB",
+          "bytes": 123527168
+        },
+        {
+          "relname": "CatalogSealedProduct",
+          "total_size": "17 MB",
+          "bytes": 18317312
+        },
+        {
+          "relname": "CatalogSet",
+          "total_size": "4408 kB",
+          "bytes": 4513792
+        },
+        {
+          "relname": "PackPrize",
+          "total_size": "64 kB",
+          "bytes": 65536
+        },
+        {
+          "relname": "VendorInventoryItem",
+          "total_size": "40 kB",
+          "bytes": 40960
+        }
+      ]
+    },
+    "canonical": {
+      "games": [
+        {
+          "code": "CARDFIGHT_VANGUARD",
+          "name": "CARDFIGHT VANGUARD",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "DRAGON_BALL_SUPER",
+          "name": "DRAGON BALL SUPER",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "FLESH_AND_BLOOD",
+          "name": "FLESH AND BLOOD",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "LORCANA",
+          "name": "LORCANA",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "ONE_PIECE",
+          "name": "ONE PIECE",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "POKEMON",
+          "name": "POKEMON",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "POKEMON_JAPAN",
+          "name": "POKEMON JAPAN",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "RIFTBOUND",
+          "name": "RIFTBOUND",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "WEISS_SCHWARZ",
+          "name": "WEISS SCHWARZ",
+          "isActive": true,
+          "sortOrder": 0
+        },
+        {
+          "code": "YUGIOH",
+          "name": "YUGIOH",
+          "isActive": true,
+          "sortOrder": 0
+        }
+      ],
+      "counts": [
+        {
+          "table_name": "CanonicalCatalogCard",
+          "total": 245844
+        },
+        {
+          "table_name": "CanonicalCatalogSet",
+          "total": 1053
+        },
+        {
+          "table_name": "CanonicalSealedProduct",
+          "total": 2963
+        },
+        {
+          "table_name": "CanonicalSearchDoc",
+          "total": 249860
+        }
+      ],
+      "searchDocTypes": [
+        {
+          "entityType": "CARD",
+          "total": 245844
+        },
+        {
+          "entityType": "SEALED_PRODUCT",
+          "total": 2963
+        },
+        {
+          "entityType": "SET",
+          "total": 1053
+        }
+      ]
+    }
+  },
+  "issues": [
+    {
+      "severity": "P1",
+      "area": "CatalogItem",
+      "finding": "29634 CatalogItem rows lack sourcePayload",
+      "evidence": "CatalogItem totals missing_source_payload",
+      "fix": "Re-run imports with payload retention or mark legacy rows as low-trust.",
+      "category": "source_metadata_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "bulbapedia/POKEMON has 11/144 sets missing all set images",
+      "evidence": {
+        "source": "bulbapedia",
+        "game": "POKEMON",
+        "language": "en",
+        "total": 144,
+        "active": 144,
+        "missing_any_image": 11,
+        "missing_source_category_id": 144,
+        "missing_product_count": 144,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet source metadata",
+      "finding": "bulbapedia/POKEMON has 144/144 sets missing sourceCategoryId",
+      "evidence": {
+        "source": "bulbapedia",
+        "game": "POKEMON",
+        "language": "en",
+        "total": 144,
+        "active": 144,
+        "missing_any_image": 11,
+        "missing_source_category_id": 144,
+        "missing_product_count": 144,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill only when deterministic same-source category mapping exists; otherwise keep as source_metadata_gap.",
+      "category": "source_metadata_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet source metadata",
+      "finding": "bulbapedia/POKEMON has 144/144 sets missing productCount",
+      "evidence": {
+        "source": "bulbapedia",
+        "game": "POKEMON",
+        "language": "en",
+        "total": 144,
+        "active": 144,
+        "missing_any_image": 11,
+        "missing_source_category_id": 144,
+        "missing_product_count": 144,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill only from source-provided product_count metadata; do not fabricate from partial local row counts.",
+      "category": "source_metadata_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "onepiecedb.io/ONE_PIECE has 51/51 sets missing all set images",
+      "evidence": {
+        "source": "onepiecedb.io",
+        "game": "ONE_PIECE",
+        "language": "en",
+        "total": 51,
+        "active": 51,
+        "missing_any_image": 51,
+        "missing_source_category_id": 51,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet source metadata",
+      "finding": "onepiecedb.io/ONE_PIECE has 51/51 sets missing sourceCategoryId",
+      "evidence": {
+        "source": "onepiecedb.io",
+        "game": "ONE_PIECE",
+        "language": "en",
+        "total": 51,
+        "active": 51,
+        "missing_any_image": 51,
+        "missing_source_category_id": 51,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill only when deterministic same-source category mapping exists; otherwise keep as source_metadata_gap.",
+      "category": "source_metadata_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "pokemoncard.io/POKEMON has 14/196 sets missing all set images",
+      "evidence": {
+        "source": "pokemoncard.io",
+        "game": "POKEMON",
+        "language": "en",
+        "total": 196,
+        "active": 196,
+        "missing_any_image": 14,
+        "missing_source_category_id": 196,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet source metadata",
+      "finding": "pokemoncard.io/POKEMON has 196/196 sets missing sourceCategoryId",
+      "evidence": {
+        "source": "pokemoncard.io",
+        "game": "POKEMON",
+        "language": "en",
+        "total": 196,
+        "active": 196,
+        "missing_any_image": 14,
+        "missing_source_category_id": 196,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill only when deterministic same-source category mapping exists; otherwise keep as source_metadata_gap.",
+      "category": "source_metadata_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/CARDFIGHT_VANGUARD has 263/263 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "CARDFIGHT_VANGUARD",
+        "language": "en",
+        "total": 263,
+        "active": 263,
+        "missing_any_image": 263,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/DRAGON_BALL_SUPER has 101/101 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "DRAGON_BALL_SUPER",
+        "language": "en",
+        "total": 101,
+        "active": 101,
+        "missing_any_image": 101,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/FLESH_AND_BLOOD has 94/94 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "FLESH_AND_BLOOD",
+        "language": "en",
+        "total": 94,
+        "active": 94,
+        "missing_any_image": 94,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/LORCANA has 18/18 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "LORCANA",
+        "language": "en",
+        "total": 18,
+        "active": 18,
+        "missing_any_image": 18,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/ONE_PIECE has 76/76 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "ONE_PIECE",
+        "language": "en",
+        "total": 76,
+        "active": 76,
+        "missing_any_image": 76,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/POKEMON has 443/447 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "POKEMON",
+        "language": "ja",
+        "total": 447,
+        "active": 447,
+        "missing_any_image": 443,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/POKEMON_JAPAN has 93/446 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "POKEMON_JAPAN",
+        "language": "en",
+        "total": 446,
+        "active": 446,
+        "missing_any_image": 93,
+        "missing_source_category_id": 446,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet source metadata",
+      "finding": "tcgtracking/POKEMON_JAPAN has 446/446 sets missing sourceCategoryId",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "POKEMON_JAPAN",
+        "language": "en",
+        "total": 446,
+        "active": 446,
+        "missing_any_image": 93,
+        "missing_source_category_id": 446,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill only when deterministic same-source category mapping exists; otherwise keep as source_metadata_gap.",
+      "category": "source_metadata_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/RIFTBOUND has 7/7 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "RIFTBOUND",
+        "language": "en",
+        "total": 7,
+        "active": 7,
+        "missing_any_image": 7,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/WEISS_SCHWARZ has 163/163 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "WEISS_SCHWARZ",
+        "language": "en",
+        "total": 163,
+        "active": 163,
+        "missing_any_image": 163,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P2",
+      "area": "CatalogSet",
+      "finding": "tcgtracking/YUGIOH has 605/605 sets missing all set images",
+      "evidence": {
+        "source": "tcgtracking",
+        "game": "YUGIOH",
+        "language": "en",
+        "total": 605,
+        "active": 605,
+        "missing_any_image": 605,
+        "missing_source_category_id": 0,
+        "missing_product_count": 0,
+        "missing_group_kind": 0,
+        "missing_review_status": 0,
+        "missing_source_payload": 0
+      },
+      "fix": "Backfill set logos/symbols/banners from overlapping source only when provenance is recorded; otherwise leave as source_image_gap.",
+      "category": "source_image_gap"
+    },
+    {
+      "severity": "P1",
+      "area": "VendorInventoryItem",
+      "finding": "No owned/vendor inventory rows exist",
+      "evidence": {
+        "total": 0,
+        "quantity_total": null,
+        "quantity_held": null,
+        "quantity_sold": null,
+        "missing_catalog_or_custom_ref": null,
+        "missing_image": null,
+        "slab_like": null,
+        "slab_like_missing_cert": null,
+        "invalid_quantity_rows": null,
+        "negative_quantity_rows": null
+      },
+      "fix": "Build/import owned stock lane; catalog rows are not inventory.",
+      "category": "product_lane_absent"
+    },
+    {
+      "severity": "P1",
+      "area": "PackPrize",
+      "finding": "Existing PackPrize rows are all unlinked manual/demo rows",
+      "evidence": {
+        "total": 6,
+        "catalog_linked": 0,
+        "unlinked_manual": 6,
+        "linked_missing_snapshot": 0,
+        "missing_image": 0,
+        "missing_set_id": 6,
+        "missing_card_number": 6,
+        "missing_rarity": 6,
+        "invalid_stock_rows": 0
+      },
+      "fix": "Backfill deterministic refs where possible or recreate through source-backed import flow.",
+      "category": "demo_fixture_gap"
+    }
+  ]
+}
