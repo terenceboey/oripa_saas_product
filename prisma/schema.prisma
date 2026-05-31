@@ -862,6 +862,8 @@ model CatalogItem {
 
   @@unique([source, sourceItemId, language])
   @@index([itemType, game, isActive])
+  @@index([game, itemType, isActive, setId, rarity])
+  @@index([game, itemType, isActive, name])
   @@index([source, isActive])
   @@index([name])
   @@index([catalogSetId, isActive])
@@ -893,6 +895,7 @@ model CatalogSet {
   sealedProducts   CatalogSealedProduct[]
 
   @@unique([source, sourceSetId, game])
+  @@index([sourceSetId, game, isActive])
   @@index([game, isActive, releaseDate])
   @@index([game, isActive, name])
 }
@@ -920,6 +923,7 @@ model CatalogSealedProduct {
   catalogSet       CatalogSet? @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
 
   @@unique([source, sourceProductId, language, game])
+  @@index([game, isActive, catalogSetId, name])
   @@index([catalogSetId, isActive])
   @@index([game, isActive, name])
 }

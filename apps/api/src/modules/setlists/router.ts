@@ -6,6 +6,8 @@ export const setlistRouter = Router();
 
 const gameMap: Record<string, string> = {
   pokemon: "POKEMON",
+  onepiece: "ONE_PIECE",
+  "one-piece": "ONE_PIECE",
   "pokemon-japan": "POKEMON_JAPAN",
   all: "ALL",
 };
@@ -31,11 +33,91 @@ function resolveGame(input: string) {
   return gameMap[input] ?? "POKEMON";
 }
 
-function resolveSourceForGame(game: string, source?: string) {
-  const requested = source?.trim().toLowerCase();
-  if (requested) return requested;
-  if (game === "POKEMON") return "tcgtracking";
-  return undefined;
+function normalizeSource(input?: string | null) {
+  const normalized = input?.trim().toLowerCase();
+  if (!normalized) return null;
+  if (normalized === "pokemoncardio") return "pokemoncard.io";
+  if (normalized === "onepiecedb") return "onepiecedb.io";
+  return normalized;
+}
+
+async function resolveCatalogSetBySourceSetId(input: {
+  sourceSetId: string;
+  game: string;
+  source?: string | null;
+}) {
+  const resolvedSource = normalizeSource(input.source);
+  if (resolvedSource) {
+    return prisma.catalogSet.findFirst({
+      where: {
+        sourceSetId: input.sourceSetId,
+        ...(input.game !== "ALL" ? { game: input.game } : {}),
+        source: resolvedSource,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        source: true,
+        sourceSetId: true,
+        name: true,
+        setCode: true,
+        game: true,
+        releaseDate: true,
+        symbolImageUrl: true,
+        logoImageUrl: true,
+        bannerImageUrl: true,
+        cards: {
+          where: { isActive: true, itemType: "CARD" },
+          take: 1,
+          orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
+          select: {
+            imageThumbUrl: true,
+            imageLargeUrl: true,
+            imageBaseUrl: true,
+          },
+        },
+      },
+    });
+  }
+
+  const matches = await prisma.catalogSet.findMany({
+    where: {
+      sourceSetId: input.sourceSetId,
+      ...(input.game !== "ALL" ? { game: input.game } : {}),
+      isActive: true,
+    },
+    orderBy: [{ source: "asc" }, { updatedAt: "desc" }],
+    take: 2,
+    select: {
+      id: true,
+      source: true,
+      sourceSetId: true,
+      name: true,
+      setCode: true,
+      game: true,
+      releaseDate: true,
+      symbolImageUrl: true,
+      logoImageUrl: true,
+      bannerImageUrl: true,
+      cards: {
+        where: { isActive: true, itemType: "CARD" },
+        take: 1,
+        orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
+        select: {
+          imageThumbUrl: true,
+          imageLargeUrl: true,
+          imageBaseUrl: true,
+        },
+      },
+    },
+  });
+
+  if (matches.length === 1) return matches[0];
+  if (matches.length > 1) {
+    const error = new Error("AMBIGUOUS_SET_SOURCE");
+    throw error;
+  }
+  return null;
 }
 
 setlistRouter.get("/v1/public/setlists", async (req, res) => {
@@ -46,7 +128,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   const { game, source, q, sort, page, limit } = parsed.data;
   const resolvedGame = resolveGame(game);
-  const resolvedSource = resolveSourceForGame(resolvedGame, source);
+  const resolvedSource = normalizeSource(source);
   const skip = (page - 1) * limit;
   const search = q?.toLowerCase();
   const orderBy =
@@ -147,39 +229,21 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
   }
 
   const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
-  const source = resolveSourceForGame(game, String(req.query.source ?? ""));
+  const source = normalizeSource(String(req.query.source ?? ""));
   const { q, rarity, page, limit } = parsed.data;
   const skip = (page - 1) * limit;
 
-  const catalogSet = await prisma.catalogSet.findFirst({
-    where: {
-      sourceSetId,
-      ...(game !== "ALL" ? { game } : {}),
-      ...(source ? { source } : {}),
-      isActive: true,
-    },
-    select: {
-      id: true,
-      sourceSetId: true,
-      name: true,
-      setCode: true,
-      game: true,
-      releaseDate: true,
-      symbolImageUrl: true,
-      logoImageUrl: true,
-      bannerImageUrl: true,
-      cards: {
-        where: { isActive: true, itemType: "CARD" },
-        take: 1,
-        orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
-        select: {
-          imageThumbUrl: true,
-          imageLargeUrl: true,
-          imageBaseUrl: true,
-        },
-      },
-    },
-  });
+  let catalogSet = null;
+  try {
+    catalogSet = await resolveCatalogSetBySourceSetId({ sourceSetId, game, source });
+  } catch (error) {
+    if ((error as Error).message === "AMBIGUOUS_SET_SOURCE") {
+      return res.status(409).json({
+        error: "Set source is ambiguous. Please include ?source=<source> for this set.",
+      });
+    }
+    throw error;
+  }
 
   if (!catalogSet) {
     return res.status(404).json({ error: "Set not found" });
@@ -248,17 +312,19 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/sealed", async (req, res) =>
     return res.status(400).json({ error: "sourceSetId is required" });
   }
   const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
-  const source = resolveSourceForGame(game, String(req.query.source ?? ""));
+  const source = normalizeSource(String(req.query.source ?? ""));
 
-  const setRecord = await prisma.catalogSet.findFirst({
-    where: {
-      sourceSetId,
-      ...(game !== "ALL" ? { game } : {}),
-      ...(source ? { source } : {}),
-      isActive: true,
-    },
-    select: { id: true, sourceSetId: true, name: true, game: true },
-  });
+  let setRecord = null;
+  try {
+    setRecord = await resolveCatalogSetBySourceSetId({ sourceSetId, game, source });
+  } catch (error) {
+    if ((error as Error).message === "AMBIGUOUS_SET_SOURCE") {
+      return res.status(409).json({
+        error: "Set source is ambiguous. Please include ?source=<source> for this set.",
+      });
+    }
+    throw error;
+  }
   if (!setRecord) {
     return res.status(404).json({ error: "Set not found" });
   }
@@ -280,8 +346,16 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/sealed", async (req, res) =>
     },
   });
 
+  const setPayload = {
+    id: setRecord.id,
+    source: setRecord.source,
+    sourceSetId: setRecord.sourceSetId,
+    name: setRecord.name,
+    game: setRecord.game,
+  };
+
   return res.json({
-    set: setRecord,
+    set: setPayload,
     items: sealed,
   });
 });

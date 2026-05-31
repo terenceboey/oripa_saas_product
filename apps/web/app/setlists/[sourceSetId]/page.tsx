@@ -43,10 +43,11 @@ export default function SetlistDetailPage() {
   const searchParams = useSearchParams();
   const sourceSetId = String(params?.sourceSetId ?? "");
   const game = (searchParams.get("game") || "pokemon").toLowerCase();
-  const source = (searchParams.get("source") || (game === "pokemon" ? "pokemoncardio" : "")).toLowerCase();
+  const source = (searchParams.get("source") || "").trim().toLowerCase();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<CardResponse | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("");
   const [page, setPage] = useState(1);
@@ -59,6 +60,7 @@ export default function SetlistDetailPage() {
     if (!sourceSetId) return;
     let active = true;
     setLoading(true);
+    setFetchError(null);
     const url = new URL(`${apiBase}/v1/public/setlists/${sourceSetId}/cards`);
     url.searchParams.set("game", game);
     if (source) url.searchParams.set("source", source);
@@ -68,10 +70,21 @@ export default function SetlistDetailPage() {
     if (rarity.trim()) url.searchParams.set("rarity", rarity.trim());
 
     fetch(url.toString(), { cache: "no-store" })
-      .then((r) => r.json())
+      .then(async (r) => {
+        const payload = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          throw new Error(payload?.error ?? "Failed to load set cards");
+        }
+        return payload;
+      })
       .then((payload) => {
         if (!active) return;
         setData(payload);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        setData(null);
+        setFetchError(error instanceof Error ? error.message : "Failed to load set cards");
       })
       .finally(() => {
         if (!active) return;
@@ -92,7 +105,7 @@ export default function SetlistDetailPage() {
     <main style={styles.page}>
       <div style={styles.container}>
         <Link href={`/setlists?game=${game}${source ? `&source=${source}` : ""}`} style={styles.backLink}>
-          ← All Sets
+          {"<- All Sets"}
         </Link>
 
         <section style={styles.setHeader}>
@@ -121,7 +134,7 @@ export default function SetlistDetailPage() {
           </select>
           <div style={styles.pageCtrls}>
             <button type="button" style={styles.pageBtn} disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              ‹
+              {"<"}
             </button>
             <span style={styles.pageInfo}>
               {currentPage} / {Math.max(1, data?.totalPages ?? 1)}
@@ -132,12 +145,13 @@ export default function SetlistDetailPage() {
               disabled={currentPage >= Math.max(1, data?.totalPages ?? 1)}
               onClick={() => setPage((p) => Math.min(Math.max(1, data?.totalPages ?? 1), p + 1))}
             >
-              ›
+              {">"}
             </button>
           </div>
         </section>
 
         {loading ? <p style={styles.loading}>Loading cards...</p> : null}
+        {fetchError ? <p style={styles.loading}>{fetchError}</p> : null}
         <section style={styles.grid}>
           {cards.map((card) => (
             <article key={card.id} style={styles.card}>
@@ -146,7 +160,7 @@ export default function SetlistDetailPage() {
                 <div style={styles.cardName}>{card.name}</div>
                 <div style={styles.cardMeta}>
                   {card.cardNumber ? `#${card.cardNumber}` : "No number"}
-                  {card.rarity ? ` • ${card.rarity}` : ""}
+                  {card.rarity ? ` | ${card.rarity}` : ""}
                 </div>
               </div>
             </article>
@@ -209,3 +223,4 @@ const styles: Record<string, CSSProperties> = {
   cardName: { fontWeight: 800, lineHeight: 1.2, minHeight: 38 },
   cardMeta: { color: "#70639d", fontSize: 13, marginTop: 4 },
 };
+

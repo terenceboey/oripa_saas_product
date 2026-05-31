@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createPackSchema, updatePackSchema } from "@oripa/shared";
-import { Prisma } from "@prisma/client";
+import { CatalogItemType, Prisma } from "@prisma/client";
 import multer from "multer";
 import { parse } from "csv-parse/sync";
 import { prisma } from "../../lib/prisma";
@@ -55,16 +55,91 @@ const catalogItemSelect = {
   imageLargeUrl: true,
 } as const;
 
+const catalogSealedSelect = {
+  id: true,
+  source: true,
+  sourceProductId: true,
+  game: true,
+  language: true,
+  name: true,
+  imageUrl: true,
+  catalogSet: {
+    select: {
+      sourceSetId: true,
+      name: true,
+    },
+  },
+} as const;
+
 const prismaCatalogLookup: CatalogItemLookup = {
   async findCatalogItemsByIds(ids: string[]) {
     if (ids.length === 0) return [];
-    return prisma.catalogItem.findMany({ where: { id: { in: ids }, isActive: true }, select: catalogItemSelect });
+    const [cards, sealedProducts] = await prisma.$transaction([
+      prisma.catalogItem.findMany({
+        where: { id: { in: ids }, isActive: true },
+        select: catalogItemSelect,
+      }),
+      prisma.catalogSealedProduct.findMany({
+        where: { id: { in: ids }, isActive: true },
+        select: catalogSealedSelect,
+      }),
+    ]);
+
+    const mappedSealed = sealedProducts.map((row) => ({
+      id: row.id,
+      source: row.source,
+      sourceItemId: row.sourceProductId,
+      itemType: CatalogItemType.SEALED_PRODUCT,
+      game: row.game,
+      language: row.language,
+      name: row.name,
+      setId: row.catalogSet?.sourceSetId ?? null,
+      setName: row.catalogSet?.name ?? null,
+      localId: null,
+      cardNumber: null,
+      rarity: null,
+      imageBaseUrl: row.imageUrl,
+      imageThumbUrl: row.imageUrl,
+      imageLargeUrl: row.imageUrl,
+    }));
+
+    return [...cards, ...mappedSealed];
   },
   async findCatalogItemBySourceRef(ref: { source: string; sourceItemId: string; language?: string }) {
-    return prisma.catalogItem.findFirst({
+    const card = await prisma.catalogItem.findFirst({
       where: { source: ref.source, sourceItemId: ref.sourceItemId, language: ref.language ?? "en", isActive: true },
       select: catalogItemSelect,
     });
+    if (card) return card;
+
+    const sealed = await prisma.catalogSealedProduct.findFirst({
+      where: {
+        source: ref.source,
+        sourceProductId: ref.sourceItemId,
+        language: ref.language ?? "en",
+        isActive: true,
+      },
+      select: catalogSealedSelect,
+    });
+    if (!sealed) return null;
+
+    return {
+      id: sealed.id,
+      source: sealed.source,
+      sourceItemId: sealed.sourceProductId,
+      itemType: CatalogItemType.SEALED_PRODUCT,
+      game: sealed.game,
+      language: sealed.language,
+      name: sealed.name,
+      setId: sealed.catalogSet?.sourceSetId ?? null,
+      setName: sealed.catalogSet?.name ?? null,
+      localId: null,
+      cardNumber: null,
+      rarity: null,
+      imageBaseUrl: sealed.imageUrl,
+      imageThumbUrl: sealed.imageUrl,
+      imageLargeUrl: sealed.imageUrl,
+    };
   },
 };
 

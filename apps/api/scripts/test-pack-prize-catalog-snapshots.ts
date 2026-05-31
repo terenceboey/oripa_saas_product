@@ -43,9 +43,28 @@ const catalogPikachu: CatalogItemSnapshotSource = {
   imageLargeUrl: "https://images.example/pikachu-large.png",
 };
 
+const sealedBoosterBox: CatalogItemSnapshotSource = {
+  id: "sealed-op05-box",
+  source: "onepiecedb.io",
+  sourceItemId: "op05-booster-box",
+  itemType: "SEALED_PRODUCT",
+  game: "ONE_PIECE",
+  language: "en",
+  name: "OP-05 Booster Box",
+  setId: "op05",
+  setName: "Awakening of the New Era",
+  localId: null,
+  cardNumber: null,
+  rarity: null,
+  imageBaseUrl: "https://images.example/op05-box.png",
+  imageThumbUrl: "https://images.example/op05-box.png",
+  imageLargeUrl: "https://images.example/op05-box.png",
+};
+
 const catalogById = new Map([
   [catalogCharizard.id, catalogCharizard],
   [catalogPikachu.id, catalogPikachu],
+  [sealedBoosterBox.id, sealedBoosterBox],
 ]);
 
 const catalogStore = {
@@ -194,6 +213,26 @@ async function main() {
   assert.equal(tierRows[0].cardNumber, "58/102");
   assert.equal(tierRows[0].imageUrl, "https://images.example/pikachu-base.png");
   assert.equal(tierRows[0].weight, 1000);
+
+  const sealedRows = await resolvePackPrizeRows(
+    {
+      prizes: [
+        {
+          catalogItemId: sealedBoosterBox.id,
+          label: "Ignored sealed label",
+          estimatedValue: 900,
+          weight: 5,
+          stock: 4,
+        },
+      ],
+    },
+    catalogStore
+  );
+  assert.equal(sealedRows[0].label, "OP-05 Booster Box");
+  assert.equal(sealedRows[0].catalogItemId, sealedBoosterBox.id);
+  assert.equal(sealedRows[0].catalogSource, "onepiecedb.io");
+  assert.equal(sealedRows[0].catalogSourceItemId, "op05-booster-box");
+  assert.equal(sealedRows[0].imageUrl, "https://images.example/op05-box.png");
 
   await assert.rejects(
     () =>
