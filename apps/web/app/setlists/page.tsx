@@ -139,28 +139,7 @@ export default function SetlistsPage() {
           </select>
         </section>
 
-        {featured ? (
-          <section style={styles.hero}>
-            <div style={styles.heroInner}>
-              <div style={styles.heroSide}>{fanCards(featured)}</div>
-              <div style={styles.heroCenter}>
-                <span style={styles.latest}>LATEST RELEASE</span>
-                <SetImage set={featured} style={styles.heroLogo} />
-                <h2 style={styles.heroTitle}>{featured.name}</h2>
-                <p style={styles.heroMeta}>
-                  {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {setCountLabel(featured)}
-                </p>
-                <Link
-                  href={`/setlists/${encodeURIComponent(featured.sourceSetId)}?game=${game}&source=${encodeURIComponent(featured.source)}`}
-                  style={styles.heroButton}
-                >
-                  Browse Cards →
-                </Link>
-              </div>
-              <div style={styles.heroSide}>{fanCards(featured, true)}</div>
-            </div>
-          </section>
-        ) : null}
+        {featured ? <FeaturedSet set={featured} game={game} /> : null}
 
         <section style={styles.sectionHeader}>
           <h3 style={styles.sectionTitle}>Recent Releases</h3>
@@ -201,17 +180,47 @@ export default function SetlistsPage() {
 }
 
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {
+  const imageUrl = imageForSet(set);
   return (
     <Link href={`/setlists/${encodeURIComponent(set.sourceSetId)}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
-      <div style={styles.cardLogoWrap}>
-        <SetImage set={set} style={styles.cardLogo} />
-      </div>
+      {imageUrl ? (
+        <div style={styles.cardLogoWrap}>
+          <SetImage set={set} style={styles.cardLogo} />
+        </div>
+      ) : (
+        <div style={styles.codeRow}>
+          <span style={styles.codeChip}>{set.setCode || set.name.slice(0, 8)}</span>
+        </div>
+      )}
       <div style={styles.cardName}>{set.name}</div>
       <div style={styles.cardMeta}>
         {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} • {setCountLabel(set)}
       </div>
       {recent ? <span style={styles.cardArrow}>{">"}</span> : null}
     </Link>
+  );
+}
+
+function FeaturedSet({ set, game }: { set: SetlistItem; game: string }) {
+  const imageUrl = imageForSet(set);
+  return (
+    <section style={styles.hero}>
+      <div style={imageUrl ? styles.heroInner : styles.heroInnerTextOnly}>
+        {imageUrl ? <div style={styles.heroSide}>{fanCards(set)}</div> : null}
+        <div style={styles.heroCenter}>
+          <span style={styles.latest}>LATEST RELEASE</span>
+          {imageUrl ? <SetImage set={set} style={styles.heroLogo} /> : <span style={styles.heroCode}>{set.setCode || set.name.slice(0, 8)}</span>}
+          <h2 style={styles.heroTitle}>{set.name}</h2>
+          <p style={styles.heroMeta}>
+            {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown date")} • {setCountLabel(set)}
+          </p>
+          <Link href={`/setlists/${encodeURIComponent(set.sourceSetId)}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.heroButton}>
+            Browse Cards →
+          </Link>
+        </div>
+        {imageUrl ? <div style={styles.heroSide}>{fanCards(set, true)}</div> : null}
+      </div>
+    </section>
   );
 }
 
@@ -280,7 +289,7 @@ const styles: Record<string, CSSProperties> = {
     minHeight: "100vh",
     background: "linear-gradient(180deg,#f3f0ff 0%, #edf6ff 45%, #f9fcff 100%)",
     color: "#2c2450",
-    padding: "18px 14px 28px",
+    padding: "28px 14px 28px",
   },
   container: { maxWidth: 1280, margin: "0 auto" },
   header: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" },
@@ -293,9 +302,11 @@ const styles: Record<string, CSSProperties> = {
   select: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 12, padding: "11px 14px", boxShadow: "0 5px 20px rgba(77,52,146,.08)" },
   hero: { marginTop: 20, borderRadius: 18, border: "1px solid #d7cfed", background: "linear-gradient(120deg, rgba(159,144,255,.20), rgba(116,200,255,.18))", boxShadow: "0 14px 28px rgba(93,69,172,.14)" },
   heroInner: { display: "grid", gridTemplateColumns: "minmax(120px,1fr) minmax(230px, 430px) minmax(120px,1fr)", gap: 8, alignItems: "center", padding: 12 },
+  heroInnerTextOnly: { display: "grid", gridTemplateColumns: "1fr", justifyItems: "center", alignItems: "center", padding: "28px 16px" },
   heroSide: { display: "grid", placeItems: "center" },
   heroCenter: { textAlign: "center", padding: "8px 6px" },
   latest: { display: "inline-block", padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,.78)", border: "1px solid #e2daf4", fontSize: 12, fontWeight: 800, letterSpacing: ".08em", color: "#5a4b88" },
+  heroCode: { display: "inline-block", marginTop: 14, padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,.78)", border: "1px solid #e2daf4", color: "#584b85", fontSize: 16, fontWeight: 900, letterSpacing: ".08em" },
   heroLogo: { width: "min(390px,90%)", maxHeight: 140, objectFit: "contain", marginTop: 12 },
   heroTitle: { margin: "10px 0 4px", fontSize: "clamp(28px,3.4vw,40px)", lineHeight: 1.06 },
   heroMeta: { margin: 0, color: "#6f629f", fontWeight: 600 },
@@ -306,6 +317,8 @@ const styles: Record<string, CSSProperties> = {
   recentGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 10 },
   allGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(185px,1fr))", gap: 10 },
   card: { position: "relative", textDecoration: "none", color: "inherit", border: "1px solid #d8d0ec", background: "#ffffffcc", borderRadius: 14, padding: 10, boxShadow: "0 10px 24px rgba(80,59,150,.08)" },
+  codeRow: { display: "flex", alignItems: "center", minHeight: 26 },
+  codeChip: { display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "5px 9px", background: "linear-gradient(135deg,#efeafe,#dff3ff)", border: "1px solid #d8d0ec", color: "#5f5390", fontWeight: 900, fontSize: 12, letterSpacing: ".04em" },
   cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)" },
   cardLogo: { maxWidth: "100%", maxHeight: 88, objectFit: "contain" },
   imageFallback: { display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(135deg,#efeafe,#dff3ff)", border: "1px solid #d8d0ec" },
