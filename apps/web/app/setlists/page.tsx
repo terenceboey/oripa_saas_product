@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 
 type SetlistItem = {
@@ -38,11 +38,10 @@ type SetlistGame = "pokemon" | "pokemon-japan" | "onepiece";
 export default function SetlistsPage() {
   const [game, setGame] = useState<SetlistGame>("pokemon");
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
+  const [sort, setSort] = useState<"newest" | "oldest" | "name">("name");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [mainData, setMainData] = useState<SetlistResponse>({ total: 0, totalPages: 1, page: 1, limit: PAGE_SIZE, items: [] });
-  const [recentItems, setRecentItems] = useState<SetlistItem[]>([]);
   const [tabCounts, setTabCounts] = useState({ pokemon: 0, pokemonJapan: 0, onepiece: 0 });
 
   useEffect(() => {
@@ -66,12 +65,11 @@ export default function SetlistsPage() {
 
     Promise.all([
       fetch(buildListUrl(game, { page, limit: PAGE_SIZE, q: query, sort }), { cache: "no-store" }).then((r) => r.json()),
-      fetch(buildListUrl(game, { page: 1, limit: 5, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
       fetch(buildListUrl("pokemon", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
       fetch(buildListUrl("pokemon-japan", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
       fetch(buildListUrl("onepiece", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
     ])
-      .then(([mainPayload, recentPayload, pokemonCountPayload, japanCountPayload, onepieceCountPayload]) => {
+      .then(([mainPayload, pokemonCountPayload, japanCountPayload, onepieceCountPayload]) => {
         if (!active) return;
         const pokemonCount = Number(pokemonCountPayload?.total ?? 0);
         const pokemonJapanCount = Number(japanCountPayload?.total ?? 0);
@@ -83,7 +81,6 @@ export default function SetlistsPage() {
           limit: Number(mainPayload?.limit ?? PAGE_SIZE),
           items: Array.isArray(mainPayload?.items) ? mainPayload.items : [],
         });
-        setRecentItems(Array.isArray(recentPayload?.items) ? recentPayload.items : []);
         setTabCounts({
           pokemon: pokemonCount,
           pokemonJapan: pokemonJapanCount,
@@ -93,7 +90,6 @@ export default function SetlistsPage() {
       .catch(() => {
         if (!active) return;
         setMainData({ total: 0, totalPages: 1, page: 1, limit: PAGE_SIZE, items: [] });
-        setRecentItems([]);
       })
       .finally(() => {
         if (!active) return;
@@ -105,17 +101,18 @@ export default function SetlistsPage() {
     };
   }, [game, page, query, sort]);
 
-  const featured = useMemo(() => recentItems[0] ?? mainData.items[0] ?? null, [recentItems, mainData.items]);
   const totalPages = Math.max(1, mainData.totalPages || 1);
   const currentPage = Math.min(Math.max(1, mainData.page || page), totalPages);
+  const selectedLabel = game === "pokemon-japan" ? "Pokemon Japan" : game === "onepiece" ? "One Piece" : "Pokemon";
 
   return (
     <main style={styles.page}>
       <div style={styles.container}>
         <header style={styles.header}>
           <div>
+            <p style={styles.eyebrow}>TCGTracking catalog</p>
             <h1 style={styles.title}>Setlists</h1>
-            <p style={styles.subtitle}>Browse every release across the platform.</p>
+            <p style={styles.subtitle}>Source-native releases, promos, sealed buckets, and card sets.</p>
           </div>
           <div style={styles.tabs}>
             <button type="button" style={tabStyle(game === "pokemon")} onClick={() => setGame("pokemon")}>
@@ -139,17 +136,19 @@ export default function SetlistsPage() {
           </select>
         </section>
 
-        {featured ? <FeaturedSet set={featured} game={game} /> : null}
-
-        <section style={styles.sectionHeader}>
-          <h3 style={styles.sectionTitle}>Recent Releases</h3>
-          <span style={styles.viewAll}>{"View all ->"}</span>
-        </section>
-
-        <section style={styles.recentGrid}>
-          {recentItems.map((set) => (
-            <SetCard key={`recent-${set.id}`} set={set} game={game} recent />
-          ))}
+        <section style={styles.summaryBar}>
+          <div>
+            <span style={styles.summaryLabel}>Viewing</span>
+            <strong style={styles.summaryValue}>{selectedLabel}</strong>
+          </div>
+          <div>
+            <span style={styles.summaryLabel}>Sets</span>
+            <strong style={styles.summaryValue}>{mainData.total}</strong>
+          </div>
+          <div>
+            <span style={styles.summaryLabel}>Page</span>
+            <strong style={styles.summaryValue}>{currentPage} / {totalPages}</strong>
+          </div>
         </section>
 
         <section style={styles.sectionHeader}>
@@ -183,44 +182,21 @@ function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string
   const imageUrl = imageForSet(set);
   return (
     <Link href={`/setlists/${encodeURIComponent(set.sourceSetId)}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
-      {imageUrl ? (
-        <div style={styles.cardLogoWrap}>
-          <SetImage set={set} style={styles.cardLogo} />
+      <div style={styles.cardMedia}>
+        {imageUrl ? <SetImage set={set} style={styles.cardLogo} /> : <span style={styles.codeChip}>{set.setCode || set.name.slice(0, 8)}</span>}
+      </div>
+      <div style={styles.cardBody}>
+        <div style={styles.cardTopline}>
+          <span style={styles.sourceTag}>{set.source}</span>
+          {set.setCode ? <span style={styles.inlineCode}>{set.setCode}</span> : null}
         </div>
-      ) : (
-        <div style={styles.codeRow}>
-          <span style={styles.codeChip}>{set.setCode || set.name.slice(0, 8)}</span>
+        <div style={styles.cardName}>{set.name}</div>
+        <div style={styles.cardMeta}>
+          {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} • {setCountLabel(set)}
         </div>
-      )}
-      <div style={styles.cardName}>{set.name}</div>
-      <div style={styles.cardMeta}>
-        {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} • {setCountLabel(set)}
       </div>
       {recent ? <span style={styles.cardArrow}>{">"}</span> : null}
     </Link>
-  );
-}
-
-function FeaturedSet({ set, game }: { set: SetlistItem; game: string }) {
-  const imageUrl = imageForSet(set);
-  return (
-    <section style={styles.hero}>
-      <div style={imageUrl ? styles.heroInner : styles.heroInnerTextOnly}>
-        {imageUrl ? <div style={styles.heroSide}>{fanCards(set)}</div> : null}
-        <div style={styles.heroCenter}>
-          <span style={styles.latest}>LATEST RELEASE</span>
-          {imageUrl ? <SetImage set={set} style={styles.heroLogo} /> : <span style={styles.heroCode}>{set.setCode || set.name.slice(0, 8)}</span>}
-          <h2 style={styles.heroTitle}>{set.name}</h2>
-          <p style={styles.heroMeta}>
-            {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown date")} • {setCountLabel(set)}
-          </p>
-          <Link href={`/setlists/${encodeURIComponent(set.sourceSetId)}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.heroButton}>
-            Browse Cards →
-          </Link>
-        </div>
-        {imageUrl ? <div style={styles.heroSide}>{fanCards(set, true)}</div> : null}
-      </div>
-    </section>
   );
 }
 
@@ -253,16 +229,6 @@ function SetImage({ set, style }: { set: SetlistItem; style: CSSProperties }) {
   return <img src={src} alt={set.name} style={style} onError={() => setFailed(true)} />;
 }
 
-function fanCards(set: SetlistItem, reverse = false) {
-  return (
-    <div style={{ ...styles.fanRoot, transform: reverse ? "scaleX(-1)" : "none" }}>
-      <SetImage set={set} style={{ ...styles.fanCard, top: 56, left: 6, transform: "rotate(-16deg)" }} />
-      <SetImage set={set} style={{ ...styles.fanCard, top: 28, left: 66, transform: "rotate(-4deg)" }} />
-      <SetImage set={set} style={{ ...styles.fanCard, top: 56, left: 128, transform: "rotate(11deg)" }} />
-    </div>
-  );
-}
-
 function tabStyle(active: boolean, alt = false, disabled = false, warm = false): CSSProperties {
   if (disabled) {
     return {
@@ -271,65 +237,55 @@ function tabStyle(active: boolean, alt = false, disabled = false, warm = false):
       cursor: "not-allowed",
     };
   }
-  const gradient = warm
-    ? "linear-gradient(135deg,#ffbf69,#ff8a5b)"
-    : alt
-      ? "linear-gradient(135deg,#ff9eb5,#ff6c8a)"
-      : "linear-gradient(135deg,#9f90ff,#74c8ff)";
+  const accent = warm ? "#c56a20" : alt ? "#9a3650" : "#315f7d";
   return {
     ...styles.tab,
-    background: active ? gradient : "#f7f6ff",
-    color: active ? "#20153a" : "#473d66",
-    border: active ? "1px solid transparent" : "1px solid #d8d0ec",
+    background: active ? "#111827" : "#ffffff",
+    color: active ? "#ffffff" : accent,
+    border: active ? "1px solid #111827" : "1px solid #d8dee8",
   };
 }
 
 const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background: "linear-gradient(180deg,#f3f0ff 0%, #edf6ff 45%, #f9fcff 100%)",
-    color: "#2c2450",
-    padding: "28px 14px 28px",
+    background: "#f6f3ec",
+    color: "#171717",
+    padding: "32px 16px 40px",
   },
-  container: { maxWidth: 1280, margin: "0 auto" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" },
-  title: { fontSize: "clamp(34px,4.4vw,46px)", margin: 0, lineHeight: 1.05, letterSpacing: "-0.02em" },
-  subtitle: { margin: "8px 0 0", color: "#70639d" },
+  container: { maxWidth: 1240, margin: "0 auto" },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap" },
+  eyebrow: { margin: "0 0 8px", color: "#7c5f41", fontSize: 12, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase" },
+  title: { fontSize: "clamp(38px,5vw,58px)", margin: 0, lineHeight: 0.95, letterSpacing: "-0.055em" },
+  subtitle: { margin: "10px 0 0", color: "#5f5a52", maxWidth: 560, lineHeight: 1.45 },
   tabs: { display: "flex", gap: 8, flexWrap: "wrap" },
-  tab: { padding: "9px 14px", borderRadius: 999, fontWeight: 700, fontSize: 14, cursor: "pointer" },
-  filterRow: { marginTop: 18, display: "grid", gridTemplateColumns: "minmax(160px,1fr) minmax(190px,240px)", gap: 10 },
-  input: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 12, padding: "11px 14px", boxShadow: "0 5px 20px rgba(77,52,146,.08)" },
-  select: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 12, padding: "11px 14px", boxShadow: "0 5px 20px rgba(77,52,146,.08)" },
-  hero: { marginTop: 20, borderRadius: 18, border: "1px solid #d7cfed", background: "linear-gradient(120deg, rgba(159,144,255,.20), rgba(116,200,255,.18))", boxShadow: "0 14px 28px rgba(93,69,172,.14)" },
-  heroInner: { display: "grid", gridTemplateColumns: "minmax(120px,1fr) minmax(230px, 430px) minmax(120px,1fr)", gap: 8, alignItems: "center", padding: 12 },
-  heroInnerTextOnly: { display: "grid", gridTemplateColumns: "1fr", justifyItems: "center", alignItems: "center", padding: "28px 16px" },
-  heroSide: { display: "grid", placeItems: "center" },
-  heroCenter: { textAlign: "center", padding: "8px 6px" },
-  latest: { display: "inline-block", padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,.78)", border: "1px solid #e2daf4", fontSize: 12, fontWeight: 800, letterSpacing: ".08em", color: "#5a4b88" },
-  heroCode: { display: "inline-block", marginTop: 14, padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,.78)", border: "1px solid #e2daf4", color: "#584b85", fontSize: 16, fontWeight: 900, letterSpacing: ".08em" },
-  heroLogo: { width: "min(390px,90%)", maxHeight: 140, objectFit: "contain", marginTop: 12 },
-  heroTitle: { margin: "10px 0 4px", fontSize: "clamp(28px,3.4vw,40px)", lineHeight: 1.06 },
-  heroMeta: { margin: 0, color: "#6f629f", fontWeight: 600 },
-  heroButton: { display: "inline-block", marginTop: 12, padding: "10px 18px", borderRadius: 10, background: "linear-gradient(135deg,#9f90ff,#74c8ff)", color: "#1c1340", textDecoration: "none", fontWeight: 800 },
-  sectionHeader: { marginTop: 20, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
-  sectionTitle: { margin: 0, fontSize: 22 },
-  viewAll: { color: "#7d71a8", fontWeight: 700, fontSize: 14 },
-  recentGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 10 },
-  allGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(185px,1fr))", gap: 10 },
-  card: { position: "relative", textDecoration: "none", color: "inherit", border: "1px solid #d8d0ec", background: "#ffffffcc", borderRadius: 14, padding: 10, boxShadow: "0 10px 24px rgba(80,59,150,.08)" },
-  codeRow: { display: "flex", alignItems: "center", minHeight: 26 },
-  codeChip: { display: "inline-flex", alignItems: "center", borderRadius: 999, padding: "5px 9px", background: "linear-gradient(135deg,#efeafe,#dff3ff)", border: "1px solid #d8d0ec", color: "#5f5390", fontWeight: 900, fontSize: 12, letterSpacing: ".04em" },
-  cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)" },
-  cardLogo: { maxWidth: "100%", maxHeight: 88, objectFit: "contain" },
-  imageFallback: { display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(135deg,#efeafe,#dff3ff)", border: "1px solid #d8d0ec" },
-  imageFallbackText: { color: "#5f5390", fontWeight: 900, fontSize: 12, textAlign: "center", padding: 8 },
-  cardName: { marginTop: 8, fontWeight: 800, lineHeight: 1.2, minHeight: 36 },
-  cardMeta: { marginTop: 6, color: "#72669f", fontSize: 13 },
-  cardArrow: { position: "absolute", right: 10, bottom: 10, width: 20, height: 20, display: "grid", placeItems: "center", borderRadius: 6, background: "#efeafe", color: "#6f5ea8", fontWeight: 900 },
-  pagination: { marginTop: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 },
-  pageBtn: { border: "1px solid #d7cfee", background: "#fff", color: "#433869", borderRadius: 10, padding: "9px 14px", fontWeight: 700, cursor: "pointer" },
-  pageText: { color: "#6a5f97", fontWeight: 700 },
-  loading: { color: "#6f639d", fontWeight: 600 },
-  fanRoot: { position: "relative", width: "min(240px,42vw)", height: 190 },
-  fanCard: { position: "absolute", width: 110, aspectRatio: "63/88", objectFit: "cover", borderRadius: 10, border: "1px solid #f4f0ff", boxShadow: "0 10px 20px rgba(64,42,133,.26)" },
+  tab: { padding: "9px 13px", borderRadius: 10, fontWeight: 800, fontSize: 13, cursor: "pointer", boxShadow: "0 1px 0 rgba(17,24,39,.05)" },
+  filterRow: { marginTop: 22, display: "grid", gridTemplateColumns: "minmax(220px,1fr) minmax(190px,240px)", gap: 10 },
+  input: { background: "#fffdf8", border: "1px solid #d8d1c3", color: "#191714", borderRadius: 10, padding: "12px 14px", outlineColor: "#111827" },
+  select: { background: "#fffdf8", border: "1px solid #d8d1c3", color: "#191714", borderRadius: 10, padding: "12px 14px", outlineColor: "#111827" },
+  summaryBar: { marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(160px,1fr))", gap: 10 },
+  summaryLabel: { display: "block", color: "#7b7469", fontSize: 12, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" },
+  summaryValue: { display: "block", marginTop: 3, color: "#171717", fontSize: 18, fontWeight: 900 },
+  sectionHeader: { marginTop: 24, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
+  sectionTitle: { margin: 0, fontSize: 18, letterSpacing: "-.02em" },
+  viewAll: { color: "#6a6258", fontWeight: 800, fontSize: 13 },
+  recentGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(310px,1fr))", gap: 10 },
+  allGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(310px,1fr))", gap: 10 },
+  card: { position: "relative", display: "grid", gridTemplateColumns: "82px minmax(0,1fr)", gap: 12, alignItems: "center", minHeight: 106, textDecoration: "none", color: "inherit", border: "1px solid #d9d0c1", background: "#fffdf8", borderRadius: 14, padding: 10, boxShadow: "0 8px 20px rgba(45,35,22,.05)" },
+  cardMedia: { width: 82, height: 82, display: "grid", placeItems: "center", borderRadius: 12, background: "#f1eadf", border: "1px solid #e3d8c8", overflow: "hidden" },
+  codeChip: { display: "inline-flex", alignItems: "center", borderRadius: 8, padding: "6px 8px", background: "#171717", color: "#fffdf8", fontWeight: 900, fontSize: 11, letterSpacing: ".06em", maxWidth: 68, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  cardLogo: { maxWidth: "88%", maxHeight: "74%", objectFit: "contain" },
+  cardBody: { minWidth: 0 },
+  cardTopline: { display: "flex", gap: 6, alignItems: "center", minHeight: 18, marginBottom: 4 },
+  sourceTag: { color: "#8a8174", fontSize: 10, fontWeight: 900, letterSpacing: ".08em", textTransform: "uppercase" },
+  inlineCode: { color: "#4a453e", fontSize: 10, fontWeight: 900, letterSpacing: ".08em", border: "1px solid #ded4c4", borderRadius: 6, padding: "2px 5px" },
+  imageFallback: { display: "grid", placeItems: "center", borderRadius: 10, background: "#171717" },
+  imageFallbackText: { color: "#fffdf8", fontWeight: 900, fontSize: 11, textAlign: "center", padding: 8 },
+  cardName: { fontWeight: 900, lineHeight: 1.18, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" },
+  cardMeta: { marginTop: 6, color: "#6b6257", fontSize: 13, lineHeight: 1.3 },
+  cardArrow: { position: "absolute", right: 10, bottom: 10, width: 22, height: 22, display: "grid", placeItems: "center", borderRadius: 7, background: "#171717", color: "#fffdf8", fontWeight: 900 },
+  pagination: { marginTop: 20, display: "flex", alignItems: "center", justifyContent: "center", gap: 12, flexWrap: "wrap" },
+  pageBtn: { border: "1px solid #d8d1c3", background: "#fffdf8", color: "#171717", borderRadius: 10, padding: "9px 14px", fontWeight: 800, cursor: "pointer" },
+  pageText: { color: "#5f5a52", fontWeight: 800 },
+  loading: { color: "#6b6257", fontWeight: 700 },
 };
