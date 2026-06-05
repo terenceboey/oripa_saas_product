@@ -60,27 +60,29 @@ function normalizeImageKey(input?: string | null) {
   return input?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? null;
 }
 
-function usableCatalogImageUrl(url?: string | null) {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-  const lower = trimmed.toLowerCase();
-  if (lower.includes("tcgtracking.com/scan/set-symbol.php")) return null;
-  if (lower.includes("archives.bulbagarden.net") && lower.includes("pok%c3%a9mon_tcg_logo")) return null;
-  if (lower.includes("archives.bulbagarden.net") && lower.includes("pokemon_tcg_logo")) return null;
-  return trimmed;
+function cleanImageUrl(url?: string | null) {
+  const trimmed = url?.trim();
+  return trimmed || null;
 }
 
 function usableSetImageUrl(url: string | null | undefined, setCode?: string | null) {
-  const usable = usableCatalogImageUrl(url);
+  const usable = cleanImageUrl(url);
   if (!usable) return null;
-  const pokemonTcgMatch = usable.match(/images\.pokemontcg\.io\/([^/]+)\//i);
+
+  // Setlist thumbnails are intentionally allowlisted. Unknown catalog images are often
+  // card art, sealed packaging, brand marks, or scraped wiki assets that only happen
+  // to sit on a CatalogSet row. Do not display them as set artwork.
+  if (/^https:\/\/assets\.tcgdex\.net\//i.test(usable)) return usable;
+
+  const pokemonTcgMatch = usable.match(/^https:\/\/images\.pokemontcg\.io\/([^/]+)\//i);
   if (pokemonTcgMatch) {
     const imageSetKey = normalizeImageKey(pokemonTcgMatch[1]);
     const expectedSetKey = normalizeImageKey(setCode);
     if (!imageSetKey || !expectedSetKey || imageSetKey !== expectedSetKey) return null;
+    return usable;
   }
-  return usable;
+
+  return null;
 }
 
 async function resolveCatalogSetBySourceSetId(input: {
@@ -131,16 +133,6 @@ async function resolveCatalogSetBySourceSetId(input: {
       symbolImageUrl: true,
       logoImageUrl: true,
       bannerImageUrl: true,
-      cards: {
-        where: { isActive: true, itemType: "CARD" },
-        take: 1,
-        orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
-        select: {
-          imageThumbUrl: true,
-          imageLargeUrl: true,
-          imageBaseUrl: true,
-        },
-      },
     },
   });
 
