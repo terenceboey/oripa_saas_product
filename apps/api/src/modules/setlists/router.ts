@@ -113,6 +113,12 @@ async function resolveCatalogSetBySourceSetId(input: {
             imageBaseUrl: true,
           },
         },
+        sealedProducts: {
+          where: { isActive: true, imageUrl: { not: null }, imageCount: { gt: 0 } },
+          take: 1,
+          orderBy: [{ imageCount: "desc" }, { presaleReleaseDate: "desc" }, { name: "asc" }],
+          select: { imageUrl: true },
+        },
       },
     });
   }
@@ -145,6 +151,12 @@ async function resolveCatalogSetBySourceSetId(input: {
           imageLargeUrl: true,
           imageBaseUrl: true,
         },
+      },
+      sealedProducts: {
+        where: { isActive: true, imageUrl: { not: null }, imageCount: { gt: 0 } },
+        take: 1,
+        orderBy: [{ imageCount: "desc" }, { presaleReleaseDate: "desc" }, { name: "asc" }],
+        select: { imageUrl: true },
       },
     },
   });
@@ -213,6 +225,12 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
             imageBaseUrl: true,
           },
         },
+        sealedProducts: {
+          where: { isActive: true, imageUrl: { not: null }, imageCount: { gt: 0 } },
+          take: 1,
+          orderBy: [{ imageCount: "desc" }, { presaleReleaseDate: "desc" }, { name: "asc" }],
+          select: { imageUrl: true },
+        },
         _count: {
           select: {
             cards: { where: { isActive: true } },
@@ -233,9 +251,11 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     totalPages: Math.max(1, Math.ceil(total / limit)),
     items: sets.map((set) => {
       const firstCard = set.cards[0];
+      const firstSealedProduct = set.sealedProducts[0];
       const fallbackImage = firstUsableImageUrl(firstCard?.imageLargeUrl, firstCard?.imageThumbUrl, firstCard?.imageBaseUrl);
-      const resolvedLogoImageUrl = firstUsableImageUrl(set.logoImageUrl, set.symbolImageUrl, fallbackImage);
-      const resolvedSymbolImageUrl = firstUsableImageUrl(set.symbolImageUrl, set.logoImageUrl, fallbackImage);
+      const sealedFallbackImage = firstUsableImageUrl(firstSealedProduct?.imageUrl);
+      const resolvedLogoImageUrl = firstUsableImageUrl(set.logoImageUrl, set.symbolImageUrl, fallbackImage, sealedFallbackImage);
+      const resolvedSymbolImageUrl = firstUsableImageUrl(set.symbolImageUrl, set.logoImageUrl, fallbackImage, sealedFallbackImage);
       return {
         resolvedLogoImageUrl,
         resolvedSymbolImageUrl,
@@ -322,20 +342,18 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
     }),
   ]);
 
+  const firstCard = catalogSet.cards[0];
+  const firstSealedProduct = catalogSet.sealedProducts[0];
+  const fallbackImage = firstUsableImageUrl(firstCard?.imageLargeUrl, firstCard?.imageThumbUrl, firstCard?.imageBaseUrl);
+  const sealedFallbackImage = firstUsableImageUrl(firstSealedProduct?.imageUrl);
+  const resolvedLogoImageUrl = firstUsableImageUrl(catalogSet.logoImageUrl, catalogSet.symbolImageUrl, fallbackImage, sealedFallbackImage);
+  const resolvedSymbolImageUrl = firstUsableImageUrl(catalogSet.symbolImageUrl, catalogSet.logoImageUrl, fallbackImage, sealedFallbackImage);
+
   return res.json({
     set: {
       ...catalogSet,
-      logoImageUrl:
-        catalogSet.logoImageUrl ??
-        catalogSet.cards[0]?.imageLargeUrl ??
-        catalogSet.cards[0]?.imageThumbUrl ??
-        catalogSet.cards[0]?.imageBaseUrl ??
-        null,
-      symbolImageUrl:
-        catalogSet.symbolImageUrl ??
-        catalogSet.cards[0]?.imageThumbUrl ??
-        catalogSet.cards[0]?.imageBaseUrl ??
-        null,
+      logoImageUrl: resolvedLogoImageUrl,
+      symbolImageUrl: resolvedSymbolImageUrl,
     },
     page,
     limit,

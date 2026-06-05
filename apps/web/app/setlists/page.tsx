@@ -148,7 +148,7 @@ export default function SetlistsPage() {
                 <SetImage set={featured} style={styles.heroLogo} />
                 <h2 style={styles.heroTitle}>{featured.name}</h2>
                 <p style={styles.heroMeta}>
-                  {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {featured.cardCount} cards
+                  {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {setCountLabel(featured)}
                 </p>
                 <Link
                   href={`/setlists/${encodeURIComponent(featured.sourceSetId)}?game=${game}&source=${encodeURIComponent(featured.source)}`}
@@ -208,7 +208,7 @@ function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string
       </div>
       <div style={styles.cardName}>{set.name}</div>
       <div style={styles.cardMeta}>
-        {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} • {set.cardCount} cards
+        {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} • {setCountLabel(set)}
       </div>
       {recent ? <span style={styles.cardArrow}>{">"}</span> : null}
     </Link>
@@ -219,9 +219,21 @@ function imageForSet(set: SetlistItem) {
   return set.resolvedLogoImageUrl || set.logoImageUrl || set.resolvedSymbolImageUrl || set.symbolImageUrl || "/default-brand-logo.png";
 }
 
+function setCountLabel(set: SetlistItem) {
+  if (set.cardCount > 0 && set.sealedProductCount > 0) return `${set.cardCount} cards • ${set.sealedProductCount} sealed`;
+  if (set.cardCount > 0) return `${set.cardCount} cards`;
+  if (set.sealedProductCount > 0) return `${set.sealedProductCount} sealed products`;
+  return "No catalog items yet";
+}
+
 function SetImage({ set, style }: { set: SetlistItem; style: CSSProperties }) {
   const [failed, setFailed] = useState(false);
   const src = imageForSet(set);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
   if (failed) {
     return (
       <div style={{ ...styles.imageFallback, ...style }} aria-label={set.name}>
@@ -233,12 +245,11 @@ function SetImage({ set, style }: { set: SetlistItem; style: CSSProperties }) {
 }
 
 function fanCards(set: SetlistItem, reverse = false) {
-  const baseImage = imageForSet(set);
   return (
     <div style={{ ...styles.fanRoot, transform: reverse ? "scaleX(-1)" : "none" }}>
-      <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 56, left: 6, transform: "rotate(-16deg)" }} />
-      <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 28, left: 66, transform: "rotate(-4deg)" }} />
-      <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 56, left: 128, transform: "rotate(11deg)" }} />
+      <SetImage set={set} style={{ ...styles.fanCard, top: 56, left: 6, transform: "rotate(-16deg)" }} />
+      <SetImage set={set} style={{ ...styles.fanCard, top: 28, left: 66, transform: "rotate(-4deg)" }} />
+      <SetImage set={set} style={{ ...styles.fanCard, top: 56, left: 128, transform: "rotate(11deg)" }} />
     </div>
   );
 }
