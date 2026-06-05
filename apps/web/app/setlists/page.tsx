@@ -202,8 +202,9 @@ function imageForSet(set: SetlistItem) {
 }
 
 function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
-  const [failed, setFailed] = useState(false);
-  const src = failed ? null : imageForSet(set);
+  const imageSrc = imageForSet(set);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const src = imageSrc && failedSrc !== imageSrc ? imageSrc : null;
   if (!src) {
     return (
       <div style={hero ? styles.heroImageFallback : styles.cardImageFallback}>
@@ -212,7 +213,7 @@ function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
       </div>
     );
   }
-  return <img src={src} alt={set.name} style={hero ? styles.heroLogo : styles.cardLogo} onError={() => setFailed(true)} />;
+  return <img src={src} alt={set.name} style={hero ? styles.heroLogo : styles.cardLogo} onError={() => setFailedSrc(src)} />;
 }
 
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {

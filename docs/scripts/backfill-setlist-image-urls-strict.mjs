@@ -18,6 +18,11 @@ const MANUAL_ONEPIECE_SLUGS = {
   "Starter Deck 2: Worst Generation": ["st01-04"],
   "Starter Deck 3: The Seven Warlords of The Sea": ["st01-04"],
   "Starter Deck 4: Animal Kingdom Pirates": ["st01-04"],
+  "Learn Together Deck Set": ["ld01"],
+  "Super Pre-Release Starter Deck 1: Straw Hat Crew": ["st01-04_pre"],
+  "Super Pre-Release Starter Deck 2: Worst Generation": ["st01-04_pre"],
+  "Super Pre-Release Starter Deck 3: The Seven Warlords of the Sea": ["st01-04_pre"],
+  "Super Pre-Release Starter Deck 4: Animal Kingdom Pirates": ["st01-04_pre"],
 };
 
 const SPECIAL_POKEMON_URLS = {
@@ -56,6 +61,30 @@ const SPECIAL_POKEMON_URLS = {
     reason: "manual_scrydex_white_flare_set_logo",
     evidence: "https://scrydex.com",
   },
+  "Trick or Trade BOOster Bundle 2023": {
+    logoImageUrl: "https://archives.bulbagarden.net/media/upload/0/00/Trick_or_Trade_2023.png",
+    symbolImageUrl: null,
+    bannerImageUrl: null,
+    reason: "manual_bulbagarden_trick_or_trade_2023_logo_like_set_art",
+    evidence: "https://archives.bulbagarden.net/wiki/File:Trick_or_Trade_2023.png",
+  },
+  "Trick or Trade BOOster Bundle 2024": {
+    logoImageUrl: "https://archives.bulbagarden.net/media/upload/e/ed/Trick_or_Trade_2024.png",
+    symbolImageUrl: null,
+    bannerImageUrl: null,
+    reason: "manual_bulbagarden_trick_or_trade_2024_logo_like_set_art",
+    evidence: "https://archives.bulbagarden.net/wiki/File:Trick_or_Trade_2024.png",
+  },
+};
+
+const SPECIAL_JP_URLS = {
+  "SVM: Generations Start Decks": {
+    logoImageUrl: "https://archives.bulbagarden.net/media/upload/f/ff/SVM_Generations_Start_Decks_logo.png",
+    symbolImageUrl: null,
+    bannerImageUrl: null,
+    reason: "manual_bulbagarden_svm_generations_start_decks_logo",
+    evidence: "https://archives.bulbagarden.net/wiki/File:SVM_Generations_Start_Decks_logo.png",
+  },
 };
 
 const MANUAL_POKEMON_IDS = {
@@ -76,6 +105,15 @@ const MANUAL_POKEMON_IDS = {
   "SWSH: Crown Zenith: Galarian Gallery": { id: "swsh12pt5gg", reason: "manual_exact_crown_zenith_gg" },
   "SM Promos": { id: "smp", reason: "manual_exact_sm_promos" },
   "McDonald's 25th Anniversary Promos": { id: "mcd21", reason: "manual_exact_mcdonalds_25th" },
+  "McDonald's Promos 2011": { id: "mcd11", reason: "manual_exact_mcdonalds_2011" },
+  "McDonald's Promos 2012": { id: "mcd12", reason: "manual_exact_mcdonalds_2012" },
+  "McDonald's Promos 2014": { id: "mcd14", reason: "manual_exact_mcdonalds_2014" },
+  "McDonald's Promos 2015": { id: "mcd15", reason: "manual_exact_mcdonalds_2015" },
+  "McDonald's Promos 2016": { id: "mcd16", reason: "manual_exact_mcdonalds_2016" },
+  "McDonald's Promos 2017": { id: "mcd17", reason: "manual_exact_mcdonalds_2017" },
+  "McDonald's Promos 2018": { id: "mcd18", reason: "manual_exact_mcdonalds_2018" },
+  "McDonald's Promos 2019": { id: "mcd19", reason: "manual_exact_mcdonalds_2019" },
+  "McDonald's Promos 2022": { id: "mcd22", reason: "manual_exact_mcdonalds_2022" },
   "EX Trainer Kit 1: Latias & Latios": { id: "tk1a", reason: "manual_trainer_kit_primary_symbol" },
   "EX Trainer Kit 2: Plusle & Minun": { id: "tk2a", reason: "manual_trainer_kit_primary_symbol" },
   "XY Trainer Kit: Latias & Latios": { id: "tk1a", reason: "manual_trainer_kit_primary_symbol" },
@@ -170,9 +208,9 @@ function isPokemonSafeUrl(url) {
 function isBulbagardenSetLogo(url) {
   if (!/^https:\/\/archives\.bulbagarden\.net\/media\/upload\//i.test(url)) return false;
   const decoded = decodeURIComponent(url).toLowerCase();
-  if (!/(?:logo|symbol)/i.test(decoded)) return false;
+  if (!/(?:logo|symbol|trick_or_trade_2023|trick_or_trade_2024)/i.test(decoded)) return false;
   if (/pokemon_tcg_logo|pokémon_tcg_logo|tcg_logo_old|tcg_logo\.png/.test(decoded)) return false;
-  if (/pack|box|deck|booster|starter|constructed|collection|key_visual|poster|anime|none\.png|card\d|temporalforces|masterball/.test(decoded)) return false;
+  if (/pack|box|booster|constructed|key_visual|poster|anime|none\.png|card\d|temporalforces|masterball/.test(decoded)) return false;
   return /\.(png|jpg|jpeg|webp)(?:$|[/?#])/i.test(decoded);
 }
 
@@ -306,7 +344,58 @@ async function bulbaFileUrl(title) {
   }
 }
 
+
+async function bulbaAllImages(prefix) {
+  if (!prefix) return [];
+  const key = `allimages:${prefix}`;
+  if (bulbaCategoryCache.has(key)) return bulbaCategoryCache.get(key);
+  const url = `https://archives.bulbagarden.net/w/api.php?action=query&list=allimages&aiprefix=${encodeURIComponent(prefix)}&ailimit=100&format=json`;
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "oripa-set-image-backfill/1.0" } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    const files = (json.query?.allimages ?? []).map((image) => ({ title: `File:${image.name}`, url: image.url }));
+    bulbaCategoryCache.set(key, files);
+    return files;
+  } catch {
+    return [];
+  }
+}
+
+async function discoverBulbaPrefixLogo(row) {
+  const prefixes = [];
+  const code = String(row.setCode ?? "").replace(/[^A-Za-z0-9.]/g, "");
+  if (code) {
+    prefixes.push(code);
+    prefixes.push(code.toUpperCase());
+    prefixes.push(code.toLowerCase());
+  }
+  const titleSlug = categorySlug(jpSetTitle(row));
+  if (titleSlug) prefixes.push(titleSlug);
+  for (const prefix of [...new Set(prefixes.filter(Boolean))]) {
+    const files = await bulbaAllImages(prefix);
+    const ranked = files
+      .map((file) => ({ ...file, lower: decodeURIComponent(file.title).toLowerCase() }))
+      .filter(({ lower }) => /(logo|setsymbol|set_symbol)/.test(lower))
+      .filter(({ lower }) => !/(pack|box|booster|constructed|key_visual|poster|anime|none\.png|card\d|masterball)/.test(lower))
+      .sort((a, b) => {
+        const al = /logo/.test(a.lower);
+        const bl = /logo/.test(b.lower);
+        if (al !== bl) return al ? -1 : 1;
+        return a.title.localeCompare(b.title);
+      });
+    for (const candidate of ranked) {
+      if (candidate.url && isBulbagardenSetLogo(candidate.url)) {
+        return { logoImageUrl: /logo/i.test(candidate.title) ? candidate.url : null, symbolImageUrl: /logo/i.test(candidate.title) ? null : candidate.url, bannerImageUrl: null, evidenceUrl: `https://archives.bulbagarden.net/wiki/${encodeURIComponent(candidate.title)}`, reason: "bulbagarden_prefix_set_logo" };
+      }
+    }
+  }
+  return null;
+}
+
 async function discoverJpBulbaSetImages(row) {
+  const direct = await discoverBulbaPrefixLogo(row);
+  if (direct) return direct;
   const code = String(row.setCode ?? "").toLowerCase();
   const title = jpSetTitle(row).toLowerCase();
   for (const category of jpCategoryCandidates(row)) {
@@ -409,6 +498,11 @@ async function main() {
   });
 
   for (const row of pokemonJpRows) {
+    const jpSpecial = SPECIAL_JP_URLS[row.name];
+    if (jpSpecial) {
+      await updateRow(row, { logoImageUrl: jpSpecial.logoImageUrl, symbolImageUrl: jpSpecial.symbolImageUrl, bannerImageUrl: jpSpecial.bannerImageUrl }, jpSpecial.reason, jpSpecial.evidence, updates);
+      continue;
+    }
     const discovered = await discoverJpBulbaSetImages(row);
     if (discovered) {
       await updateRow(row, { logoImageUrl: discovered.logoImageUrl, symbolImageUrl: discovered.symbolImageUrl, bannerImageUrl: discovered.bannerImageUrl }, discovered.reason, discovered.evidenceUrl, updates);

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "cmprdkn9306ajtmrouhog42w5",
+    "game": "POKEMON_JAPAN",
+    "language": "en",
+    "name": "SVM: Generations Start Decks",
+    "setCode": null,
+    "reason": "manual_bulbagarden_svm_generations_start_decks_logo",
+    "evidence": "https://archives.bulbagarden.net/wiki/File:SVM_Generations_Start_Decks_logo.png",
+    "before": {
+      "logoImageUrl": null,
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    },
+    "after": {
+      "logoImageUrl": "https://archives.bulbagarden.net/media/upload/f/ff/SVM_Generations_Start_Decks_logo.png",
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    }
+  },
+  {
+    "id": "cmpt0pke505wxq0jfp8orphg0",
+    "game": "POKEMON",
+    "language": "ja",
+    "name": "SVM: Generations Start Decks",
+    "setCode": null,
+    "reason": "manual_bulbagarden_svm_generations_start_decks_logo",
+    "evidence": "https://archives.bulbagarden.net/wiki/File:SVM_Generations_Start_Decks_logo.png",
+    "before": {
+      "logoImageUrl": null,
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    },
+    "after": {
+      "logoImageUrl": "https://archives.bulbagarden.net/media/upload/f/ff/SVM_Generations_Start_Decks_logo.png",
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    }
+  }
+]

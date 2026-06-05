@@ -118,9 +118,9 @@ function expectedOfficialPokemonImageKeys(setName?: string | null, setCode?: str
 function usableBulbagardenSetLogo(url: string) {
   if (!/^https:\/\/archives\.bulbagarden\.net\/media\/upload\//i.test(url)) return false;
   const decoded = decodeURIComponent(url).toLowerCase();
-  if (!/(?:logo|symbol)/i.test(decoded)) return false;
+  if (!/(?:logo|symbol|trick_or_trade_2023|trick_or_trade_2024)/i.test(decoded)) return false;
   if (/pokemon_tcg_logo|pokémon_tcg_logo|tcg_logo_old|tcg_logo\.png/.test(decoded)) return false;
-  if (/pack|box|deck|booster|starter|constructed|collection|key_visual|poster|anime|none\.png|card\d|temporalforces|masterball/.test(decoded)) return false;
+  if (/pack|box|booster|constructed|key_visual|poster|anime|none\.png|card\d|temporalforces|masterball/.test(decoded)) return false;
   return /\.(?:png|jpg|jpeg|webp)(?:$|[/?#])/i.test(decoded);
 }
 
