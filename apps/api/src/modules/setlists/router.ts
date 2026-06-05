@@ -65,29 +65,55 @@ function usableCatalogImageUrl(input?: string | null) {
     const url = new URL(input);
     const host = url.hostname.toLowerCase();
     const path = url.pathname.toLowerCase();
-    // TCGtracking's dynamic set-symbol endpoint returns an HTML/403 response for
-    // missing symbols, which renders as a broken image in the browser.
+    // TCGtracking's dynamic set-symbol endpoint often returns an HTML/403
+    // response for missing symbols, which renders as a broken image.
     if (host === "tcgtracking.com" && path === "/scan/set-symbol.php") return null;
-    // Bulbagarden allows some direct loads but is unreliable for hotlinked set
-    // logos in-browser. Prefer source card/CDN images for storefront cards.
-    if (host === "archives.bulbagarden.net") return null;
     return input;
   } catch {
     return null;
   }
 }
 
-function usableSetImageUrl(input?: string | null, setCode?: string | null) {
+function isGenericPokemonLogo(input: string) {
+  try {
+    const url = new URL(input);
+    const host = url.hostname.toLowerCase();
+    const path = decodeURIComponent(url.pathname).toLowerCase();
+    return host === "archives.bulbagarden.net" && path.includes("pokémon_tcg_logo");
+  } catch {
+    return false;
+  }
+}
+
+function isPokemonTcgIoSetMatch(input: string, setCode?: string | null, setName?: string | null) {
+  try {
+    const url = new URL(input);
+    const sourceSetKey = normalizeImageKey(url.pathname.split("/").filter(Boolean)[0]);
+    if (!sourceSetKey) return true;
+
+    const expectedSetKey = normalizeImageKey(setCode);
+    if (expectedSetKey && sourceSetKey === expectedSetKey) return true;
+
+    const normalizedName = normalizeImageKey(setName);
+    if (normalizedName && normalizedName.includes(sourceSetKey)) return true;
+
+    const popMatch = sourceSetKey.match(/^pop(\d+)$/);
+    if (popMatch && normalizedName === `popseries${popMatch[1]}`) return true;
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function usableSetImageUrl(input?: string | null, setCode?: string | null, setName?: string | null) {
   const usable = usableCatalogImageUrl(input);
   if (!usable) return null;
+  if (isGenericPokemonLogo(usable)) return null;
   try {
     const url = new URL(usable);
     const host = url.hostname.toLowerCase();
-    if (host === "images.pokemontcg.io") {
-      const sourceSetKey = normalizeImageKey(url.pathname.split("/").filter(Boolean)[0]);
-      const expectedSetKey = normalizeImageKey(setCode);
-      if (expectedSetKey && sourceSetKey && sourceSetKey !== expectedSetKey) return null;
-    }
+    if (host === "images.pokemontcg.io" && !isPokemonTcgIoSetMatch(usable, setCode, setName)) return null;
     return usable;
   } catch {
     return null;
@@ -274,9 +300,9 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
     items: sets.map((set) => {
-      const resolvedLogoImageUrl = usableSetImageUrl(set.logoImageUrl, set.setCode);
-      const resolvedSymbolImageUrl = usableSetImageUrl(set.symbolImageUrl, set.setCode);
-      const resolvedBannerImageUrl = usableSetImageUrl(set.bannerImageUrl, set.setCode);
+      const resolvedLogoImageUrl = usableSetImageUrl(set.logoImageUrl, set.setCode, set.name);
+      const resolvedSymbolImageUrl = usableSetImageUrl(set.symbolImageUrl, set.setCode, set.name);
+      const resolvedBannerImageUrl = usableSetImageUrl(set.bannerImageUrl, set.setCode, set.name);
       return {
         resolvedLogoImageUrl,
         resolvedSymbolImageUrl,
@@ -363,9 +389,9 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
     }),
   ]);
 
-  const resolvedLogoImageUrl = usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode);
-  const resolvedSymbolImageUrl = usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode);
-  const resolvedBannerImageUrl = usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode);
+  const resolvedLogoImageUrl = usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode, catalogSet.name);
+  const resolvedSymbolImageUrl = usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode, catalogSet.name);
+  const resolvedBannerImageUrl = usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode, catalogSet.name);
 
   return res.json({
     set: {
