@@ -207,7 +207,8 @@ function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
   if (!src) {
     return (
       <div style={hero ? styles.heroImageFallback : styles.cardImageFallback}>
-        {set.setCode || set.name.slice(0, 3).toUpperCase()}
+        <span style={hero ? styles.fallbackCodeHero : styles.fallbackCode}>{set.setCode || set.name.slice(0, 3).toUpperCase()}</span>
+        <span style={hero ? styles.fallbackLabelHero : styles.fallbackLabel}>set badge</span>
       </div>
     );
   }
@@ -289,8 +290,14 @@ const styles: Record<string, CSSProperties> = {
   recentGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 10 },
   allGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(185px,1fr))", gap: 10 },
   card: { position: "relative", textDecoration: "none", color: "inherit", border: "1px solid #d8d0ec", background: "#ffffffcc", borderRadius: 14, padding: 10, boxShadow: "0 10px 24px rgba(80,59,150,.08)" },
-  cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)" },
+  cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)", overflow: "hidden" },
   cardLogo: { maxWidth: "100%", maxHeight: 88, objectFit: "contain" },
+  cardImageFallback: { width: "100%", height: "100%", display: "grid", placeItems: "center", alignContent: "center", gap: 3, borderRadius: 10, background: "radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 24%), linear-gradient(135deg,#8f7cff,#62c7ff 52%,#ff9eb5)", color: "#20153a", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.45)" },
+  fallbackCode: { fontSize: 27, lineHeight: 1, fontWeight: 950, letterSpacing: ".02em", textShadow: "0 1px 0 rgba(255,255,255,.35)" },
+  fallbackLabel: { fontSize: 10, fontWeight: 900, letterSpacing: ".12em", textTransform: "uppercase", opacity: .72 },
+  heroImageFallback: { width: "min(390px,90%)", minHeight: 136, margin: "12px auto 0", display: "grid", placeItems: "center", alignContent: "center", gap: 4, borderRadius: 18, background: "radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 24%), linear-gradient(135deg,#8f7cff,#62c7ff 52%,#ff9eb5)", color: "#20153a", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.45), 0 14px 26px rgba(80,59,150,.18)" },
+  fallbackCodeHero: { fontSize: 46, lineHeight: 1, fontWeight: 950, letterSpacing: ".02em", textShadow: "0 1px 0 rgba(255,255,255,.35)" },
+  fallbackLabelHero: { fontSize: 12, fontWeight: 900, letterSpacing: ".14em", textTransform: "uppercase", opacity: .72 },
   cardName: { marginTop: 8, fontWeight: 800, lineHeight: 1.2, minHeight: 36 },
   cardMeta: { marginTop: 6, color: "#72669f", fontSize: 13 },
   cardArrow: { position: "absolute", right: 10, bottom: 10, width: 20, height: 20, display: "grid", placeItems: "center", borderRadius: 6, background: "#efeafe", color: "#6f5ea8", fontWeight: 900 },

@@ -65,21 +65,43 @@ function cleanImageUrl(url?: string | null) {
   return trimmed || null;
 }
 
-function usableSetImageUrl(url: string | null | undefined, setCode?: string | null) {
+function expectedOfficialPokemonImageKeys(setName?: string | null, setCode?: string | null) {
+  const name = setName?.toLowerCase() ?? "";
+  const keys = new Set<string>();
+  const codeKey = normalizeImageKey(setCode);
+  if (codeKey) keys.add(codeKey);
+
+  const popMatch = name.match(/pop series (\d+)/);
+  if (popMatch) keys.add(`pop${popMatch[1]}`);
+  if (name.includes("pokemon go") || name.includes("pokémon go")) keys.add("pgo");
+  if (name.includes("pokemon rumble") || name === "rumble") keys.add("ru1");
+  if (name.includes("hidden fates") && name.includes("shiny vault")) keys.add("sma");
+  if (name.includes("shining fates") && name.includes("shiny vault")) keys.add("swsh45sv");
+  if (name.includes("nintendo") && name.includes("promos")) keys.add("np");
+  if (name.includes("scarlet") && name.includes("violet") && name.includes("promo")) keys.add("svp");
+
+  const trainerGallery = name.match(/swsh(\d+).*trainer gallery/);
+  if (trainerGallery) keys.add(`swsh${trainerGallery[1]}tg`);
+
+  return keys;
+}
+
+function usableSetImageUrl(url: string | null | undefined, setCode?: string | null, setName?: string | null) {
   const usable = cleanImageUrl(url);
   if (!usable) return null;
 
-  // Setlist thumbnails are intentionally allowlisted. Unknown catalog images are often
-  // card art, sealed packaging, brand marks, or scraped wiki assets that only happen
-  // to sit on a CatalogSet row. Do not display them as set artwork.
+  // Known source-native set artwork CDNs. These are set/logo/symbol assets, not
+  // product photos or card art.
   if (/^https:\/\/assets\.tcgdex\.net\//i.test(usable)) return usable;
+  if (/^https:\/\/images\.scrydex\.com\/pokemon\//i.test(usable)) return usable;
+  if (/^https:\/\/www\.pokemon\.com\/static-assets\/content-assets\/cms2\/img\/trading-card-game\//i.test(usable)) return usable;
 
   const pokemonTcgMatch = usable.match(/^https:\/\/images\.pokemontcg\.io\/([^/]+)\//i);
   if (pokemonTcgMatch) {
     const imageSetKey = normalizeImageKey(pokemonTcgMatch[1]);
-    const expectedSetKey = normalizeImageKey(setCode);
-    if (!imageSetKey || !expectedSetKey || imageSetKey !== expectedSetKey) return null;
-    return usable;
+    if (!imageSetKey) return null;
+    if (expectedOfficialPokemonImageKeys(setName, setCode).has(imageSetKey)) return usable;
+    return null;
   }
 
   return null;
@@ -206,9 +228,9 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
     items: sets.map((set) => ({
-      resolvedLogoImageUrl: usableSetImageUrl(set.logoImageUrl, set.setCode),
-      resolvedSymbolImageUrl: usableSetImageUrl(set.symbolImageUrl, set.setCode),
-      resolvedBannerImageUrl: usableSetImageUrl(set.bannerImageUrl, set.setCode),
+      resolvedLogoImageUrl: usableSetImageUrl(set.logoImageUrl, set.setCode, set.name),
+      resolvedSymbolImageUrl: usableSetImageUrl(set.symbolImageUrl, set.setCode, set.name),
+      resolvedBannerImageUrl: usableSetImageUrl(set.bannerImageUrl, set.setCode, set.name),
       id: set.id,
       source: set.source,
       sourceSetId: set.sourceSetId,
@@ -219,9 +241,9 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
       productCount: set.productCount,
       cardCount: set._count.cards,
       sealedProductCount: set._count.sealedProducts,
-      symbolImageUrl: usableSetImageUrl(set.symbolImageUrl, set.setCode),
-      logoImageUrl: usableSetImageUrl(set.logoImageUrl, set.setCode),
-      bannerImageUrl: usableSetImageUrl(set.bannerImageUrl, set.setCode),
+      symbolImageUrl: usableSetImageUrl(set.symbolImageUrl, set.setCode, set.name),
+      logoImageUrl: usableSetImageUrl(set.logoImageUrl, set.setCode, set.name),
+      bannerImageUrl: usableSetImageUrl(set.bannerImageUrl, set.setCode, set.name),
     })),
   });
 });
@@ -294,9 +316,9 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
   return res.json({
     set: {
       ...catalogSet,
-      logoImageUrl: usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode),
-      symbolImageUrl: usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode),
-      bannerImageUrl: usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode),
+      logoImageUrl: usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode, catalogSet.name),
+      symbolImageUrl: usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode, catalogSet.name),
+      bannerImageUrl: usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode, catalogSet.name),
     },
     page,
     limit,
