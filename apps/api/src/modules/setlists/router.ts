@@ -4,19 +4,12 @@ import { prisma } from "../../lib/prisma";
 
 export const setlistRouter = Router();
 
-type ResolvedSetlistScope = {
-  game?: string;
-  language?: string;
-};
-
-const gameMap: Record<string, ResolvedSetlistScope> = {
-  pokemon: { game: "POKEMON", language: "en" },
-  "pokemon-english": { game: "POKEMON", language: "en" },
-  "pokemon-japan": { game: "POKEMON", language: "ja" },
-  "pokemon-ja": { game: "POKEMON", language: "ja" },
-  onepiece: { game: "ONE_PIECE", language: "en" },
-  "one-piece": { game: "ONE_PIECE", language: "en" },
-  all: {},
+const gameMap: Record<string, string> = {
+  pokemon: "POKEMON",
+  onepiece: "ONE_PIECE",
+  "one-piece": "ONE_PIECE",
+  "pokemon-japan": "POKEMON_JAPAN",
+  all: "ALL",
 };
 
 const listQuerySchema = z.object({
@@ -37,11 +30,7 @@ const cardQuerySchema = z.object({
 });
 
 function resolveGame(input: string) {
-  return gameMap[input]?.game ?? "POKEMON";
-}
-
-function resolveSetlistScope(input: string): ResolvedSetlistScope {
-  return gameMap[input] ?? gameMap.pokemon;
+  return gameMap[input] ?? "POKEMON";
 }
 
 function normalizeSource(input?: string | null) {
@@ -50,82 +39,6 @@ function normalizeSource(input?: string | null) {
   if (normalized === "pokemoncardio") return "pokemoncard.io";
   if (normalized === "onepiecedb") return "onepiecedb.io";
   return normalized;
-}
-
-function normalizeImageKey(input?: string | null) {
-  return String(input ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
-}
-
-function usableCatalogImageUrl(input?: string | null) {
-  if (!input) return null;
-  try {
-    const url = new URL(input);
-    const host = url.hostname.toLowerCase();
-    const path = url.pathname.toLowerCase();
-    // TCGtracking's dynamic set-symbol endpoint often returns an HTML/403
-    // response for missing symbols, which renders as a broken image.
-    if (host === "tcgtracking.com" && path === "/scan/set-symbol.php") return null;
-    return input;
-  } catch {
-    return null;
-  }
-}
-
-function isGenericPokemonLogo(input: string) {
-  try {
-    const url = new URL(input);
-    const host = url.hostname.toLowerCase();
-    const path = decodeURIComponent(url.pathname).toLowerCase();
-    return host === "archives.bulbagarden.net" && path.includes("pokémon_tcg_logo");
-  } catch {
-    return false;
-  }
-}
-
-function isPokemonTcgIoSetMatch(input: string, setCode?: string | null, setName?: string | null) {
-  try {
-    const url = new URL(input);
-    const sourceSetKey = normalizeImageKey(url.pathname.split("/").filter(Boolean)[0]);
-    if (!sourceSetKey) return true;
-
-    const expectedSetKey = normalizeImageKey(setCode);
-    if (expectedSetKey && sourceSetKey === expectedSetKey) return true;
-
-    const normalizedName = normalizeImageKey(setName);
-    if (normalizedName && normalizedName.includes(sourceSetKey)) return true;
-
-    const popMatch = sourceSetKey.match(/^pop(\d+)$/);
-    if (popMatch && normalizedName === `popseries${popMatch[1]}`) return true;
-
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-function usableSetImageUrl(input?: string | null, setCode?: string | null, setName?: string | null) {
-  const usable = usableCatalogImageUrl(input);
-  if (!usable) return null;
-  if (isGenericPokemonLogo(usable)) return null;
-  try {
-    const url = new URL(usable);
-    const host = url.hostname.toLowerCase();
-    if (host === "images.pokemontcg.io" && !isPokemonTcgIoSetMatch(usable, setCode, setName)) return null;
-    return usable;
-  } catch {
-    return null;
-  }
-}
-
-function firstUsableImageUrl(...urls: Array<string | null | undefined>) {
-  for (const url of urls) {
-    const usable = usableCatalogImageUrl(url);
-    if (usable) return usable;
-  }
-  return null;
 }
 
 async function resolveCatalogSetBySourceSetId(input: {
@@ -163,12 +76,6 @@ async function resolveCatalogSetBySourceSetId(input: {
             imageBaseUrl: true,
           },
         },
-        sealedProducts: {
-          where: { isActive: true, imageUrl: { not: null }, imageCount: { gt: 0 } },
-          take: 1,
-          orderBy: [{ imageCount: "desc" }, { presaleReleaseDate: "desc" }, { name: "asc" }],
-          select: { imageUrl: true },
-        },
       },
     });
   }
@@ -202,12 +109,6 @@ async function resolveCatalogSetBySourceSetId(input: {
           imageBaseUrl: true,
         },
       },
-      sealedProducts: {
-        where: { isActive: true, imageUrl: { not: null }, imageCount: { gt: 0 } },
-        take: 1,
-        orderBy: [{ imageCount: "desc" }, { presaleReleaseDate: "desc" }, { name: "asc" }],
-        select: { imageUrl: true },
-      },
     },
   });
 
@@ -226,8 +127,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
   }
 
   const { game, source, q, sort, page, limit } = parsed.data;
-  const resolvedScope = resolveSetlistScope(game);
-  const resolvedGame = resolvedScope.game ?? "ALL";
+  const resolvedGame = resolveGame(game);
   const resolvedSource = normalizeSource(source);
   const skip = (page - 1) * limit;
   const search = q?.toLowerCase();
@@ -240,8 +140,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   const where = {
     isActive: true,
-    ...(resolvedScope.game ? { game: resolvedScope.game } : {}),
-    ...(resolvedScope.language ? { language: resolvedScope.language } : {}),
+    ...(resolvedGame !== "ALL" ? { game: resolvedGame } : {}),
     ...(resolvedSource ? { source: resolvedSource } : {}),
     ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
   };
@@ -275,12 +174,6 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
             imageBaseUrl: true,
           },
         },
-        sealedProducts: {
-          where: { isActive: true, imageUrl: { not: null }, imageCount: { gt: 0 } },
-          take: 1,
-          orderBy: [{ imageCount: "desc" }, { presaleReleaseDate: "desc" }, { name: "asc" }],
-          select: { imageUrl: true },
-        },
         _count: {
           select: {
             cards: { where: { isActive: true } },
@@ -293,34 +186,34 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   return res.json({
     game: resolvedGame,
-    language: resolvedScope.language ?? null,
     source: resolvedSource ?? null,
     page,
     limit,
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
-    items: sets.map((set) => {
-      const resolvedLogoImageUrl = usableSetImageUrl(set.logoImageUrl, set.setCode, set.name);
-      const resolvedSymbolImageUrl = usableSetImageUrl(set.symbolImageUrl, set.setCode, set.name);
-      const resolvedBannerImageUrl = usableSetImageUrl(set.bannerImageUrl, set.setCode, set.name);
-      return {
-        resolvedLogoImageUrl,
-        resolvedSymbolImageUrl,
-        id: set.id,
-        source: set.source,
-        sourceSetId: set.sourceSetId,
-        game: set.game,
-        setCode: set.setCode,
-        name: set.name,
-        releaseDate: set.releaseDate,
-        productCount: set.productCount,
-        cardCount: set._count.cards,
-        sealedProductCount: set._count.sealedProducts,
-        symbolImageUrl: resolvedSymbolImageUrl,
-        logoImageUrl: resolvedLogoImageUrl,
-        bannerImageUrl: resolvedBannerImageUrl,
-      };
-    }),
+    items: sets.map((set) => ({
+      ...(function () {
+        const firstCard = set.cards[0];
+        const fallbackImage = firstCard?.imageLargeUrl ?? firstCard?.imageThumbUrl ?? firstCard?.imageBaseUrl ?? null;
+        return {
+          resolvedLogoImageUrl: set.logoImageUrl ?? fallbackImage,
+          resolvedSymbolImageUrl: set.symbolImageUrl ?? fallbackImage,
+        };
+      })(),
+      id: set.id,
+      source: set.source,
+      sourceSetId: set.sourceSetId,
+      game: set.game,
+      setCode: set.setCode,
+      name: set.name,
+      releaseDate: set.releaseDate,
+      productCount: set.productCount,
+      cardCount: set._count.cards,
+      sealedProductCount: set._count.sealedProducts,
+      symbolImageUrl: set.symbolImageUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
+      logoImageUrl: set.logoImageUrl ?? set.cards[0]?.imageLargeUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
+      bannerImageUrl: set.bannerImageUrl,
+    })),
   });
 });
 
@@ -389,16 +282,20 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
     }),
   ]);
 
-  const resolvedLogoImageUrl = usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode, catalogSet.name);
-  const resolvedSymbolImageUrl = usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode, catalogSet.name);
-  const resolvedBannerImageUrl = usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode, catalogSet.name);
-
   return res.json({
     set: {
       ...catalogSet,
-      logoImageUrl: resolvedLogoImageUrl,
-      symbolImageUrl: resolvedSymbolImageUrl,
-      bannerImageUrl: resolvedBannerImageUrl,
+      logoImageUrl:
+        catalogSet.logoImageUrl ??
+        catalogSet.cards[0]?.imageLargeUrl ??
+        catalogSet.cards[0]?.imageThumbUrl ??
+        catalogSet.cards[0]?.imageBaseUrl ??
+        null,
+      symbolImageUrl:
+        catalogSet.symbolImageUrl ??
+        catalogSet.cards[0]?.imageThumbUrl ??
+        catalogSet.cards[0]?.imageBaseUrl ??
+        null,
     },
     page,
     limit,

@@ -13,8 +13,8 @@ type SetInfo = {
   releaseDate?: string | null;
   symbolImageUrl?: string | null;
   logoImageUrl?: string | null;
-  bannerImageUrl?: string | null;
 };
+
 type SetCard = {
   id: string;
   name: string;
@@ -110,7 +110,7 @@ export default function SetlistDetailPage() {
 
         <section style={styles.setHeader}>
           <div style={styles.logoBox}>
-            <SetHeaderImage set={setInfo} title={pageTitle} />
+            <img src={setInfo?.logoImageUrl || setInfo?.symbolImageUrl || "/default-brand-logo.png"} alt={pageTitle} style={styles.logo} />
           </div>
           <div>
             <h1 style={styles.setTitle}>{pageTitle}</h1>
@@ -171,29 +171,6 @@ export default function SetlistDetailPage() {
   );
 }
 
-function imageForSet(set?: SetInfo | null) {
-  return set?.bannerImageUrl || set?.logoImageUrl || set?.symbolImageUrl || null;
-}
-
-function SetHeaderImage({ set, title }: { set?: SetInfo | null; title: string }) {
-  const src = imageForSet(set);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    setFailed(false);
-  }, [src]);
-
-  if (!src || failed) {
-    return (
-      <div style={styles.imageFallback} aria-label={title}>
-        <span style={styles.imageFallbackText}>{set?.setCode || title.slice(0, 8)}</span>
-      </div>
-    );
-  }
-
-  return <img src={src} alt={title} style={styles.logo} onError={() => setFailed(true)} />;
-}
-
 const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
@@ -217,22 +194,6 @@ const styles: Record<string, CSSProperties> = {
   },
   logoBox: { width: 100, height: 100, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.6)", border: "1px solid #e3dcf4" },
   logo: { width: 92, height: 92, objectFit: "contain" },
-  imageFallback: {
-    width: 92,
-    height: 92,
-    borderRadius: 10,
-    display: "grid",
-    placeItems: "center",
-    background: "linear-gradient(135deg,#f8f5ff,#e6f6ff)",
-    border: "1px dashed #c7bdeb",
-    color: "#6f62a0",
-    fontWeight: 900,
-    fontSize: 13,
-    textAlign: "center",
-    padding: 8,
-    boxSizing: "border-box",
-  },
-  imageFallbackText: { overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" },
   setTitle: { margin: 0, fontSize: "clamp(30px,4.2vw,44px)", lineHeight: 1.05 },
   statsRow: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" },
   pillPrimary: { padding: "5px 10px", borderRadius: 8, background: "linear-gradient(135deg,#9f90ff,#74c8ff)", color: "#1c1340", fontWeight: 800, fontSize: 12 },
