@@ -52,6 +52,32 @@ function normalizeSource(input?: string | null) {
   return normalized;
 }
 
+function usableCatalogImageUrl(input?: string | null) {
+  if (!input) return null;
+  try {
+    const url = new URL(input);
+    const host = url.hostname.toLowerCase();
+    const path = url.pathname.toLowerCase();
+    // TCGtracking's dynamic set-symbol endpoint returns an HTML/403 response for
+    // missing symbols, which renders as a broken image in the browser.
+    if (host === "tcgtracking.com" && path === "/scan/set-symbol.php") return null;
+    // Bulbagarden allows some direct loads but is unreliable for hotlinked set
+    // logos in-browser. Prefer source card/CDN images for storefront cards.
+    if (host === "archives.bulbagarden.net") return null;
+    return input;
+  } catch {
+    return null;
+  }
+}
+
+function firstUsableImageUrl(...urls: Array<string | null | undefined>) {
+  for (const url of urls) {
+    const usable = usableCatalogImageUrl(url);
+    if (usable) return usable;
+  }
+  return null;
+}
+
 async function resolveCatalogSetBySourceSetId(input: {
   sourceSetId: string;
   game: string;
@@ -205,29 +231,29 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     limit,
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
-    items: sets.map((set) => ({
-      ...(function () {
-        const firstCard = set.cards[0];
-        const fallbackImage = firstCard?.imageLargeUrl ?? firstCard?.imageThumbUrl ?? firstCard?.imageBaseUrl ?? null;
-        return {
-          resolvedLogoImageUrl: set.logoImageUrl ?? fallbackImage,
-          resolvedSymbolImageUrl: set.symbolImageUrl ?? fallbackImage,
-        };
-      })(),
-      id: set.id,
-      source: set.source,
-      sourceSetId: set.sourceSetId,
-      game: set.game,
-      setCode: set.setCode,
-      name: set.name,
-      releaseDate: set.releaseDate,
-      productCount: set.productCount,
-      cardCount: set._count.cards,
-      sealedProductCount: set._count.sealedProducts,
-      symbolImageUrl: set.symbolImageUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
-      logoImageUrl: set.logoImageUrl ?? set.cards[0]?.imageLargeUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
-      bannerImageUrl: set.bannerImageUrl,
-    })),
+    items: sets.map((set) => {
+      const firstCard = set.cards[0];
+      const fallbackImage = firstUsableImageUrl(firstCard?.imageLargeUrl, firstCard?.imageThumbUrl, firstCard?.imageBaseUrl);
+      const resolvedLogoImageUrl = firstUsableImageUrl(set.logoImageUrl, set.symbolImageUrl, fallbackImage);
+      const resolvedSymbolImageUrl = firstUsableImageUrl(set.symbolImageUrl, set.logoImageUrl, fallbackImage);
+      return {
+        resolvedLogoImageUrl,
+        resolvedSymbolImageUrl,
+        id: set.id,
+        source: set.source,
+        sourceSetId: set.sourceSetId,
+        game: set.game,
+        setCode: set.setCode,
+        name: set.name,
+        releaseDate: set.releaseDate,
+        productCount: set.productCount,
+        cardCount: set._count.cards,
+        sealedProductCount: set._count.sealedProducts,
+        symbolImageUrl: resolvedSymbolImageUrl,
+        logoImageUrl: resolvedLogoImageUrl,
+        bannerImageUrl: usableCatalogImageUrl(set.bannerImageUrl),
+      };
+    }),
   });
 });
 
