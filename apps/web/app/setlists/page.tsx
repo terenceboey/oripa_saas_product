@@ -216,7 +216,7 @@ function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string
 }
 
 function imageForSet(set: SetlistItem) {
-  return set.resolvedLogoImageUrl || set.logoImageUrl || set.resolvedSymbolImageUrl || set.symbolImageUrl || "/default-brand-logo.png";
+  return set.bannerImageUrl || set.resolvedLogoImageUrl || set.logoImageUrl || set.resolvedSymbolImageUrl || set.symbolImageUrl || null;
 }
 
 function setCountLabel(set: SetlistItem) {
@@ -234,7 +234,7 @@ function SetImage({ set, style }: { set: SetlistItem; style: CSSProperties }) {
     setFailed(false);
   }, [src]);
 
-  if (failed) {
+  if (!src || failed) {
     return (
       <div style={{ ...styles.imageFallback, ...style }} aria-label={set.name}>
         <span style={styles.imageFallbackText}>{set.setCode || set.name.slice(0, 8)}</span>

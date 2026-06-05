@@ -52,6 +52,13 @@ function normalizeSource(input?: string | null) {
   return normalized;
 }
 
+function normalizeImageKey(input?: string | null) {
+  return String(input ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
 function usableCatalogImageUrl(input?: string | null) {
   if (!input) return null;
   try {
@@ -65,6 +72,23 @@ function usableCatalogImageUrl(input?: string | null) {
     // logos in-browser. Prefer source card/CDN images for storefront cards.
     if (host === "archives.bulbagarden.net") return null;
     return input;
+  } catch {
+    return null;
+  }
+}
+
+function usableSetImageUrl(input?: string | null, setCode?: string | null) {
+  const usable = usableCatalogImageUrl(input);
+  if (!usable) return null;
+  try {
+    const url = new URL(usable);
+    const host = url.hostname.toLowerCase();
+    if (host === "images.pokemontcg.io") {
+      const sourceSetKey = normalizeImageKey(url.pathname.split("/").filter(Boolean)[0]);
+      const expectedSetKey = normalizeImageKey(setCode);
+      if (expectedSetKey && sourceSetKey && sourceSetKey !== expectedSetKey) return null;
+    }
+    return usable;
   } catch {
     return null;
   }
@@ -250,12 +274,9 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
     items: sets.map((set) => {
-      const firstCard = set.cards[0];
-      const firstSealedProduct = set.sealedProducts[0];
-      const fallbackImage = firstUsableImageUrl(firstCard?.imageLargeUrl, firstCard?.imageThumbUrl, firstCard?.imageBaseUrl);
-      const sealedFallbackImage = firstUsableImageUrl(firstSealedProduct?.imageUrl);
-      const resolvedLogoImageUrl = firstUsableImageUrl(set.logoImageUrl, set.symbolImageUrl, fallbackImage, sealedFallbackImage);
-      const resolvedSymbolImageUrl = firstUsableImageUrl(set.symbolImageUrl, set.logoImageUrl, fallbackImage, sealedFallbackImage);
+      const resolvedLogoImageUrl = usableSetImageUrl(set.logoImageUrl, set.setCode);
+      const resolvedSymbolImageUrl = usableSetImageUrl(set.symbolImageUrl, set.setCode);
+      const resolvedBannerImageUrl = usableSetImageUrl(set.bannerImageUrl, set.setCode);
       return {
         resolvedLogoImageUrl,
         resolvedSymbolImageUrl,
@@ -271,7 +292,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
         sealedProductCount: set._count.sealedProducts,
         symbolImageUrl: resolvedSymbolImageUrl,
         logoImageUrl: resolvedLogoImageUrl,
-        bannerImageUrl: usableCatalogImageUrl(set.bannerImageUrl),
+        bannerImageUrl: resolvedBannerImageUrl,
       };
     }),
   });
@@ -342,18 +363,16 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
     }),
   ]);
 
-  const firstCard = catalogSet.cards[0];
-  const firstSealedProduct = catalogSet.sealedProducts[0];
-  const fallbackImage = firstUsableImageUrl(firstCard?.imageLargeUrl, firstCard?.imageThumbUrl, firstCard?.imageBaseUrl);
-  const sealedFallbackImage = firstUsableImageUrl(firstSealedProduct?.imageUrl);
-  const resolvedLogoImageUrl = firstUsableImageUrl(catalogSet.logoImageUrl, catalogSet.symbolImageUrl, fallbackImage, sealedFallbackImage);
-  const resolvedSymbolImageUrl = firstUsableImageUrl(catalogSet.symbolImageUrl, catalogSet.logoImageUrl, fallbackImage, sealedFallbackImage);
+  const resolvedLogoImageUrl = usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode);
+  const resolvedSymbolImageUrl = usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode);
+  const resolvedBannerImageUrl = usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode);
 
   return res.json({
     set: {
       ...catalogSet,
       logoImageUrl: resolvedLogoImageUrl,
       symbolImageUrl: resolvedSymbolImageUrl,
+      bannerImageUrl: resolvedBannerImageUrl,
     },
     page,
     limit,
