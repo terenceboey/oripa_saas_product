@@ -29,16 +29,19 @@ type SetlistResponse = {
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PAGE_SIZE = 18;
+const SETLIST_SOURCE = "tcgtracking";
+
+type SetlistGame = "pokemon" | "pokemon-japan" | "onepiece";
 
 export default function SetlistsPage() {
-  const [game, setGame] = useState<"pokemon" | "pokemon-japan">("pokemon");
+  const [game, setGame] = useState<SetlistGame>("pokemon");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [mainData, setMainData] = useState<SetlistResponse>({ total: 0, totalPages: 1, page: 1, limit: PAGE_SIZE, items: [] });
   const [recentItems, setRecentItems] = useState<SetlistItem[]>([]);
-  const [tabCounts, setTabCounts] = useState({ pokemon: 0, pokemonJapan: 0, parallel: 0 });
+  const [tabCounts, setTabCounts] = useState({ pokemon: 0, pokemonJapan: 0, onepiece: 0 });
 
   useEffect(() => {
     setPage(1);
@@ -51,6 +54,7 @@ export default function SetlistsPage() {
     const buildListUrl = (gameKey: string, params: { page?: number; limit?: number; q?: string; sort?: string }) => {
       const url = new URL(`${apiBase}/v1/public/setlists`);
       url.searchParams.set("game", gameKey);
+      url.searchParams.set("source", SETLIST_SOURCE);
       url.searchParams.set("page", String(params.page ?? 1));
       url.searchParams.set("limit", String(params.limit ?? PAGE_SIZE));
       url.searchParams.set("sort", params.sort ?? sort);
@@ -63,13 +67,13 @@ export default function SetlistsPage() {
       fetch(buildListUrl(game, { page: 1, limit: 5, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
       fetch(buildListUrl("pokemon", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
       fetch(buildListUrl("pokemon-japan", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
-      fetch(buildListUrl("all", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
+      fetch(buildListUrl("onepiece", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
     ])
-      .then(([mainPayload, recentPayload, pokemonCountPayload, japanCountPayload, allPayload]) => {
+      .then(([mainPayload, recentPayload, pokemonCountPayload, japanCountPayload, onepieceCountPayload]) => {
         if (!active) return;
         const pokemonCount = Number(pokemonCountPayload?.total ?? 0);
         const pokemonJapanCount = Number(japanCountPayload?.total ?? 0);
-        const allCount = Number(allPayload?.total ?? 0);
+        const onepieceCount = Number(onepieceCountPayload?.total ?? 0);
         setMainData({
           total: Number(mainPayload?.total ?? 0),
           totalPages: Number(mainPayload?.totalPages ?? 1),
@@ -81,7 +85,7 @@ export default function SetlistsPage() {
         setTabCounts({
           pokemon: pokemonCount,
           pokemonJapan: pokemonJapanCount,
-          parallel: Math.max(0, allCount - pokemonCount - pokemonJapanCount),
+          onepiece: onepieceCount,
         });
       })
       .catch(() => {
@@ -118,8 +122,8 @@ export default function SetlistsPage() {
             <button type="button" style={tabStyle(game === "pokemon-japan", true)} onClick={() => setGame("pokemon-japan")}>
               Pokemon Japan {tabCounts.pokemonJapan}
             </button>
-            <button type="button" style={tabStyle(false, false, true)} disabled>
-              Parallel {tabCounts.parallel}
+            <button type="button" style={tabStyle(game === "onepiece", false, false, true)} onClick={() => setGame("onepiece")}>
+              One Piece {tabCounts.onepiece}
             </button>
           </div>
         </header>
@@ -145,7 +149,7 @@ export default function SetlistsPage() {
                   {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {featured.cardCount} cards
                 </p>
                 <Link
-                  href={`/setlists/${featured.sourceSetId}?game=${game}&source=${encodeURIComponent(featured.source)}`}
+                  href={`/setlists/${encodeURIComponent(featured.sourceSetId)}?game=${game}&source=${encodeURIComponent(featured.source)}`}
                   style={styles.heroButton}
                 >
                   Browse Cards →
@@ -196,7 +200,7 @@ export default function SetlistsPage() {
 
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {
   return (
-    <Link href={`/setlists/${set.sourceSetId}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
+    <Link href={`/setlists/${encodeURIComponent(set.sourceSetId)}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
       <div style={styles.cardLogoWrap}>
         <img src={set.logoImageUrl || set.symbolImageUrl || "/default-brand-logo.png"} alt={set.name} style={styles.cardLogo} />
       </div>
@@ -220,7 +224,7 @@ function fanCards(set: SetlistItem, reverse = false) {
   );
 }
 
-function tabStyle(active: boolean, alt = false, disabled = false): CSSProperties {
+function tabStyle(active: boolean, alt = false, disabled = false, warm = false): CSSProperties {
   if (disabled) {
     return {
       ...styles.tab,
@@ -228,7 +232,11 @@ function tabStyle(active: boolean, alt = false, disabled = false): CSSProperties
       cursor: "not-allowed",
     };
   }
-  const gradient = alt ? "linear-gradient(135deg,#ff9eb5,#ff6c8a)" : "linear-gradient(135deg,#9f90ff,#74c8ff)";
+  const gradient = warm
+    ? "linear-gradient(135deg,#ffbf69,#ff8a5b)"
+    : alt
+      ? "linear-gradient(135deg,#ff9eb5,#ff6c8a)"
+      : "linear-gradient(135deg,#9f90ff,#74c8ff)";
   return {
     ...styles.tab,
     background: active ? gradient : "#f7f6ff",

@@ -4,12 +4,19 @@ import { prisma } from "../../lib/prisma";
 
 export const setlistRouter = Router();
 
-const gameMap: Record<string, string> = {
-  pokemon: "POKEMON",
-  onepiece: "ONE_PIECE",
-  "one-piece": "ONE_PIECE",
-  "pokemon-japan": "POKEMON_JAPAN",
-  all: "ALL",
+type ResolvedSetlistScope = {
+  game?: string;
+  language?: string;
+};
+
+const gameMap: Record<string, ResolvedSetlistScope> = {
+  pokemon: { game: "POKEMON", language: "en" },
+  "pokemon-english": { game: "POKEMON", language: "en" },
+  "pokemon-japan": { game: "POKEMON", language: "ja" },
+  "pokemon-ja": { game: "POKEMON", language: "ja" },
+  onepiece: { game: "ONE_PIECE", language: "en" },
+  "one-piece": { game: "ONE_PIECE", language: "en" },
+  all: {},
 };
 
 const listQuerySchema = z.object({
@@ -30,7 +37,11 @@ const cardQuerySchema = z.object({
 });
 
 function resolveGame(input: string) {
-  return gameMap[input] ?? "POKEMON";
+  return gameMap[input]?.game ?? "POKEMON";
+}
+
+function resolveSetlistScope(input: string): ResolvedSetlistScope {
+  return gameMap[input] ?? gameMap.pokemon;
 }
 
 function normalizeSource(input?: string | null) {
@@ -127,7 +138,8 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
   }
 
   const { game, source, q, sort, page, limit } = parsed.data;
-  const resolvedGame = resolveGame(game);
+  const resolvedScope = resolveSetlistScope(game);
+  const resolvedGame = resolvedScope.game ?? "ALL";
   const resolvedSource = normalizeSource(source);
   const skip = (page - 1) * limit;
   const search = q?.toLowerCase();
@@ -140,7 +152,8 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   const where = {
     isActive: true,
-    ...(resolvedGame !== "ALL" ? { game: resolvedGame } : {}),
+    ...(resolvedScope.game ? { game: resolvedScope.game } : {}),
+    ...(resolvedScope.language ? { language: resolvedScope.language } : {}),
     ...(resolvedSource ? { source: resolvedSource } : {}),
     ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
   };
@@ -186,6 +199,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   return res.json({
     game: resolvedGame,
+    language: resolvedScope.language ?? null,
     source: resolvedSource ?? null,
     page,
     limit,
