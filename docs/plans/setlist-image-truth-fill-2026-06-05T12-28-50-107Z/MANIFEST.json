@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-06-05T12:28:50.107Z",
+  "outDir": "docs/plans/setlist-image-truth-fill-2026-06-05T12-28-50-107Z",
+  "entries": [
+    {
+      "file": "REPORT.md",
+      "bytes": 1073,
+      "sha256": "43045d997fd584a5eaf9a839d1e5195a51d0d6ae64f33fb304ebecf426c5858c"
+    },
+    {
+      "file": "candidate-updates.csv",
+      "bytes": 1324,
+      "sha256": "2b375706b80d8475b6a2b7f6773ffa85aa02e6a93375534462d74ac5eb428655"
+    },
+    {
+      "file": "rejections.csv",
+      "bytes": 112681,
+      "sha256": "ca2fb8093f8887a29755416ec3edd3dbd8459fe0e23655ef095c8d8e180109b0"
+    },
+    {
+      "file": "candidate-updates.sql",
+      "bytes": 2851,
+      "sha256": "0dc7b5c711c65d909a604e1eaaa1b1ce393e3de8abf5b7a5e8f0ed358d71f33c"
+    },
+    {
+      "file": "setlist-image-truth-fill.json",
+      "bytes": 454851,
+      "sha256": "41801ab1586659c0a7f9e7ec0e1ca9255a3de103f815b43d4ba2a59a69e7a015"
+    }
+  ]
+}

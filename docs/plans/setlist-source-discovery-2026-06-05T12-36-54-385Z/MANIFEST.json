@@ -1,0 +1,25 @@
+{
+  "runId": "2026-06-05T12-36-54-385Z",
+  "entries": [
+    {
+      "file": "REPORT.md",
+      "bytes": 621,
+      "sha256": "1858c5628ba430a14b46c76bbfe508479073a621c336e0adcd064e9f115a740e"
+    },
+    {
+      "file": "candidates.csv",
+      "bytes": 118,
+      "sha256": "525357cd74068d0c5d7c668de29963999b7f705f9e1389ca0b4b150f004ed129"
+    },
+    {
+      "file": "rejections.csv",
+      "bytes": 92205,
+      "sha256": "419839a5dd7fee95839cfd328a9f8fc9d11171aad42a6e19308da4381842fa4b"
+    },
+    {
+      "file": "source-discovery.json",
+      "bytes": 177044,
+      "sha256": "c75019678005c496c49a0a164eb56f1a19582aaff7c4ade1c2b2d58431046ac8"
+    }
+  ]
+}

@@ -17,6 +17,9 @@ type SetlistItem = {
   symbolImageUrl?: string | null;
   logoImageUrl?: string | null;
   bannerImageUrl?: string | null;
+  resolvedLogoImageUrl?: string | null;
+  resolvedSymbolImageUrl?: string | null;
+  resolvedBannerImageUrl?: string | null;
 };
 
 type SetlistResponse = {
@@ -139,7 +142,7 @@ export default function SetlistsPage() {
               <div style={styles.heroSide}>{fanCards(featured)}</div>
               <div style={styles.heroCenter}>
                 <span style={styles.latest}>LATEST RELEASE</span>
-                <img src={featured.logoImageUrl || featured.symbolImageUrl || "/default-brand-logo.png"} alt={featured.name} style={styles.heroLogo} />
+                <SetImage set={featured} hero />
                 <h2 style={styles.heroTitle}>{featured.name}</h2>
                 <p style={styles.heroMeta}>
                   {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {featured.cardCount} cards
@@ -194,11 +197,28 @@ export default function SetlistsPage() {
   );
 }
 
+function imageForSet(set: SetlistItem) {
+  return set.resolvedBannerImageUrl || set.bannerImageUrl || set.resolvedLogoImageUrl || set.logoImageUrl || set.resolvedSymbolImageUrl || set.symbolImageUrl || null;
+}
+
+function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const src = failed ? null : imageForSet(set);
+  if (!src) {
+    return (
+      <div style={hero ? styles.heroImageFallback : styles.cardImageFallback}>
+        {set.setCode || set.name.slice(0, 3).toUpperCase()}
+      </div>
+    );
+  }
+  return <img src={src} alt={set.name} style={hero ? styles.heroLogo : styles.cardLogo} onError={() => setFailed(true)} />;
+}
+
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {
   return (
     <Link href={`/setlists/${set.sourceSetId}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
       <div style={styles.cardLogoWrap}>
-        <img src={set.logoImageUrl || set.symbolImageUrl || "/default-brand-logo.png"} alt={set.name} style={styles.cardLogo} />
+        <SetImage set={set} />
       </div>
       <div style={styles.cardName}>{set.name}</div>
       <div style={styles.cardMeta}>
@@ -210,7 +230,8 @@ function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string
 }
 
 function fanCards(set: SetlistItem, reverse = false) {
-  const baseImage = set.logoImageUrl || set.symbolImageUrl || "/default-brand-logo.png";
+  const baseImage = imageForSet(set);
+  if (!baseImage) return <div style={styles.fanRoot} />;
   return (
     <div style={{ ...styles.fanRoot, transform: reverse ? "scaleX(-1)" : "none" }}>
       <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 56, left: 6, transform: "rotate(-16deg)" }} />

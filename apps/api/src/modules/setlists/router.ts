@@ -33,12 +33,54 @@ function resolveGame(input: string) {
   return gameMap[input] ?? "POKEMON";
 }
 
+function setlistScopeWhere(game: string) {
+  if (game === "ALL") return {};
+  if (game === "POKEMON_JAPAN") {
+    return {
+      OR: [
+        { game: "POKEMON_JAPAN" },
+        { game: "POKEMON", language: "ja" },
+      ],
+    };
+  }
+  if (game === "POKEMON") return { game: "POKEMON", language: "en" };
+  if (game === "ONE_PIECE") return { game: "ONE_PIECE", language: "en" };
+  return { game };
+}
+
 function normalizeSource(input?: string | null) {
   const normalized = input?.trim().toLowerCase();
   if (!normalized) return null;
   if (normalized === "pokemoncardio") return "pokemoncard.io";
   if (normalized === "onepiecedb") return "onepiecedb.io";
   return normalized;
+}
+
+function normalizeImageKey(input?: string | null) {
+  return input?.toLowerCase().replace(/[^a-z0-9]/g, "") ?? null;
+}
+
+function usableCatalogImageUrl(url?: string | null) {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  if (lower.includes("tcgtracking.com/scan/set-symbol.php")) return null;
+  if (lower.includes("archives.bulbagarden.net") && lower.includes("pok%c3%a9mon_tcg_logo")) return null;
+  if (lower.includes("archives.bulbagarden.net") && lower.includes("pokemon_tcg_logo")) return null;
+  return trimmed;
+}
+
+function usableSetImageUrl(url: string | null | undefined, setCode?: string | null) {
+  const usable = usableCatalogImageUrl(url);
+  if (!usable) return null;
+  const pokemonTcgMatch = usable.match(/images\.pokemontcg\.io\/([^/]+)\//i);
+  if (pokemonTcgMatch) {
+    const imageSetKey = normalizeImageKey(pokemonTcgMatch[1]);
+    const expectedSetKey = normalizeImageKey(setCode);
+    if (!imageSetKey || !expectedSetKey || imageSetKey !== expectedSetKey) return null;
+  }
+  return usable;
 }
 
 async function resolveCatalogSetBySourceSetId(input: {
@@ -51,7 +93,7 @@ async function resolveCatalogSetBySourceSetId(input: {
     return prisma.catalogSet.findFirst({
       where: {
         sourceSetId: input.sourceSetId,
-        ...(input.game !== "ALL" ? { game: input.game } : {}),
+        ...setlistScopeWhere(input.game),
         source: resolvedSource,
         isActive: true,
       },
@@ -66,16 +108,6 @@ async function resolveCatalogSetBySourceSetId(input: {
         symbolImageUrl: true,
         logoImageUrl: true,
         bannerImageUrl: true,
-        cards: {
-          where: { isActive: true, itemType: "CARD" },
-          take: 1,
-          orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
-          select: {
-            imageThumbUrl: true,
-            imageLargeUrl: true,
-            imageBaseUrl: true,
-          },
-        },
       },
     });
   }
@@ -83,7 +115,7 @@ async function resolveCatalogSetBySourceSetId(input: {
   const matches = await prisma.catalogSet.findMany({
     where: {
       sourceSetId: input.sourceSetId,
-      ...(input.game !== "ALL" ? { game: input.game } : {}),
+      ...setlistScopeWhere(input.game),
       isActive: true,
     },
     orderBy: [{ source: "asc" }, { updatedAt: "desc" }],
@@ -140,7 +172,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
 
   const where = {
     isActive: true,
-    ...(resolvedGame !== "ALL" ? { game: resolvedGame } : {}),
+    ...setlistScopeWhere(resolvedGame),
     ...(resolvedSource ? { source: resolvedSource } : {}),
     ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
   };
@@ -164,16 +196,6 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
         symbolImageUrl: true,
         logoImageUrl: true,
         bannerImageUrl: true,
-        cards: {
-          where: { isActive: true, itemType: "CARD" },
-          take: 1,
-          orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
-          select: {
-            imageThumbUrl: true,
-            imageLargeUrl: true,
-            imageBaseUrl: true,
-          },
-        },
         _count: {
           select: {
             cards: { where: { isActive: true } },
@@ -192,14 +214,9 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     total,
     totalPages: Math.max(1, Math.ceil(total / limit)),
     items: sets.map((set) => ({
-      ...(function () {
-        const firstCard = set.cards[0];
-        const fallbackImage = firstCard?.imageLargeUrl ?? firstCard?.imageThumbUrl ?? firstCard?.imageBaseUrl ?? null;
-        return {
-          resolvedLogoImageUrl: set.logoImageUrl ?? fallbackImage,
-          resolvedSymbolImageUrl: set.symbolImageUrl ?? fallbackImage,
-        };
-      })(),
+      resolvedLogoImageUrl: usableSetImageUrl(set.logoImageUrl, set.setCode),
+      resolvedSymbolImageUrl: usableSetImageUrl(set.symbolImageUrl, set.setCode),
+      resolvedBannerImageUrl: usableSetImageUrl(set.bannerImageUrl, set.setCode),
       id: set.id,
       source: set.source,
       sourceSetId: set.sourceSetId,
@@ -210,9 +227,9 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
       productCount: set.productCount,
       cardCount: set._count.cards,
       sealedProductCount: set._count.sealedProducts,
-      symbolImageUrl: set.symbolImageUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
-      logoImageUrl: set.logoImageUrl ?? set.cards[0]?.imageLargeUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
-      bannerImageUrl: set.bannerImageUrl,
+      symbolImageUrl: usableSetImageUrl(set.symbolImageUrl, set.setCode),
+      logoImageUrl: usableSetImageUrl(set.logoImageUrl, set.setCode),
+      bannerImageUrl: usableSetImageUrl(set.bannerImageUrl, set.setCode),
     })),
   });
 });
@@ -285,17 +302,9 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
   return res.json({
     set: {
       ...catalogSet,
-      logoImageUrl:
-        catalogSet.logoImageUrl ??
-        catalogSet.cards[0]?.imageLargeUrl ??
-        catalogSet.cards[0]?.imageThumbUrl ??
-        catalogSet.cards[0]?.imageBaseUrl ??
-        null,
-      symbolImageUrl:
-        catalogSet.symbolImageUrl ??
-        catalogSet.cards[0]?.imageThumbUrl ??
-        catalogSet.cards[0]?.imageBaseUrl ??
-        null,
+      logoImageUrl: usableSetImageUrl(catalogSet.logoImageUrl, catalogSet.setCode),
+      symbolImageUrl: usableSetImageUrl(catalogSet.symbolImageUrl, catalogSet.setCode),
+      bannerImageUrl: usableSetImageUrl(catalogSet.bannerImageUrl, catalogSet.setCode),
     },
     page,
     limit,
