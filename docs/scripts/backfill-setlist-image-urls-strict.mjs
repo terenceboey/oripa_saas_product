@@ -75,6 +75,27 @@ const SPECIAL_POKEMON_URLS = {
     reason: "manual_bulbagarden_trick_or_trade_2024_logo_like_set_art",
     evidence: "https://archives.bulbagarden.net/wiki/File:Trick_or_Trade_2024.png",
   },
+  "Trick or Trade BOOster Bundle": {
+    logoImageUrl: "https://archives.bulbagarden.net/media/upload/1/18/Trick_or_Trade.png",
+    symbolImageUrl: null,
+    bannerImageUrl: null,
+    reason: "manual_bulbagarden_trick_or_trade_logo_like_set_art",
+    evidence: "https://archives.bulbagarden.net/wiki/File:Trick_or_Trade.png",
+  },
+  "My First Battle": {
+    logoImageUrl: "https://archives.bulbagarden.net/media/upload/1/1d/My_First_Battle_logo.png",
+    symbolImageUrl: null,
+    bannerImageUrl: null,
+    reason: "manual_bulbagarden_my_first_battle_logo",
+    evidence: "https://archives.bulbagarden.net/wiki/File:My_First_Battle_logo.png",
+  },
+  "Pikachu World Collection Promos": {
+    logoImageUrl: null,
+    symbolImageUrl: "https://archives.bulbagarden.net/media/upload/8/86/Pikachu_World_Collection_Symbol.png",
+    bannerImageUrl: null,
+    reason: "manual_bulbagarden_pikachu_world_collection_symbol",
+    evidence: "https://archives.bulbagarden.net/wiki/File:Pikachu_World_Collection_Symbol.png",
+  },
 };
 
 const SPECIAL_JP_URLS = {
@@ -208,7 +229,7 @@ function isPokemonSafeUrl(url) {
 function isBulbagardenSetLogo(url) {
   if (!/^https:\/\/archives\.bulbagarden\.net\/media\/upload\//i.test(url)) return false;
   const decoded = decodeURIComponent(url).toLowerCase();
-  if (!/(?:logo|symbol|trick_or_trade_2023|trick_or_trade_2024)/i.test(decoded)) return false;
+  if (!/(?:logo|symbol|trick_or_trade(?:_2023|_2024)?)/i.test(decoded)) return false;
   if (/pokemon_tcg_logo|pokémon_tcg_logo|tcg_logo_old|tcg_logo\.png/.test(decoded)) return false;
   if (/pack|box|booster|constructed|key_visual|poster|anime|none\.png|card\d|temporalforces|masterball/.test(decoded)) return false;
   return /\.(png|jpg|jpeg|webp)(?:$|[/?#])/i.test(decoded);
@@ -498,6 +519,16 @@ async function main() {
   });
 
   for (const row of pokemonJpRows) {
+    const safeLogo = isPokemonSafeUrl(row.logoImageUrl) ? row.logoImageUrl : null;
+    const safeSymbol = isPokemonSafeUrl(row.symbolImageUrl) ? row.symbolImageUrl : null;
+    const safeBanner = isPokemonSafeUrl(row.bannerImageUrl) ? row.bannerImageUrl : null;
+    const hadUnsafe = urlFields(row).some((u) => !isPokemonSafeUrl(u));
+    const safeNext = { logoImageUrl: safeLogo, symbolImageUrl: safeSymbol, bannerImageUrl: safeBanner };
+    if ((safeLogo || safeSymbol || safeBanner) && !hadUnsafe) {
+      keeps.push({ ...row, reason: "safe_jp_set_logo" });
+      continue;
+    }
+
     const jpSpecial = SPECIAL_JP_URLS[row.name];
     if (jpSpecial) {
       await updateRow(row, { logoImageUrl: jpSpecial.logoImageUrl, symbolImageUrl: jpSpecial.symbolImageUrl, bannerImageUrl: jpSpecial.bannerImageUrl }, jpSpecial.reason, jpSpecial.evidence, updates);
@@ -509,17 +540,12 @@ async function main() {
       continue;
     }
 
-    const safeLogo = isPokemonSafeUrl(row.logoImageUrl) ? row.logoImageUrl : null;
-    const safeSymbol = isPokemonSafeUrl(row.symbolImageUrl) ? row.symbolImageUrl : null;
-    const safeBanner = isPokemonSafeUrl(row.bannerImageUrl) ? row.bannerImageUrl : null;
-    const hadUnsafe = urlFields(row).some((u) => !isPokemonSafeUrl(u));
-    const next = { logoImageUrl: safeLogo, symbolImageUrl: safeSymbol, bannerImageUrl: safeBanner };
     if (safeLogo || safeSymbol || safeBanner) {
-      await updateRow(row, next, hadUnsafe ? "keep_safe_jp_set_logo_clear_untrusted" : "keep_safe_jp_set_logo", null, updates);
+      await updateRow(row, safeNext, hadUnsafe ? "keep_safe_jp_set_logo_clear_untrusted" : "keep_safe_jp_set_logo", null, updates);
       keeps.push({ ...row, reason: "safe_jp_set_logo" });
     } else {
       if (hadUnsafe) {
-        await updateRow(row, next, "clear_untrusted_jp_url", null, updates);
+        await updateRow(row, safeNext, "clear_untrusted_jp_url", null, updates);
         cleared.push({ ...row, reason: "clear_untrusted_jp_url" });
       }
       gaps.push({ game: row.game, language: row.language, name: row.name, setCode: row.setCode, reason: hadUnsafe ? "no_jp_set_logo_after_clearing_untrusted_url" : "no_jp_set_logo_mapping" });
@@ -533,6 +559,14 @@ async function main() {
   });
 
   for (const row of onePieceRows) {
+    const safeLogo = isOnePieceOfficialProductVisual(row.logoImageUrl) ? row.logoImageUrl : null;
+    const safeBanner = isOnePieceOfficialProductVisual(row.bannerImageUrl) ? row.bannerImageUrl : null;
+    const hadUnsafeCurrent = urlFields(row).some((u) => !isOnePieceOfficialProductVisual(u));
+    if ((safeLogo || safeBanner) && !hadUnsafeCurrent) {
+      keeps.push({ ...row, reason: "safe_onepiece_product_visual" });
+      continue;
+    }
+
     const bases = [...new Set([...(MANUAL_ONEPIECE_SLUGS[row.name] ?? []), ...onePieceBaseCodes(row.setCode)])];
     let found = null;
     for (const base of bases) {

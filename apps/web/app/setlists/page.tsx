@@ -204,6 +204,11 @@ function imageForSet(set: SetlistItem) {
 function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
   const imageSrc = imageForSet(set);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [imageSrc]);
+
   const src = imageSrc && failedSrc !== imageSrc ? imageSrc : null;
   if (!src) {
     return (
