@@ -208,7 +208,7 @@ function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
     return (
       <div style={hero ? styles.heroImageFallback : styles.cardImageFallback}>
         <span style={hero ? styles.fallbackCodeHero : styles.fallbackCode}>{set.setCode || set.name.slice(0, 3).toUpperCase()}</span>
-        <span style={hero ? styles.fallbackLabelHero : styles.fallbackLabel}>set badge</span>
+        <span style={hero ? styles.fallbackLabelHero : styles.fallbackLabel}>image missing</span>
       </div>
     );
   }

@@ -81,9 +81,56 @@ function expectedOfficialPokemonImageKeys(setName?: string | null, setCode?: str
   if (name.includes("scarlet") && name.includes("violet") && name.includes("promo")) keys.add("svp");
 
   const trainerGallery = name.match(/swsh(\d+).*trainer gallery/);
-  if (trainerGallery) keys.add(`swsh${trainerGallery[1]}tg`);
+  if (trainerGallery) keys.add(`swsh${Number(trainerGallery[1])}tg`);
+
+  const swsh = name.match(/^swsh(\d+)/);
+  if (swsh) keys.add(`swsh${Number(swsh[1])}`);
+  const sv = name.match(/^sv0?(\d+)/);
+  if (sv) keys.add(`sv${Number(sv[1])}`);
+  const sm = setName?.match(/^SM(?: - | Base Set)/i) && setCode?.match(/^SM0?(\d+)$/i);
+  if (sm) keys.add(`sm${Number(sm[1])}`);
+
+  if (name.includes("crown zenith") && name.includes("galarian gallery")) keys.add("swsh12pt5gg");
+  else if (name.includes("crown zenith")) keys.add("swsh12pt5");
+  if (name.includes("paldean fates")) keys.add("sv4pt5");
+  if (name.includes("shrouded fable")) keys.add("sv6pt5");
+  if (name.includes("prismatic evolutions")) keys.add("sv8pt5");
+  if (name.includes("mcdonald") && name.includes("25th")) keys.add("mcd21");
+  const mcd = setName?.match(/McDonald's (?:Collection|Promos) (20\d\d)/i);
+  if (mcd) keys.add(`mcd${mcd[1].slice(2)}`);
+  if (name.includes("sm promos")) keys.add("smp");
+  if (name.includes("xy promos")) keys.add("xyp");
+  if (name.includes("black and white promos")) keys.add("bwp");
+  if (name.includes("hgss promos")) keys.add("hsp");
+  if (name.includes("diamond and pearl promos")) keys.add("dpp");
+  if (name.includes("wotc promo")) keys.add("basep");
+  if (name === "base set" || name.includes("base set shadowless")) keys.add("base1");
+  if (name === "expedition") keys.add("ecard1");
+  if (name.includes("best of promos")) keys.add("bp");
+  if (name.includes("mega evolution promo")) keys.add("me1");
+  if (name.includes("ex trainer kit 1") || name.includes("xy trainer kit latias")) keys.add("tk1a");
+  if (name.includes("ex trainer kit 2")) keys.add("tk2a");
 
   return keys;
+}
+
+
+function usableBulbagardenSetLogo(url: string) {
+  if (!/^https:\/\/archives\.bulbagarden\.net\/media\/upload\//i.test(url)) return false;
+  const decoded = decodeURIComponent(url).toLowerCase();
+  if (!/(?:logo|symbol)/i.test(decoded)) return false;
+  if (/pokemon_tcg_logo|pokémon_tcg_logo|tcg_logo_old|tcg_logo\.png/.test(decoded)) return false;
+  if (/pack|box|deck|booster|starter|constructed|collection|key_visual|poster|anime|none\.png|card\d|temporalforces|masterball/.test(decoded)) return false;
+  return /\.(?:png|jpg|jpeg|webp)(?:$|[/?#])/i.test(decoded);
+}
+
+function usableOnePieceProductVisual(url: string) {
+  if (!/^https:\/\/en\.onepiece-cardgame\.com\//i.test(url)) return false;
+  const lower = url.toLowerCase();
+  if (!/(?:\/images\/products\/|\/renewal\/images\/products\/|\/onepiececg\/bccard\/|\/products\/boosters\/images\/)/.test(lower)) return false;
+  if (/\/cardlist\/card\//.test(lower)) return false;
+  if (/batch_[a-z0-9-]+\d|op\d{2}-\d{3}|st\d{2}-\d{3}|p-\d{3}/i.test(lower)) return false;
+  return /(?:logo|mv_01|bg_mv|\/mv\.|img_item01|img_thumbnail)/i.test(lower) && /\.(?:png|jpg|jpeg|webp)(?:$|[?&#])/i.test(lower);
 }
 
 function usableSetImageUrl(url: string | null | undefined, setCode?: string | null, setName?: string | null) {
@@ -95,12 +142,15 @@ function usableSetImageUrl(url: string | null | undefined, setCode?: string | nu
   if (/^https:\/\/assets\.tcgdex\.net\//i.test(usable)) return usable;
   if (/^https:\/\/images\.scrydex\.com\/pokemon\//i.test(usable)) return usable;
   if (/^https:\/\/www\.pokemon\.com\/static-assets\/content-assets\/cms2\/img\/trading-card-game\//i.test(usable)) return usable;
+  if (usableBulbagardenSetLogo(usable)) return usable;
+  if (usableOnePieceProductVisual(usable)) return usable;
 
-  const pokemonTcgMatch = usable.match(/^https:\/\/images\.pokemontcg\.io\/([^/]+)\//i);
+  // Official Pokémon TCG set images use only /<set-id>/logo.png or /<set-id>/symbol.png.
+  // Card art under the same CDN uses card-number paths, so keep the suffix gate and require row evidence.
+  const pokemonTcgMatch = usable.match(/^https:\/\/images\.pokemontcg\.io\/([^/]+)\/(?:logo|symbol)\.png$/i);
   if (pokemonTcgMatch) {
     const imageSetKey = normalizeImageKey(pokemonTcgMatch[1]);
-    if (!imageSetKey) return null;
-    if (expectedOfficialPokemonImageKeys(setName, setCode).has(imageSetKey)) return usable;
+    if (imageSetKey && expectedOfficialPokemonImageKeys(setName, setCode).has(imageSetKey)) return usable;
     return null;
   }
 

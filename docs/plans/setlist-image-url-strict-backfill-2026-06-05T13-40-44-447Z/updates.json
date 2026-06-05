@@ -1,0 +1,78 @@
+[
+  {
+    "id": "cmprbf22v04qptm8gequyqou8",
+    "game": "POKEMON",
+    "language": "en",
+    "name": "ME02: Phantasmal Flames",
+    "setCode": "PFL",
+    "reason": "manual_scrydex_me02_set_logo",
+    "evidence": "https://scrydex.com",
+    "before": {
+      "logoImageUrl": "https://images.pokemontcg.io/me2/logo.png",
+      "symbolImageUrl": "https://images.pokemontcg.io/me2/symbol.png",
+      "bannerImageUrl": null
+    },
+    "after": {
+      "logoImageUrl": "https://images.scrydex.com/pokemon/me2-logo/logo",
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    }
+  },
+  {
+    "id": "cmprbfl940547tm8g9rl0f8vh",
+    "game": "POKEMON",
+    "language": "en",
+    "name": "ME01: Mega Evolution",
+    "setCode": "MEG",
+    "reason": "manual_scrydex_me01_set_logo",
+    "evidence": "https://scrydex.com",
+    "before": {
+      "logoImageUrl": "https://images.pokemontcg.io/me1/logo.png",
+      "symbolImageUrl": "https://images.pokemontcg.io/me1/symbol.png",
+      "bannerImageUrl": null
+    },
+    "after": {
+      "logoImageUrl": "https://images.scrydex.com/pokemon/me1-logo/logo",
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    }
+  },
+  {
+    "id": "cmprbg3k005hdtm8gyxba8xdv",
+    "game": "POKEMON",
+    "language": "en",
+    "name": "SV: Black Bolt",
+    "setCode": "BLK",
+    "reason": "manual_scrydex_black_bolt_set_logo",
+    "evidence": "https://scrydex.com",
+    "before": {
+      "logoImageUrl": "https://images.pokemontcg.io/zsv10pt5/logo.png",
+      "symbolImageUrl": "https://images.pokemontcg.io/zsv10pt5/symbol.png",
+      "bannerImageUrl": null
+    },
+    "after": {
+      "logoImageUrl": "https://images.scrydex.com/pokemon/sv10pt5-logo/logo",
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    }
+  },
+  {
+    "id": "cmprbgvdl061ctm8gq25dk1uf",
+    "game": "POKEMON",
+    "language": "en",
+    "name": "SV: White Flare",
+    "setCode": "WHT",
+    "reason": "manual_scrydex_white_flare_set_logo",
+    "evidence": "https://scrydex.com",
+    "before": {
+      "logoImageUrl": "https://images.pokemontcg.io/rsv10pt5/logo.png",
+      "symbolImageUrl": "https://images.pokemontcg.io/rsv10pt5/symbol.png",
+      "bannerImageUrl": null
+    },
+    "after": {
+      "logoImageUrl": "https://images.scrydex.com/pokemon/sv10pt5-logo/logo",
+      "symbolImageUrl": null,
+      "bannerImageUrl": null
+    }
+  }
+]
