@@ -138,6 +138,34 @@ enum CatalogEntityType {
   SET
 }
 
+enum CustodyProvider {
+  ORIPA_INTERNAL
+  COLLECTOR_CRYPT
+  PHYGITALS
+}
+
+enum CustodyItemStatus {
+  HELD
+  REDEMPTION_REQUESTED
+  BUYBACK_REQUESTED
+  REDEEMED
+  BOUGHT_BACK
+  VOIDED
+}
+
+enum CustodyRequestType {
+  REDEMPTION
+  BUYBACK
+}
+
+enum CustodyRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
 model Vendor {
   id                  String                @id @default(cuid())
   name                String
@@ -162,6 +190,8 @@ model Vendor {
   vendorSettings      VendorSettings?
   drawOrders          DrawOrder[]
   drawResults         DrawResult[]
+  custodyItems        CustodyItem[]
+  custodyRequests     CustodyRequest[]
   revenueLedger       VendorRevenueLedger[]
   auditLogs           AuditLog[]
   outboxEvents        OutboxEvent[]
@@ -184,6 +214,8 @@ model User {
   email                   String                  @unique
   passwordHash            String?
   displayName             String?
+  age                     Int?
+  country                 String?
   status                  UserStatus              @default(ACTIVE)
   emailVerificationStatus EmailVerificationStatus @default(PENDING)
   emailVerifiedAt         DateTime?
@@ -207,6 +239,8 @@ model User {
   redeemedPointGrantQrs   VendorPointGrantQr[] @relation("RedeemedByUser")
   createdPointGrantQrs    VendorPointGrantQr[] @relation("CreatedByUser")
   vendorReferralSignups   VendorReferralSignup[]
+  custodyItems             CustodyItem[]
+  custodyRequests          CustodyRequest[]
 }
 
 model Role {
@@ -301,6 +335,7 @@ model Pack {
   draws          PackDraw[]
   drawOrders     DrawOrder[]
   drawResults    DrawResult[]
+  custodyItems   CustodyItem[]
   fairnessProofs DrawFairnessProof[]
   creativeJobs   CreativeJob[]
   inventoryAllocations PackPrizeInventoryAllocation[]
@@ -334,6 +369,7 @@ model PackPrize {
   draws          PackDraw[]
   drawResults    DrawResult[]
   inventoryAllocations PackPrizeInventoryAllocation[]
+  custodyItems   CustodyItem[]
 
   @@index([packId])
   @@index([catalogItemId])
@@ -552,6 +588,7 @@ model DrawOrder {
   results             DrawResult[]
   fairnessProof       DrawFairnessProof?
   fairnessSelections  DrawFairnessSelection[]
+  custodyItems        CustodyItem[]
 
   @@index([vendorId, createdAt])
   @@index([userId, createdAt])
@@ -573,9 +610,71 @@ model DrawResult {
   drawOrder    DrawOrder  @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
   pack         Pack       @relation(fields: [packId], references: [id], onDelete: Restrict)
   packPrize    PackPrize? @relation(fields: [packPrizeId], references: [id], onDelete: SetNull)
+  custodyItem  CustodyItem?
 
   @@index([vendorId, createdAt])
   @@index([drawOrderId, drawSequence])
+}
+
+model CustodyItem {
+  id              String            @id @default(cuid())
+  vendorId        String
+  userId          String
+  packId          String
+  packPrizeId     String
+  drawOrderId     String
+  drawResultId    String            @unique
+  status          CustodyItemStatus @default(HELD)
+  provider        CustodyProvider   @default(ORIPA_INTERNAL)
+  providerItemId  String?
+  providerMemo    String?
+  providerTxSig   String?
+  prizeLabel      String
+  imageUrl        String?
+  imageLargeUrl   String?
+  setName         String?
+  cardName        String?
+  rarity          String?
+  catalogSnapshot Json?
+  estimatedValue  Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pack            Pack              @relation(fields: [packId], references: [id], onDelete: Restrict)
+  packPrize       PackPrize         @relation(fields: [packPrizeId], references: [id], onDelete: Restrict)
+  drawOrder       DrawOrder         @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  drawResult      DrawResult        @relation(fields: [drawResultId], references: [id], onDelete: Cascade)
+  requests        CustodyRequest[]
+
+  @@index([vendorId, userId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([vendorId, createdAt])
+  @@index([packPrizeId])
+  @@index([drawOrderId])
+}
+
+model CustodyRequest {
+  id            String               @id @default(cuid())
+  vendorId      String
+  userId        String
+  custodyItemId String
+  type          CustodyRequestType
+  status        CustodyRequestStatus @default(PENDING)
+  customerNote  String?
+  opsNote       String?
+  requestedAt   DateTime             @default(now())
+  reviewedAt    DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  vendor        Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  custodyItem   CustodyItem          @relation(fields: [custodyItemId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, userId, status, requestedAt])
+  @@index([custodyItemId, status])
+  @@index([vendorId, type, status, requestedAt])
 }
 
 model DrawFairnessProof {

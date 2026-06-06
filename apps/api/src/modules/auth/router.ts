@@ -9,6 +9,7 @@ import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { sendEmail } from "../../lib/email";
 import { getRequestUserId } from "../../lib/rbac";
+import { isCustomerProfileComplete, normalizeCustomerProfileInput } from "../../lib/customer-profile";
 
 const authRouter = Router();
 const webBaseUrl = process.env.WEB_URL ?? "http://localhost:3000";
@@ -333,7 +334,15 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
 
   return res.status(201).json({
     requiresEmailVerification: true,
-    user: { id: user.id, email: user.email, displayName: user.displayName, emailVerificationStatus: user.emailVerificationStatus },
+    user: {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      age: user.age,
+      country: user.country,
+      emailVerificationStatus: user.emailVerificationStatus,
+      profileComplete: isCustomerProfileComplete(user),
+    },
   });
 });
 
@@ -361,7 +370,14 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
   setAccessCookie(res, token);
   return res.json({
     token,
-    user: { id: user.id, email: user.email, displayName: user.displayName },
+    user: {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      age: user.age,
+      country: user.country,
+      profileComplete: isCustomerProfileComplete(user),
+    },
   });
 });
 
@@ -379,7 +395,15 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
     setAccessCookie(res, token);
     return res.json({
       token,
-      user: { id: user.id, email: user.email, displayName: user.displayName, emailVerificationStatus: user.emailVerificationStatus },
+      user: {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        age: user.age,
+        country: user.country,
+        emailVerificationStatus: user.emailVerificationStatus,
+        profileComplete: isCustomerProfileComplete(user),
+      },
     });
   }
 
@@ -422,7 +446,15 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
   setAccessCookie(res, token);
   return res.json({
     token,
-    user: { id: verifiedUser.id, email: verifiedUser.email, displayName: verifiedUser.displayName, emailVerificationStatus: verifiedUser.emailVerificationStatus },
+    user: {
+      id: verifiedUser.id,
+      email: verifiedUser.email,
+      displayName: verifiedUser.displayName,
+      age: verifiedUser.age,
+      country: verifiedUser.country,
+      emailVerificationStatus: verifiedUser.emailVerificationStatus,
+      profileComplete: isCustomerProfileComplete(verifiedUser),
+    },
   });
 });
 
@@ -471,6 +503,42 @@ authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
+      age: user.age,
+      country: user.country,
+      profileComplete: isCustomerProfileComplete(user),
+      status: user.status,
+      emailVerificationStatus: user.emailVerificationStatus,
+      emailVerifiedAt: user.emailVerifiedAt,
+      lastLoginAt: user.lastLoginAt,
+    },
+  });
+});
+
+authRouter.put("/v1/auth/profile", async (req: VendorRequest, res) => {
+  const userId = getRequestUserId(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+
+  let profile;
+  try {
+    profile = normalizeCustomerProfileInput(req.body ?? {});
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "invalid profile";
+    return res.status(400).json({ error: message });
+  }
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: profile,
+  });
+
+  return res.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      age: user.age,
+      country: user.country,
+      profileComplete: isCustomerProfileComplete(user),
       status: user.status,
       emailVerificationStatus: user.emailVerificationStatus,
       emailVerifiedAt: user.emailVerifiedAt,
@@ -560,16 +628,17 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
     });
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
+    const landingPath = isCustomerProfileComplete(user) ? "/customer" : "/customer/basic-info";
     try {
       if (isSafeRedirectVendorHost(vendorHost)) {
         const parsedWeb = new URL(webBaseUrl);
-        const directVendorLoginUrl = `${parsedWeb.protocol}//${vendorHost}/login?vendorHost=${encodeURIComponent(vendorHost)}`;
+        const directVendorLoginUrl = `${parsedWeb.protocol}//${vendorHost}${landingPath}?vendorHost=${encodeURIComponent(vendorHost)}`;
         return res.redirect(directVendorLoginUrl);
       }
     } catch {
       // fallback to WEB_URL login redirect below
     }
-    return res.redirect(`${webBaseUrl}/login?vendorHost=${encodeURIComponent(vendorHost)}`);
+    return res.redirect(`${webBaseUrl}${landingPath}?vendorHost=${encodeURIComponent(vendorHost)}`);
   })(req, res, next);
 });
 
@@ -587,7 +656,8 @@ authRouter.post("/v1/auth/apple/callback", (req, res, next) => {
     }
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
-    return res.redirect(`${webBaseUrl}/login`);
+    const landingPath = isCustomerProfileComplete(user) ? "/customer" : "/customer/basic-info";
+    return res.redirect(`${webBaseUrl}${landingPath}`);
   })(req, res, next);
 });
 

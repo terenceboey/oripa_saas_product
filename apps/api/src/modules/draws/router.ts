@@ -243,6 +243,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
         prizeId: string | null;
         prizeLabel: string | null;
         prizeImageUrl: string | null;
+        custodyItemId: string | null;
       }[] = [];
 
       const selectionRows: Prisma.DrawFairnessSelectionCreateManyInput[] = [];
@@ -280,7 +281,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
           },
         });
 
-        await tx.drawResult.create({
+        const drawResult = await tx.drawResult.create({
           data: {
             vendorId,
             drawOrderId: drawOrder.id,
@@ -293,6 +294,28 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
             requestId,
           },
         });
+
+        const prize = selected?.id ? prizeLookup.get(selected.id) : null;
+        const custodyItem = prize
+          ? await tx.custodyItem.create({
+              data: {
+                vendorId,
+                userId: actorUserId,
+                packId: pack.id,
+                packPrizeId: prize.id,
+                drawOrderId: drawOrder.id,
+                drawResultId: drawResult.id,
+                prizeLabel: prize.label,
+                imageUrl: prize.imageUrl,
+                imageLargeUrl: prize.imageLargeUrl,
+                setName: prize.setName,
+                cardName: prize.label,
+                rarity: prize.rarity,
+                catalogSnapshot: prize.catalogSnapshot ?? Prisma.JsonNull,
+                estimatedValue: prize.estimatedValue,
+              },
+            })
+          : null;
 
         selectionRows.push({
           vendorId,
@@ -311,12 +334,12 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
           eligiblePrizeIds: selectedResult.eligiblePrizeIds,
         });
 
-        const prize = selected?.id ? prizeLookup.get(selected.id) : null;
         draws.push({
           drawId: legacyDraw.id,
           prizeId: selected?.id ?? null,
           prizeLabel: prize?.label ?? null,
           prizeImageUrl: prize?.imageUrl ?? null,
+          custodyItemId: custodyItem?.id ?? null,
         });
       }
 
