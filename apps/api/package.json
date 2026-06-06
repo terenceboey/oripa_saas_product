@@ -9,13 +9,14 @@
     "lint": "tsc -p tsconfig.json --noEmit",
     "catalog:sync:tcgtracking": "tsx scripts/sync-tcgtracking.ts",
     "catalog:sync:tcgtracking:full": "tsx scripts/sync-tcgtracking-catalog.ts",
+    "catalog:gap-fill:tcgtracking": "tsx scripts/tcgtracking-gap-fill-importer.ts",
     "catalog:sync:onepiecedb": "tsx scripts/sync-onepiecedb-catalog.ts",
     "catalog:sync:pokemoncardio": "tsx scripts/sync-pokemoncardio-catalog.ts",
     "catalog:import:pokemoncardio": "tsx scripts/import-pokemoncardio-dump.ts",
     "catalog:enrich:set-images": "tsx scripts/enrich-set-images.ts",
-    "catalog:backfill:canonical": "tsx scripts/backfill-canonical-catalog.ts",
     "catalog:report": "tsx scripts/catalog-report.ts",
     "catalog:sync:tcgdex": "tsx scripts/sync-tcgdex.ts",
+    "catalog:sync:source-native": "tsx scripts/sync-source-native-full-universe.ts",
     "catalog:sync:carddb": "tsx scripts/sync-carddb-sources.ts",
     "test:catalog:tcgdex": "tsx scripts/test-tcgdex-normalizer.ts",
     "test:catalog:tcgtracking": "tsx scripts/test-tcgtracking-normalizer.ts",
@@ -34,7 +35,9 @@
     "test:packs:template-publish": "tsx scripts/test-pack-template-publish.ts",
     "test:draws:pool-integrity": "tsx scripts/test-draw-pool-integrity.ts",
     "test:catalog:tcgtracking:guardrails": "tsx scripts/test-sync-tcgtracking-guardrails.ts",
-    "test:creative:mvp": "tsx scripts/test-campaign-creative-mvp.ts"
+    "test:creative:mvp": "tsx scripts/test-campaign-creative-mvp.ts",
+    "test:customer:profile": "tsx scripts/test-customer-profile-contract.ts",
+    "test:customer:phase2": "tsx scripts/test-customer-custody-contract.ts"
   },
   "dependencies": {
     "@oripa/shared": "0.1.0",
