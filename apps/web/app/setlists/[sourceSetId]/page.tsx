@@ -13,6 +13,7 @@ type SetInfo = {
   releaseDate?: string | null;
   symbolImageUrl?: string | null;
   logoImageUrl?: string | null;
+  bannerImageUrl?: string | null;
 };
 
 type SetCard = {
@@ -110,7 +111,7 @@ export default function SetlistDetailPage() {
 
         <section style={styles.setHeader}>
           <div style={styles.logoBox}>
-            <img src={setInfo?.logoImageUrl || setInfo?.symbolImageUrl || "/default-brand-logo.png"} alt={pageTitle} style={styles.logo} />
+            <SetHeaderImage set={setInfo} title={pageTitle} />
           </div>
           <div>
             <h1 style={styles.setTitle}>{pageTitle}</h1>
@@ -171,6 +172,19 @@ export default function SetlistDetailPage() {
   );
 }
 
+function setImageForHeader(set?: SetInfo | null) {
+  return set?.bannerImageUrl || set?.logoImageUrl || set?.symbolImageUrl || null;
+}
+
+function SetHeaderImage({ set, title }: { set?: SetInfo | null; title: string }) {
+  const [failed, setFailed] = useState(false);
+  const src = failed ? null : setImageForHeader(set);
+  if (!src) {
+    return <div style={styles.logoFallback}>{set?.setCode || title.slice(0, 3).toUpperCase()}</div>;
+  }
+  return <img src={src} alt={title} style={styles.logo} onError={() => setFailed(true)} />;
+}
+
 const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
@@ -194,6 +208,7 @@ const styles: Record<string, CSSProperties> = {
   },
   logoBox: { width: 100, height: 100, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.6)", border: "1px solid #e3dcf4" },
   logo: { width: 92, height: 92, objectFit: "contain" },
+  logoFallback: { width: 92, height: 92, borderRadius: 10, display: "grid", placeItems: "center", background: "#f7f6ff", border: "1px dashed #d8d0ec", color: "#6b5f95", fontWeight: 900, fontSize: 18, letterSpacing: ".06em" },
   setTitle: { margin: 0, fontSize: "clamp(30px,4.2vw,44px)", lineHeight: 1.05 },
   statsRow: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" },
   pillPrimary: { padding: "5px 10px", borderRadius: 8, background: "linear-gradient(135deg,#9f90ff,#74c8ff)", color: "#1c1340", fontWeight: 800, fontSize: 12 },

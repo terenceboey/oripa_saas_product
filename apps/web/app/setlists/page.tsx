@@ -17,6 +17,9 @@ type SetlistItem = {
   symbolImageUrl?: string | null;
   logoImageUrl?: string | null;
   bannerImageUrl?: string | null;
+  resolvedLogoImageUrl?: string | null;
+  resolvedSymbolImageUrl?: string | null;
+  resolvedBannerImageUrl?: string | null;
 };
 
 type SetlistResponse = {
@@ -145,7 +148,7 @@ export default function SetlistsPage() {
               <div style={styles.heroSide}>{fanCards(featured)}</div>
               <div style={styles.heroCenter}>
                 <span style={styles.latest}>LATEST RELEASE</span>
-                <img src={featured.logoImageUrl || featured.symbolImageUrl || "/default-brand-logo.png"} alt={featured.name} style={styles.heroLogo} />
+                <SetImage set={featured} hero />
                 <h2 style={styles.heroTitle}>{featured.name}</h2>
                 <p style={styles.heroMeta}>
                   {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {featured.cardCount} cards
@@ -200,11 +203,35 @@ export default function SetlistsPage() {
   );
 }
 
+function imageForSet(set: SetlistItem) {
+  return set.resolvedBannerImageUrl || set.bannerImageUrl || set.resolvedLogoImageUrl || set.logoImageUrl || set.resolvedSymbolImageUrl || set.symbolImageUrl || null;
+}
+
+function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
+  const imageSrc = imageForSet(set);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [imageSrc]);
+
+  const src = imageSrc && failedSrc !== imageSrc ? imageSrc : null;
+  if (!src) {
+    return (
+      <div style={hero ? styles.heroImageFallback : styles.cardImageFallback}>
+        <span style={hero ? styles.fallbackCodeHero : styles.fallbackCode}>{set.setCode || set.name.slice(0, 3).toUpperCase()}</span>
+        <span style={hero ? styles.fallbackLabelHero : styles.fallbackLabel}>image missing</span>
+      </div>
+    );
+  }
+  return <img src={src} alt={set.name} style={hero ? styles.heroLogo : styles.cardLogo} onError={() => setFailedSrc(src)} />;
+}
+
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {
   return (
     <Link href={`/setlists/${set.sourceSetId}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
       <div style={styles.cardLogoWrap}>
-        <img src={set.logoImageUrl || set.symbolImageUrl || "/default-brand-logo.png"} alt={set.name} style={styles.cardLogo} />
+        <SetImage set={set} />
       </div>
       <div style={styles.cardName}>{set.name}</div>
       <div style={styles.cardMeta}>
@@ -216,7 +243,8 @@ function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string
 }
 
 function fanCards(set: SetlistItem, reverse = false) {
-  const baseImage = set.logoImageUrl || set.symbolImageUrl || "/default-brand-logo.png";
+  const baseImage = imageForSet(set);
+  if (!baseImage) return <div style={styles.fanRoot} />;
   return (
     <div style={{ ...styles.fanRoot, transform: reverse ? "scaleX(-1)" : "none" }}>
       <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 56, left: 6, transform: "rotate(-16deg)" }} />
@@ -274,8 +302,14 @@ const styles: Record<string, CSSProperties> = {
   recentGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 10 },
   allGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(185px,1fr))", gap: 10 },
   card: { position: "relative", textDecoration: "none", color: "inherit", border: "1px solid #d8d0ec", background: "#ffffffcc", borderRadius: 14, padding: 10, boxShadow: "0 10px 24px rgba(80,59,150,.08)" },
-  cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)" },
+  cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)", overflow: "hidden" },
   cardLogo: { maxWidth: "100%", maxHeight: 88, objectFit: "contain" },
+  cardImageFallback: { width: "100%", height: "100%", display: "grid", placeItems: "center", alignContent: "center", gap: 3, borderRadius: 10, background: "radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 24%), linear-gradient(135deg,#8f7cff,#62c7ff 52%,#ff9eb5)", color: "#20153a", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.45)" },
+  fallbackCode: { fontSize: 27, lineHeight: 1, fontWeight: 950, letterSpacing: ".02em", textShadow: "0 1px 0 rgba(255,255,255,.35)" },
+  fallbackLabel: { fontSize: 10, fontWeight: 900, letterSpacing: ".12em", textTransform: "uppercase", opacity: .72 },
+  heroImageFallback: { width: "min(390px,90%)", minHeight: 136, margin: "12px auto 0", display: "grid", placeItems: "center", alignContent: "center", gap: 4, borderRadius: 18, background: "radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 24%), linear-gradient(135deg,#8f7cff,#62c7ff 52%,#ff9eb5)", color: "#20153a", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.45), 0 14px 26px rgba(80,59,150,.18)" },
+  fallbackCodeHero: { fontSize: 46, lineHeight: 1, fontWeight: 950, letterSpacing: ".02em", textShadow: "0 1px 0 rgba(255,255,255,.35)" },
+  fallbackLabelHero: { fontSize: 12, fontWeight: 900, letterSpacing: ".14em", textTransform: "uppercase", opacity: .72 },
   cardName: { marginTop: 8, fontWeight: 800, lineHeight: 1.2, minHeight: 36 },
   cardMeta: { marginTop: 6, color: "#72669f", fontSize: 13 },
   cardArrow: { position: "absolute", right: 10, bottom: 10, width: 20, height: 20, display: "grid", placeItems: "center", borderRadius: 6, background: "#efeafe", color: "#6f5ea8", fontWeight: 900 },
