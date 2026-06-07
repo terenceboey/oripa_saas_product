@@ -68,6 +68,26 @@ enum VendorPlanCode {
   ELITE
 }
 
+enum VendorApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum VendorIdentificationDocumentType {
+  PASSPORT
+  DRIVING_LICENCE
+}
+
+enum VendorYearsOfOperations {
+  LT_1
+  ONE_TO_THREE
+  THREE_TO_FIVE
+  FIVE_PLUS
+}
+
 enum PackStatus {
   DRAFT
   LIVE
@@ -157,6 +177,23 @@ model Vendor {
   referralCode                  String?                        @unique
   businessLocation              String?
   businessContact               String?
+  applicationStatus             VendorApplicationStatus        @default(DRAFT)
+  entityName                    String?
+  yearsOfOperations             VendorYearsOfOperations?
+  personInCharge                String?
+  personInChargeDateOfBirth     DateTime?
+  personInChargeCountry         String?
+  identificationDocumentType    VendorIdentificationDocumentType?
+  identificationDocumentUrl     String?
+  businessRegistrationNumber    String?
+  registeredBusinessAddress     String?
+  contactPhoneNumber            String?
+  businessEmail                 String?
+  websiteOrSocialLinks          String?
+  payoutBankDetails             String?
+  applicationSubmittedAt        DateTime?
+  applicationReviewedAt         DateTime?
+  applicationReviewNotes        String?
   isActive                      Boolean                        @default(true)
   riskLevel                     Int                            @default(0)
   complianceFlags               Json?

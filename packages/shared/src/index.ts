@@ -13,6 +13,19 @@ const imageUrlSchema = z
     }
   }, "Image URL must be an absolute http/https URL");
 
+const optionalTrimmedStringSchema = (maxLength: number) =>
+  z.preprocess((value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : undefined;
+  }, z.string().max(maxLength).optional());
+
+const optionalEmailSchema = z.preprocess((value) => {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+}, z.string().email().max(254).optional());
+
 export const createVendorSchema = z.object({
   name: z.string().min(2).max(80),
   slug: z.string().min(2).max(50).regex(/^[a-z0-9-]+$/),
@@ -42,6 +55,23 @@ export const updateVendorPrefixSchema = z.object({
 export const updateVendorBusinessSchema = z.object({
   businessLocation: z.string().max(200).optional().nullable(),
   businessContact: z.string().max(120).optional().nullable(),
+});
+
+export const vendorApplicationSchema = z.object({
+  entityName: z.string().min(2).max(120),
+  yearsOfOperations: z.enum(["LT_1", "ONE_TO_THREE", "THREE_TO_FIVE", "FIVE_PLUS"]),
+  personInCharge: z.string().min(2).max(120),
+  personInChargeDateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  personInChargeCountry: z.string().min(2).max(80),
+  identificationDocumentType: z.enum(["PASSPORT", "DRIVING_LICENCE"]),
+  identificationDocumentUrl: z.string().url().max(2048).optional().nullable(),
+  businessRegistrationNumber: optionalTrimmedStringSchema(120),
+  registeredBusinessAddress: optionalTrimmedStringSchema(500),
+  contactPhoneNumber: optionalTrimmedStringSchema(40),
+  businessEmail: optionalEmailSchema,
+  websiteOrSocialLinks: optionalTrimmedStringSchema(2000),
+  payoutBankDetails: optionalTrimmedStringSchema(2000),
+  applicationStatus: z.enum(["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"]).optional(),
 });
 
 export const updateVendorReferralSchema = z.object({
@@ -148,6 +178,7 @@ export type UpdateVendorProfileInput = z.infer<typeof updateVendorProfileSchema>
 export type UpdateVendorLogoInput = z.infer<typeof updateVendorLogoSchema>;
 export type UpdateVendorPrefixInput = z.infer<typeof updateVendorPrefixSchema>;
 export type UpdateVendorBusinessInput = z.infer<typeof updateVendorBusinessSchema>;
+export type VendorApplicationInput = z.infer<typeof vendorApplicationSchema>;
 export type UpdateVendorReferralInput = z.infer<typeof updateVendorReferralSchema>;
 export type UpdateVendorThemeInput = z.infer<typeof updateVendorThemeSchema>;
 export type UpdateVendorPlanInput = z.infer<typeof updateVendorPlanSchema>;

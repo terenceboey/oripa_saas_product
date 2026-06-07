@@ -9,6 +9,7 @@ import {
   updateVendorProfileSchema,
   updateVendorReferralSchema,
   updateVendorThemeSchema,
+  vendorApplicationSchema,
 } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
@@ -49,6 +50,14 @@ function planLimits(planCode: "BASIC" | "ELITE") {
     maxPackTiers: 5,
     maxDrawQuantity: 100,
   };
+}
+
+function parseVendorDate(value: unknown) {
+  const raw = String(value ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const parsed = new Date(`${raw}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
 }
 
 vendorRouter.post("/v1/vendors", async (req, res) => {
@@ -115,6 +124,103 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
 
   if (!vendor) return res.status(404).json({ error: "Vendor not found" });
   return res.json({ vendor });
+});
+
+vendorRouter.get("/v1/vendor/application", async (req: VendorRequest, res) => {
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
+
+  const vendor = await prisma.vendor.findUnique({
+    where: { id: auth.vendorId },
+    select: {
+      id: true,
+      name: true,
+      applicationStatus: true,
+      entityName: true,
+      yearsOfOperations: true,
+      personInCharge: true,
+      personInChargeDateOfBirth: true,
+      personInChargeCountry: true,
+      identificationDocumentType: true,
+      identificationDocumentUrl: true,
+      businessRegistrationNumber: true,
+      registeredBusinessAddress: true,
+      contactPhoneNumber: true,
+      businessEmail: true,
+      websiteOrSocialLinks: true,
+      payoutBankDetails: true,
+      applicationSubmittedAt: true,
+      applicationReviewedAt: true,
+      applicationReviewNotes: true,
+      updatedAt: true,
+    },
+  });
+  if (!vendor) return res.status(404).json({ error: "Vendor not found" });
+  return res.json({ application: vendor });
+});
+
+vendorRouter.patch("/v1/vendor/application", async (req: VendorRequest, res) => {
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER"]);
+  if (!auth) return;
+
+  const parsed = vendorApplicationSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const personInChargeDateOfBirth = parseVendorDate(parsed.data.personInChargeDateOfBirth);
+  if (!personInChargeDateOfBirth) {
+    return res.status(400).json({ error: "personInChargeDateOfBirth must be a valid YYYY-MM-DD date" });
+  }
+  const identificationDocumentUrl = String(parsed.data.identificationDocumentUrl ?? "").trim();
+  if (!identificationDocumentUrl) {
+    return res.status(400).json({ error: "identificationDocumentUrl is required" });
+  }
+
+  const vendor = await prisma.vendor.update({
+    where: { id: auth.vendorId },
+    data: {
+      entityName: parsed.data.entityName.trim(),
+      yearsOfOperations: parsed.data.yearsOfOperations,
+      personInCharge: parsed.data.personInCharge.trim(),
+      personInChargeDateOfBirth,
+      personInChargeCountry: parsed.data.personInChargeCountry.trim().toUpperCase(),
+      identificationDocumentType: parsed.data.identificationDocumentType,
+      identificationDocumentUrl,
+      businessRegistrationNumber: String(parsed.data.businessRegistrationNumber ?? "").trim() || null,
+      registeredBusinessAddress: String(parsed.data.registeredBusinessAddress ?? "").trim() || null,
+      contactPhoneNumber: String(parsed.data.contactPhoneNumber ?? "").trim() || null,
+      businessEmail: String(parsed.data.businessEmail ?? "").trim() || null,
+      websiteOrSocialLinks: String(parsed.data.websiteOrSocialLinks ?? "").trim() || null,
+      payoutBankDetails: String(parsed.data.payoutBankDetails ?? "").trim() || null,
+      applicationStatus: parsed.data.applicationStatus ?? "SUBMITTED",
+      applicationSubmittedAt: new Date(),
+    },
+    select: {
+      id: true,
+      name: true,
+      applicationStatus: true,
+      entityName: true,
+      yearsOfOperations: true,
+      personInCharge: true,
+      personInChargeDateOfBirth: true,
+      personInChargeCountry: true,
+      identificationDocumentType: true,
+      identificationDocumentUrl: true,
+      businessRegistrationNumber: true,
+      registeredBusinessAddress: true,
+      contactPhoneNumber: true,
+      businessEmail: true,
+      websiteOrSocialLinks: true,
+      payoutBankDetails: true,
+      applicationSubmittedAt: true,
+      applicationReviewedAt: true,
+      applicationReviewNotes: true,
+      updatedAt: true,
+    },
+  });
+
+  return res.json({ application: vendor });
 });
 
 vendorRouter.patch("/v1/vendor/theme", async (req: VendorRequest, res) => {

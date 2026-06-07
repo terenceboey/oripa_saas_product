@@ -12,6 +12,8 @@ const clientPageHeader = { "x-client-page": "/verify-email" };
 export default function VerifyEmailPage() {
   const router = useRouter();
   const runtimeVendorHost = useMemo(() => {
+    const queryHost = typeof window !== "undefined" ? new URL(window.location.href).searchParams.get("vendorHost") : null;
+    if (queryHost?.trim()) return queryHost.trim().toLowerCase();
     if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
     return configuredVendorHost;
   }, []);
@@ -21,6 +23,12 @@ export default function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const returnTo = useMemo(() => {
+    const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
+    const raw = String(url?.searchParams.get("returnTo") ?? "").trim();
+    if (raw.startsWith("/")) return raw;
+    return `/profile?vendorHost=${encodeURIComponent(runtimeVendorHost)}`;
+  }, [runtimeVendorHost]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -50,7 +58,11 @@ export default function VerifyEmailPage() {
       setMessage("Email verified and login successful.");
       setOtp("");
       window.setTimeout(() => {
-        router.push(`/profile?vendorHost=${encodeURIComponent(runtimeVendorHost)}`);
+        if (returnTo.startsWith("/vendor") && runtimeVendorHost && window.location.host.toLowerCase() !== runtimeVendorHost) {
+          window.location.assign(`${window.location.protocol}//${runtimeVendorHost}${returnTo}`);
+          return;
+        }
+        router.push(returnTo);
       }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "OTP verification failed");

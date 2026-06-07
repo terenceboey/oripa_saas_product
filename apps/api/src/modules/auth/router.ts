@@ -70,6 +70,28 @@ function buildAuthCompleteRedirectUrl(vendorHost: string, provider: "google" | "
   return applyParams(new URL("/auth/complete", webBaseUrl));
 }
 
+function buildVendorPathRedirectUrl(vendorHost: string, path: string, params?: Record<string, string | null | undefined>) {
+  const normalizedVendorHost = String(vendorHost ?? "").trim().toLowerCase();
+  const applyParams = (url: URL) => {
+    for (const [key, value] of Object.entries(params ?? {})) {
+      if (!value) continue;
+      url.searchParams.set(key, value);
+    }
+    return url.toString();
+  };
+
+  try {
+    if (isSafeRedirectVendorHost(normalizedVendorHost)) {
+      const parsedWeb = new URL(webBaseUrl);
+      return applyParams(new URL(`${parsedWeb.protocol}//${normalizedVendorHost}${path}`));
+    }
+  } catch {
+    // Fall back to the configured web URL below.
+  }
+
+  return applyParams(new URL(path, webBaseUrl));
+}
+
 function issueAccessToken(user: { id: string; email: string; displayName: string | null; status: string }) {
   return jwt.sign(
     {
@@ -241,25 +263,32 @@ function validateCustomerProfileInput(body: unknown, options: { required?: boole
   };
 }
 
-async function findOrCreateCustomerUser(email: string, displayName?: string | null) {
-  const role = await prisma.role.upsert({
-    where: { code: "customer" },
-    update: {},
-    create: { code: "customer", label: "Customer" },
-  });
+type VendorMembershipSummary = {
+  role: string;
+  Vendor: {
+    id: string;
+    name: string;
+    slug: string;
+    host: string;
+    isActive: boolean;
+  };
+};
 
+async function findOrCreateVerifiedSocialUser(email: string, displayName?: string | null) {
+  const now = new Date();
   const user = await prisma.user.upsert({
     where: { email },
     update: {
       displayName: displayName ?? undefined,
+      fullName: displayName ?? undefined,
       status: "ACTIVE",
       emailVerificationStatus: "VERIFIED",
-      emailVerifiedAt: new Date(),
+      emailVerifiedAt: now,
       emailOtpCodeHash: null,
       emailOtpExpiresAt: null,
       emailOtpAttemptCount: 0,
       emailOtpLockedUntil: null,
-      lastLoginAt: new Date(),
+      lastLoginAt: now,
     },
     create: {
       email,
@@ -267,18 +296,114 @@ async function findOrCreateCustomerUser(email: string, displayName?: string | nu
       fullName: displayName ?? null,
       status: "ACTIVE",
       emailVerificationStatus: "VERIFIED",
-      emailVerifiedAt: new Date(),
-      lastLoginAt: new Date(),
+      emailVerifiedAt: now,
+      lastLoginAt: now,
     },
   });
 
-  await prisma.userRole.upsert({
-    where: { userId_roleId: { userId: user.id, roleId: role.id } },
-    update: {},
-    create: { userId: user.id, roleId: role.id },
+  return user;
+}
+
+async function findOrCreatePendingSocialUser(email: string, displayName?: string | null) {
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    return { user: existing, created: false };
+  }
+
+  const user = await prisma.user.create({
+    data: {
+      email,
+      displayName: displayName ?? null,
+      fullName: displayName ?? null,
+      status: "ACTIVE",
+      emailVerificationStatus: "PENDING",
+      emailVerifiedAt: null,
+      lastLoginAt: null,
+    },
   });
 
-  return user;
+  return { user, created: true };
+}
+
+async function getActiveVendorMemberships(userId: string) {
+  return prisma.vendorMembership.findMany({
+    where: {
+      userId,
+      isActive: true,
+      Vendor: {
+        isActive: true,
+      },
+    },
+    select: {
+      role: true,
+      Vendor: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          host: true,
+          isActive: true,
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  }) as Promise<VendorMembershipSummary[]>;
+}
+
+async function getActiveVendorMembershipForHost(userId: string, vendorHost: string) {
+  const host = String(vendorHost ?? "").trim().toLowerCase();
+  if (!host) return null;
+  return prisma.vendorMembership.findFirst({
+    where: {
+      userId,
+      isActive: true,
+      Vendor: {
+        host,
+        isActive: true,
+      },
+    },
+    select: {
+      role: true,
+      Vendor: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          host: true,
+          isActive: true,
+        },
+      },
+    },
+  });
+}
+
+async function ensureVendorMembershipForHost(userId: string, vendorHost: string) {
+  const host = String(vendorHost ?? "").trim().toLowerCase();
+  if (!host) return null;
+  const vendor = await prisma.vendor.findUnique({
+    where: { host },
+    select: { id: true, name: true, slug: true, host: true, isActive: true },
+  });
+  if (!vendor || !vendor.isActive) return null;
+
+  const membership = await prisma.vendorMembership.upsert({
+    where: { vendorId_userId: { vendorId: vendor.id, userId } },
+    update: { isActive: true },
+    create: {
+      vendorId: vendor.id,
+      userId,
+      role: "OWNER",
+      isActive: true,
+    },
+    select: {
+      role: true,
+      isActive: true,
+      Vendor: {
+        select: { id: true, name: true, slug: true, host: true, isActive: true },
+      },
+    },
+  });
+  return membership;
 }
 
 function generateOtpCode() {
@@ -387,12 +512,28 @@ function configurePassportIfNeeded() {
           clientID: googleClientId,
           clientSecret: googleClientSecret,
           callbackURL: process.env.GOOGLE_CALLBACK_URL ?? `${appBaseUrl}/v1/auth/google/callback`,
+          passReqToCallback: true,
         },
-        async (_accessToken, _refreshToken, profile, done) => {
+        async (req, _accessToken, _refreshToken, profile, done) => {
           try {
             const email = profile.emails?.[0]?.value?.toLowerCase();
             if (!email) return done(new Error("Google account missing email"));
-            const user = await findOrCreateCustomerUser(email, profile.displayName);
+            let intent = "customer_login";
+            try {
+              const rawState = String(req?.query?.state ?? "");
+              const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { intent?: string } | null;
+              intent = String(decoded?.intent ?? intent).trim().toLowerCase();
+            } catch {
+              intent = "customer_login";
+            }
+
+            const pendingSocialUser = intent.startsWith("vendor_")
+              ? await findOrCreatePendingSocialUser(email, profile.displayName)
+              : null;
+            const user = pendingSocialUser?.user ?? await findOrCreateVerifiedSocialUser(email, profile.displayName);
+            if (pendingSocialUser) {
+              (user as any).__created = pendingSocialUser.created;
+            }
             return done(null, user);
           } catch (error) {
             return done(error as Error);
@@ -423,7 +564,7 @@ function configurePassportIfNeeded() {
             const email = String(decoded?.email ?? "").toLowerCase().trim();
             if (!email) return done(new Error("Apple account missing email"));
             const displayName = profile?.displayName ?? null;
-            const user = await findOrCreateCustomerUser(email, displayName);
+            const user = await findOrCreateVerifiedSocialUser(email, displayName);
             return done(null, user);
           } catch (error) {
             return done(error as Error);
@@ -452,7 +593,15 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
   if (profileInput.errors.length) return res.status(400).json({ error: "invalid customer profile", issues: profileInput.errors });
 
   const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return res.status(409).json({ error: "email already registered. please login instead." });
+  if (existing) {
+    const vendorMemberships = await getActiveVendorMemberships(existing.id);
+    if (vendorMemberships.length > 0) {
+      return res.status(403).json({
+        error: "this email is registered as a vendor account. please use vendor login.",
+      });
+    }
+    return res.status(409).json({ error: "email already registered. please login instead." });
+  }
 
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
@@ -496,6 +645,84 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
   });
 });
 
+authRouter.post("/v1/auth/vendor/register", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "vendor context is required" });
+
+  const vendorHost = String(req.vendorHost ?? "").trim().toLowerCase();
+  const email = String(req.body?.email ?? "").toLowerCase().trim();
+  const password = String(req.body?.password ?? "");
+
+  if (!vendorHost) return res.status(400).json({ error: "vendor host is required" });
+  if (!email || !password) return res.status(400).json({ error: "email and password are required" });
+  if (!isEmailFormatValid(email)) return res.status(400).json({ error: "invalid email format" });
+  if (isBlockedEmailDomain(email)) return res.status(400).json({ error: "please use a real email address" });
+  if (password.length < 8) return res.status(400).json({ error: "password must be at least 8 characters" });
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    return res.status(409).json({ error: "email already registered. please use vendor login." });
+  }
+
+  const vendor = await prisma.vendor.findUnique({
+    where: { host: vendorHost },
+    select: { id: true, host: true, isActive: true },
+  });
+  if (!vendor || !vendor.isActive) {
+    return res.status(404).json({ error: "vendor not found" });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 12);
+  const user = await prisma.$transaction(async (tx) => {
+    const createdUser = await tx.user.create({
+      data: {
+        email,
+        passwordHash,
+        status: "ACTIVE",
+        emailVerificationStatus: "PENDING",
+        emailVerifiedAt: null,
+        lastLoginAt: null,
+      },
+    });
+
+    await tx.vendorMembership.create({
+      data: {
+        vendorId: vendor.id,
+        userId: createdUser.id,
+        role: "OWNER",
+        isActive: true,
+      },
+    });
+
+    return createdUser;
+  });
+
+  try {
+    await issueAndSendEmailOtp(user);
+  } catch (error) {
+    console.error("[auth] failed to send vendor registration OTP", { email: user.email, error });
+    try {
+      await prisma.vendorMembership.deleteMany({ where: { vendorId: vendor.id, userId: user.id } });
+      await prisma.user.delete({ where: { id: user.id } });
+    } catch (cleanupError) {
+      console.error("[auth] failed to roll back vendor registration after OTP failure", {
+        email: user.email,
+        cleanupError,
+      });
+    }
+    return res.status(502).json({ error: "failed to send verification email. please try again shortly." });
+  }
+
+  return res.status(201).json({
+    requiresEmailVerification: true,
+    user: serializeAuthUser(user),
+    nextUrl: buildVendorPathRedirectUrl(vendorHost, "/verify-email", {
+      email: user.email,
+      vendorHost,
+      returnTo: "/vendor/profile",
+    }),
+  });
+});
+
 authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
   const email = String(req.body?.email ?? "").toLowerCase().trim();
   const password = String(req.body?.password ?? "");
@@ -506,6 +733,14 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
   if (!user.passwordHash) return res.status(409).json({ error: "this email uses social login. please continue with google." });
   if (user.emailVerificationStatus !== "VERIFIED" || !user.emailVerifiedAt) {
     return res.status(403).json({ error: "email not verified. please verify with OTP first." });
+  }
+  const vendorMemberships = await getActiveVendorMemberships(user.id);
+  if (vendorMemberships.length > 0) {
+    const vendorHost = vendorMemberships[0]?.Vendor?.host ?? "";
+    return res.status(403).json({
+      error: "this is a vendor account. please use vendor login.",
+      vendorHost,
+    });
   }
 
   const ok = await bcrypt.compare(password, user.passwordHash);
@@ -580,7 +815,6 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(404).json({ error: "user not found" });
-  if (!user.passwordHash) return res.status(409).json({ error: "social login account does not require OTP verification here." });
   if (user.emailVerificationStatus === "VERIFIED" && user.emailVerifiedAt) {
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
@@ -641,7 +875,6 @@ authRouter.post("/v1/auth/resend-email-otp", async (req: VendorRequest, res) => 
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(404).json({ error: "user not found" });
-  if (!user.passwordHash) return res.status(409).json({ error: "social login account does not require OTP verification here." });
   if (user.emailVerificationStatus === "VERIFIED") return res.status(200).json({ message: "email already verified" });
 
   const now = new Date();
@@ -756,7 +989,9 @@ authRouter.get("/v1/auth/google/start", (req, res, next) => {
   }
   const vendorHost = String(req.query.vendorHost ?? resolveRequestHost(req)).trim().toLowerCase();
   const referralCode = String(req.query.referralCode ?? "").trim().toLowerCase() || null;
-  const state = Buffer.from(JSON.stringify({ vendorHost, referralCode })).toString("base64url");
+  const intent = String(req.query.intent ?? "customer_login").trim().toLowerCase();
+  const safeIntent = new Set(["customer_login", "customer_register", "vendor_login", "vendor_register"]).has(intent) ? intent : "customer_login";
+  const state = Buffer.from(JSON.stringify({ vendorHost, referralCode, intent: safeIntent })).toString("base64url");
   return passport.authenticate("google", { scope: ["profile", "email"], session: false, state })(req, res, next);
 });
 
@@ -768,14 +1003,100 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
     const rawState = String(req.query.state ?? "");
     let vendorHost = resolveRequestHost(req);
     let referralCode: string | null = null;
+    let intent = "customer_login";
     try {
-      const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { vendorHost?: string; referralCode?: string };
+      const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { vendorHost?: string; referralCode?: string; intent?: string };
       vendorHost = String(decoded.vendorHost ?? vendorHost);
       referralCode = decoded.referralCode ? String(decoded.referralCode).toLowerCase() : null;
+      intent = String(decoded.intent ?? intent).trim().toLowerCase();
     } catch {
       vendorHost = resolveRequestHost(req);
       referralCode = null;
+      intent = "customer_login";
     }
+
+    if (intent.startsWith("vendor_")) {
+      const vendorMembership = await getActiveVendorMembershipForHost(String(user.id), vendorHost);
+      if (intent === "vendor_register") {
+        const createdMembership = await ensureVendorMembershipForHost(String(user.id), vendorHost);
+        if (!createdMembership) {
+          return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor/register", { error: "vendor_approval_required" }));
+        }
+
+        if (user.emailVerificationStatus !== "VERIFIED" || !user.emailVerifiedAt) {
+          try {
+            await issueAndSendEmailOtp(user);
+          } catch (error) {
+            console.error("[auth] failed to send vendor onboarding OTP", { email: user.email, error });
+            if (user.__created) {
+              try {
+                await prisma.vendorMembership.deleteMany({ where: { vendorId: createdMembership.Vendor.id, userId: user.id } });
+                await prisma.user.delete({ where: { id: user.id } });
+              } catch (cleanupError) {
+                console.error("[auth] failed to roll back vendor onboarding after OTP failure", {
+                  email: user.email,
+                  cleanupError,
+                });
+              }
+            }
+            return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor/register", { error: "otp_send_failed" }));
+          }
+          return res.redirect(
+            buildVendorPathRedirectUrl(vendorHost, "/verify-email", {
+              email: user.email,
+              vendorHost,
+              returnTo: "/vendor/profile",
+            })
+          );
+        }
+
+        const loggedInUser = await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date(), status: "ACTIVE" },
+        });
+        const token = issueAccessToken(loggedInUser);
+        setAccessCookie(res, token);
+        return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor/profile", { from: "register" }));
+      }
+
+      if (!vendorMembership) {
+        const errorUrl = buildVendorPathRedirectUrl(vendorHost, "/vendor/login", { error: "vendor_approval_required" });
+        return res.redirect(errorUrl);
+      }
+
+      if (user.emailVerificationStatus !== "VERIFIED" || !user.emailVerifiedAt) {
+        try {
+          await issueAndSendEmailOtp(user);
+        } catch (error) {
+          console.error("[auth] failed to send vendor login OTP", { email: user.email, error });
+          return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor/login", { error: "otp_send_failed" }));
+        }
+        return res.redirect(
+          buildVendorPathRedirectUrl(vendorHost, "/verify-email", {
+            email: user.email,
+            vendorHost,
+            returnTo: "/vendor",
+          })
+        );
+      }
+
+      const loggedInUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date(), status: "ACTIVE" },
+      });
+      const token = issueAccessToken(loggedInUser);
+      setAccessCookie(res, token);
+      return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor"));
+    }
+
+    const activeVendorMemberships = await getActiveVendorMemberships(String(user.id));
+    if (activeVendorMemberships.length > 0) {
+      const vendorLoginUrl = buildVendorPathRedirectUrl(activeVendorMemberships[0].Vendor.host, "/vendor/login", {
+        error: "vendor_account",
+      });
+      return res.redirect(vendorLoginUrl);
+    }
+
     await ensureCustomerEntitlements({
       userId: String(user.id),
       email: String(user.email),

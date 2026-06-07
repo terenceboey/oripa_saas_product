@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
@@ -22,6 +23,15 @@ type Vendor = {
   referralCode?: string | null;
   businessLocation?: string | null;
   businessContact?: string | null;
+  applicationStatus?: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED" | null;
+  entityName?: string | null;
+  yearsOfOperations?: "LT_1" | "ONE_TO_THREE" | "THREE_TO_FIVE" | "FIVE_PLUS" | null;
+  personInCharge?: string | null;
+  personInChargeDateOfBirth?: string | null;
+  personInChargeCountry?: string | null;
+  identificationDocumentType?: "PASSPORT" | "DRIVING_LICENCE" | null;
+  identificationDocumentUrl?: string | null;
+  applicationSubmittedAt?: string | null;
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
   vendorSettings?: {
@@ -1290,8 +1300,10 @@ export default function VendorPage() {
         <div className="brand-text">
           <strong>Vendor Dashboard</strong>
           <span>{vendor?.name ?? "-"} ({vendor?.host ?? runtimeVendorHost})</span>
+          {vendor?.applicationStatus ? <span className="muted tiny">Application status: {vendor.applicationStatus}</span> : null}
         </div>
         <div className="actions">
+          <Link className="sort-pill" href="/vendor/profile">Vendor Profile</Link>
           <a className="sort-pill" href="/">Back to Homepage</a>
         </div>
       </header>

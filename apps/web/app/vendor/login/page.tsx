@@ -7,6 +7,7 @@ import { FormField } from "../../../components/form-field";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const clientPageHeader = { "x-client-page": "/vendor/login" };
+const socialBase = `${apiBase}/v1/auth`;
 
 function isLocalhostLike(host: string) {
   const normalized = host.trim().toLowerCase();
@@ -60,6 +61,28 @@ function VendorLoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const callbackError = String(searchParams.get("error") ?? "").trim().toLowerCase();
+  const callbackStatus = String(searchParams.get("status") ?? "").trim().toLowerCase();
+  const callbackErrorMessage =
+    callbackError === "vendor_approval_required"
+      ? "This vendor account is waiting for super admin approval."
+      : callbackError === "vendor_account"
+        ? "This is a vendor account. Please use the vendor login page."
+        : callbackError
+          ? "Vendor sign-in failed."
+          : null;
+  const callbackStatusMessage = callbackStatus === "pending_approval" ? "Your vendor application was submitted and is waiting for approval." : null;
+  const displayError = error ?? callbackErrorMessage;
+  const displayMessage = message ?? callbackStatusMessage;
+
+  function startGoogleVendorLogin(event: React.MouseEvent<HTMLAnchorElement>) {
+    event.preventDefault();
+    const url = new URL(`${socialBase}/google/start`);
+    url.searchParams.set("vendorHost", runtimeVendorHost);
+    url.searchParams.set("intent", "vendor_login");
+    window.location.href = url.toString();
+  }
+
   async function handleVendorLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -97,7 +120,7 @@ function VendorLoginContent() {
       <section className="card auth-card">
         <h1>Vendor Login</h1>
         <p className="muted">
-          Sign in with an approved vendor account. Vendor access is granted only after super admin approval.
+          Sign in with your vendor account. Your application can still be under review while you work in the dashboard.
         </p>
 
         <form className="auth-form" onSubmit={handleVendorLogin}>
@@ -112,8 +135,16 @@ function VendorLoginContent() {
           </button>
         </form>
 
-        {error ? <p className="error">{error}</p> : null}
-        {message ? <p className="badge">{message}</p> : null}
+        <div className="auth-divider">Other vendor login options</div>
+        <div className="auth-social-row">
+          <a className="auth-social-button google" href="#" onClick={startGoogleVendorLogin}>
+            <span className="google-g">G</span>
+            <span>Vendor login with Google</span>
+          </a>
+        </div>
+
+        {displayError ? <p className="error">{displayError}</p> : null}
+        {displayMessage ? <p className="badge">{displayMessage}</p> : null}
       </section>
     </main>
   );

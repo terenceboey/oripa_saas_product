@@ -45,6 +45,18 @@ export default function RegisterPage() {
     const url = new URL(window.location.href);
     const ref = String(url.searchParams.get("ref") ?? "").trim().toLowerCase();
     if (ref) setReferralCode(ref);
+    void (async () => {
+      const response = await fetch(`${apiBase}/v1/vendor/me`, {
+        headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+        credentials: "include",
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok && Boolean(payload?.isVendorMember)) {
+        router.replace("/vendor");
+        return;
+      }
+    })();
     void fetch(`${apiBase}/v1/vendor/current`, {
       headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
       credentials: "include",
@@ -98,7 +110,13 @@ export default function RegisterPage() {
       });
 
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "Registration failed");
+      if (!response.ok) {
+        if (payload?.vendorHost || String(payload?.error ?? "").toLowerCase().includes("vendor account")) {
+          window.location.href = "/vendor/login?error=vendor_account";
+          return;
+        }
+        throw new Error(payload.error ?? "Registration failed");
+      }
 
       setMessage("Account created. Please verify OTP sent to your email.");
       setPassword("");
@@ -115,6 +133,7 @@ export default function RegisterPage() {
     const host = window.location.host.toLowerCase();
     const url = new URL(`${socialBase}/google/start`);
     url.searchParams.set("vendorHost", host);
+    url.searchParams.set("intent", "customer_register");
     if (referralCode) url.searchParams.set("referralCode", referralCode);
     window.location.href = url.toString();
   }
@@ -127,7 +146,7 @@ export default function RegisterPage() {
 
       <section className="card auth-card">
         <h1>Create Customer Account</h1>
-        <p className="muted">Create your customer login first. After email verification, we will take you to the customer information page. Vendor applications will use a separate approval flow.</p>
+        <p className="muted">Create a customer account first. After email verification, we will take you to the customer information page. Vendor applications use a separate approval flow.</p>
 
         <form className="auth-form" onSubmit={handleRegister}>
           <FormField label="Email">
@@ -143,7 +162,7 @@ export default function RegisterPage() {
         <div className="auth-social-row">
           <a className="auth-social-button google" href="#" onClick={startGoogleRegister}>
             <span className="google-g">G</span>
-            <span>Continue as customer with Google</span>
+            <span>Continue with Google</span>
           </a>
         </div>
 

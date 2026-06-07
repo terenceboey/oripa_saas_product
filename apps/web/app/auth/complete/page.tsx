@@ -67,6 +67,16 @@ function AuthCompleteContent() {
 
     void (async () => {
       try {
+        const vendorAccess = await fetch(`${apiBase}/v1/vendor/me`, {
+          headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+          credentials: "include",
+          cache: "no-store",
+        });
+        const vendorPayload = await vendorAccess.json().catch(() => ({}));
+        if (active && vendorAccess.ok && Boolean(vendorPayload?.isVendorMember)) {
+          router.replace("/vendor");
+          return;
+        }
         const nextUser = await loadProfileWithRetry();
         if (!active) return;
         if (!nextUser?.profileComplete) {

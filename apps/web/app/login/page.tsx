@@ -67,6 +67,16 @@ export default function LoginPage() {
     return nextUser;
   }
 
+  async function loadVendorMembership() {
+    const response = await fetch(`${apiBase}/v1/vendor/me`, {
+      headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+      credentials: "include",
+      cache: "no-store",
+    });
+    const payload = await response.json().catch(() => ({}));
+    return response.ok && Boolean(payload?.isVendorMember);
+  }
+
   useEffect(() => {
     const url = new URL(window.location.href);
     const token = url.searchParams.get("token");
@@ -97,7 +107,14 @@ export default function LoginPage() {
       window.history.replaceState({}, "", url.toString());
     }
 
-    void loadProfile().catch(() => {});
+    void (async () => {
+      const isVendorMember = await loadVendorMembership().catch(() => false);
+      if (isVendorMember) {
+        router.replace("/vendor");
+        return;
+      }
+      void loadProfile().catch(() => {});
+    })();
     void fetch(`${apiBase}/v1/vendor/current`, {
       headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
       credentials: "include",
@@ -151,7 +168,13 @@ export default function LoginPage() {
       });
 
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error ?? "Login failed");
+      if (!response.ok) {
+        if (payload?.vendorHost || String(payload?.error ?? "").toLowerCase().includes("vendor account")) {
+          window.location.href = "/vendor/login?error=vendor_account";
+          return;
+        }
+        throw new Error(payload.error ?? "Login failed");
+      }
 
       setMessage("Customer login successful.");
       const nextUser = (payload.user ?? (await loadProfile())) as AuthUser | null;
@@ -177,6 +200,7 @@ export default function LoginPage() {
     const host = window.location.host.toLowerCase();
     const url = new URL(`${socialBase}/google/start`);
     url.searchParams.set("vendorHost", host);
+    url.searchParams.set("intent", "customer_login");
     window.location.href = url.toString();
   }
 
@@ -188,7 +212,7 @@ export default function LoginPage() {
 
       <section className="card auth-card">
         <h1>Customer Login</h1>
-        <p className="muted">Sign in as a customer with email/password, Google, or Apple. Vendor registration will use a separate approval flow.</p>
+        <p className="muted">Sign in as a customer with email/password or Google. Vendor accounts use a separate login and approval flow.</p>
 
         <form className="auth-form" onSubmit={handleLogin}>
           <FormField label="Email">
@@ -204,7 +228,7 @@ export default function LoginPage() {
         <div className="auth-social-row">
           <a className="auth-social-button google" href="#" onClick={startGoogleLogin}>
             <span className="google-g">G</span>
-            <span>Customer login with Google</span>
+            <span>Continue with Google</span>
           </a>
         </div>
 
