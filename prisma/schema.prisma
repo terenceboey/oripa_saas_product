@@ -178,6 +178,10 @@ model User {
   email                   String                  @unique
   passwordHash            String?
   displayName             String?
+  fullName                String?
+  dateOfBirth             DateTime?
+  age                     Int?
+  country                 String?
   status                  UserStatus              @default(ACTIVE)
   emailVerificationStatus EmailVerificationStatus @default(PENDING)
   emailVerifiedAt         DateTime?

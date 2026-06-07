@@ -66,6 +66,8 @@ type AuthUser = {
   id: string;
   email: string;
   displayName: string | null;
+  fullName?: string | null;
+  profileComplete?: boolean;
   status: string;
   lastLoginAt?: string | null;
 };
@@ -278,10 +280,11 @@ export default function HomePage() {
         </div>
         <div className="header-right">
           {user ? (
-            <div className="auth-inline-card">
-              <strong>{user.displayName || "Customer"}</strong>
+            <Link href="/profile" className="auth-inline-card">
+              <strong>{user.displayName || user.fullName || "Customer"}</strong>
               <span>{user.email}</span>
-            </div>
+              {!user.profileComplete ? <span>Complete profile</span> : null}
+            </Link>
           ) : (
             <>
               <a className="sort-pill" href="/login">Login</a>

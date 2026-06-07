@@ -16,7 +16,11 @@ type AuthUser = {
   id: string;
   email: string;
   displayName: string | null;
+  fullName?: string | null;
+  dateOfBirth?: string | null;
+  countryCode?: string | null;
   status: string;
+  profileComplete?: boolean;
   lastLoginAt?: string | null;
 };
 type VendorTheme = {
@@ -85,7 +89,9 @@ export default function LoginPage() {
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.error ?? "Failed to load profile");
-    setUser(payload.user ?? null);
+    const nextUser = (payload.user ?? null) as AuthUser | null;
+    setUser(nextUser);
+    return nextUser;
   }
 
   useEffect(() => {
@@ -102,6 +108,11 @@ export default function LoginPage() {
       window.history.replaceState({}, "", url.toString());
       window.setTimeout(() => {
         void (async () => {
+          const nextUser = await loadProfile().catch(() => null);
+          if (!nextUser?.profileComplete) {
+            router.push("/profile");
+            return;
+          }
           const currentHost = window.location.host.toLowerCase();
           const callbackHostCandidate = callbackVendorHost && !isLocalhostLike(callbackVendorHost) ? callbackVendorHost : null;
           const membershipHost = await resolveVendorHomeHost();
@@ -111,7 +122,7 @@ export default function LoginPage() {
             window.location.href = `${window.location.protocol}//${targetHost}/login`;
             return;
           }
-          router.push("/vendor");
+          router.push(membershipHost ? "/vendor" : "/");
         })();
       }, 500);
     }
@@ -179,16 +190,21 @@ export default function LoginPage() {
       if (!response.ok) throw new Error(payload.error ?? "Login failed");
 
       setMessage("Logged in successfully.");
-      await loadProfile();
+      const nextUser = (payload.user ?? (await loadProfile())) as AuthUser | null;
+      setUser(nextUser);
       window.setTimeout(() => {
         void (async () => {
+          if (!nextUser?.profileComplete) {
+            router.push("/profile");
+            return;
+          }
           const currentHost = window.location.host.toLowerCase();
           const membershipHost = await resolveVendorHomeHost();
           if (membershipHost && !isLocalhostLike(membershipHost) && membershipHost !== currentHost) {
             window.location.href = `${window.location.protocol}//${membershipHost}/login`;
             return;
           }
-          router.push("/vendor");
+          router.push(membershipHost ? "/vendor" : "/");
         })();
       }, 500);
     } catch (err) {
@@ -238,9 +254,11 @@ export default function LoginPage() {
         {message ? <p className="badge">{message}</p> : null}
         {user ? (
           <div className="auth-profile-card">
-            <strong>Signed in as {user.displayName || "Customer"}</strong>
+            <strong>Signed in as {user.displayName || user.fullName || "Customer"}</strong>
             <div className="muted tiny">{user.email}</div>
             <div className="muted tiny">Status: {user.status}</div>
+            <div className="muted tiny">{user.profileComplete ? "Profile complete" : "Profile needs completion"}</div>
+            <div className="muted tiny"><Link href="/profile">Edit customer profile</Link></div>
           </div>
         ) : null}
 

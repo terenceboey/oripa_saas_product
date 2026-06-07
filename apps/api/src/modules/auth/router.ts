@@ -89,6 +89,124 @@ function clearAccessCookie(res: any) {
   res.setHeader("Set-Cookie", parts.join("; "));
 }
 
+type AuthUserRecord = {
+  id: string;
+  email: string;
+  displayName: string | null;
+  fullName: string | null;
+  dateOfBirth: Date | null;
+  age: number | null;
+  country: string | null;
+  status: string;
+  emailVerificationStatus: string;
+  emailVerifiedAt: Date | null;
+  lastLoginAt: Date | null;
+};
+
+function formatDateOnly(value?: Date | null) {
+  return value ? value.toISOString().slice(0, 10) : null;
+}
+
+function countryToCode(value?: string | null) {
+  const normalized = String(value ?? "").trim();
+  if (!normalized) return null;
+  if (/^[a-z]{2}$/i.test(normalized)) return normalized.toUpperCase();
+  const knownCountries: Record<string, string> = {
+    singapore: "SG",
+    australia: "AU",
+    malaysia: "MY",
+    "united states": "US",
+    "united kingdom": "GB",
+    canada: "CA",
+    japan: "JP",
+    "south korea": "KR",
+    indonesia: "ID",
+    philippines: "PH",
+    thailand: "TH",
+    vietnam: "VN",
+  };
+  return knownCountries[normalized.toLowerCase()] ?? null;
+}
+
+function isCustomerProfileComplete(user: Pick<AuthUserRecord, "fullName" | "dateOfBirth" | "country">) {
+  return Boolean(user.fullName?.trim() && user.dateOfBirth && countryToCode(user.country));
+}
+
+function serializeAuthUser(user: AuthUserRecord) {
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    fullName: user.fullName,
+    dateOfBirth: formatDateOnly(user.dateOfBirth),
+    country: user.country,
+    countryCode: countryToCode(user.country),
+    age: user.age,
+    status: user.status,
+    emailVerificationStatus: user.emailVerificationStatus,
+    emailVerifiedAt: user.emailVerifiedAt,
+    lastLoginAt: user.lastLoginAt,
+    profileComplete: isCustomerProfileComplete(user),
+  };
+}
+
+function normalizeFullName(input: unknown) {
+  return String(input ?? "").trim().replace(/\s+/g, " ");
+}
+
+function normalizeCountryCode(input: unknown) {
+  return String(input ?? "").trim().toUpperCase();
+}
+
+function parseDateOfBirth(input: unknown) {
+  const raw = String(input ?? "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(raw)) return null;
+  const parsed = new Date(`${raw}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  if (parsed.toISOString().slice(0, 10) !== raw) return null;
+  return parsed;
+}
+
+function calculateAge(dateOfBirth: Date | null) {
+  if (!dateOfBirth) return null;
+  const today = new Date();
+  let age = today.getUTCFullYear() - dateOfBirth.getUTCFullYear();
+  const hasHadBirthdayThisYear =
+    today.getUTCMonth() > dateOfBirth.getUTCMonth() ||
+    (today.getUTCMonth() === dateOfBirth.getUTCMonth() && today.getUTCDate() >= dateOfBirth.getUTCDate());
+  if (!hasHadBirthdayThisYear) age -= 1;
+  return age;
+}
+
+function validateCustomerProfileInput(body: unknown) {
+  const input = (body ?? {}) as Record<string, unknown>;
+  const fullName = normalizeFullName(input.fullName ?? input.displayName);
+  const dateOfBirth = parseDateOfBirth(input.dateOfBirth);
+  const countryCode = normalizeCountryCode(input.countryCode);
+  const errors: string[] = [];
+  const today = new Date();
+  const oldestAllowed = new Date("1900-01-01T00:00:00.000Z");
+
+  if (!fullName) errors.push("fullName is required");
+  else if (fullName.length > 120) errors.push("fullName must be 120 characters or fewer");
+
+  if (!dateOfBirth) errors.push("dateOfBirth must be a valid YYYY-MM-DD date");
+  else if (dateOfBirth > today) errors.push("dateOfBirth cannot be in the future");
+  else if (dateOfBirth < oldestAllowed) errors.push("dateOfBirth is too far in the past");
+
+  if (!/^[A-Z]{2}$/.test(countryCode)) errors.push("countryCode must be a valid 2-letter country code");
+
+  return {
+    errors,
+    data: {
+      fullName,
+      dateOfBirth,
+      countryCode,
+      age: calculateAge(dateOfBirth),
+    },
+  };
+}
+
 async function findOrCreateCustomerUser(email: string, displayName?: string | null) {
   const role = await prisma.role.upsert({
     where: { code: "customer" },
@@ -112,6 +230,7 @@ async function findOrCreateCustomerUser(email: string, displayName?: string | nu
     create: {
       email,
       displayName: displayName ?? null,
+      fullName: displayName ?? null,
       status: "ACTIVE",
       emailVerificationStatus: "VERIFIED",
       emailVerifiedAt: new Date(),
@@ -286,7 +405,8 @@ configurePassportIfNeeded();
 authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
   const email = String(req.body?.email ?? "").toLowerCase().trim();
   const password = String(req.body?.password ?? "");
-  const displayName = String(req.body?.displayName ?? "").trim() || null;
+  const profileInput = validateCustomerProfileInput(req.body);
+  const displayName = String(req.body?.displayName ?? profileInput.data.fullName ?? "").trim() || null;
   const referralCode = String(req.body?.referralCode ?? "").trim().toLowerCase() || null;
   const vendorId = req.vendorId;
 
@@ -295,6 +415,7 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
   if (!isEmailFormatValid(email)) return res.status(400).json({ error: "invalid email format" });
   if (isBlockedEmailDomain(email)) return res.status(400).json({ error: "please use a real email address" });
   if (password.length < 8) return res.status(400).json({ error: "password must be at least 8 characters" });
+  if (profileInput.errors.length) return res.status(400).json({ error: "invalid customer profile", issues: profileInput.errors });
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return res.status(409).json({ error: "email already registered. please login instead." });
@@ -305,6 +426,10 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
       email,
       passwordHash,
       displayName,
+      fullName: profileInput.data.fullName,
+      dateOfBirth: profileInput.data.dateOfBirth,
+      age: profileInput.data.age,
+      country: profileInput.data.countryCode,
       status: "ACTIVE",
       emailVerificationStatus: "PENDING",
       emailVerifiedAt: null,
@@ -333,7 +458,7 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
 
   return res.status(201).json({
     requiresEmailVerification: true,
-    user: { id: user.id, email: user.email, displayName: user.displayName, emailVerificationStatus: user.emailVerificationStatus },
+    user: serializeAuthUser(user),
   });
 });
 
@@ -352,16 +477,16 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
   const ok = await bcrypt.compare(password, user.passwordHash);
   if (!ok) return res.status(401).json({ error: "invalid credentials" });
 
-  await prisma.user.update({
+  const loggedInUser = await prisma.user.update({
     where: { id: user.id },
     data: { lastLoginAt: new Date(), status: "ACTIVE" },
   });
 
-  const token = issueAccessToken(user);
+  const token = issueAccessToken(loggedInUser);
   setAccessCookie(res, token);
   return res.json({
     token,
-    user: { id: user.id, email: user.email, displayName: user.displayName },
+    user: serializeAuthUser(loggedInUser),
   });
 });
 
@@ -379,7 +504,7 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
     setAccessCookie(res, token);
     return res.json({
       token,
-      user: { id: user.id, email: user.email, displayName: user.displayName, emailVerificationStatus: user.emailVerificationStatus },
+      user: serializeAuthUser(user),
     });
   }
 
@@ -422,7 +547,7 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
   setAccessCookie(res, token);
   return res.json({
     token,
-    user: { id: verifiedUser.id, email: verifiedUser.email, displayName: verifiedUser.displayName, emailVerificationStatus: verifiedUser.emailVerificationStatus },
+    user: serializeAuthUser(verifiedUser),
   });
 });
 
@@ -466,17 +591,39 @@ authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return res.status(404).json({ error: "user not found" });
 
-  return res.json({
-    user: {
-      id: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      status: user.status,
-      emailVerificationStatus: user.emailVerificationStatus,
-      emailVerifiedAt: user.emailVerifiedAt,
-      lastLoginAt: user.lastLoginAt,
+  return res.json({ user: serializeAuthUser(user) });
+});
+
+authRouter.get("/v1/auth/profile", async (req: VendorRequest, res) => {
+  const userId = getRequestUserId(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return res.status(404).json({ error: "user not found" });
+
+  return res.json({ user: serializeAuthUser(user) });
+});
+
+authRouter.patch("/v1/auth/profile", async (req: VendorRequest, res) => {
+  const userId = getRequestUserId(req);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+
+  const profileInput = validateCustomerProfileInput(req.body);
+  if (profileInput.errors.length) return res.status(400).json({ error: "invalid customer profile", issues: profileInput.errors });
+  const displayName = String(req.body?.displayName ?? profileInput.data.fullName).trim() || profileInput.data.fullName;
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      fullName: profileInput.data.fullName,
+      displayName,
+      dateOfBirth: profileInput.data.dateOfBirth,
+      age: profileInput.data.age,
+      country: profileInput.data.countryCode,
     },
   });
+
+  return res.json({ user: serializeAuthUser(user) });
 });
 
 authRouter.get("/v1/auth/vendor-home", async (req: VendorRequest, res) => {
@@ -563,13 +710,13 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
     try {
       if (isSafeRedirectVendorHost(vendorHost)) {
         const parsedWeb = new URL(webBaseUrl);
-        const directVendorLoginUrl = `${parsedWeb.protocol}//${vendorHost}/login?vendorHost=${encodeURIComponent(vendorHost)}`;
-        return res.redirect(directVendorLoginUrl);
+        const directVendorProfileUrl = `${parsedWeb.protocol}//${vendorHost}/profile?vendorHost=${encodeURIComponent(vendorHost)}`;
+        return res.redirect(directVendorProfileUrl);
       }
     } catch {
       // fallback to WEB_URL login redirect below
     }
-    return res.redirect(`${webBaseUrl}/login?vendorHost=${encodeURIComponent(vendorHost)}`);
+    return res.redirect(`${webBaseUrl}/profile?vendorHost=${encodeURIComponent(vendorHost)}`);
   })(req, res, next);
 });
 
@@ -587,7 +734,7 @@ authRouter.post("/v1/auth/apple/callback", (req, res, next) => {
     }
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
-    return res.redirect(`${webBaseUrl}/login`);
+    return res.redirect(`${webBaseUrl}/profile`);
   })(req, res, next);
 });
 

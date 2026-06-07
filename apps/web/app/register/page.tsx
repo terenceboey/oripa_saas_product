@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { FormField } from "../../components/form-field";
+import { COUNTRY_OPTIONS } from "../../lib/countries";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
@@ -32,7 +33,9 @@ export default function RegisterPage() {
     return configuredVendorHost;
   }, []);
   const [referralCode, setReferralCode] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [countryCode, setCountryCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -95,7 +98,7 @@ export default function RegisterPage() {
           ...clientPageHeader,
         },
         credentials: "include",
-        body: JSON.stringify({ displayName, email, password, referralCode: referralCode || undefined }),
+        body: JSON.stringify({ fullName, displayName: fullName, dateOfBirth, countryCode, email, password, referralCode: referralCode || undefined }),
       });
 
       const payload = await response.json();
@@ -131,8 +134,21 @@ export default function RegisterPage() {
         <p className="muted">Register as a customer and start topping up points.</p>
 
         <form className="auth-form" onSubmit={handleRegister}>
-          <FormField label="Display name">
-            <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="Display name" required />
+          <FormField label="Full name">
+            <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" required />
+          </FormField>
+          <FormField label="Date of birth">
+            <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
+          </FormField>
+          <FormField label="Country">
+            <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} required>
+              <option value="">Select country</option>
+              {COUNTRY_OPTIONS.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
           </FormField>
           <FormField label="Email">
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
@@ -147,7 +163,7 @@ export default function RegisterPage() {
         <div className="auth-social-row">
           <a className="auth-social-button google" href="#" onClick={startGoogleRegister}>
             <span className="google-g">G</span>
-            <span>Continue with Google</span>
+            <span>Continue with Google, then complete profile</span>
           </a>
         </div>
 
