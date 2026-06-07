@@ -127,50 +127,66 @@ enum CreativeAssetStatus {
   REJECTED
 }
 
+enum CustodyItemStatus {
+  HELD
+  REDEMPTION_REQUESTED
+  BUYBACK_REQUESTED
+  REDEEMED
+  BOUGHT_BACK
+  VOIDED
+}
+
+enum CustodyProvider {
+  ORIPA_INTERNAL
+  COLLECTOR_CRYPT
+  PHYGITALS
+}
+
 enum CatalogItemType {
   CARD
   SEALED_PRODUCT
 }
 
 model Vendor {
-  id                  String                @id @default(cuid())
-  name                String
-  slug                String                @unique
-  host                String                @unique
-  logoImageUrl        String?
-  faviconImageUrl     String?
-  referralCode        String?               @unique
-  businessLocation    String?
-  businessContact     String?
-  isActive            Boolean               @default(true)
-  riskLevel           Int                   @default(0)
-  complianceFlags     Json?
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-  packs               Pack[]
-  draws               PackDraw[]
-  wallets             WalletAccount[]
-  idempotency         IdempotencyKey[]
-  banners             VendorBanner[]
-  members             VendorMembership[]
-  vendorSettings      VendorSettings?
-  drawOrders          DrawOrder[]
-  drawResults         DrawResult[]
-  revenueLedger       VendorRevenueLedger[]
-  auditLogs           AuditLog[]
-  outboxEvents        OutboxEvent[]
-  topupOrders         TopupOrder[]
-  paymentTransactions PaymentTransaction[]
-  fairnessProofs      DrawFairnessProof[]
-  fairnessSelections  DrawFairnessSelection[]
-  referralSignups     VendorReferralSignup[]
-  pointGrantQrs       VendorPointGrantQr[]
-  creativeJobs        CreativeJob[]
-  creativeAssets      CreativeAsset[]
-  inventoryItems      VendorInventoryItem[]
-  packTemplates       PackTemplate[]
-  packTemplateVersions PackTemplateVersion[]
+  id                            String                         @id @default(cuid())
+  name                          String
+  slug                          String                         @unique
+  host                          String                         @unique
+  logoImageUrl                  String?
+  faviconImageUrl               String?
+  referralCode                  String?                        @unique
+  businessLocation              String?
+  businessContact               String?
+  isActive                      Boolean                        @default(true)
+  riskLevel                     Int                            @default(0)
+  complianceFlags               Json?
+  createdAt                     DateTime                       @default(now())
+  updatedAt                     DateTime                       @updatedAt
+  packs                         Pack[]
+  draws                         PackDraw[]
+  wallets                       WalletAccount[]
+  idempotency                   IdempotencyKey[]
+  banners                       VendorBanner[]
+  members                       VendorMembership[]
+  vendorSettings                VendorSettings?
+  drawOrders                    DrawOrder[]
+  drawResults                   DrawResult[]
+  revenueLedger                 VendorRevenueLedger[]
+  auditLogs                     AuditLog[]
+  outboxEvents                  OutboxEvent[]
+  topupOrders                   TopupOrder[]
+  paymentTransactions           PaymentTransaction[]
+  fairnessProofs                DrawFairnessProof[]
+  fairnessSelections            DrawFairnessSelection[]
+  referralSignups               VendorReferralSignup[]
+  pointGrantQrs                 VendorPointGrantQr[]
+  creativeJobs                  CreativeJob[]
+  creativeAssets                CreativeAsset[]
+  inventoryItems                VendorInventoryItem[]
+  packTemplates                 PackTemplate[]
+  packTemplateVersions          PackTemplateVersion[]
   packPrizeInventoryAllocations PackPrizeInventoryAllocation[]
+  custodyItems                  CustodyItem[]
 }
 
 model User {
@@ -202,9 +218,10 @@ model User {
   paymentTransactions     PaymentTransaction[]
   auditLogs               AuditLog[]
   fairnessProofs          DrawFairnessProof[]
-  redeemedPointGrantQrs   VendorPointGrantQr[] @relation("RedeemedByUser")
-  createdPointGrantQrs    VendorPointGrantQr[] @relation("CreatedByUser")
+  redeemedPointGrantQrs   VendorPointGrantQr[]    @relation("RedeemedByUser")
+  createdPointGrantQrs    VendorPointGrantQr[]    @relation("CreatedByUser")
   vendorReferralSignups   VendorReferralSignup[]
+  custodyItems            CustodyItem[]
 }
 
 model Role {
@@ -244,94 +261,96 @@ model VendorMembership {
 }
 
 model VendorSettings {
-  id                    String   @id @default(cuid())
-  vendorId              String   @unique
-  pointsPerCurrencyUnit Int      @default(100)
-  currencyCode          String   @default("USD")
-  platformFeeBps        Int      @default(0)
-  maxPackItems          Int      @default(500)
-  maxPackTiers          Int      @default(10)
-  maxDrawQuantity       Int      @default(100)
+  id                    String         @id @default(cuid())
+  vendorId              String         @unique
+  pointsPerCurrencyUnit Int            @default(100)
+  currencyCode          String         @default("USD")
+  platformFeeBps        Int            @default(0)
+  maxPackItems          Int            @default(500)
+  maxPackTiers          Int            @default(10)
+  maxDrawQuantity       Int            @default(100)
   planCode              VendorPlanCode @default(BASIC)
-  storefrontPrimary     String   @default("#0E6FFF")
-  storefrontSecondary   String   @default("#EAF2FF")
-  storefrontAccent      String   @default("#1353B5")
-  storefrontSurface     String   @default("#FFFFFF")
-  storefrontText        String   @default("#121826")
-  storefrontMuted       String   @default("#516074")
-  storefrontRadius      Int      @default(16)
+  storefrontPrimary     String         @default("#0E6FFF")
+  storefrontSecondary   String         @default("#EAF2FF")
+  storefrontAccent      String         @default("#1353B5")
+  storefrontSurface     String         @default("#FFFFFF")
+  storefrontText        String         @default("#121826")
+  storefrontMuted       String         @default("#516074")
+  storefrontRadius      Int            @default(16)
   payoutSchedule        String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  Vendor                Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  Vendor                Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 }
 
 model Pack {
-  id             String       @id @default(cuid())
-  vendorId       String
-  title          String
-  packBannerImageUrl String?
-  pricePoints    Int
-  totalStock     Int
-  remainingStock Int
-  isNew          Boolean      @default(true)
-  limitedLabel   String?
-  importantNotes String?
-  status                  PackStatus             @default(DRAFT)
-  sourceTemplateType      PackSourceTemplateType @default(MANUAL)
+  id                      String                         @id @default(cuid())
+  vendorId                String
+  title                   String
+  packBannerImageUrl      String?
+  pricePoints             Int
+  totalStock              Int
+  remainingStock          Int
+  isNew                   Boolean                        @default(true)
+  limitedLabel            String?
+  importantNotes          String?
+  status                  PackStatus                     @default(DRAFT)
+  sourceTemplateType      PackSourceTemplateType         @default(MANUAL)
   sourceTemplateId        String?
   sourceTemplateVersionId String?
   poolSnapshotHash        String?
-  poolSnapshotVersion     Int                    @default(1)
+  poolSnapshotVersion     Int                            @default(1)
   publishedFromTemplateAt DateTime?
   publishedByUserId       String?
   publishIdempotencyKey   String?
-  drawLimitMode           DrawLimitMode          @default(NONE)
+  drawLimitMode           DrawLimitMode                  @default(NONE)
   drawLimitValue          Int?
-  drawLimitResetTimezone String? @default("Asia/Singapore")
-  isActive       Boolean      @default(true)
-  startsAt       DateTime?
-  endsAt         DateTime?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  Vendor         Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  prizes         PackPrize[]
-  draws          PackDraw[]
-  drawOrders     DrawOrder[]
-  drawResults    DrawResult[]
-  fairnessProofs DrawFairnessProof[]
-  creativeJobs   CreativeJob[]
-  inventoryAllocations PackPrizeInventoryAllocation[]
+  drawLimitResetTimezone  String?                        @default("Asia/Singapore")
+  isActive                Boolean                        @default(true)
+  startsAt                DateTime?
+  endsAt                  DateTime?
+  createdAt               DateTime                       @default(now())
+  updatedAt               DateTime                       @updatedAt
+  Vendor                  Vendor                         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  prizes                  PackPrize[]
+  draws                   PackDraw[]
+  drawOrders              DrawOrder[]
+  drawResults             DrawResult[]
+  fairnessProofs          DrawFairnessProof[]
+  creativeJobs            CreativeJob[]
+  inventoryAllocations    PackPrizeInventoryAllocation[]
+  custodyItems            CustodyItem[]
 
   @@index([vendorId, isActive])
   @@index([vendorId, status, poolSnapshotHash])
 }
 
 model PackPrize {
-  id             String       @id @default(cuid())
-  packId         String
-  catalogItemId  String?
-  catalogSource  String?
-  catalogSourceItemId String?
-  catalogSnapshot Json?
-  label          String
-  imageUrl       String?
-  imageLargeUrl  String?
-  setId          String?
-  setName        String?
-  localId        String?
-  cardNumber     String?
-  rarity         String?
-  estimatedValue Int
-  weight         Int
-  stock          Int
-  remainingStock Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  pack           Pack         @relation(fields: [packId], references: [id], onDelete: Cascade)
-  draws          PackDraw[]
-  drawResults    DrawResult[]
+  id                   String                         @id @default(cuid())
+  packId               String
+  catalogItemId        String?
+  catalogSource        String?
+  catalogSourceItemId  String?
+  catalogSnapshot      Json?
+  label                String
+  imageUrl             String?
+  imageLargeUrl        String?
+  setId                String?
+  setName              String?
+  localId              String?
+  cardNumber           String?
+  rarity               String?
+  estimatedValue       Int
+  weight               Int
+  stock                Int
+  remainingStock       Int
+  createdAt            DateTime                       @default(now())
+  updatedAt            DateTime                       @updatedAt
+  pack                 Pack                           @relation(fields: [packId], references: [id], onDelete: Cascade)
+  draws                PackDraw[]
+  drawResults          DrawResult[]
   inventoryAllocations PackPrizeInventoryAllocation[]
+  custodyItems         CustodyItem[]
 
   @@index([packId])
   @@index([catalogItemId])
@@ -407,24 +426,24 @@ model PackTemplateSlot {
 }
 
 model VendorInventoryItem {
-  id             String                @id @default(cuid())
-  vendorId       String
-  catalogItemId  String?
-  customItemId   String?
-  title          String
-  condition      String?
-  gradeCompany   String?
-  grade          String?
-  certNumber     String?
-  imageUrl       String?
-  quantityTotal  Int
-  quantityHeld   Int                   @default(0)
-  quantitySold   Int                   @default(0)
-  status         VendorInventoryStatus @default(ACTIVE)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  Vendor         Vendor                @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  allocations    PackPrizeInventoryAllocation[]
+  id            String                         @id @default(cuid())
+  vendorId      String
+  catalogItemId String?
+  customItemId  String?
+  title         String
+  condition     String?
+  gradeCompany  String?
+  grade         String?
+  certNumber    String?
+  imageUrl      String?
+  quantityTotal Int
+  quantityHeld  Int                            @default(0)
+  quantitySold  Int                            @default(0)
+  status        VendorInventoryStatus          @default(ACTIVE)
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
+  Vendor        Vendor                         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  allocations   PackPrizeInventoryAllocation[]
 
   @@index([vendorId, status])
   @@index([vendorId, catalogItemId])
@@ -446,7 +465,7 @@ model PackPrizeInventoryAllocation {
   Vendor                Vendor                             @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   pack                  Pack                               @relation(fields: [packId], references: [id], onDelete: Cascade)
   packPrize             PackPrize                          @relation(fields: [packPrizeId], references: [id], onDelete: Cascade)
-  vendorInventoryItem   VendorInventoryItem                 @relation(fields: [vendorInventoryItemId], references: [id], onDelete: Restrict)
+  vendorInventoryItem   VendorInventoryItem                @relation(fields: [vendorInventoryItemId], references: [id], onDelete: Restrict)
 
   @@unique([packPrizeId, vendorInventoryItemId])
   @@index([vendorId, vendorInventoryItemId])
@@ -527,7 +546,7 @@ model IdempotencyKey {
 }
 
 model DrawOrder {
-  id                  String          @id @default(cuid())
+  id                  String                  @id @default(cuid())
   vendorId            String
   userId              String?
   walletAccountId     String
@@ -535,28 +554,29 @@ model DrawOrder {
   quantity            Int
   unitPricePoints     Int
   totalPoints         Int
-  status              DrawOrderStatus @default(COMPLETED)
+  status              DrawOrderStatus         @default(COMPLETED)
   requestId           String?
   idempotencyScopeKey String?
   clientIp            String?
   userAgent           String?
   metadata            Json?
-  createdAt           DateTime        @default(now())
-  updatedAt           DateTime        @updatedAt
-  Vendor              Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  user                User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
-  walletAccount       WalletAccount   @relation(fields: [walletAccountId], references: [id], onDelete: Restrict)
-  pack                Pack            @relation(fields: [packId], references: [id], onDelete: Restrict)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  Vendor              Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user                User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  walletAccount       WalletAccount           @relation(fields: [walletAccountId], references: [id], onDelete: Restrict)
+  pack                Pack                    @relation(fields: [packId], references: [id], onDelete: Restrict)
   results             DrawResult[]
   fairnessProof       DrawFairnessProof?
   fairnessSelections  DrawFairnessSelection[]
+  custodyItems        CustodyItem[]
 
   @@index([vendorId, createdAt])
   @@index([userId, createdAt])
 }
 
 model DrawResult {
-  id           String     @id @default(cuid())
+  id           String       @id @default(cuid())
   vendorId     String
   drawOrderId  String
   packId       String
@@ -566,61 +586,99 @@ model DrawResult {
   rngVersion   String?
   rngSeedHash  String?
   requestId    String?
-  createdAt    DateTime   @default(now())
-  Vendor       Vendor     @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  drawOrder    DrawOrder  @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
-  pack         Pack       @relation(fields: [packId], references: [id], onDelete: Restrict)
-  packPrize    PackPrize? @relation(fields: [packPrizeId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  Vendor       Vendor       @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  drawOrder    DrawOrder    @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  pack         Pack         @relation(fields: [packId], references: [id], onDelete: Restrict)
+  packPrize    PackPrize?   @relation(fields: [packPrizeId], references: [id], onDelete: SetNull)
+  custodyItem  CustodyItem?
 
   @@index([vendorId, createdAt])
   @@index([drawOrderId, drawSequence])
 }
 
+model CustodyItem {
+  id              String            @id @default(cuid())
+  vendorId        String
+  userId          String
+  packId          String
+  packPrizeId     String
+  drawOrderId     String
+  drawResultId    String            @unique
+  status          CustodyItemStatus @default(HELD)
+  provider        CustodyProvider   @default(ORIPA_INTERNAL)
+  providerItemId  String?
+  providerMemo    String?
+  providerTxSig   String?
+  prizeLabel      String
+  imageUrl        String?
+  imageLargeUrl   String?
+  setName         String?
+  cardName        String?
+  rarity          String?
+  catalogSnapshot Json?
+  estimatedValue  Int?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  Vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pack            Pack              @relation(fields: [packId], references: [id], onDelete: Restrict)
+  packPrize       PackPrize         @relation(fields: [packPrizeId], references: [id], onDelete: Restrict)
+  drawOrder       DrawOrder         @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  drawResult      DrawResult        @relation(fields: [drawResultId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, createdAt])
+  @@index([userId, createdAt])
+  @@index([vendorId, userId, status, createdAt])
+  @@index([drawOrderId])
+  @@index([packPrizeId])
+}
+
 model DrawFairnessProof {
-  id               String                  @id @default(cuid())
-  vendorId         String
-  drawOrderId      String                  @unique
-  packId           String
-  userId           String?
-  algorithmVersion String
-  serverSeedHash   String
+  id                 String                  @id @default(cuid())
+  vendorId           String
+  drawOrderId        String                  @unique
+  packId             String
+  userId             String?
+  algorithmVersion   String
+  serverSeedHash     String
   revealedServerSeed String
-  clientSeed       String
-  nonceBase        String
-  quantity         Int
-  poolSnapshotHash String
-  poolSnapshotJson Json
-  createdAt        DateTime                @default(now())
-  Vendor           Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  drawOrder        DrawOrder               @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
-  pack             Pack                    @relation(fields: [packId], references: [id], onDelete: Restrict)
-  user             User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  selections       DrawFairnessSelection[]
+  clientSeed         String
+  nonceBase          String
+  quantity           Int
+  poolSnapshotHash   String
+  poolSnapshotJson   Json
+  createdAt          DateTime                @default(now())
+  Vendor             Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  drawOrder          DrawOrder               @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  pack               Pack                    @relation(fields: [packId], references: [id], onDelete: Restrict)
+  user               User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  selections         DrawFairnessSelection[]
 
   @@index([vendorId, createdAt])
   @@index([userId, createdAt])
 }
 
 model DrawFairnessSelection {
-  id                  String            @id @default(cuid())
-  vendorId            String
-  drawOrderId         String
-  proofId             String
-  drawSequence        Int
-  hmacHex             String
-  randomFloat         Decimal           @db.Decimal(20, 18)
-  randomWeightValue   Int
-  totalWeightAtDraw   Int
-  tierLabel           String?
-  tierLowerBound      Int?
-  tierUpperBound      Int?
-  rowSeedHex          String
-  chosenPackPrizeId   String?
-  eligiblePrizeIds    Json
-  createdAt           DateTime          @default(now())
-  Vendor              Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  drawOrder           DrawOrder         @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
-  proof               DrawFairnessProof @relation(fields: [proofId], references: [id], onDelete: Cascade)
+  id                String            @id @default(cuid())
+  vendorId          String
+  drawOrderId       String
+  proofId           String
+  drawSequence      Int
+  hmacHex           String
+  randomFloat       Decimal           @db.Decimal(20, 18)
+  randomWeightValue Int
+  totalWeightAtDraw Int
+  tierLabel         String?
+  tierLowerBound    Int?
+  tierUpperBound    Int?
+  rowSeedHex        String
+  chosenPackPrizeId String?
+  eligiblePrizeIds  Json
+  createdAt         DateTime          @default(now())
+  Vendor            Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  drawOrder         DrawOrder         @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
+  proof             DrawFairnessProof @relation(fields: [proofId], references: [id], onDelete: Cascade)
 
   @@index([vendorId, createdAt])
   @@index([proofId, drawSequence])
@@ -733,78 +791,78 @@ model OutboxEvent {
 }
 
 model VendorBanner {
-  id        String   @id @default(cuid())
-  vendorId  String
+  id              String   @id @default(cuid())
+  vendorId        String
   creativeAssetId String?
-  creativeHash String?
-  title     String
-  imageUrl  String
-  targetUrl String?
-  sortOrder Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  Vendor    Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  creativeHash    String?
+  title           String
+  imageUrl        String
+  targetUrl       String?
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Vendor          Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@index([vendorId, isActive, sortOrder])
   @@index([creativeAssetId])
 }
 
 model CreativeJob {
-  id              String            @id @default(cuid())
-  vendorId        String
-  packId          String
-  status          CreativeJobStatus @default(DRAFT)
-  stylePreset     String
-  aspectRatio     String            @default("16:9")
-  safePrompt      String
-  forbiddenTerms  Json
-  packSnapshot    Json
-  prizeSnapshot   Json
-  errorMessage    String?
-  actorUserId     String?
-  requestId       String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  Vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  pack            Pack              @relation(fields: [packId], references: [id], onDelete: Cascade)
-  assets          CreativeAsset[]
+  id             String            @id @default(cuid())
+  vendorId       String
+  packId         String
+  status         CreativeJobStatus @default(DRAFT)
+  stylePreset    String
+  aspectRatio    String            @default("16:9")
+  safePrompt     String
+  forbiddenTerms Json
+  packSnapshot   Json
+  prizeSnapshot  Json
+  errorMessage   String?
+  actorUserId    String?
+  requestId      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  Vendor         Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  pack           Pack              @relation(fields: [packId], references: [id], onDelete: Cascade)
+  assets         CreativeAsset[]
 
   @@index([vendorId, status, createdAt])
   @@index([packId, createdAt])
 }
 
 model CreativeAsset {
-  id              String              @id @default(cuid())
-  vendorId        String
-  creativeJobId   String
-  status          CreativeAssetStatus @default(PRIVATE_DRAFT)
-  title           String
-  imageUrl        String
-  targetUrl       String
-  contentHash     String
-  storageKey      String?
-  width           Int                 @default(1600)
-  height          Int                 @default(900)
-  metadata        Json?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  Vendor          Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  creativeJob     CreativeJob         @relation(fields: [creativeJobId], references: [id], onDelete: Cascade)
+  id            String              @id @default(cuid())
+  vendorId      String
+  creativeJobId String
+  status        CreativeAssetStatus @default(PRIVATE_DRAFT)
+  title         String
+  imageUrl      String
+  targetUrl     String
+  contentHash   String
+  storageKey    String?
+  width         Int                 @default(1600)
+  height        Int                 @default(900)
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  Vendor        Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  creativeJob   CreativeJob         @relation(fields: [creativeJobId], references: [id], onDelete: Cascade)
 
+  @@unique([creativeJobId, contentHash])
   @@index([vendorId, status, createdAt])
   @@index([creativeJobId])
-  @@unique([creativeJobId, contentHash])
 }
 
 model VendorReferralSignup {
-  id               String   @id @default(cuid())
-  vendorId         String
-  referralCode     String
-  customerUserId   String
-  createdAt        DateTime @default(now())
-  Vendor           Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  customerUser     User     @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+  id             String   @id @default(cuid())
+  vendorId       String
+  referralCode   String
+  customerUserId String
+  createdAt      DateTime @default(now())
+  Vendor         Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  customerUser   User     @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
 
   @@unique([vendorId, customerUserId])
   @@index([vendorId, createdAt])
@@ -812,51 +870,51 @@ model VendorReferralSignup {
 }
 
 model VendorPointGrantQr {
-  id               String                  @id @default(cuid())
+  id               String                   @id @default(cuid())
   vendorId         String
-  token            String                  @unique
+  token            String                   @unique
   points           Int
   status           VendorPointGrantQrStatus @default(ACTIVE)
   expiresAt        DateTime
   createdByUserId  String?
   redeemedByUserId String?
   redeemedAt       DateTime?
-  createdAt        DateTime                @default(now())
-  updatedAt        DateTime                @updatedAt
-  Vendor           Vendor                  @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  createdByUser    User?                   @relation("CreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
-  redeemedByUser   User?                   @relation("RedeemedByUser", fields: [redeemedByUserId], references: [id], onDelete: SetNull)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  Vendor           Vendor                   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdByUser    User?                    @relation("CreatedByUser", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  redeemedByUser   User?                    @relation("RedeemedByUser", fields: [redeemedByUserId], references: [id], onDelete: SetNull)
 
   @@index([vendorId, status, createdAt])
   @@index([vendorId, expiresAt])
 }
 
 model CatalogItem {
-  id             String          @id @default(cuid())
-  source         String
-  sourceItemId   String
-  catalogSetId   String?
-  localId        String?
-  sourcePayload  Json?
-  cardType       String?
-  color          String?
-  attribute      String?
-  itemType       CatalogItemType @default(CARD)
-  game           String          @default("POKEMON")
-  language       String          @default("en")
-  name           String
-  setId          String?
-  setName        String?
-  cardNumber     String?
-  rarity         String?
-  imageBaseUrl   String?
-  imageThumbUrl  String?
-  imageLargeUrl  String?
-  searchText     String
-  isActive       Boolean         @default(true)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  catalogSet     CatalogSet?     @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
+  id            String          @id @default(cuid())
+  source        String
+  sourceItemId  String
+  catalogSetId  String?
+  localId       String?
+  sourcePayload Json?
+  cardType      String?
+  color         String?
+  attribute     String?
+  itemType      CatalogItemType @default(CARD)
+  game          String          @default("POKEMON")
+  language      String          @default("en")
+  name          String
+  setId         String?
+  setName       String?
+  cardNumber    String?
+  rarity        String?
+  imageBaseUrl  String?
+  imageThumbUrl String?
+  imageLargeUrl String?
+  searchText    String
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  catalogSet    CatalogSet?     @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
 
   @@unique([source, sourceItemId, language])
   @@index([itemType, game, isActive])
@@ -868,11 +926,11 @@ model CatalogItem {
 }
 
 model CatalogSet {
-  id               String      @id @default(cuid())
+  id               String                 @id @default(cuid())
   source           String
   sourceSetId      String
   sourceCategoryId String?
-  language         String      @default("en")
+  language         String                 @default("en")
   groupKind        String?
   reviewStatus     String?
   sourcePayload    Json?
@@ -884,11 +942,11 @@ model CatalogSet {
   symbolImageUrl   String?
   logoImageUrl     String?
   bannerImageUrl   String?
-  isSupplemental   Boolean     @default(false)
+  isSupplemental   Boolean                @default(false)
   searchText       String
-  isActive         Boolean     @default(true)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  isActive         Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
   cards            CatalogItem[]
   sealedProducts   CatalogSealedProduct[]
 
@@ -899,26 +957,26 @@ model CatalogSet {
 }
 
 model CatalogSealedProduct {
-  id               String      @id @default(cuid())
-  source           String
-  sourceProductId  String
-  sourceCategoryId String?
-  productKind      String?
-  sourcePayload    Json?
-  catalogSetId     String?
-  game             String
-  language         String      @default("en")
-  name             String
-  cleanName        String?
-  imageUrl         String?
-  imageCount       Int?
-  isPresale        Boolean     @default(false)
+  id                 String      @id @default(cuid())
+  source             String
+  sourceProductId    String
+  sourceCategoryId   String?
+  productKind        String?
+  sourcePayload      Json?
+  catalogSetId       String?
+  game               String
+  language           String      @default("en")
+  name               String
+  cleanName          String?
+  imageUrl           String?
+  imageCount         Int?
+  isPresale          Boolean     @default(false)
   presaleReleaseDate DateTime?
-  searchText       String
-  isActive         Boolean     @default(true)
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-  catalogSet       CatalogSet? @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
+  searchText         String
+  isActive           Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  catalogSet         CatalogSet? @relation(fields: [catalogSetId], references: [id], onDelete: SetNull)
 
   @@unique([source, sourceProductId, language, game])
   @@index([game, isActive, catalogSetId, name])
