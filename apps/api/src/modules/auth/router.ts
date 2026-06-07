@@ -17,6 +17,7 @@ const jwtSecret = process.env.JWT_SECRET ?? "change-me";
 const appNodeEnv = String(process.env.NODE_ENV ?? "development").toLowerCase();
 const isProduction = appNodeEnv === "production";
 const cookieDomain = process.env.AUTH_COOKIE_DOMAIN;
+const authCookieSameSite = isProduction ? "None" : "Lax";
 
 let passportConfigured = false;
 const OTP_TTL_MINUTES = 10;
@@ -49,6 +50,26 @@ function isSafeRedirectVendorHost(host: string) {
   return normalized === base || normalized.endsWith(`.${base}`);
 }
 
+function buildAuthCompleteRedirectUrl(vendorHost: string, provider: "google" | "apple") {
+  const normalizedVendorHost = String(vendorHost ?? "").trim().toLowerCase();
+  const applyParams = (url: URL) => {
+    if (normalizedVendorHost) url.searchParams.set("vendorHost", normalizedVendorHost);
+    url.searchParams.set("provider", provider);
+    return url.toString();
+  };
+
+  try {
+    if (isSafeRedirectVendorHost(normalizedVendorHost)) {
+      const parsedWeb = new URL(webBaseUrl);
+      return applyParams(new URL(`${parsedWeb.protocol}//${normalizedVendorHost}/auth/complete`));
+    }
+  } catch {
+    // Fall back to the configured web URL below.
+  }
+
+  return applyParams(new URL("/auth/complete", webBaseUrl));
+}
+
 function issueAccessToken(user: { id: string; email: string; displayName: string | null; status: string }) {
   return jwt.sign(
     {
@@ -69,7 +90,7 @@ function setAccessCookie(res: any, token: string) {
     "Path=/",
     "HttpOnly",
     `Max-Age=${maxAgeSeconds}`,
-    "SameSite=Lax",
+    `SameSite=${authCookieSameSite}`,
   ];
   if (isProduction) parts.push("Secure");
   if (cookieDomain) parts.push(`Domain=${cookieDomain}`);
@@ -82,7 +103,7 @@ function clearAccessCookie(res: any) {
     "Path=/",
     "HttpOnly",
     "Max-Age=0",
-    "SameSite=Lax",
+    `SameSite=${authCookieSameSite}`,
   ];
   if (isProduction) parts.push("Secure");
   if (cookieDomain) parts.push(`Domain=${cookieDomain}`);
@@ -178,30 +199,43 @@ function calculateAge(dateOfBirth: Date | null) {
   return age;
 }
 
-function validateCustomerProfileInput(body: unknown) {
+function validateCustomerProfileInput(body: unknown, options: { required?: boolean } = {}) {
+  const required = options.required ?? true;
   const input = (body ?? {}) as Record<string, unknown>;
-  const fullName = normalizeFullName(input.fullName ?? input.displayName);
-  const dateOfBirth = parseDateOfBirth(input.dateOfBirth);
-  const countryCode = normalizeCountryCode(input.countryCode);
+  const rawFullName = input.fullName ?? input.displayName;
+  const rawDateOfBirth = input.dateOfBirth;
+  const rawCountry = input.countryCode ?? input.country;
+  const hasFullName = normalizeFullName(rawFullName).length > 0;
+  const hasDateOfBirth = String(rawDateOfBirth ?? "").trim().length > 0;
+  const hasCountry = String(rawCountry ?? "").trim().length > 0;
+  const fullName = normalizeFullName(rawFullName);
+  const dateOfBirth = hasDateOfBirth ? parseDateOfBirth(rawDateOfBirth) : null;
+  const countryCode = countryToCode(String(rawCountry ?? "")) ?? normalizeCountryCode(rawCountry);
   const errors: string[] = [];
   const today = new Date();
   const oldestAllowed = new Date("1900-01-01T00:00:00.000Z");
 
-  if (!fullName) errors.push("fullName is required");
-  else if (fullName.length > 120) errors.push("fullName must be 120 characters or fewer");
+  if (required || hasFullName) {
+    if (!fullName) errors.push("fullName is required");
+    else if (fullName.length > 120) errors.push("fullName must be 120 characters or fewer");
+  }
 
-  if (!dateOfBirth) errors.push("dateOfBirth must be a valid YYYY-MM-DD date");
-  else if (dateOfBirth > today) errors.push("dateOfBirth cannot be in the future");
-  else if (dateOfBirth < oldestAllowed) errors.push("dateOfBirth is too far in the past");
+  if (required || hasDateOfBirth) {
+    if (!dateOfBirth) errors.push("dateOfBirth must be a valid YYYY-MM-DD date");
+    else if (dateOfBirth > today) errors.push("dateOfBirth cannot be in the future");
+    else if (dateOfBirth < oldestAllowed) errors.push("dateOfBirth is too far in the past");
+  }
 
-  if (!/^[A-Z]{2}$/.test(countryCode)) errors.push("countryCode must be a valid 2-letter country code");
+  if (required || hasCountry) {
+    if (!/^[A-Z]{2}$/.test(countryCode)) errors.push("countryCode must be a valid 2-letter country code");
+  }
 
   return {
     errors,
     data: {
-      fullName,
+      fullName: fullName || null,
       dateOfBirth,
-      countryCode,
+      countryCode: /^[A-Z]{2}$/.test(countryCode) ? countryCode : null,
       age: calculateAge(dateOfBirth),
     },
   };
@@ -405,7 +439,7 @@ configurePassportIfNeeded();
 authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
   const email = String(req.body?.email ?? "").toLowerCase().trim();
   const password = String(req.body?.password ?? "");
-  const profileInput = validateCustomerProfileInput(req.body);
+  const profileInput = validateCustomerProfileInput(req.body, { required: false });
   const displayName = String(req.body?.displayName ?? profileInput.data.fullName ?? "").trim() || null;
   const referralCode = String(req.body?.referralCode ?? "").trim().toLowerCase() || null;
   const vendorId = req.vendorId;
@@ -708,15 +742,10 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
     try {
-      if (isSafeRedirectVendorHost(vendorHost)) {
-        const parsedWeb = new URL(webBaseUrl);
-        const directVendorProfileUrl = `${parsedWeb.protocol}//${vendorHost}/profile?vendorHost=${encodeURIComponent(vendorHost)}`;
-        return res.redirect(directVendorProfileUrl);
-      }
+      return res.redirect(buildAuthCompleteRedirectUrl(vendorHost, "google"));
     } catch {
-      // fallback to WEB_URL login redirect below
+      return res.redirect(`${webBaseUrl}/login?error=google_auth_failed`);
     }
-    return res.redirect(`${webBaseUrl}/profile?vendorHost=${encodeURIComponent(vendorHost)}`);
   })(req, res, next);
 });
 
@@ -734,7 +763,7 @@ authRouter.post("/v1/auth/apple/callback", (req, res, next) => {
     }
     const token = issueAccessToken(user);
     setAccessCookie(res, token);
-    return res.redirect(`${webBaseUrl}/profile`);
+    return res.redirect(buildAuthCompleteRedirectUrl(resolveRequestHost(req), "apple"));
   })(req, res, next);
 });
 

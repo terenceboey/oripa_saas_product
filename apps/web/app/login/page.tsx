@@ -110,7 +110,7 @@ export default function LoginPage() {
         void (async () => {
           const nextUser = await loadProfile().catch(() => null);
           if (!nextUser?.profileComplete) {
-            router.push("/profile");
+            router.push(`/profile?vendorHost=${encodeURIComponent(callbackVendorHost || runtimeVendorHost)}`);
             return;
           }
           const currentHost = window.location.host.toLowerCase();
@@ -195,7 +195,7 @@ export default function LoginPage() {
       window.setTimeout(() => {
         void (async () => {
           if (!nextUser?.profileComplete) {
-            router.push("/profile");
+            router.push(`/profile?vendorHost=${encodeURIComponent(runtimeVendorHost)}`);
             return;
           }
           const currentHost = window.location.host.toLowerCase();

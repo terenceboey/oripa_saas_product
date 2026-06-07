@@ -50,7 +50,7 @@ export default function VerifyEmailPage() {
       setMessage("Email verified and login successful.");
       setOtp("");
       window.setTimeout(() => {
-        router.push(payload.user?.profileComplete ? "/" : "/profile");
+        router.push(`/profile?vendorHost=${encodeURIComponent(runtimeVendorHost)}`);
       }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "OTP verification failed");
