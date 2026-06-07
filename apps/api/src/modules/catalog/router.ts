@@ -87,29 +87,29 @@ type CardSearchRow = PickerSearchItem & {
 
 const CARD_RARITY_ORDER_SQL = Prisma.sql`
   CASE
-    WHEN rarity IS NULL OR btrim(rarity) = '' THEN 999
-    WHEN lower(rarity) LIKE '%black label%' THEN 0
-    WHEN lower(rarity) LIKE '%serial%' THEN 0
-    WHEN lower(rarity) LIKE '%secret%' THEN 0
-    WHEN lower(rarity) LIKE '%starlight%' THEN 0
-    WHEN lower(rarity) LIKE '%ghost rare%' THEN 0
-    WHEN lower(rarity) LIKE '%ultimate rare%' THEN 0
-    WHEN lower(rarity) LIKE '%illustration rare%' THEN 0
-    WHEN lower(rarity) LIKE '%special illustration rare%' THEN 0
-    WHEN lower(rarity) LIKE '%hyper rare%' THEN 1
-    WHEN lower(rarity) LIKE '%rainbow rare%' THEN 1
-    WHEN lower(rarity) LIKE '%gold%' THEN 1
-    WHEN lower(rarity) LIKE '%alternate art%' THEN 1
-    WHEN lower(rarity) LIKE '%alt art%' THEN 1
-    WHEN lower(rarity) LIKE '%ultra rare%' THEN 2
-    WHEN lower(rarity) LIKE '%double rare%' THEN 2
-    WHEN lower(rarity) LIKE '%triple rare%' THEN 2
-    WHEN lower(rarity) LIKE '%rare holo%' THEN 2
-    WHEN lower(rarity) LIKE '%holo rare%' THEN 2
-    WHEN lower(rarity) LIKE '%super rare%' THEN 2
-    WHEN lower(rarity) LIKE '%rare%' THEN 3
-    WHEN lower(rarity) LIKE '%uncommon%' THEN 4
-    WHEN lower(rarity) LIKE '%common%' THEN 5
+    WHEN ci.rarity IS NULL OR btrim(ci.rarity) = '' THEN 999
+    WHEN lower(ci.rarity) LIKE '%black label%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%serial%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%secret%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%starlight%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%ghost rare%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%ultimate rare%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%illustration rare%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%special illustration rare%' THEN 0
+    WHEN lower(ci.rarity) LIKE '%hyper rare%' THEN 1
+    WHEN lower(ci.rarity) LIKE '%rainbow rare%' THEN 1
+    WHEN lower(ci.rarity) LIKE '%gold%' THEN 1
+    WHEN lower(ci.rarity) LIKE '%alternate art%' THEN 1
+    WHEN lower(ci.rarity) LIKE '%alt art%' THEN 1
+    WHEN lower(ci.rarity) LIKE '%ultra rare%' THEN 2
+    WHEN lower(ci.rarity) LIKE '%double rare%' THEN 2
+    WHEN lower(ci.rarity) LIKE '%triple rare%' THEN 2
+    WHEN lower(ci.rarity) LIKE '%rare holo%' THEN 2
+    WHEN lower(ci.rarity) LIKE '%holo rare%' THEN 2
+    WHEN lower(ci.rarity) LIKE '%super rare%' THEN 2
+    WHEN lower(ci.rarity) LIKE '%rare%' THEN 3
+    WHEN lower(ci.rarity) LIKE '%uncommon%' THEN 4
+    WHEN lower(ci.rarity) LIKE '%common%' THEN 5
     ELSE 6
   END
 `;
@@ -200,7 +200,7 @@ function buildCardFacetWhere(input: {
     game: input.game,
     ...(input.source ? { source: input.source } : {}),
     ...(input.language ? { language: input.language } : {}),
-    ...(input.setId ? { setId: input.setId } : {}),
+    ...(input.setId ? { catalogSet: { sourceSetId: input.setId } } : {}),
     ...(input.rarity
       ? {
           rarity: {
@@ -261,12 +261,23 @@ async function getCardFacets(input: {
       orderBy: { language: "asc" },
     }),
     prisma.catalogItem.groupBy({
-      by: ["setId", "setName"],
+      by: ["catalogSetId"],
       where: setWhere,
-      _count: { setId: true },
-      orderBy: [{ setId: "asc" }, { setName: "asc" }],
+      _count: { catalogSetId: true },
+      orderBy: { catalogSetId: "asc" },
     }),
   ]);
+
+  const catalogSetIds = setRows
+    .map((row: (typeof setRows)[number]) => normalizeFacetValue(row.catalogSetId))
+    .filter((id: string | null): id is string => Boolean(id));
+  const catalogSets = catalogSetIds.length > 0
+    ? await prisma.catalogSet.findMany({
+        where: { id: { in: catalogSetIds } },
+        select: { id: true, sourceSetId: true, name: true },
+      })
+    : [];
+  const catalogSetById = new Map(catalogSets.map((set) => [set.id, set]));
 
   const rarityRows = rarityWhere
     ? await prisma.catalogItem.groupBy({
@@ -298,10 +309,12 @@ async function getCardFacets(input: {
   const sets = sortSetFacetOptions(
     setRows
       .map((row: (typeof setRows)[number]) => {
-        const id = normalizeFacetValue(row.setId);
+        const catalogSetId = normalizeFacetValue(row.catalogSetId);
+        const set = catalogSetId ? catalogSetById.get(catalogSetId) : null;
+        const id = normalizeFacetValue(set?.sourceSetId);
         if (!id) return null;
-        const name = normalizeFacetValue(row.setName);
-        return { id, name, count: groupedFacetCount(row, "setId") };
+        const name = normalizeFacetValue(set?.name);
+        return { id, name, count: groupedFacetCount(row, "catalogSetId") };
       })
       .filter((row: CatalogSetFacetOption | null): row is CatalogSetFacetOption => row !== null),
   ).slice(0, input.limit);
@@ -425,20 +438,20 @@ async function searchCardItems(input: {
   }
 
   const clauses: Prisma.Sql[] = [
-    Prisma.sql`"isActive" = true`,
-    Prisma.sql`"itemType" = ${CatalogItemType.CARD}::"CatalogItemType"`,
-    Prisma.sql`game = ${input.game}`,
+    Prisma.sql`ci."isActive" = true`,
+    Prisma.sql`ci."itemType" = ${CatalogItemType.CARD}::"CatalogItemType"`,
+    Prisma.sql`ci.game = ${input.game}`,
   ];
 
-  if (input.source) clauses.push(Prisma.sql`source = ${input.source}`);
-  if (input.language) clauses.push(Prisma.sql`language = ${input.language}`);
-  if (input.setId) clauses.push(Prisma.sql`"setId" = ${input.setId}`);
-  if (input.rarity) clauses.push(Prisma.sql`lower(coalesce(rarity, '')) = ${input.rarity.toLowerCase()}`);
+  if (input.source) clauses.push(Prisma.sql`ci.source = ${input.source}`);
+  if (input.language) clauses.push(Prisma.sql`ci.language = ${input.language}`);
+  if (input.setId) clauses.push(Prisma.sql`cs."sourceSetId" = ${input.setId}`);
+  if (input.rarity) clauses.push(Prisma.sql`lower(coalesce(ci.rarity, '')) = ${input.rarity.toLowerCase()}`);
   if (query.length > 0) {
     const likeNeedle = `%${query}%`;
     clauses.push(Prisma.sql`(
-      lower(name) LIKE ${likeNeedle}
-      OR lower(coalesce("searchText", '')) LIKE ${likeNeedle}
+      lower(ci.name) LIKE ${likeNeedle}
+      OR lower(coalesce(ci."searchText", '')) LIKE ${likeNeedle}
     )`);
   }
 
@@ -449,7 +462,7 @@ async function searchCardItems(input: {
     }
     clauses.push(
       Prisma.sql`(
-        (${CARD_RARITY_ORDER_SQL}, lower(name), source, "sourceItemId", id)
+        (${CARD_RARITY_ORDER_SQL}, lower(ci.name), ci.source, ci."sourceItemId", ci.id)
         > (${decoded.rarityOrder}, ${decoded.nameSort}, ${decoded.source}, ${decoded.sourceItemId}, ${decoded.id})
       )`,
     );
@@ -457,28 +470,29 @@ async function searchCardItems(input: {
 
   const rows = await prisma.$queryRaw<CardSearchRow[]>(Prisma.sql`
     SELECT
-      id,
-      source,
-      "sourceItemId",
-      "itemType",
-      game,
-      language,
-      name,
-      "setId",
-      "setName",
-      "localId",
-      "cardNumber",
-      rarity,
-      "imageThumbUrl",
-      "imageLargeUrl",
-      "imageBaseUrl",
-      "searchText",
-      "sourcePayload",
+      ci.id,
+      ci.source,
+      ci."sourceItemId",
+      ci."itemType",
+      ci.game,
+      ci.language,
+      ci.name,
+      cs."sourceSetId" AS "setId",
+      cs.name AS "setName",
+      ci."localId",
+      ci."cardNumber",
+      ci.rarity,
+      ci."imageThumbUrl",
+      ci."imageLargeUrl",
+      ci."imageBaseUrl",
+      ci."searchText",
+      ci."sourcePayload",
       ${CARD_RARITY_ORDER_SQL} AS "rarityOrder",
-      lower(name) AS "nameSort"
-    FROM "CatalogItem"
+      lower(ci.name) AS "nameSort"
+    FROM "CatalogItem" ci
+    JOIN "CatalogSet" cs ON cs.id = ci."catalogSetId"
     WHERE ${Prisma.join(clauses, " AND ")}
-    ORDER BY "rarityOrder" ASC, "nameSort" ASC, source ASC, "sourceItemId" ASC, id ASC
+    ORDER BY "rarityOrder" ASC, "nameSort" ASC, ci.source ASC, ci."sourceItemId" ASC, ci.id ASC
     LIMIT ${input.limit + 1}
   `);
 

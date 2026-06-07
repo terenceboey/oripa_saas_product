@@ -52,6 +52,11 @@ function typeToCatalogItemType(type: CatalogBrowseType | undefined) {
 }
 
 export function buildCatalogFacetWhere(query: CatalogFacetQuery): Prisma.CatalogItemWhereInput {
+  const catalogSetWhere: Prisma.CatalogSetWhereInput = {
+    ...(query.setId ? { sourceSetId: query.setId } : {}),
+    ...(query.setName ? { name: { contains: query.setName, mode: "insensitive" } } : {}),
+  };
+
   const where: Prisma.CatalogItemWhereInput = {
     isActive: true,
   };
@@ -62,8 +67,7 @@ export function buildCatalogFacetWhere(query: CatalogFacetQuery): Prisma.Catalog
   if (itemType) where.itemType = itemType;
   if (query.language) where.language = query.language;
   if (query.source) where.source = query.source;
-  if (query.setId) where.setId = query.setId;
-  if (query.setName) where.setName = { contains: query.setName, mode: "insensitive" };
+  if (Object.keys(catalogSetWhere).length > 0) where.catalogSet = catalogSetWhere;
   if (query.rarity) where.rarity = { contains: query.rarity, mode: "insensitive" };
   return where;
 }

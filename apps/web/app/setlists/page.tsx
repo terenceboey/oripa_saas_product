@@ -27,18 +27,23 @@ type SetlistResponse = {
   items: SetlistItem[];
 };
 
+type SetlistStatsResponse = {
+  total?: number;
+  byGame?: Record<string, number>;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PAGE_SIZE = 18;
 
 export default function SetlistsPage() {
-  const [game, setGame] = useState<"pokemon" | "pokemon-japan">("pokemon");
+  const [game, setGame] = useState<"pokemon" | "one-piece" | "pokemon-japan">("pokemon");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [mainData, setMainData] = useState<SetlistResponse>({ total: 0, totalPages: 1, page: 1, limit: PAGE_SIZE, items: [] });
   const [recentItems, setRecentItems] = useState<SetlistItem[]>([]);
-  const [tabCounts, setTabCounts] = useState({ pokemon: 0, pokemonJapan: 0, parallel: 0 });
+  const [tabCounts, setTabCounts] = useState({ pokemon: 0, onePiece: 0, pokemonJapan: 0 });
 
   useEffect(() => {
     setPage(1);
@@ -57,19 +62,20 @@ export default function SetlistsPage() {
       if (params.q?.trim()) url.searchParams.set("q", params.q.trim());
       return url.toString();
     };
+    const statsUrl = new URL(`${apiBase}/v1/public/setlists/stats`);
 
     Promise.all([
-      fetch(buildListUrl(game, { page, limit: PAGE_SIZE, q: query, sort }), { cache: "no-store" }).then((r) => r.json()),
-      fetch(buildListUrl(game, { page: 1, limit: 5, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
-      fetch(buildListUrl("pokemon", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
-      fetch(buildListUrl("pokemon-japan", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
-      fetch(buildListUrl("all", { page: 1, limit: 1, sort: "newest" }), { cache: "no-store" }).then((r) => r.json()),
+      fetch(buildListUrl(game, { page, limit: PAGE_SIZE, q: query, sort })).then((r) => r.json()),
+      fetch(buildListUrl(game, { page: 1, limit: 5, sort: "newest" })).then((r) => r.json()),
+      fetch(statsUrl.toString()).then((r) => r.json()),
     ])
-      .then(([mainPayload, recentPayload, pokemonCountPayload, japanCountPayload, allPayload]) => {
+      .then(([mainPayload, recentPayload, statsPayload]) => {
         if (!active) return;
-        const pokemonCount = Number(pokemonCountPayload?.total ?? 0);
-        const pokemonJapanCount = Number(japanCountPayload?.total ?? 0);
-        const allCount = Number(allPayload?.total ?? 0);
+        const typedStats = (statsPayload ?? {}) as SetlistStatsResponse;
+        const byGame = typedStats.byGame ?? {};
+        const pokemonCount = Number(byGame.POKEMON ?? 0);
+        const onePieceCount = Number(byGame.ONE_PIECE ?? 0);
+        const pokemonJapanCount = Number(byGame.POKEMON_JAPAN ?? 0);
         setMainData({
           total: Number(mainPayload?.total ?? 0),
           totalPages: Number(mainPayload?.totalPages ?? 1),
@@ -80,8 +86,8 @@ export default function SetlistsPage() {
         setRecentItems(Array.isArray(recentPayload?.items) ? recentPayload.items : []);
         setTabCounts({
           pokemon: pokemonCount,
+          onePiece: onePieceCount,
           pokemonJapan: pokemonJapanCount,
-          parallel: Math.max(0, allCount - pokemonCount - pokemonJapanCount),
         });
       })
       .catch(() => {
@@ -115,11 +121,11 @@ export default function SetlistsPage() {
             <button type="button" style={tabStyle(game === "pokemon")} onClick={() => setGame("pokemon")}>
               Pokemon {tabCounts.pokemon}
             </button>
-            <button type="button" style={tabStyle(game === "pokemon-japan", true)} onClick={() => setGame("pokemon-japan")}>
-              Pokemon Japan {tabCounts.pokemonJapan}
+            <button type="button" style={tabStyle(game === "one-piece", true)} onClick={() => setGame("one-piece")}>
+              One Piece {tabCounts.onePiece}
             </button>
-            <button type="button" style={tabStyle(false, false, true)} disabled>
-              Parallel {tabCounts.parallel}
+            <button type="button" style={tabStyle(game === "pokemon-japan")} onClick={() => setGame("pokemon-japan")}>
+              Pokemon Japan {tabCounts.pokemonJapan}
             </button>
           </div>
         </header>

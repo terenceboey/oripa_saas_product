@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 
@@ -31,6 +32,17 @@ const cardQuerySchema = z.object({
 
 function resolveGame(input: string) {
   return gameMap[input] ?? "POKEMON";
+}
+
+function handleSetlistRouteError(res: any, error: unknown, routeLabel: string) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2024") {
+    return res.status(503).json({
+      error: "Catalog is temporarily busy. Please retry in a moment.",
+      code: "CATALOG_BUSY",
+    });
+  }
+  console.error(`[setlists:${routeLabel}]`, error);
+  return res.status(500).json({ error: "Failed to load setlist data" });
 }
 
 function normalizeSource(input?: string | null) {
@@ -121,33 +133,34 @@ async function resolveCatalogSetBySourceSetId(input: {
 }
 
 setlistRouter.get("/v1/public/setlists", async (req, res) => {
-  const parsed = listQuerySchema.safeParse(req.query);
-  if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
-  }
+  try {
+    const parsed = listQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
+    }
 
-  const { game, source, q, sort, page, limit } = parsed.data;
-  const resolvedGame = resolveGame(game);
-  const resolvedSource = normalizeSource(source);
-  const skip = (page - 1) * limit;
-  const search = q?.toLowerCase();
-  const orderBy =
-    sort === "name"
-      ? [{ name: "asc" as const }]
-      : sort === "oldest"
-        ? [{ releaseDate: "asc" as const }, { name: "asc" as const }]
-        : [{ releaseDate: "desc" as const }, { name: "asc" as const }];
+    const { game, source, q, sort, page, limit } = parsed.data;
+    const resolvedGame = resolveGame(game);
+    const resolvedSource = normalizeSource(source);
+    const skip = (page - 1) * limit;
+    const search = q?.toLowerCase();
+    const orderBy =
+      sort === "name"
+        ? [{ name: "asc" as const }]
+        : sort === "oldest"
+          ? [{ releaseDate: "asc" as const }, { name: "asc" as const }]
+          : [{ releaseDate: "desc" as const }, { name: "asc" as const }];
 
-  const where = {
-    isActive: true,
-    ...(resolvedGame !== "ALL" ? { game: resolvedGame } : {}),
-    ...(resolvedSource ? { source: resolvedSource } : {}),
-    ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
-  };
+    const where = {
+      isActive: true,
+      ...(resolvedGame !== "ALL" ? { game: resolvedGame } : {}),
+      ...(resolvedSource ? { source: resolvedSource } : {}),
+      ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
+    };
 
-  const [total, sets] = await Promise.all([
-    prisma.catalogSet.count({ where }),
-    prisma.catalogSet.findMany({
+    // Run these sequentially to reduce concurrent DB connection pressure per request.
+    const total = await prisma.catalogSet.count({ where });
+    const sets = await prisma.catalogSet.findMany({
       where,
       orderBy,
       skip,
@@ -181,85 +194,119 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
           },
         },
       },
-    }),
-  ]);
+    });
 
-  return res.json({
-    game: resolvedGame,
-    source: resolvedSource ?? null,
-    page,
-    limit,
-    total,
-    totalPages: Math.max(1, Math.ceil(total / limit)),
-    items: sets.map((set) => ({
-      ...(function () {
-        const firstCard = set.cards[0];
-        const fallbackImage = firstCard?.imageLargeUrl ?? firstCard?.imageThumbUrl ?? firstCard?.imageBaseUrl ?? null;
-        return {
-          resolvedLogoImageUrl: set.logoImageUrl ?? fallbackImage,
-          resolvedSymbolImageUrl: set.symbolImageUrl ?? fallbackImage,
-        };
-      })(),
-      id: set.id,
-      source: set.source,
-      sourceSetId: set.sourceSetId,
-      game: set.game,
-      setCode: set.setCode,
-      name: set.name,
-      releaseDate: set.releaseDate,
-      productCount: set.productCount,
-      cardCount: set._count.cards,
-      sealedProductCount: set._count.sealedProducts,
-      symbolImageUrl: set.symbolImageUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
-      logoImageUrl: set.logoImageUrl ?? set.cards[0]?.imageLargeUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
-      bannerImageUrl: set.bannerImageUrl,
-    })),
-  });
+    return res.json({
+      game: resolvedGame,
+      source: resolvedSource ?? null,
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      items: sets.map((set) => ({
+        ...(function () {
+          const firstCard = set.cards[0];
+          const fallbackImage = firstCard?.imageLargeUrl ?? firstCard?.imageThumbUrl ?? firstCard?.imageBaseUrl ?? null;
+          return {
+            resolvedLogoImageUrl: set.logoImageUrl ?? fallbackImage,
+            resolvedSymbolImageUrl: set.symbolImageUrl ?? fallbackImage,
+          };
+        })(),
+        id: set.id,
+        source: set.source,
+        sourceSetId: set.sourceSetId,
+        game: set.game,
+        setCode: set.setCode,
+        name: set.name,
+        releaseDate: set.releaseDate,
+        productCount: set.productCount,
+        cardCount: set._count.cards,
+        sealedProductCount: set._count.sealedProducts,
+        symbolImageUrl: set.symbolImageUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
+        logoImageUrl: set.logoImageUrl ?? set.cards[0]?.imageLargeUrl ?? set.cards[0]?.imageThumbUrl ?? set.cards[0]?.imageBaseUrl ?? null,
+        bannerImageUrl: set.bannerImageUrl,
+      })),
+    });
+  } catch (error) {
+    return handleSetlistRouteError(res, error, "list");
+  }
+});
+
+setlistRouter.get("/v1/public/setlists/stats", async (req, res) => {
+  try {
+    const source = normalizeSource(String(req.query.source ?? ""));
+    const baseWhere = {
+      isActive: true,
+      ...(source ? { source } : {}),
+    };
+
+    const [total, grouped] = await Promise.all([
+      prisma.catalogSet.count({ where: baseWhere }),
+      prisma.catalogSet.groupBy({
+        by: ["game"],
+        where: baseWhere,
+        _count: { game: true },
+      }),
+    ]);
+
+    const byGame = grouped.reduce<Record<string, number>>((acc, row) => {
+      acc[row.game] = row._count.game;
+      return acc;
+    }, {});
+
+    return res.json({
+      total,
+      byGame,
+      source: source ?? null,
+    });
+  } catch (error) {
+    return handleSetlistRouteError(res, error, "stats");
+  }
 });
 
 setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => {
-  const parsed = cardQuerySchema.safeParse(req.query);
-  if (!parsed.success) {
-    return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
-  }
-
-  const sourceSetId = String(req.params.sourceSetId ?? "").trim();
-  if (!sourceSetId) {
-    return res.status(400).json({ error: "sourceSetId is required" });
-  }
-
-  const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
-  const source = normalizeSource(String(req.query.source ?? ""));
-  const { q, rarity, page, limit } = parsed.data;
-  const skip = (page - 1) * limit;
-
-  let catalogSet = null;
   try {
-    catalogSet = await resolveCatalogSetBySourceSetId({ sourceSetId, game, source });
-  } catch (error) {
-    if ((error as Error).message === "AMBIGUOUS_SET_SOURCE") {
-      return res.status(409).json({
-        error: "Set source is ambiguous. Please include ?source=<source> for this set.",
-      });
+    const parsed = cardQuerySchema.safeParse(req.query);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid query", issues: parsed.error.issues });
     }
-    throw error;
-  }
 
-  if (!catalogSet) {
-    return res.status(404).json({ error: "Set not found" });
-  }
+    const sourceSetId = String(req.params.sourceSetId ?? "").trim();
+    if (!sourceSetId) {
+      return res.status(400).json({ error: "sourceSetId is required" });
+    }
 
-  const where = {
-    catalogSetId: catalogSet.id,
-    itemType: "CARD" as const,
-    isActive: true,
-    ...(q ? { searchText: { contains: q.toLowerCase(), mode: "insensitive" as const } } : {}),
-    ...(rarity ? { rarity: { equals: rarity, mode: "insensitive" as const } } : {}),
-  };
+    const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
+    const source = normalizeSource(String(req.query.source ?? ""));
+    const { q, rarity, page, limit } = parsed.data;
+    const skip = (page - 1) * limit;
 
-  const [total, items, rarities] = await Promise.all([
-    prisma.catalogItem.count({ where }),
-    prisma.catalogItem.findMany({
+    let catalogSet = null;
+    try {
+      catalogSet = await resolveCatalogSetBySourceSetId({ sourceSetId, game, source });
+    } catch (error) {
+      if ((error as Error).message === "AMBIGUOUS_SET_SOURCE") {
+        return res.status(409).json({
+          error: "Set source is ambiguous. Please include ?source=<source> for this set.",
+        });
+      }
+      throw error;
+    }
+
+    if (!catalogSet) {
+      return res.status(404).json({ error: "Set not found" });
+    }
+
+    const where = {
+      catalogSetId: catalogSet.id,
+      itemType: "CARD" as const,
+      isActive: true,
+      ...(q ? { searchText: { contains: q.toLowerCase(), mode: "insensitive" as const } } : {}),
+      ...(rarity ? { rarity: { equals: rarity, mode: "insensitive" as const } } : {}),
+    };
+
+    const total = await prisma.catalogItem.count({ where });
+    const items = await prisma.catalogItem.findMany({
       where,
       orderBy: [{ cardNumber: "asc" }, { name: "asc" }],
       skip,
@@ -273,89 +320,95 @@ setlistRouter.get("/v1/public/setlists/:sourceSetId/cards", async (req, res) => 
         imageLargeUrl: true,
         imageBaseUrl: true,
       },
-    }),
-    prisma.catalogItem.findMany({
+    });
+    const rarities = await prisma.catalogItem.findMany({
       where: { catalogSetId: catalogSet.id, itemType: "CARD", isActive: true },
       distinct: ["rarity"],
       select: { rarity: true },
       orderBy: [{ rarity: "asc" }],
-    }),
-  ]);
+    });
 
-  return res.json({
-    set: {
-      ...catalogSet,
-      logoImageUrl:
-        catalogSet.logoImageUrl ??
-        catalogSet.cards[0]?.imageLargeUrl ??
-        catalogSet.cards[0]?.imageThumbUrl ??
-        catalogSet.cards[0]?.imageBaseUrl ??
-        null,
-      symbolImageUrl:
-        catalogSet.symbolImageUrl ??
-        catalogSet.cards[0]?.imageThumbUrl ??
-        catalogSet.cards[0]?.imageBaseUrl ??
-        null,
-    },
-    page,
-    limit,
-    total,
-    totalPages: Math.max(1, Math.ceil(total / limit)),
-    rarities: rarities.map((r) => r.rarity).filter(Boolean),
-    items,
-  });
+    return res.json({
+      set: {
+        ...catalogSet,
+        logoImageUrl:
+          catalogSet.logoImageUrl ??
+          catalogSet.cards[0]?.imageLargeUrl ??
+          catalogSet.cards[0]?.imageThumbUrl ??
+          catalogSet.cards[0]?.imageBaseUrl ??
+          null,
+        symbolImageUrl:
+          catalogSet.symbolImageUrl ??
+          catalogSet.cards[0]?.imageThumbUrl ??
+          catalogSet.cards[0]?.imageBaseUrl ??
+          null,
+      },
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      rarities: rarities.map((r) => r.rarity).filter(Boolean),
+      items,
+    });
+  } catch (error) {
+    return handleSetlistRouteError(res, error, "cards");
+  }
 });
 
 setlistRouter.get("/v1/public/setlists/:sourceSetId/sealed", async (req, res) => {
-  const sourceSetId = String(req.params.sourceSetId ?? "").trim();
-  if (!sourceSetId) {
-    return res.status(400).json({ error: "sourceSetId is required" });
-  }
-  const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
-  const source = normalizeSource(String(req.query.source ?? ""));
-
-  let setRecord = null;
   try {
-    setRecord = await resolveCatalogSetBySourceSetId({ sourceSetId, game, source });
-  } catch (error) {
-    if ((error as Error).message === "AMBIGUOUS_SET_SOURCE") {
-      return res.status(409).json({
-        error: "Set source is ambiguous. Please include ?source=<source> for this set.",
-      });
+    const sourceSetId = String(req.params.sourceSetId ?? "").trim();
+    if (!sourceSetId) {
+      return res.status(400).json({ error: "sourceSetId is required" });
     }
-    throw error;
+    const game = resolveGame(String(req.query.game ?? "pokemon").trim().toLowerCase());
+    const source = normalizeSource(String(req.query.source ?? ""));
+
+    let setRecord = null;
+    try {
+      setRecord = await resolveCatalogSetBySourceSetId({ sourceSetId, game, source });
+    } catch (error) {
+      if ((error as Error).message === "AMBIGUOUS_SET_SOURCE") {
+        return res.status(409).json({
+          error: "Set source is ambiguous. Please include ?source=<source> for this set.",
+        });
+      }
+      throw error;
+    }
+    if (!setRecord) {
+      return res.status(404).json({ error: "Set not found" });
+    }
+
+    const sealed = await prisma.catalogSealedProduct.findMany({
+      where: {
+        catalogSetId: setRecord.id,
+        isActive: true,
+      },
+      orderBy: [{ name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        cleanName: true,
+        imageUrl: true,
+        imageCount: true,
+        isPresale: true,
+        presaleReleaseDate: true,
+      },
+    });
+
+    const setPayload = {
+      id: setRecord.id,
+      source: setRecord.source,
+      sourceSetId: setRecord.sourceSetId,
+      name: setRecord.name,
+      game: setRecord.game,
+    };
+
+    return res.json({
+      set: setPayload,
+      items: sealed,
+    });
+  } catch (error) {
+    return handleSetlistRouteError(res, error, "sealed");
   }
-  if (!setRecord) {
-    return res.status(404).json({ error: "Set not found" });
-  }
-
-  const sealed = await prisma.catalogSealedProduct.findMany({
-    where: {
-      catalogSetId: setRecord.id,
-      isActive: true,
-    },
-    orderBy: [{ name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      cleanName: true,
-      imageUrl: true,
-      imageCount: true,
-      isPresale: true,
-      presaleReleaseDate: true,
-    },
-  });
-
-  const setPayload = {
-    id: setRecord.id,
-    source: setRecord.source,
-    sourceSetId: setRecord.sourceSetId,
-    name: setRecord.name,
-    game: setRecord.game,
-  };
-
-  return res.json({
-    set: setPayload,
-    items: sealed,
-  });
 });

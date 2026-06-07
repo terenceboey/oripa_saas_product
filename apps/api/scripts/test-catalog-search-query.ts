@@ -45,8 +45,10 @@ assert.equal(where.game, "POKEMON");
 assert.equal(where.itemType, "CARD");
 assert.equal(where.language, "en");
 assert.equal(where.source, "tcgtracking");
-assert.equal(where.setId, "sv3pt5");
-assert.deepEqual(where.setName, { contains: "151", mode: "insensitive" });
+assert.deepEqual(where.catalogSet, {
+  sourceSetId: "sv3pt5",
+  name: { contains: "151", mode: "insensitive" },
+});
 assert.deepEqual(where.rarity, { contains: "rare", mode: "insensitive" });
 assert.equal(where.localId, "006");
 assert.equal(where.cardNumber, "006/165");
@@ -72,7 +74,9 @@ const indexedSql = buildCatalogIndexedSearchSql(
   40,
 );
 const indexedSqlText = indexedSql.strings.join("?");
-assert.match(indexedSqlText, /lower\("name"\) LIKE/);
+assert.match(indexedSqlText, /lower\(ci\.name\) LIKE/);
+assert.match(indexedSqlText, /JOIN "CatalogSet" cs/);
+assert.match(indexedSqlText, /cs\."sourceSetId" =/);
 assert.doesNotMatch(indexedSqlText, /"searchText"\s+ILIKE/i);
 assert.equal(indexedSql.values.includes("%zard%"), true);
 

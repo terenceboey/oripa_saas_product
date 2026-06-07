@@ -94,6 +94,7 @@ async function main() {
 
   await findCatalogSearchAdapterCandidates(mockClient as any, { q: "char", game: "ALL", itemClass: "CARD" }, 5);
   assert.equal(lastCardSql.includes("game ="), false);
+  assert.equal(lastCardSql.includes('JOIN "CatalogSet" cs'), true);
 
   console.log("catalog search adapter tests passed");
 }

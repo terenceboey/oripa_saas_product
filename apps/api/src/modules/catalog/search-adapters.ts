@@ -60,49 +60,50 @@ function buildCardSql(input: AdapterInput, take: number): Prisma.Sql {
   const containsNeedle = `%${needle}%`;
   const prefixNeedle = `${needle}%`;
   const clauses: Prisma.Sql[] = [
-    Prisma.sql`"isActive" = true`,
-    Prisma.sql`lower("name") LIKE ${containsNeedle}`,
-    Prisma.sql`"itemType" = ${"CARD"}::"CatalogItemType"`,
+    Prisma.sql`ci."isActive" = true`,
+    Prisma.sql`lower(ci.name) LIKE ${containsNeedle}`,
+    Prisma.sql`ci."itemType" = ${"CARD"}::"CatalogItemType"`,
   ];
 
-  if (shouldApplyGameFilter(input.game)) clauses.push(Prisma.sql`game = ${input.game}`);
-  if (input.language) clauses.push(Prisma.sql`language = ${input.language}`);
-  if (input.source) clauses.push(Prisma.sql`source = ${input.source}`);
-  if (input.setId) clauses.push(Prisma.sql`"setId" = ${input.setId}`);
-  if (input.setName) clauses.push(Prisma.sql`lower("setName") LIKE ${`%${input.setName.toLocaleLowerCase()}%`}`);
-  if (input.rarity) clauses.push(Prisma.sql`lower(rarity) LIKE ${`%${input.rarity.toLocaleLowerCase()}%`}`);
-  if (input.localId) clauses.push(Prisma.sql`"localId" = ${input.localId}`);
-  if (input.cardNumber) clauses.push(Prisma.sql`"cardNumber" = ${input.cardNumber}`);
+  if (shouldApplyGameFilter(input.game)) clauses.push(Prisma.sql`ci.game = ${input.game}`);
+  if (input.language) clauses.push(Prisma.sql`ci.language = ${input.language}`);
+  if (input.source) clauses.push(Prisma.sql`ci.source = ${input.source}`);
+  if (input.setId) clauses.push(Prisma.sql`cs."sourceSetId" = ${input.setId}`);
+  if (input.setName) clauses.push(Prisma.sql`lower(cs.name) LIKE ${`%${input.setName.toLocaleLowerCase()}%`}`);
+  if (input.rarity) clauses.push(Prisma.sql`lower(ci.rarity) LIKE ${`%${input.rarity.toLocaleLowerCase()}%`}`);
+  if (input.localId) clauses.push(Prisma.sql`ci."localId" = ${input.localId}`);
+  if (input.cardNumber) clauses.push(Prisma.sql`ci."cardNumber" = ${input.cardNumber}`);
 
   return Prisma.sql`
     SELECT
-      id,
-      source,
-      "sourceItemId",
-      "itemType",
-      game,
-      language,
-      name,
-      "setId",
-      "setName",
-      "localId",
-      "cardNumber",
-      rarity,
-      "imageThumbUrl",
-      "imageLargeUrl",
-      "imageBaseUrl",
-      "searchText"
-    FROM "CatalogItem"
+      ci.id,
+      ci.source,
+      ci."sourceItemId",
+      ci."itemType",
+      ci.game,
+      ci.language,
+      ci.name,
+      cs."sourceSetId" AS "setId",
+      cs.name AS "setName",
+      ci."localId",
+      ci."cardNumber",
+      ci.rarity,
+      ci."imageThumbUrl",
+      ci."imageLargeUrl",
+      ci."imageBaseUrl",
+      ci."searchText"
+    FROM "CatalogItem" ci
+    JOIN "CatalogSet" cs ON cs.id = ci."catalogSetId"
     WHERE ${Prisma.join(clauses, " AND ")}
     ORDER BY
       CASE
-        WHEN lower("name") = ${needle} THEN 0
-        WHEN lower("name") LIKE ${prefixNeedle} THEN 1
+        WHEN lower(ci.name) = ${needle} THEN 0
+        WHEN lower(ci.name) LIKE ${prefixNeedle} THEN 1
         ELSE 2
       END,
-      name ASC,
-      source ASC,
-      "sourceItemId" ASC
+      ci.name ASC,
+      ci.source ASC,
+      ci."sourceItemId" ASC
     LIMIT ${take}
   `;
 }

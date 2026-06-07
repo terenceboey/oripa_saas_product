@@ -1730,7 +1730,7 @@ export default function VendorPage() {
                       </select>
                     </label>
                     <label className="muted tiny">
-                      Search cards
+                      Search catalog
                       <input
                         value={cardSearchQuery}
                         onChange={(e) => setCardSearchQuery(e.target.value)}
@@ -1810,7 +1810,7 @@ export default function VendorPage() {
                   ) : null}
                   {catalogSearchError ? (
                     <div className="inline-error-banner" role="alert">
-                      Card search failed: {catalogSearchError}
+                      Catalog search failed: {catalogSearchError}
                     </div>
                   ) : null}
                   {!gameSelected ? (
@@ -1835,7 +1835,9 @@ export default function VendorPage() {
                       >
                         <img src={suggestion.imageThumbUrl || suggestion.imageLargeUrl || suggestion.imageBaseUrl || DEFAULT_CARD} alt={suggestion.name} />
                         <span className="catalog-result-name">{suggestion.name}</span>
-                        <span className="muted tiny">{suggestion.cardNumber ? `#${suggestion.cardNumber}` : suggestion.setId || "Card"}</span>
+                        <span className="muted tiny">
+                          {suggestion.cardNumber ? `#${suggestion.cardNumber}` : suggestion.setId || (suggestion.itemType === "SEALED_PRODUCT" ? "Sealed product" : "Card")}
+                        </span>
                       </button>
                     ))}
                   </div>

@@ -13,7 +13,6 @@
     "catalog:sync:pokemoncardio": "tsx scripts/sync-pokemoncardio-catalog.ts",
     "catalog:import:pokemoncardio": "tsx scripts/import-pokemoncardio-dump.ts",
     "catalog:enrich:set-images": "tsx scripts/enrich-set-images.ts",
-    "catalog:backfill:canonical": "tsx scripts/backfill-canonical-catalog.ts",
     "catalog:report": "tsx scripts/catalog-report.ts",
     "catalog:sync:tcgdex": "tsx scripts/sync-tcgdex.ts",
     "catalog:sync:carddb": "tsx scripts/sync-carddb-sources.ts",

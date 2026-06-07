@@ -58,4 +58,4 @@
 1. Keep `CatalogSet` as the single set anchor used by both cards and sealed.
 2. Continue freezing `catalogSnapshot` in `PackPrize` for immutability and auditability.
 3. Add a first-class catalog reference type column on prize/inventory/template rows (card vs sealed) to remove ambiguity and tighten inventory matching.
-4. Shift setlist and vendor picker reads to canonical tables once source import parity is complete (`CanonicalCatalogSet`, `CanonicalCatalogCard`, `CanonicalSealedProduct`).
+4. Keep the current `CatalogSet`, `CatalogItem`, and `CatalogSealedProduct` tables as the catalog source of truth until a future canonical layer is intentionally reintroduced with a new migration.

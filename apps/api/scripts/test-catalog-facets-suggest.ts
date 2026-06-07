@@ -20,7 +20,7 @@ assert.equal(activePokemonCardWhere.game, "POKEMON");
 assert.equal(activePokemonCardWhere.itemType, "CARD");
 assert.equal(activePokemonCardWhere.language, "en");
 assert.equal(activePokemonCardWhere.source, "pokemoncard.io");
-assert.equal(activePokemonCardWhere.setId, "sv3pt5");
+assert.deepEqual(activePokemonCardWhere.catalogSet, { sourceSetId: "sv3pt5" });
 assert.deepEqual(activePokemonCardWhere.rarity, { contains: "Rare", mode: "insensitive" });
 
 const suggestWhere = buildCatalogSuggestWhere({ q: "char", game: "POKEMON", type: "all", language: "en" });

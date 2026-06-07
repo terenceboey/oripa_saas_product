@@ -45,7 +45,7 @@ async function main() {
           game: "POKEMON",
           language: "en",
           name: "Charizard ex",
-          setId: "sv3pt5",
+          setId: "85:23599",
           setName: "151",
           localId: "006",
           cardNumber: "006/165",
@@ -70,7 +70,7 @@ async function main() {
     const token = jwt.sign({ sub: "user-1", email: "owner@example.com" }, process.env.JWT_SECRET ?? "change-me");
 
     const response = await fetch(
-      `http://127.0.0.1:${port}/v1/catalog/search?game=POKEMON&itemClass=CARD&setId=sv3pt5&limit=50`,
+      `http://127.0.0.1:${port}/v1/catalog/search?game=POKEMON&itemClass=CARD&setId=85%3A23599&limit=50`,
       {
         headers: {
           authorization: `Bearer ${token}`,
@@ -85,8 +85,9 @@ async function main() {
     assert.equal(payload.items.length, 1);
     assert.equal(payload.items[0].name, "Charizard ex");
     assert.equal(payload.nextCursor, null);
-    assert.equal(capturedSql.includes("\"setId\" ="), true);
-    assert.equal(capturedSql.includes("lower(name) LIKE"), false);
+    assert.equal(capturedSql.includes("JOIN \"CatalogSet\" cs"), true);
+    assert.equal(capturedSql.includes("cs.\"sourceSetId\" ="), true);
+    assert.equal(capturedSql.includes("lower(ci.name) LIKE"), false);
 
     const idleResponse = await fetch(
       `http://127.0.0.1:${port}/v1/catalog/search?game=POKEMON&itemClass=CARD&limit=50`,

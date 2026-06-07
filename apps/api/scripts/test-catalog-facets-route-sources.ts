@@ -55,10 +55,10 @@ async function main() {
           { language: "ja", _count: { language: 1000 } },
         ];
       }
-      if (by === "setId,setName") {
+      if (by === "catalogSetId") {
         return [
-          { setId: "sv3pt5", setName: "Scarlet & Violet 151", _count: { setId: 900 } },
-          { setId: "sv2a", setName: "Pokemon Card 151", _count: { setId: 800 } },
+          { catalogSetId: "catalog-set-151-en", _count: { catalogSetId: 900 } },
+          { catalogSetId: "catalog-set-151-ja", _count: { catalogSetId: 800 } },
         ];
       }
       if (by === "rarity") {
@@ -71,6 +71,15 @@ async function main() {
     }),
   );
 
+  restores.push(
+    patchMethod((prisma as any).catalogSet, "findMany", async () => {
+      return [
+        { id: "catalog-set-151-en", sourceSetId: "85:23599", name: "Scarlet & Violet 151" },
+        { id: "catalog-set-151-ja", sourceSetId: "85:23601", name: "Pokemon Card 151" },
+      ];
+    }),
+  );
+
   const app = createApp();
   const server = app.listen(0);
 
@@ -78,7 +87,7 @@ async function main() {
     const port = (server.address() as AddressInfo).port;
     const token = jwt.sign({ sub: "user-1", email: "owner@example.com" }, process.env.JWT_SECRET ?? "change-me");
     const response = await fetch(
-      `http://127.0.0.1:${port}/v1/catalog/facets?type=card&game=POKEMON&setId=sv3pt5&limit=30`,
+      `http://127.0.0.1:${port}/v1/catalog/facets?type=card&game=POKEMON&setId=85%3A23599&limit=30`,
       {
         headers: {
           authorization: `Bearer ${token}`,
@@ -95,7 +104,7 @@ async function main() {
       { value: "pokemoncard.io", count: 22000 },
     ]);
     assert.equal(payload.languages[0].value, "en");
-    assert.equal(payload.sets[0].id, "sv3pt5");
+    assert.equal(payload.sets[0].id, "85:23599");
     assert.equal(payload.rarities[0].value, "Rare");
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
