@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 type CatalogSearchItem = {
   id: string;
@@ -26,8 +27,23 @@ type SortMode = "relevance" | "name" | "set" | "value-desc" | "value-asc";
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 
+function isLocalhostLike(host: string) {
+  const normalized = host.trim().toLowerCase();
+  return (
+    normalized === "localhost" ||
+    normalized.startsWith("localhost:") ||
+    normalized === "demo.localhost" ||
+    normalized.endsWith(".localhost") ||
+    normalized.startsWith("127.0.0.1") ||
+    normalized.startsWith("0.0.0.0")
+  );
+}
+
 function currentVendorHost() {
-  if (typeof window !== "undefined" && window.location.host) return window.location.host.toLowerCase();
+  if (typeof window !== "undefined" && window.location.host) {
+    const host = window.location.host.toLowerCase();
+    return isLocalhostLike(host) ? configuredVendorHost || "demo.localhost" : host;
+  }
   return configuredVendorHost || "demo.localhost";
 }
 
@@ -55,6 +71,8 @@ function sortItems(items: CatalogSearchItem[], sortMode: SortMode) {
 }
 
 export default function VendorSortingWorkbenchPage() {
+  const router = useRouter();
+  const [accessState, setAccessState] = useState<"checking" | "allowed" | "denied">("checking");
   const [query, setQuery] = useState("charizard");
   const [language, setLanguage] = useState("");
   const [source, setSource] = useState("");
@@ -65,8 +83,43 @@ export default function VendorSortingWorkbenchPage() {
 
   const sortedItems = useMemo(() => sortItems(items, sortMode), [items, sortMode]);
 
+  useEffect(() => {
+    let active = true;
+
+    void (async () => {
+      try {
+        const response = await fetch(`${apiBase}/v1/vendor/me`, {
+          headers: {
+            "x-vendor-host": currentVendorHost(),
+            "x-client-page": "/vendor/working/sorting",
+          },
+          credentials: "include",
+          cache: "no-store",
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!active) return;
+        if (response.status === 401) {
+          router.replace(`/vendor/login?returnTo=${encodeURIComponent("/vendor/working/sorting")}`);
+          return;
+        }
+        if (!response.ok || !payload?.isVendorMember) {
+          setAccessState("denied");
+          return;
+        }
+        setAccessState("allowed");
+      } catch {
+        if (active) setAccessState("denied");
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
   async function runSearch(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
+    if (accessState !== "allowed") return;
     const q = query.trim();
     if (!q) return;
 
@@ -101,6 +154,15 @@ export default function VendorSortingWorkbenchPage() {
   return (
     <main style={{ minHeight: "100vh", background: "#080b12", color: "#f8fafc", padding: "32px" }}>
       <section style={{ margin: "0 auto", maxWidth: "1180px" }}>
+        {accessState !== "allowed" ? (
+          <div style={{ border: "1px solid #1e293b", borderRadius: "16px", background: "#0f172a", padding: "24px" }}>
+            <h1 style={{ fontSize: "28px", lineHeight: 1.1, margin: "0 0 8px" }}>Vendor Access Required</h1>
+            <p style={{ color: "#cbd5e1", margin: 0 }}>
+              {accessState === "checking" ? "Checking approved vendor access..." : "This page is restricted to approved vendor accounts only."}
+            </p>
+          </div>
+        ) : (
+          <>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "16px", alignItems: "center", marginBottom: "24px" }}>
           <div>
             <p style={{ color: "#94a3b8", margin: "0 0 6px" }}>Vendor working tools</p>
@@ -185,6 +247,8 @@ export default function VendorSortingWorkbenchPage() {
             </tbody>
           </table>
         </div>
+          </>
+        )}
       </section>
     </main>
   );

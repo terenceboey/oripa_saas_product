@@ -524,6 +524,54 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
   });
 });
 
+authRouter.post("/v1/auth/vendor/login", async (req: VendorRequest, res) => {
+  if (!req.vendorId) return res.status(400).json({ error: "vendor context is required" });
+
+  const email = String(req.body?.email ?? "").toLowerCase().trim();
+  const password = String(req.body?.password ?? "");
+  if (!email || !password) return res.status(400).json({ error: "email and password are required" });
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return res.status(401).json({ error: "invalid vendor credentials" });
+  if (!user.passwordHash) return res.status(409).json({ error: "this vendor account uses social login. contact support for vendor access." });
+  if (user.emailVerificationStatus !== "VERIFIED" || !user.emailVerifiedAt) {
+    return res.status(403).json({ error: "email not verified. please verify with OTP first." });
+  }
+
+  const ok = await bcrypt.compare(password, user.passwordHash);
+  if (!ok) return res.status(401).json({ error: "invalid vendor credentials" });
+
+  const membership = await prisma.vendorMembership.findFirst({
+    where: { vendorId: req.vendorId, userId: user.id, isActive: true },
+    select: {
+      role: true,
+      Vendor: {
+        select: { id: true, name: true, slug: true, host: true, isActive: true },
+      },
+    },
+  });
+
+  if (!membership || !membership.Vendor?.isActive) {
+    return res.status(403).json({ error: "this account is not approved for this vendor" });
+  }
+
+  const loggedInUser = await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLoginAt: new Date(), status: "ACTIVE" },
+  });
+
+  const token = issueAccessToken(loggedInUser);
+  setAccessCookie(res, token);
+  return res.json({
+    token,
+    user: serializeAuthUser(loggedInUser),
+    membership: {
+      role: membership.role,
+      vendor: membership.Vendor,
+    },
+  });
+});
+
 authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => {
   const email = String(req.body?.email ?? "").toLowerCase().trim();
   const otp = String(req.body?.otp ?? "").trim();

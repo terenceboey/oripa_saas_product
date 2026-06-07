@@ -193,6 +193,18 @@ const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
 type ActiveTab = "BUSINESS" | "PACKS";
 
+function isLocalhostLike(host: string) {
+  const normalized = host.trim().toLowerCase();
+  return (
+    normalized === "localhost" ||
+    normalized.startsWith("localhost:") ||
+    normalized === "demo.localhost" ||
+    normalized.endsWith(".localhost") ||
+    normalized.startsWith("127.0.0.1") ||
+    normalized.startsWith("0.0.0.0")
+  );
+}
+
 const DEFAULT_THEME = {
   storefrontPrimary: "#7A5CFA",
   storefrontSecondary: "#EEE7FF",
@@ -305,7 +317,8 @@ export default function VendorPage() {
   const pathname = usePathname();
   const runtimeVendorHost = useMemo(() => {
     if (typeof window !== "undefined" && window.location?.host) {
-      return window.location.host.toLowerCase();
+      const host = window.location.host.toLowerCase();
+      return isLocalhostLike(host) ? configuredVendorHost || "demo.localhost" : host;
     }
     return configuredVendorHost || "demo.localhost";
   }, []);
@@ -416,36 +429,35 @@ export default function VendorPage() {
   const setSelected = Boolean(catalogFilters.setId);
   const isCardPicker = catalogItemClass === "CARD";
 
-  async function resolveVendorHomeHost() {
-    const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
-      headers: clientPageHeader,
-      credentials: "include",
-      cache: "no-store",
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) return null;
-    const host = String(payload.vendorHost ?? "").trim().toLowerCase();
-    return host || null;
-  }
-
   const loadAll = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
+      const accessRes = await fetch(`${apiBase}/v1/vendor/me`, { headers: authHeaders(), credentials: "include", cache: "no-store" });
+      const accessJson = await accessRes.json().catch(() => ({}));
+      if (accessRes.status === 401) {
+        router.replace(`/vendor/login?returnTo=${encodeURIComponent(pathname || "/vendor")}`);
+        return;
+      }
+      if (accessRes.status === 400) {
+        throw new Error("Vendor access is only available from an approved vendor URL.");
+      }
+      if (!accessRes.ok) {
+        throw new Error(accessJson?.error ?? "Unable to verify vendor access.");
+      }
+      if (!accessJson?.isVendorMember) {
+        throw new Error("This account is not approved for this vendor.");
+      }
+
       const vendorRes = await fetch(`${apiBase}/v1/vendor/current`, { headers: authHeaders(), credentials: "include", cache: "no-store" });
       if (!vendorRes.ok) {
         if (vendorRes.status === 400) {
-          const membershipHost = await resolveVendorHomeHost();
-          const currentHost = window.location.host.toLowerCase();
-          if (membershipHost && membershipHost !== currentHost) {
-            window.location.href = `${window.location.protocol}//${membershipHost}/vendor`;
-            return;
-          }
-          throw new Error("Vendor context not resolved for this host. Please use your vendor subdomain.");
+          throw new Error("Vendor access is only available from an approved vendor URL.");
         }
         if (vendorRes.status === 401) {
-          throw new Error("Please login with your vendor account.");
+          router.replace(`/vendor/login?returnTo=${encodeURIComponent(pathname || "/vendor")}`);
+          return;
         }
         throw new Error("Failed to resolve vendor context.");
       }
@@ -503,11 +515,12 @@ export default function VendorPage() {
       setPacks(packsJson.packs ?? []);
       setCreativeJobs(creativeJobsJson.creativeJobs ?? []);
     } catch (err) {
+      setVendor(null);
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
     }
-  }, [authHeaders]);
+  }, [authHeaders, pathname, router]);
 
   useEffect(() => {
     void loadAll();
@@ -526,27 +539,6 @@ export default function VendorPage() {
     const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
     params.set("tab", toTabValue(tab));
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }
-
-  async function bootstrapOwner() {
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const res = await fetch(`${apiBase}/v1/vendor/bootstrap-owner`, {
-        method: "POST",
-        headers: authHeaders(),
-        credentials: "include",
-      });
-      const body = await res.json().catch(() => null);
-      if (!res.ok) throw new Error(body?.error ?? "Failed to bootstrap vendor owner");
-      setSuccess(body?.membership?.bootstrapped ? "Vendor owner access granted." : "Vendor membership already exists.");
-      await loadAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to bootstrap owner");
-    } finally {
-      setSaving(false);
-    }
   }
 
   async function saveVendorProfile(event: FormEvent) {
@@ -1269,6 +1261,29 @@ export default function VendorPage() {
     }
   }
 
+  if (loading && !vendor) {
+    return (
+      <main className="container vendor-dashboard">
+        <section className="card auth-card">
+          <h1>Verifying Vendor Access</h1>
+          <p className="muted">Checking whether this account is approved for this vendor.</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!vendor) {
+    return (
+      <main className="container vendor-dashboard">
+        <section className="card auth-card">
+          <h1>Vendor Access Required</h1>
+          <p className="muted">This page is restricted to approved vendor accounts only.</p>
+          {error ? <p className="error">{error}</p> : null}
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="container vendor-dashboard">
       <header className="site-header">
@@ -1277,7 +1292,6 @@ export default function VendorPage() {
           <span>{vendor?.name ?? "-"} ({vendor?.host ?? runtimeVendorHost})</span>
         </div>
         <div className="actions">
-          <button type="button" className="sort-pill" onClick={() => void bootstrapOwner()} disabled={saving}>Bootstrap Owner Access</button>
           <a className="sort-pill" href="/">Back to Homepage</a>
         </div>
       </header>

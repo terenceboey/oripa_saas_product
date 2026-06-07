@@ -71,34 +71,8 @@ vendorRouter.get("/v1/vendors/by-host", async (req, res) => {
   return res.json({ vendor });
 });
 
-vendorRouter.post("/v1/vendor/bootstrap-owner", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
-
-  const existingActiveMembers = await prisma.vendorMembership.count({
-    where: { vendorId: req.vendorId, isActive: true },
-  });
-
-  if (existingActiveMembers > 0) {
-    const existingRole = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
-    if (!existingRole) {
-      return res.status(403).json({ error: "Vendor already has members. Contact owner/admin for invite." });
-    }
-    return res.json({ membership: { role: existingRole, bootstrapped: false } });
-  }
-
-  const membership = await prisma.vendorMembership.create({
-    data: {
-      vendorId: req.vendorId,
-      userId: actorUserId,
-      role: "OWNER",
-      isActive: true,
-    },
-    select: { id: true, vendorId: true, userId: true, role: true, isActive: true, createdAt: true },
-  });
-
-  return res.status(201).json({ membership: { ...membership, bootstrapped: true } });
+vendorRouter.post("/v1/vendor/bootstrap-owner", async (_req: VendorRequest, res) => {
+  return res.status(403).json({ error: "Vendor owner bootstrap is disabled. Vendor access requires super admin approval." });
 });
 
 vendorRouter.get("/v1/vendor/me", async (req: VendorRequest, res) => {
