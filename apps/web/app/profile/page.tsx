@@ -173,7 +173,6 @@ function CustomerProfileContent() {
     <main className="container" style={storefrontThemeStyle}>
       <header className="auth-top-nav profile-top-nav">
         <Link href="/" className="sort-pill">Back to Home</Link>
-        <Link href="/vendor" className="sort-pill">Vendor Dashboard</Link>
       </header>
 
       <section className="card auth-card">

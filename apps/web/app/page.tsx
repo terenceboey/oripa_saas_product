@@ -287,8 +287,8 @@ export default function HomePage() {
             </Link>
           ) : (
             <>
-              <a className="sort-pill" href="/login">Login</a>
-              <a className="sort-pill" href="/register">Register</a>
+              <a className="sort-pill" href="/login">Customer Login</a>
+              <a className="sort-pill" href="/register">Customer Register</a>
             </>
           )}
           {user ? (

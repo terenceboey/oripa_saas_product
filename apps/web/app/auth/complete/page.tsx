@@ -14,17 +14,6 @@ type AuthUser = {
   profileComplete?: boolean;
 };
 
-function isLocalhostLike(host: string) {
-  const normalized = host.trim().toLowerCase();
-  return (
-    normalized === "localhost" ||
-    normalized === "demo.localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized.startsWith("127.0.0.1") ||
-    normalized.startsWith("0.0.0.0")
-  );
-}
-
 export default function AuthCompletePage() {
   return (
     <Suspense fallback={<AuthCompleteShell message="Finishing sign-in..." />}>
@@ -37,7 +26,7 @@ function AuthCompleteShell({ message }: { message: string }) {
   return (
     <main className="container">
       <section className="card auth-card">
-        <h1>Finishing Sign-In</h1>
+        <h1>Finishing Customer Sign-In</h1>
         <p className="muted">{message}</p>
       </section>
     </main>
@@ -73,22 +62,6 @@ function AuthCompleteContent() {
     throw lastError ?? new Error("Unable to confirm your login session.");
   }
 
-  async function resolveVendorHomeHost(): Promise<string | null> {
-    try {
-      const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
-        headers: clientPageHeader,
-        credentials: "include",
-        cache: "no-store",
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) return null;
-      const host = String(payload.vendorHost ?? "").trim().toLowerCase();
-      return host || null;
-    } catch {
-      return null;
-    }
-  }
-
   useEffect(() => {
     let active = true;
 
@@ -102,14 +75,7 @@ function AuthCompleteContent() {
           return;
         }
 
-        const membershipHost = await resolveVendorHomeHost();
-        if (!active) return;
-        const currentHost = window.location.host.toLowerCase();
-        if (membershipHost && !isLocalhostLike(membershipHost) && membershipHost !== currentHost) {
-          window.location.href = `${window.location.protocol}//${membershipHost}/vendor`;
-          return;
-        }
-        router.replace(membershipHost ? "/vendor" : "/");
+        router.replace("/");
       } catch (err) {
         if (!active) return;
         setError(err instanceof Error ? err.message : "Unable to finish sign-in.");
@@ -125,7 +91,7 @@ function AuthCompleteContent() {
   return (
     <main className="container">
       <section className="card auth-card">
-        <h1>Finishing Sign-In</h1>
+        <h1>Finishing Customer Sign-In</h1>
         <p className="muted">{message}</p>
         {error ? (
           <p className="error">

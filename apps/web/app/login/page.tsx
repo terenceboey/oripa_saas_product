@@ -37,17 +37,6 @@ type VendorBranding = {
   faviconImageUrl?: string | null;
 };
 
-function isLocalhostLike(host: string) {
-  const normalized = host.trim().toLowerCase();
-  return (
-    normalized === "localhost" ||
-    normalized === "demo.localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized.startsWith("127.0.0.1") ||
-    normalized.startsWith("0.0.0.0")
-  );
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const runtimeVendorHost = useMemo(() => {
@@ -64,22 +53,6 @@ export default function LoginPage() {
   const [branding, setBranding] = useState<VendorBranding | null>(null);
 
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
-
-  async function resolveVendorHomeHost(): Promise<string | null> {
-    try {
-      const response = await fetch(`${apiBase}/v1/auth/vendor-home`, {
-        headers: clientPageHeader,
-        credentials: "include",
-        cache: "no-store",
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) return null;
-      const host = String(payload.vendorHost ?? "").trim().toLowerCase();
-      return host || null;
-    } catch {
-      return null;
-    }
-  }
 
   async function loadProfile() {
     const response = await fetch(`${apiBase}/v1/auth/me`, {
@@ -101,7 +74,7 @@ export default function LoginPage() {
     const oauthError = url.searchParams.get("error");
 
     if (token || callbackVendorHost) {
-      setMessage("Logged in successfully. You can continue to the storefront.");
+      setMessage("Customer login successful. You can continue to the storefront.");
       void loadProfile();
       url.searchParams.delete("token");
       url.searchParams.delete("vendorHost");
@@ -113,16 +86,7 @@ export default function LoginPage() {
             router.push(`/profile?vendorHost=${encodeURIComponent(callbackVendorHost || runtimeVendorHost)}`);
             return;
           }
-          const currentHost = window.location.host.toLowerCase();
-          const callbackHostCandidate = callbackVendorHost && !isLocalhostLike(callbackVendorHost) ? callbackVendorHost : null;
-          const membershipHost = await resolveVendorHomeHost();
-          const targetHost = callbackHostCandidate || membershipHost;
-
-          if (targetHost && targetHost !== currentHost) {
-            window.location.href = `${window.location.protocol}//${targetHost}/login`;
-            return;
-          }
-          router.push(membershipHost ? "/vendor" : "/");
+          router.push("/");
         })();
       }, 500);
     }
@@ -189,7 +153,7 @@ export default function LoginPage() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Login failed");
 
-      setMessage("Logged in successfully.");
+      setMessage("Customer login successful.");
       const nextUser = (payload.user ?? (await loadProfile())) as AuthUser | null;
       setUser(nextUser);
       window.setTimeout(() => {
@@ -198,13 +162,7 @@ export default function LoginPage() {
             router.push(`/profile?vendorHost=${encodeURIComponent(runtimeVendorHost)}`);
             return;
           }
-          const currentHost = window.location.host.toLowerCase();
-          const membershipHost = await resolveVendorHomeHost();
-          if (membershipHost && !isLocalhostLike(membershipHost) && membershipHost !== currentHost) {
-            window.location.href = `${window.location.protocol}//${membershipHost}/login`;
-            return;
-          }
-          router.push(membershipHost ? "/vendor" : "/");
+          router.push("/");
         })();
       }, 500);
     } catch (err) {
@@ -229,8 +187,8 @@ export default function LoginPage() {
       </header>
 
       <section className="card auth-card">
-        <h1>Login</h1>
-        <p className="muted">Sign in with email/password, Google, or Apple.</p>
+        <h1>Customer Login</h1>
+        <p className="muted">Sign in as a customer with email/password, Google, or Apple. Vendor registration will use a separate approval flow.</p>
 
         <form className="auth-form" onSubmit={handleLogin}>
           <FormField label="Email">
@@ -239,14 +197,14 @@ export default function LoginPage() {
           <FormField label="Password">
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
           </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Signing in..." : "Login"}</button>
+          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Signing in..." : "Customer Login"}</button>
         </form>
 
         <div className="auth-divider">Other login options</div>
         <div className="auth-social-row">
           <a className="auth-social-button google" href="#" onClick={startGoogleLogin}>
             <span className="google-g">G</span>
-            <span>Log in with Google</span>
+            <span>Customer login with Google</span>
           </a>
         </div>
 
@@ -263,7 +221,7 @@ export default function LoginPage() {
         ) : null}
 
         <p className="muted" style={{ marginTop: 14 }}>
-          No account? <Link href="/register">Create one</Link>
+          No customer account? <Link href="/register">Create one</Link>
         </p>
       </section>
     </main>

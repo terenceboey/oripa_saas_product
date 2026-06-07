@@ -126,8 +126,8 @@ export default function RegisterPage() {
       </header>
 
       <section className="card auth-card">
-        <h1>Create Account</h1>
-        <p className="muted">Create your login first. After email verification, we will take you to the customer information page.</p>
+        <h1>Create Customer Account</h1>
+        <p className="muted">Create your customer login first. After email verification, we will take you to the customer information page. Vendor applications will use a separate approval flow.</p>
 
         <form className="auth-form" onSubmit={handleRegister}>
           <FormField label="Email">
@@ -136,14 +136,14 @@ export default function RegisterPage() {
           <FormField label="Password">
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (8+ chars)" minLength={8} required />
           </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Creating..." : "Register"}</button>
+          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Creating..." : "Create Customer Account"}</button>
         </form>
 
         <div className="auth-divider">Other login options</div>
         <div className="auth-social-row">
           <a className="auth-social-button google" href="#" onClick={startGoogleRegister}>
             <span className="google-g">G</span>
-            <span>Continue with Google, then complete profile</span>
+            <span>Continue as customer with Google</span>
           </a>
         </div>
 
@@ -151,7 +151,7 @@ export default function RegisterPage() {
         {message ? <p className="badge">{message}</p> : null}
 
         <p className="muted" style={{ marginTop: 14 }}>
-          Already have an account? <Link href="/login">Login</Link>
+          Already have a customer account? <Link href="/login">Login</Link>
         </p>
       </section>
     </main>
