@@ -56,6 +56,24 @@ export default function SetlistsPage() {
     let active = true;
     setLoading(true);
 
+    const fetchRequiredJson = async (url: string) => {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Setlist request failed: ${response.status}`);
+      }
+      return response.json();
+    };
+
+    const fetchOptionalJson = async (url: string) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return response.json();
+      } catch {
+        return null;
+      }
+    };
+
     const buildListUrl = (gameKey: string, params: { page?: number; limit?: number; q?: string; sort?: string }) => {
       const url = new URL(`${apiBase}/v1/public/setlists`);
       url.searchParams.set("game", gameKey);
@@ -67,31 +85,52 @@ export default function SetlistsPage() {
     };
     const statsUrl = new URL(`${apiBase}/v1/public/setlists/stats`);
 
+    const fetchTabCounts = async (statsPayload: unknown, mainPayload: SetlistResponse) => {
+      const typedStats = (statsPayload ?? {}) as SetlistStatsResponse;
+      const byGame = typedStats.byGame ?? {};
+      if (Object.keys(byGame).length > 0) {
+        return {
+          pokemon: Number(byGame.POKEMON ?? 0),
+          onePiece: Number(byGame.ONE_PIECE ?? 0),
+          pokemonJapan: Number(byGame.POKEMON_JAPAN ?? 0),
+        };
+      }
+
+      // Older deployed APIs may not have /setlists/stats yet. Fall back to the list
+      // endpoint so an optional stats failure cannot blank the whole setlist page.
+      const [pokemonPayload, onePiecePayload, japanPayload] = await Promise.all([
+        fetchOptionalJson(buildListUrl("pokemon", { page: 1, limit: 1, sort: "newest" })),
+        fetchOptionalJson(buildListUrl("one-piece", { page: 1, limit: 1, sort: "newest" })),
+        fetchOptionalJson(buildListUrl("pokemon-japan", { page: 1, limit: 1, sort: "newest" })),
+      ]);
+
+      return {
+        pokemon: Number((pokemonPayload as SetlistResponse | null)?.total ?? (game === "pokemon" ? mainPayload.total : 0)),
+        onePiece: Number((onePiecePayload as SetlistResponse | null)?.total ?? (game === "one-piece" ? mainPayload.total : 0)),
+        pokemonJapan: Number((japanPayload as SetlistResponse | null)?.total ?? (game === "pokemon-japan" ? mainPayload.total : 0)),
+      };
+    };
+
     Promise.all([
-      fetch(buildListUrl(game, { page, limit: PAGE_SIZE, q: query, sort })).then((r) => r.json()),
-      fetch(buildListUrl(game, { page: 1, limit: 5, sort: "newest" })).then((r) => r.json()),
-      fetch(statsUrl.toString()).then((r) => r.json()),
+      fetchRequiredJson(buildListUrl(game, { page, limit: PAGE_SIZE, q: query, sort })),
+      fetchRequiredJson(buildListUrl(game, { page: 1, limit: 5, sort: "newest" })),
+      fetchOptionalJson(statsUrl.toString()),
     ])
-      .then(([mainPayload, recentPayload, statsPayload]) => {
+      .then(async ([mainPayload, recentPayload, statsPayload]) => {
         if (!active) return;
-        const typedStats = (statsPayload ?? {}) as SetlistStatsResponse;
-        const byGame = typedStats.byGame ?? {};
-        const pokemonCount = Number(byGame.POKEMON ?? 0);
-        const onePieceCount = Number(byGame.ONE_PIECE ?? 0);
-        const pokemonJapanCount = Number(byGame.POKEMON_JAPAN ?? 0);
+        const typedMainPayload = mainPayload as SetlistResponse;
+        const typedRecentPayload = recentPayload as SetlistResponse;
+        const counts = await fetchTabCounts(statsPayload, typedMainPayload);
+        if (!active) return;
         setMainData({
-          total: Number(mainPayload?.total ?? 0),
-          totalPages: Number(mainPayload?.totalPages ?? 1),
-          page: Number(mainPayload?.page ?? 1),
-          limit: Number(mainPayload?.limit ?? PAGE_SIZE),
-          items: Array.isArray(mainPayload?.items) ? mainPayload.items : [],
+          total: Number(typedMainPayload?.total ?? 0),
+          totalPages: Number(typedMainPayload?.totalPages ?? 1),
+          page: Number(typedMainPayload?.page ?? 1),
+          limit: Number(typedMainPayload?.limit ?? PAGE_SIZE),
+          items: Array.isArray(typedMainPayload?.items) ? typedMainPayload.items : [],
         });
-        setRecentItems(Array.isArray(recentPayload?.items) ? recentPayload.items : []);
-        setTabCounts({
-          pokemon: pokemonCount,
-          onePiece: onePieceCount,
-          pokemonJapan: pokemonJapanCount,
-        });
+        setRecentItems(Array.isArray(typedRecentPayload?.items) ? typedRecentPayload.items : []);
+        setTabCounts(counts);
       })
       .catch(() => {
         if (!active) return;

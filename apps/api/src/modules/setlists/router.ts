@@ -60,6 +60,17 @@ function setlistScopeWhere(game: string): Prisma.CatalogSetWhereInput {
   return { game };
 }
 
+function cardSetlistWhere(): Prisma.CatalogSetWhereInput {
+  return {
+    cards: {
+      some: {
+        isActive: true,
+        itemType: "CARD",
+      },
+    },
+  };
+}
+
 function normalizeSource(input?: string | null) {
   const normalized = input?.trim().toLowerCase();
   if (!normalized) return null;
@@ -425,6 +436,7 @@ setlistRouter.get("/v1/public/setlists", async (req, res) => {
     const where: Prisma.CatalogSetWhereInput = {
       isActive: true,
       ...setlistScopeWhere(resolvedGame),
+      ...cardSetlistWhere(),
       ...(resolvedSource ? { source: resolvedSource } : {}),
       ...(search ? { searchText: { contains: search, mode: "insensitive" as const } } : {}),
     };
@@ -493,6 +505,7 @@ setlistRouter.get("/v1/public/setlists/stats", async (req, res) => {
     const source = normalizeSource(String(req.query.source ?? ""));
     const baseWhere: Prisma.CatalogSetWhereInput = {
       isActive: true,
+      ...cardSetlistWhere(),
       ...(source ? { source } : {}),
     };
 
