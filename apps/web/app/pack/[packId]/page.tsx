@@ -97,7 +97,7 @@ export default function PackDrawPage() {
     return configuredVendorHost;
   }, []);
 
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
   const [pack, setPack] = useState<Pack | null>(null);
   const [wallet, setWallet] = useState<Wallet | null>(null);

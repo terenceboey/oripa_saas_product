@@ -15,26 +15,12 @@ import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
 import { VendorMembershipRole } from "@prisma/client";
 import { randomUUID } from "crypto";
-import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import { requireVendorAccess } from "../../lib/rbac";
 
 export const vendorRouter = Router();
 
 async function requireVendorRole(req: VendorRequest, res: any, allowedRoles: VendorMembershipRole[]) {
-  if (!req.vendorId) {
-    res.status(400).json({ error: "Vendor not resolved" });
-    return null;
-  }
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) {
-    res.status(401).json({ error: "unauthorized" });
-    return null;
-  }
-  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
-  if (!role || !hasRole(role, allowedRoles)) {
-    res.status(403).json({ error: "forbidden: insufficient vendor role" });
-    return null;
-  }
-  return { vendorId: req.vendorId, actorUserId, role };
+  return requireVendorAccess(req, res, allowedRoles);
 }
 
 function planLimits(planCode: "BASIC" | "ELITE") {
@@ -85,11 +71,9 @@ vendorRouter.post("/v1/vendor/bootstrap-owner", async (_req: VendorRequest, res)
 });
 
 vendorRouter.get("/v1/vendor/me", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
-  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
-  return res.json({ userId: actorUserId, role, isVendorMember: Boolean(role) });
+  const auth = await requireVendorAccess(req, res);
+  if (!auth) return;
+  return res.json({ userId: auth.actorUserId, role: auth.role, isVendorMember: Boolean(auth.role) });
 });
 
 vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
@@ -650,10 +634,10 @@ vendorRouter.get("/v1/vendor/points/qr", async (req: VendorRequest, res) => {
 });
 
 vendorRouter.post("/v1/points/qr/redeem", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const vendorId = req.vendorId;
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
+  const auth = await requireVendorAccess(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
+  const vendorId = auth.vendorId;
+  const actorUserId = auth.actorUserId;
 
   const token = String(req.body?.token ?? "").trim();
   if (!token) return res.status(400).json({ error: "token is required" });

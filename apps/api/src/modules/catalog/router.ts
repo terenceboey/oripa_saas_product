@@ -2,7 +2,7 @@ import { Router } from "express";
 import { CatalogItemType, Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
-import { getRequestUserId, getVendorMembershipRole } from "../../lib/rbac";
+import { requireVendorAccess } from "../../lib/rbac";
 import { VendorRequest } from "../../middleware/vendor";
 import { collapseCatalogSearchItems, type CatalogSearchMergeInput } from "./search-dedupe";
 import {
@@ -115,21 +115,7 @@ const CARD_RARITY_ORDER_SQL = Prisma.sql`
 `;
 
 async function requireVendorReadAccess(req: VendorRequest, res: any) {
-  if (!req.vendorId) {
-    res.status(400).json({ error: "Vendor not resolved" });
-    return null;
-  }
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) {
-    res.status(401).json({ error: "unauthorized" });
-    return null;
-  }
-  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
-  if (!role) {
-    res.status(403).json({ error: "forbidden: insufficient vendor role" });
-    return null;
-  }
-  return { vendorId: req.vendorId, actorUserId, role };
+  return requireVendorAccess(req, res, ["OWNER", "MANAGER", "STAFF"]);
 }
 
 function normalizeFacetValue(value: string | null | undefined) {

@@ -90,7 +90,6 @@ export default function VendorSortingWorkbenchPage() {
       try {
         const response = await fetch(`${apiBase}/v1/vendor/me`, {
           headers: {
-            "x-vendor-host": currentVendorHost(),
             "x-client-page": "/vendor/working/sorting",
           },
           credentials: "include",
@@ -134,7 +133,6 @@ export default function VendorSortingWorkbenchPage() {
 
       const response = await fetch(url.toString(), {
         headers: {
-          "x-vendor-host": currentVendorHost(),
           "x-client-page": "/vendor/working/sorting",
         },
         credentials: "include",

@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 import { createCampaignCreativeSchema, publishCampaignCreativeSchema } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
-import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import { requireVendorAccess } from "../../lib/rbac";
 import {
   assertPromptSafe,
   buildForbiddenTerms,
@@ -18,25 +18,7 @@ import {
 export const creativeRouter = Router();
 
 async function requireCreativeRole(req: VendorRequest, res: any, allowStaffReadOnly = false) {
-  if (!req.vendorId) {
-    res.status(400).json({ error: "Vendor not resolved" });
-    return null;
-  }
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) {
-    res.status(401).json({ error: "unauthorized" });
-    return null;
-  }
-  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
-  if (!role) {
-    res.status(403).json({ error: "forbidden: insufficient vendor role" });
-    return null;
-  }
-  if (!allowStaffReadOnly && !hasRole(role, ["OWNER", "MANAGER"])) {
-    res.status(403).json({ error: "forbidden: insufficient vendor role" });
-    return null;
-  }
-  return { vendorId: req.vendorId, actorUserId, role };
+  return requireVendorAccess(req, res, allowStaffReadOnly ? ["OWNER", "MANAGER", "STAFF"] : ["OWNER", "MANAGER"]);
 }
 
 function responseForJob(job: any) {

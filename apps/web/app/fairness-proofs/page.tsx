@@ -53,7 +53,7 @@ export default function FairnessProofsPage() {
     if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
     return configuredVendorHost;
   }, []);
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
   const [proofs, setProofs] = useState<FairnessProofSummary[]>([]);
   const [detailsByOrderId, setDetailsByOrderId] = useState<Record<string, FairnessProofDetail>>({});

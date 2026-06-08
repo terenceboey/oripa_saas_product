@@ -89,6 +89,8 @@ h6,
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -634,6 +636,9 @@ h6,
 .auth-top-nav {
   display: flex;
   justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 6px;
   margin-bottom: 12px;
 }
@@ -855,6 +860,11 @@ h6,
   .header-right {
     width: 100%;
     justify-content: flex-end;
+  }
+
+  .auth-top-nav .sort-pill {
+    flex: 1 1 160px;
+    text-align: center;
   }
 
   .card-preview-grid,

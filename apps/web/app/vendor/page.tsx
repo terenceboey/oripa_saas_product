@@ -336,7 +336,7 @@ export default function VendorPage() {
     const host = configuredVendorHost || runtimeVendorHost;
     return host.replace(/^[^.]+\./, "");
   }, [runtimeVendorHost]);
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
   const authHeaders = useCallback(() => {
     return {
       ...headers,
@@ -531,6 +531,16 @@ export default function VendorPage() {
       setLoading(false);
     }
   }, [authHeaders, pathname, router]);
+
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers: authHeaders(),
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => null);
+    router.replace("/vendor/login");
+  }
 
   useEffect(() => {
     void loadAll();
@@ -1305,6 +1315,7 @@ export default function VendorPage() {
         <div className="actions">
           <Link className="sort-pill" href="/vendor/profile">Vendor Profile</Link>
           <a className="sort-pill" href="/">Back to Homepage</a>
+          <button type="button" className="sort-pill" onClick={() => void logout()}>Logout</button>
         </div>
       </header>
 

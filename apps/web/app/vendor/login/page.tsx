@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import Link from "next/link";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormField } from "../../../components/form-field";
 
@@ -60,6 +61,7 @@ function VendorLoginContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [isVendorMember, setIsVendorMember] = useState(false);
 
   const callbackError = String(searchParams.get("error") ?? "").trim().toLowerCase();
   const callbackStatus = String(searchParams.get("status") ?? "").trim().toLowerCase();
@@ -74,6 +76,31 @@ function VendorLoginContent() {
   const callbackStatusMessage = callbackStatus === "pending_approval" ? "Your vendor application was submitted and is waiting for approval." : null;
   const displayError = error ?? callbackErrorMessage;
   const displayMessage = message ?? callbackStatusMessage;
+
+  useEffect(() => {
+    void (async () => {
+      const response = await fetch(`${apiBase}/v1/vendor/me`, {
+        headers: { ...clientPageHeader },
+        credentials: "include",
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok && Boolean(payload?.isVendorMember)) {
+        setIsVendorMember(true);
+      }
+    })();
+  }, [runtimeVendorHost]);
+
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers: { ...clientPageHeader },
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => null);
+    setIsVendorMember(false);
+    setMessage("You have been logged out.");
+  }
 
   function startGoogleVendorLogin(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
@@ -94,7 +121,6 @@ function VendorLoginContent() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -117,6 +143,20 @@ function VendorLoginContent() {
 
   return (
     <main className="container">
+      <header className="auth-top-nav profile-top-nav">
+        <Link href="/" className="sort-pill">
+          Back to Home
+        </Link>
+        <Link href="/vendor/register" className="sort-pill">
+          Vendor Register
+        </Link>
+        {isVendorMember ? (
+          <button type="button" className="sort-pill" onClick={() => void logout()}>
+            Logout
+          </button>
+        ) : null}
+      </header>
+
       <section className="card auth-card">
         <h1>Vendor Login</h1>
         <p className="muted">

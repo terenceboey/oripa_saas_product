@@ -69,7 +69,7 @@ export default function LoginPage() {
 
   async function loadVendorMembership() {
     const response = await fetch(`${apiBase}/v1/vendor/me`, {
-      headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+      headers: { ...clientPageHeader },
       credentials: "include",
       cache: "no-store",
     });
@@ -116,7 +116,7 @@ export default function LoginPage() {
       void loadProfile().catch(() => {});
     })();
     void fetch(`${apiBase}/v1/vendor/current`, {
-      headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+      headers: { ...clientPageHeader },
       credentials: "include",
       cache: "no-store",
     })
@@ -130,6 +130,17 @@ export default function LoginPage() {
       })
       .catch(() => null);
   }, [runtimeVendorHost]);
+
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers: clientPageHeader,
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => null);
+    setUser(null);
+    setMessage("You have been logged out.");
+  }
 
   const storefrontThemeStyle = useMemo(() => {
     if (!theme) return undefined;
@@ -160,7 +171,6 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -206,8 +216,13 @@ export default function LoginPage() {
 
   return (
     <main className="container" style={storefrontThemeStyle}>
-      <header className="auth-top-nav">
+      <header className="auth-top-nav profile-top-nav">
         <Link href="/" className="sort-pill">Back to Home</Link>
+        {user ? (
+          <button type="button" className="sort-pill" onClick={() => void logout()}>
+            Logout
+          </button>
+        ) : null}
       </header>
 
       <section className="card auth-card">

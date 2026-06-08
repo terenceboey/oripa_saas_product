@@ -1,14 +1,16 @@
 import { Router } from "express";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
+import { requireVendorAccess } from "../../lib/rbac";
 
 export const walletRouter = Router();
 
 walletRouter.get("/v1/wallet", async (req: VendorRequest, res) => {
-  if (!req.vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+  const auth = await requireVendorAccess(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
 
   const wallet = await prisma.walletAccount.findFirst({
-    where: { vendorId: req.vendorId },
+    where: { vendorId: auth.vendorId },
     include: { entries: { orderBy: { createdAt: "desc" }, take: 20 } }
   });
 

@@ -101,7 +101,7 @@ function CustomerProfileContent() {
       });
 
     void fetch(`${apiBase}/v1/vendor/current`, {
-      headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+      headers: { ...clientPageHeader },
       credentials: "include",
       cache: "no-store",
     })
@@ -169,10 +169,25 @@ function CustomerProfileContent() {
     }
   }
 
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers: clientPageHeader,
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => null);
+    router.replace("/login");
+  }
+
   return (
     <main className="container" style={storefrontThemeStyle}>
       <header className="auth-top-nav profile-top-nav">
         <Link href="/" className="sort-pill">Back to Home</Link>
+        {user ? (
+          <button type="button" className="sort-pill" onClick={() => void logout()}>
+            Logout
+          </button>
+        ) : null}
       </header>
 
       <section className="card auth-card">

@@ -64,7 +64,7 @@ function VendorRegisterContent() {
     void (async () => {
       try {
         const response = await fetch(`${apiBase}/v1/vendor/me`, {
-          headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+          headers: { ...clientPageHeader },
           credentials: "include",
           cache: "no-store",
         });
@@ -91,6 +91,17 @@ function VendorRegisterContent() {
     window.location.href = url.toString();
   }
 
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers: { ...clientPageHeader },
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => null);
+    setIsVendorMember(false);
+    setMessage("You have been logged out.");
+  }
+
   async function handleVendorRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
@@ -102,7 +113,6 @@ function VendorRegisterContent() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -146,6 +156,14 @@ function VendorRegisterContent() {
         <Link href="/" className="sort-pill">
           Back to Home
         </Link>
+        <Link href="/vendor/login" className="sort-pill">
+          Vendor Login
+        </Link>
+        {isVendorMember ? (
+          <button type="button" className="sort-pill" onClick={() => void logout()}>
+            Logout
+          </button>
+        ) : null}
       </header>
 
       <section className="card auth-card">

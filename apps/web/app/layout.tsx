@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter, Rajdhani } from "next/font/google";
+import { CsrfBootstrap } from "../components/csrf-bootstrap";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -23,7 +24,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${rajdhani.variable}`}>
-      <body>{children}</body>
+      <body>
+        <CsrfBootstrap />
+        {children}
+      </body>
     </html>
   );
 }

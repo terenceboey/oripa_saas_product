@@ -37,6 +37,7 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [branding, setBranding] = useState<VendorBranding | null>(null);
   const socialBase = useMemo(() => `${apiBase}/v1/auth`, []);
@@ -47,7 +48,7 @@ export default function RegisterPage() {
     if (ref) setReferralCode(ref);
     void (async () => {
       const response = await fetch(`${apiBase}/v1/vendor/me`, {
-        headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+        headers: { ...clientPageHeader },
         credentials: "include",
         cache: "no-store",
       });
@@ -57,8 +58,19 @@ export default function RegisterPage() {
         return;
       }
     })();
+    void (async () => {
+      const response = await fetch(`${apiBase}/v1/auth/me`, {
+        headers: clientPageHeader,
+        credentials: "include",
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (response.ok && payload?.user?.email) {
+        setUser({ email: String(payload.user.email) });
+      }
+    })();
     void fetch(`${apiBase}/v1/vendor/current`, {
-      headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+      headers: { ...clientPageHeader },
       credentials: "include",
       cache: "no-store",
     })
@@ -72,6 +84,17 @@ export default function RegisterPage() {
       })
       .catch(() => null);
   }, []);
+
+  async function logout() {
+    await fetch(`${apiBase}/v1/auth/logout`, {
+      method: "POST",
+      headers: clientPageHeader,
+      credentials: "include",
+      cache: "no-store",
+    }).catch(() => null);
+    setUser(null);
+    setMessage("You have been logged out.");
+  }
 
   const storefrontThemeStyle = useMemo(() => {
     if (!theme) return undefined;
@@ -102,7 +125,6 @@ export default function RegisterPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -140,8 +162,13 @@ export default function RegisterPage() {
 
   return (
     <main className="container" style={storefrontThemeStyle}>
-      <header className="auth-top-nav">
+      <header className="auth-top-nav profile-top-nav">
         <Link href="/" className="sort-pill">Back to Home</Link>
+        {user ? (
+          <button type="button" className="sort-pill" onClick={() => void logout()}>
+            Logout
+          </button>
+        ) : null}
       </header>
 
       <section className="card auth-card">

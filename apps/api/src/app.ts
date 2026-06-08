@@ -18,6 +18,7 @@ import { creativeRouter } from "./modules/creative/router";
 import { setlistRouter } from "./modules/setlists/router";
 import { mediaRouter } from "./modules/media/router";
 import { ensureUploadRoot } from "./lib/image-pipeline";
+import { ensureCsrfCookie, getCsrfTokenFromRequest, validateCsrfRequest } from "./lib/rbac";
 
 export function createApp() {
   const app = express();
@@ -38,7 +39,7 @@ export function createApp() {
   const webHost = normalizeHost(webUrl);
   const vendorBaseDomain = normalizeHost(String(process.env.VENDOR_BASE_DOMAIN ?? ""));
   const hardcodedPrimaryDomain = "gachanow.xyz";
-  const corsAllowedHeaders = "Content-Type, Authorization, X-Vendor-Host, X-Idempotency-Key, X-Request-Id, X-Client-Page";
+  const corsAllowedHeaders = "Content-Type, Authorization, X-Vendor-Host, X-Idempotency-Key, X-Request-Id, X-Client-Page, X-CSRF-Token";
   const corsAllowedMethods = "GET,POST,PATCH,PUT,DELETE,OPTIONS";
 
   function isAllowedOrigin(origin?: string) {
@@ -85,6 +86,14 @@ export function createApp() {
   }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json({ limit: "64kb" }));
+  app.use((req, res, next) => {
+    ensureCsrfCookie(res, getCsrfTokenFromRequest(req));
+    const csrfError = validateCsrfRequest(req);
+    if (csrfError) {
+      return res.status(403).json({ error: csrfError });
+    }
+    return next();
+  });
   app.use("/uploads", express.static(path.resolve(process.cwd(), "apps/api/uploads"), {
     maxAge: "365d",
     immutable: true,

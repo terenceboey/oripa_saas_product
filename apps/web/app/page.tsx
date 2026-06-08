@@ -121,7 +121,7 @@ export default function HomePage() {
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
 
-  const headers = useMemo(() => ({ "x-vendor-host": runtimeVendorHost, ...clientPageHeader }), [runtimeVendorHost]);
+  const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
   const loadData = useCallback(async (force = false) => {
     if (vendorNotFound && !force) return;

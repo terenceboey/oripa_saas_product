@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FormField } from "./form-field";
 import { COUNTRY_OPTIONS } from "../lib/countries";
 
@@ -122,6 +123,7 @@ export function VendorApplicationForm({
   primaryActionLabel,
   note,
 }: VendorApplicationFormProps) {
+  const router = useRouter();
   const [form, setForm] = useState<FormState>(DEFAULT_STATE);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -149,7 +151,7 @@ export function VendorApplicationForm({
 
       try {
         const membershipResponse = await fetch(`${apiBase}/v1/vendor/me`, {
-          headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+          headers: { ...clientPageHeader },
           credentials: "include",
           cache: "no-store",
         });
@@ -165,7 +167,7 @@ export function VendorApplicationForm({
         if (active) setHasAccess(true);
 
         const response = await fetch(`${apiBase}/v1/vendor/application`, {
-          headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+          headers: { ...clientPageHeader },
           credentials: "include",
           cache: "no-store",
         });
@@ -219,7 +221,6 @@ export function VendorApplicationForm({
       const response = await fetch(`${apiBase}/v1/vendor/media/documents`, {
         method: "POST",
         headers: {
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -253,7 +254,6 @@ export function VendorApplicationForm({
         method: "PATCH",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -269,6 +269,9 @@ export function VendorApplicationForm({
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(draftStorageKey);
       }
+      window.setTimeout(() => {
+        router.replace("/vendor");
+      }, 300);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Failed to save vendor application");
     } finally {

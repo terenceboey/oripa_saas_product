@@ -91,7 +91,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
-  const actorUserId = getRequestUserId(req);
+  const actorUserId = await getRequestUserId(req, res);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
   const requestId = String(req.header("x-request-id") ?? "").trim() || randomUUID();
   const clientIp = String((req.headers["x-forwarded-for"] as string) ?? req.ip ?? "").split(",")[0].trim() || null;
@@ -466,7 +466,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
 drawRouter.get("/v1/draws/:drawOrderId/proof", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getRequestUserId(req);
+  const actorUserId = await getRequestUserId(req, res);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
 
   const drawOrderId = String(req.params.drawOrderId ?? "").trim();
@@ -520,7 +520,7 @@ drawRouter.get("/v1/draws/:drawOrderId/proof", async (req: VendorRequest, res) =
 drawRouter.get("/v1/fairness-proofs", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
-  const actorUserId = getRequestUserId(req);
+  const actorUserId = await getRequestUserId(req, res);
   if (!actorUserId) return res.status(401).json({ error: "unauthorized" });
 
   const limitRaw = Number(req.query.limit ?? 100);

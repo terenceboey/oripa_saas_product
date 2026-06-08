@@ -6,18 +6,15 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import AppleStrategy from "passport-apple";
 import crypto from "crypto";
 import { prisma } from "../../lib/prisma";
-import { VendorRequest } from "../../middleware/vendor";
+import { resolveVendorHostHint, VendorRequest } from "../../middleware/vendor";
 import { sendEmail } from "../../lib/email";
-import { getRequestUserId } from "../../lib/rbac";
+import { ensureCsrfCookie, getCsrfTokenFromRequest, getRequestUserId, issueAuthSession, revokeCurrentSessionFromRequest } from "../../lib/rbac";
 
 const authRouter = Router();
 const webBaseUrl = process.env.WEB_URL ?? "http://localhost:3000";
 const appBaseUrl = process.env.APP_URL ?? "http://localhost:4000";
 const jwtSecret = process.env.JWT_SECRET ?? "change-me";
-const appNodeEnv = String(process.env.NODE_ENV ?? "development").toLowerCase();
-const isProduction = appNodeEnv === "production";
-const cookieDomain = process.env.AUTH_COOKIE_DOMAIN;
-const authCookieSameSite = isProduction ? "None" : "Lax";
+const oauthStateSecret = process.env.AUTH_STATE_SECRET ?? jwtSecret;
 
 let passportConfigured = false;
 const OTP_TTL_MINUTES = 10;
@@ -34,11 +31,11 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
 ]);
 
 function resolveRequestHost(req: VendorRequest) {
-  const explicitHost = String(req.header("x-vendor-host") ?? "").trim().toLowerCase();
-  if (explicitHost) return explicitHost;
-  const hostname = String(req.hostname ?? "").trim().toLowerCase();
-  if (hostname) return hostname;
-  return String(process.env.DEFAULT_TENANT_HOST ?? "localhost").trim().toLowerCase();
+  const currentHost = String(req.vendorHost ?? "").trim().toLowerCase();
+  if (currentHost) return currentHost;
+  const hinted = resolveVendorHostHint(req);
+  if (hinted.trusted && hinted.host) return hinted.host;
+  return "";
 }
 
 function isSafeRedirectVendorHost(host: string) {
@@ -92,44 +89,41 @@ function buildVendorPathRedirectUrl(vendorHost: string, path: string, params?: R
   return applyParams(new URL(path, webBaseUrl));
 }
 
-function issueAccessToken(user: { id: string; email: string; displayName: string | null; status: string }) {
-  return jwt.sign(
-    {
-      sub: user.id,
-      email: user.email,
-      name: user.displayName,
-      status: user.status,
-    },
-    jwtSecret,
-    { expiresIn: "7d" }
-  );
+type OAuthStatePayload = {
+  vendorHost: string;
+  referralCode: string | null;
+  intent: string;
+  issuedAt: number;
+  nonce: string;
+};
+
+function signOAuthState(payload: OAuthStatePayload) {
+  const serialized = JSON.stringify(payload);
+  const signature = crypto.createHmac("sha256", oauthStateSecret).update(serialized).digest("base64url");
+  return Buffer.from(JSON.stringify({ payload, signature }), "utf8").toString("base64url");
 }
 
-function setAccessCookie(res: any, token: string) {
-  const maxAgeSeconds = 7 * 24 * 60 * 60;
-  const parts = [
-    `oripa_access_token=${encodeURIComponent(token)}`,
-    "Path=/",
-    "HttpOnly",
-    `Max-Age=${maxAgeSeconds}`,
-    `SameSite=${authCookieSameSite}`,
-  ];
-  if (isProduction) parts.push("Secure");
-  if (cookieDomain) parts.push(`Domain=${cookieDomain}`);
-  res.setHeader("Set-Cookie", parts.join("; "));
-}
-
-function clearAccessCookie(res: any) {
-  const parts = [
-    "oripa_access_token=",
-    "Path=/",
-    "HttpOnly",
-    "Max-Age=0",
-    `SameSite=${authCookieSameSite}`,
-  ];
-  if (isProduction) parts.push("Secure");
-  if (cookieDomain) parts.push(`Domain=${cookieDomain}`);
-  res.setHeader("Set-Cookie", parts.join("; "));
+function readOAuthState(rawState: string) {
+  try {
+    const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as {
+      payload?: OAuthStatePayload;
+      signature?: string;
+    };
+    if (!decoded?.payload || !decoded.signature) return null;
+    const serialized = JSON.stringify(decoded.payload);
+    const expectedSignature = crypto.createHmac("sha256", oauthStateSecret).update(serialized).digest("base64url");
+    const provided = Buffer.from(decoded.signature);
+    const expected = Buffer.from(expectedSignature);
+    if (provided.length !== expected.length) return null;
+    if (!crypto.timingSafeEqual(provided, expected)) return null;
+    if (typeof decoded.payload.vendorHost !== "string" || typeof decoded.payload.issuedAt !== "number") return null;
+    if (!decoded.payload.intent) return null;
+    const maxAgeMs = 30 * 60 * 1000;
+    if (Date.now() - decoded.payload.issuedAt > maxAgeMs) return null;
+    return decoded.payload;
+  } catch {
+    return null;
+  }
 }
 
 type AuthUserRecord = {
@@ -751,10 +745,12 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
     data: { lastLoginAt: new Date(), status: "ACTIVE" },
   });
 
-  const token = issueAccessToken(loggedInUser);
-  setAccessCookie(res, token);
+  const session = await issueAuthSession(res, loggedInUser, {
+    userAgent: req.header("user-agent") ?? null,
+    ipAddress: req.ip ?? null,
+  });
   return res.json({
-    token,
+    token: session.accessToken,
     user: serializeAuthUser(loggedInUser),
   });
 });
@@ -795,10 +791,12 @@ authRouter.post("/v1/auth/vendor/login", async (req: VendorRequest, res) => {
     data: { lastLoginAt: new Date(), status: "ACTIVE" },
   });
 
-  const token = issueAccessToken(loggedInUser);
-  setAccessCookie(res, token);
+  const session = await issueAuthSession(res, loggedInUser, {
+    userAgent: req.header("user-agent") ?? null,
+    ipAddress: req.ip ?? null,
+  });
   return res.json({
-    token,
+    token: session.accessToken,
     user: serializeAuthUser(loggedInUser),
     membership: {
       role: membership.role,
@@ -816,10 +814,12 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(404).json({ error: "user not found" });
   if (user.emailVerificationStatus === "VERIFIED" && user.emailVerifiedAt) {
-    const token = issueAccessToken(user);
-    setAccessCookie(res, token);
+    const session = await issueAuthSession(res, user, {
+      userAgent: req.header("user-agent") ?? null,
+      ipAddress: req.ip ?? null,
+    });
     return res.json({
-      token,
+      token: session.accessToken,
       user: serializeAuthUser(user),
     });
   }
@@ -859,10 +859,12 @@ authRouter.post("/v1/auth/verify-email-otp", async (req: VendorRequest, res) => 
     },
   });
 
-  const token = issueAccessToken(verifiedUser);
-  setAccessCookie(res, token);
+  const session = await issueAuthSession(res, verifiedUser, {
+    userAgent: req.header("user-agent") ?? null,
+    ipAddress: req.ip ?? null,
+  });
   return res.json({
-    token,
+    token: session.accessToken,
     user: serializeAuthUser(verifiedUser),
   });
 });
@@ -895,12 +897,17 @@ authRouter.post("/v1/auth/resend-email-otp", async (req: VendorRequest, res) => 
 });
 
 authRouter.post("/v1/auth/logout", async (_req: VendorRequest, res) => {
-  clearAccessCookie(res);
+  await revokeCurrentSessionFromRequest(_req, res);
   return res.json({ ok: true });
 });
 
+authRouter.get("/v1/auth/csrf", async (req: VendorRequest, res) => {
+  const csrfToken = ensureCsrfCookie(res, getCsrfTokenFromRequest(req));
+  return res.json({ csrfToken });
+});
+
 authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
-  const userId = getRequestUserId(req);
+  const userId = await getRequestUserId(req, res);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -910,7 +917,7 @@ authRouter.get("/v1/auth/me", async (req: VendorRequest, res) => {
 });
 
 authRouter.get("/v1/auth/profile", async (req: VendorRequest, res) => {
-  const userId = getRequestUserId(req);
+  const userId = await getRequestUserId(req, res);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -920,7 +927,7 @@ authRouter.get("/v1/auth/profile", async (req: VendorRequest, res) => {
 });
 
 authRouter.patch("/v1/auth/profile", async (req: VendorRequest, res) => {
-  const userId = getRequestUserId(req);
+  const userId = await getRequestUserId(req, res);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
 
   const profileInput = validateCustomerProfileInput(req.body);
@@ -942,7 +949,7 @@ authRouter.patch("/v1/auth/profile", async (req: VendorRequest, res) => {
 });
 
 authRouter.get("/v1/auth/vendor-home", async (req: VendorRequest, res) => {
-  const userId = getRequestUserId(req);
+  const userId = await getRequestUserId(req, res);
   if (!userId) return res.status(401).json({ error: "unauthorized" });
 
   const memberships = await prisma.vendorMembership.findMany({
@@ -987,11 +994,26 @@ authRouter.get("/v1/auth/google/start", (req, res, next) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.status(503).json({ error: "Google OAuth not configured" });
   }
-  const vendorHost = String(req.query.vendorHost ?? resolveRequestHost(req)).trim().toLowerCase();
+  const requestHost = resolveRequestHost(req);
+  const queryHost = String(req.query.vendorHost ?? "").trim().toLowerCase();
+  if (requestHost && queryHost && queryHost !== requestHost) {
+    return res.status(403).json({ error: "forbidden: vendor host mismatch" });
+  }
+  const isProduction = String(process.env.NODE_ENV ?? "development").toLowerCase() === "production";
+  const vendorHost = requestHost || (!isProduction ? queryHost : "");
+  if (isProduction && !requestHost && queryHost) {
+    return res.status(403).json({ error: "forbidden: vendor host could not be verified" });
+  }
   const referralCode = String(req.query.referralCode ?? "").trim().toLowerCase() || null;
   const intent = String(req.query.intent ?? "customer_login").trim().toLowerCase();
   const safeIntent = new Set(["customer_login", "customer_register", "vendor_login", "vendor_register"]).has(intent) ? intent : "customer_login";
-  const state = Buffer.from(JSON.stringify({ vendorHost, referralCode, intent: safeIntent })).toString("base64url");
+  const state = signOAuthState({
+    vendorHost,
+    referralCode,
+    intent: safeIntent,
+    issuedAt: Date.now(),
+    nonce: crypto.randomBytes(16).toString("base64url"),
+  });
   return passport.authenticate("google", { scope: ["profile", "email"], session: false, state })(req, res, next);
 });
 
@@ -1001,19 +1023,13 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
       return res.redirect(`${webBaseUrl}/login?error=google_auth_failed`);
     }
     const rawState = String(req.query.state ?? "");
-    let vendorHost = resolveRequestHost(req);
-    let referralCode: string | null = null;
-    let intent = "customer_login";
-    try {
-      const decoded = JSON.parse(Buffer.from(rawState, "base64url").toString("utf8")) as { vendorHost?: string; referralCode?: string; intent?: string };
-      vendorHost = String(decoded.vendorHost ?? vendorHost);
-      referralCode = decoded.referralCode ? String(decoded.referralCode).toLowerCase() : null;
-      intent = String(decoded.intent ?? intent).trim().toLowerCase();
-    } catch {
-      vendorHost = resolveRequestHost(req);
-      referralCode = null;
-      intent = "customer_login";
+    const decodedState = readOAuthState(rawState);
+    if (!decodedState) {
+      return res.redirect(`${webBaseUrl}/login?error=google_auth_failed`);
     }
+    const vendorHost = String(decodedState.vendorHost ?? "").trim().toLowerCase();
+    const referralCode = decodedState.referralCode ? String(decodedState.referralCode).toLowerCase() : null;
+    const intent = String(decodedState.intent ?? "customer_login").trim().toLowerCase();
 
     if (intent.startsWith("vendor_")) {
       const vendorMembership = await getActiveVendorMembershipForHost(String(user.id), vendorHost);
@@ -1054,8 +1070,10 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
           where: { id: user.id },
           data: { lastLoginAt: new Date(), status: "ACTIVE" },
         });
-        const token = issueAccessToken(loggedInUser);
-        setAccessCookie(res, token);
+        await issueAuthSession(res, loggedInUser, {
+          userAgent: req.header("user-agent") ?? null,
+          ipAddress: req.ip ?? null,
+        });
         return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor/profile", { from: "register" }));
       }
 
@@ -1084,8 +1102,10 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
         where: { id: user.id },
         data: { lastLoginAt: new Date(), status: "ACTIVE" },
       });
-      const token = issueAccessToken(loggedInUser);
-      setAccessCookie(res, token);
+      await issueAuthSession(res, loggedInUser, {
+        userAgent: req.header("user-agent") ?? null,
+        ipAddress: req.ip ?? null,
+      });
       return res.redirect(buildVendorPathRedirectUrl(vendorHost, "/vendor"));
     }
 
@@ -1108,8 +1128,10 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
       referralCode,
       customerUserId: String(user.id),
     });
-    const token = issueAccessToken(user);
-    setAccessCookie(res, token);
+    await issueAuthSession(res, user, {
+      userAgent: req.header("user-agent") ?? null,
+      ipAddress: req.ip ?? null,
+    });
     try {
       return res.redirect(buildAuthCompleteRedirectUrl(vendorHost, "google"));
     } catch {
@@ -1126,23 +1148,16 @@ authRouter.get("/v1/auth/apple/start", (req, res, next) => {
 });
 
 authRouter.post("/v1/auth/apple/callback", (req, res, next) => {
-  passport.authenticate("apple", { session: false }, (err: unknown, user: any) => {
+  passport.authenticate("apple", { session: false }, async (err: unknown, user: any) => {
     if (err || !user) {
       return res.redirect(`${webBaseUrl}/login?error=apple_auth_failed`);
     }
-    const token = issueAccessToken(user);
-    setAccessCookie(res, token);
+    await issueAuthSession(res, user, {
+      userAgent: req.header("user-agent") ?? null,
+      ipAddress: req.ip ?? null,
+    });
     return res.redirect(buildAuthCompleteRedirectUrl(resolveRequestHost(req), "apple"));
   })(req, res, next);
 });
 
 export { authRouter };
-
-
-
-
-
-
-
-
-

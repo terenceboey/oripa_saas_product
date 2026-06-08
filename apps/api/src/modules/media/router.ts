@@ -3,7 +3,7 @@ import multer from "multer";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { getRequestUserId, getVendorMembershipRole, hasRole } from "../../lib/rbac";
+import { requireVendorAccess } from "../../lib/rbac";
 import { optimizeAndPersistImage } from "../../lib/image-pipeline";
 import { VendorRequest } from "../../middleware/vendor";
 
@@ -17,21 +17,7 @@ const uploadSingleImage = upload.single("file") as any;
 const uploadSingleDocument = upload.single("file") as any;
 
 async function requireVendorMediaWrite(req: VendorRequest, res: any) {
-  if (!req.vendorId) {
-    res.status(400).json({ error: "Vendor not resolved" });
-    return null;
-  }
-  const actorUserId = getRequestUserId(req);
-  if (!actorUserId) {
-    res.status(401).json({ error: "unauthorized" });
-    return null;
-  }
-  const role = await getVendorMembershipRole({ vendorId: req.vendorId, userId: actorUserId });
-  if (!role || !hasRole(role, ["OWNER", "MANAGER"])) {
-    res.status(403).json({ error: "forbidden: insufficient vendor role" });
-    return null;
-  }
-  return { vendorId: req.vendorId, actorUserId };
+  return requireVendorAccess(req, res, ["OWNER", "MANAGER"]);
 }
 
 mediaRouter.post("/v1/vendor/media/images", uploadSingleImage, async (req: VendorRequest, res) => {

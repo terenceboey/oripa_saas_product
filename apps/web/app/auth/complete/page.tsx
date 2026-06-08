@@ -68,7 +68,7 @@ function AuthCompleteContent() {
     void (async () => {
       try {
         const vendorAccess = await fetch(`${apiBase}/v1/vendor/me`, {
-          headers: { "x-vendor-host": runtimeVendorHost, ...clientPageHeader },
+          headers: { ...clientPageHeader },
           credentials: "include",
           cache: "no-store",
         });

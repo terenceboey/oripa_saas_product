@@ -46,7 +46,6 @@ export default function VerifyEmailPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
@@ -80,7 +79,6 @@ export default function VerifyEmailPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-vendor-host": runtimeVendorHost,
           ...clientPageHeader,
         },
         credentials: "include",
