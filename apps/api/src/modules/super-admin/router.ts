@@ -38,7 +38,7 @@ superAdminRouter.get("/v1/super-admin/dashboard", async (req, res) => {
   const auth = await requireSuperAdmin(req, res);
   if (!auth) return;
 
-  const [vendorCounts, pendingVendors] = await Promise.all([
+  const [vendorCounts, pendingVendors, platformFeeAgg] = await Promise.all([
     prisma.vendor.groupBy({
       by: ["applicationStatus"],
       _count: { _all: true },
@@ -73,6 +73,10 @@ superAdminRouter.get("/v1/super-admin/dashboard", async (req, res) => {
       orderBy: { updatedAt: "desc" },
       take: 25,
     }),
+    prisma.vendorRevenueLedger.aggregate({
+      where: { type: "PLATFORM_FEE" },
+      _sum: { amountPoints: true, amountCurrency: true },
+    }),
   ]);
 
   const counts = vendorCounts.reduce<Record<string, number>>((acc, row) => {
@@ -88,6 +92,8 @@ superAdminRouter.get("/v1/super-admin/dashboard", async (req, res) => {
       underReview: counts.UNDER_REVIEW ?? 0,
       approved: counts.APPROVED ?? 0,
       rejected: counts.REJECTED ?? 0,
+      platformFeePoints: platformFeeAgg._sum.amountPoints ?? 0,
+      platformFeeCurrency: Number(platformFeeAgg._sum.amountCurrency ?? 0),
     },
     pendingVendors,
   });

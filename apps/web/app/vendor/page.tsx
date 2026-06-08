@@ -56,7 +56,12 @@ type VendorLimits = {
 type EarningsSummary = {
   totalRevenuePoints: number;
   totalRevenueCurrency: number;
+  platformFeePoints?: number;
+  tenantNetPoints?: number;
   vendorSpentPoints: number;
+  topupPoints?: number;
+  topupCount?: number;
+  vendorWalletBalance?: number;
   netPoints: number;
   currencyCode: string;
 };
@@ -67,6 +72,20 @@ type PackEarning = {
   drawOrders: number;
   totalDrawQuantity: number;
   totalPoints: number;
+};
+
+type TopupActivity = {
+  id: string;
+  pointsToCredit: number;
+  expectedCurrencyAmount: number | null;
+  currencyCode: string | null;
+  status: string;
+  provider: string | null;
+  createdAt: string;
+  user?: {
+    email: string;
+    displayName?: string | null;
+  } | null;
 };
 
 type ReferralCustomer = {
@@ -369,6 +388,7 @@ export default function VendorPage() {
   const [limits, setLimits] = useState<VendorLimits>({ planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [packEarnings, setPackEarnings] = useState<PackEarning[]>([]);
+  const [topups, setTopups] = useState<TopupActivity[]>([]);
   const [referrals, setReferrals] = useState<ReferralCustomer[]>([]);
   const [qrs, setQrs] = useState<VendorQr[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -495,10 +515,11 @@ export default function VendorPage() {
       }
 
       const vendorJson = await vendorRes.json();
-      const [limitsRes, summaryRes, packEarningsRes, referralsRes, bannersRes, packsRes, qrRes, creativeJobsRes] = await Promise.all([
+      const [limitsRes, summaryRes, packEarningsRes, topupsRes, referralsRes, bannersRes, packsRes, qrRes, creativeJobsRes] = await Promise.all([
         fetch(`${apiBase}/v1/vendor/limits`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/earnings/summary`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/earnings/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/vendor/earnings/topups`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/referrals`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/banners`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/packs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
@@ -506,13 +527,14 @@ export default function VendorPage() {
         fetch(`${apiBase}/v1/vendor/creative-jobs`, { headers: authHeaders(), credentials: "include", cache: "no-store" }),
       ]);
 
-      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !referralsRes.ok || !bannersRes.ok || !packsRes.ok || !creativeJobsRes.ok) {
+      if (!limitsRes.ok || !summaryRes.ok || !packEarningsRes.ok || !topupsRes.ok || !referralsRes.ok || !bannersRes.ok || !packsRes.ok || !creativeJobsRes.ok) {
         throw new Error("Failed to load vendor dashboard data");
       }
 
       const limitsJson = await limitsRes.json();
       const summaryJson = await summaryRes.json();
       const packEarningsJson = await packEarningsRes.json();
+      const topupsJson = await topupsRes.json();
       const referralsJson = await referralsRes.json();
       const qrJson = qrRes.ok ? await qrRes.json() : { qrs: [] };
       const bannersJson = await bannersRes.json();
@@ -541,6 +563,7 @@ export default function VendorPage() {
       setLimits(limitsJson.limits ?? { planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
       setSummary(summaryJson.summary ?? null);
       setPackEarnings(packEarningsJson.items ?? []);
+      setTopups(topupsJson.topups ?? []);
       setReferrals(referralsJson.customers ?? []);
       setQrs(qrJson.qrs ?? []);
       setBanners(bannersJson.banners ?? []);
@@ -1379,8 +1402,30 @@ export default function VendorPage() {
             </div>
             <div className="stats-grid">
               <div className="stat"><div className="stat-label">Total Revenue Points</div><div className="stat-value">{summary?.totalRevenuePoints?.toLocaleString() ?? "0"}</div></div>
-              <div className="stat"><div className="stat-label">Net Points</div><div className="stat-value">{summary?.netPoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Platform Fee</div><div className="stat-value">{summary?.platformFeePoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Tenant Net</div><div className="stat-value">{summary?.tenantNetPoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Wallet Balance</div><div className="stat-value">{summary?.vendorWalletBalance?.toLocaleString() ?? "0"}</div></div>
               <div className="stat"><div className="stat-label">Currency Revenue</div><div className="stat-value">{summary ? `${summary.totalRevenueCurrency.toFixed(2)} ${summary.currencyCode}` : "0"}</div></div>
+              <div className="stat"><div className="stat-label">Wallet Top-ups</div><div className="stat-value">{summary?.topupPoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Top-up Orders</div><div className="stat-value">{summary?.topupCount?.toLocaleString() ?? "0"}</div></div>
+            </div>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Wallet Funding</h2>
+            <p className="muted tiny">This shows points loaded into customer wallets on this storefront. It is currently simulated and will later map to regional payment providers.</p>
+            <div className="result-list">
+              {topups.map((row) => (
+                <div className="result-row" key={row.id}>
+                  <span>
+                    {row.user?.displayName || row.user?.email || "Customer"} · {row.pointsToCredit.toLocaleString()} pts
+                  </span>
+                  <span>
+                    {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
+                  </span>
+                </div>
+              ))}
+              {topups.length === 0 ? <p className="muted tiny">No top-up activity yet.</p> : null}
             </div>
           </section>
 

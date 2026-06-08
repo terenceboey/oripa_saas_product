@@ -150,16 +150,16 @@ export default function HomePage() {
         fetch(`${apiBase}/v1/banners`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
-      if (!walletResponse.ok || !packsResponse.ok || !bannersResponse.ok) {
+      if (!packsResponse.ok || !bannersResponse.ok) {
         throw new Error("Failed to load vendor storefront data.");
       }
 
-      const walletPayload = await walletResponse.json();
+      const walletPayload = walletResponse.ok ? await walletResponse.json() : { wallet: null };
       const packsPayload = await packsResponse.json();
       const bannersPayload = await bannersResponse.json();
       const tenantPayload = await tenantResponse.json();
 
-      setWallet(walletPayload.wallet);
+      setWallet(walletPayload.wallet ?? null);
       setPacks(packsPayload.packs ?? []);
       setBanners(bannersPayload.banners ?? []);
       setTenant(tenantPayload.vendor ?? tenantPayload.tenant ?? null);

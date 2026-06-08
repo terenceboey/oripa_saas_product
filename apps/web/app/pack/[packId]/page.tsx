@@ -145,14 +145,12 @@ export default function PackDrawPage() {
         const payload = await packResponse.json().catch(() => ({}));
         throw new Error(payload.error ?? "Pack not found");
       }
-      if (!walletResponse.ok) throw new Error("Failed to load wallet");
-
       const packPayload = await packResponse.json();
-      const walletPayload = await walletResponse.json();
+      const walletPayload = walletResponse.ok ? await walletResponse.json() : { wallet: null };
       const vendorPayload = vendorResponse.ok ? await vendorResponse.json() : null;
 
       setPack(packPayload.pack);
-      setWallet(walletPayload.wallet);
+      setWallet(walletPayload.wallet ?? null);
       setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
       setVendorLogo(normalizeVendorLogoUrl(vendorPayload?.vendor?.logoImageUrl) || null);
       setVendorFavicon(normalizeVendorFaviconUrl(vendorPayload?.vendor?.faviconImageUrl, vendorPayload?.vendor?.logoImageUrl) || null);

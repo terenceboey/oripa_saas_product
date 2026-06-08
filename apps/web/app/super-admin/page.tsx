@@ -39,6 +39,8 @@ type DashboardResponse = {
     underReview: number;
     approved: number;
     rejected: number;
+    platformFeePoints: number;
+    platformFeeCurrency: number;
   };
   pendingVendors: SuperAdminVendor[];
 };
@@ -59,6 +61,7 @@ export default function SuperAdminDashboardPage() {
       { label: "Under Review", value: summary?.underReview ?? 0 },
       { label: "Approved", value: summary?.approved ?? 0 },
       { label: "Rejected", value: summary?.rejected ?? 0 },
+      { label: "Platform Fee Points", value: summary?.platformFeePoints ?? 0 },
     ];
   }, [dashboard]);
 
@@ -141,6 +144,12 @@ export default function SuperAdminDashboardPage() {
               <span>{card.label}</span>
             </div>
           ))}
+          <div className="badge">
+            <strong style={{ display: "block", fontSize: 18 }}>
+              {dashboard?.summary?.platformFeeCurrency?.toFixed(2) ?? "0.00"}
+            </strong>
+            <span>Platform Fee Currency</span>
+          </div>
         </div>
 
         {loading ? <p className="muted">Loading dashboard...</p> : null}

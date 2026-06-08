@@ -328,7 +328,7 @@ model VendorSettings {
   vendorId              String         @unique
   pointsPerCurrencyUnit Int            @default(100)
   currencyCode          String         @default("USD")
-  platformFeeBps        Int            @default(0)
+  platformFeeBps        Int            @default(100)
   maxPackItems          Int            @default(500)
   maxPackTiers          Int            @default(10)
   maxDrawQuantity       Int            @default(100)

@@ -506,27 +506,46 @@ vendorRouter.get("/v1/vendor/earnings/summary", async (req: VendorRequest, res) 
   const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
   if (!auth) return;
 
-  const [entries, walletAgg] = await Promise.all([
+  const [entries, walletAgg, topupAgg, vendorWallet] = await Promise.all([
     prisma.vendorRevenueLedger.findMany({
-      where: { vendorId: auth.vendorId, type: "DRAW_GROSS" },
-      select: { amountPoints: true, amountCurrency: true, currencyCode: true },
+      where: { vendorId: auth.vendorId, type: { in: ["DRAW_GROSS", "PLATFORM_FEE", "TENANT_NET"] } },
+      select: { type: true, amountPoints: true, amountCurrency: true, currencyCode: true },
     }),
     prisma.walletEntry.aggregate({
       where: { vendorId: auth.vendorId, type: "DEBIT", reason: "PACK_DRAW" },
       _sum: { amountPoints: true },
     }),
+    prisma.topupOrder.aggregate({
+      where: { vendorId: auth.vendorId, status: "COMPLETED" },
+      _sum: { pointsToCredit: true },
+      _count: { _all: true },
+    }),
+    prisma.walletAccount.findFirst({
+      where: { vendorId: auth.vendorId, userId: null },
+      select: { balancePoints: true },
+    }),
   ]);
 
-  const totalRevenuePoints = entries.reduce((sum, row) => sum + row.amountPoints, 0);
-  const totalRevenueCurrency = entries.reduce((sum, row) => sum + Number(row.amountCurrency ?? 0), 0);
+  const totalRevenuePoints = entries.filter((row) => row.type === "DRAW_GROSS").reduce((sum, row) => sum + row.amountPoints, 0);
+  const platformFeePoints = entries.filter((row) => row.type === "PLATFORM_FEE").reduce((sum, row) => sum + row.amountPoints, 0);
+  const tenantNetPoints = entries.filter((row) => row.type === "TENANT_NET").reduce((sum, row) => sum + row.amountPoints, 0);
+  const totalRevenueCurrency = entries.filter((row) => row.type === "DRAW_GROSS").reduce((sum, row) => sum + Number(row.amountCurrency ?? 0), 0);
   const vendorSpentPoints = walletAgg._sum.amountPoints ?? 0;
+  const topupPoints = topupAgg._sum.pointsToCredit ?? 0;
+  const topupCount = topupAgg._count._all ?? 0;
+  const vendorWalletBalance = vendorWallet?.balancePoints ?? 0;
 
   return res.json({
     summary: {
       totalRevenuePoints,
       totalRevenueCurrency: Number(totalRevenueCurrency.toFixed(2)),
+      platformFeePoints,
+      tenantNetPoints,
       vendorSpentPoints,
-      netPoints: totalRevenuePoints - vendorSpentPoints,
+      vendorWalletBalance,
+      topupPoints,
+      topupCount,
+      netPoints: vendorWalletBalance,
       currencyCode: entries[0]?.currencyCode ?? "USD",
     },
   });
@@ -558,6 +577,50 @@ vendorRouter.get("/v1/vendor/earnings/packs", async (req: VendorRequest, res) =>
   }));
 
   return res.json({ items });
+});
+
+vendorRouter.get("/v1/vendor/earnings/topups", async (req: VendorRequest, res) => {
+  const auth = await requireVendorRole(req, res, ["OWNER", "MANAGER", "STAFF"]);
+  if (!auth) return;
+
+  const [topups, aggregate] = await Promise.all([
+    prisma.topupOrder.findMany({
+      where: { vendorId: auth.vendorId, status: "COMPLETED" },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        pointsToCredit: true,
+        expectedCurrencyAmount: true,
+        currencyCode: true,
+        status: true,
+        provider: true,
+        createdAt: true,
+        user: {
+          select: {
+            email: true,
+            displayName: true,
+          },
+        },
+      },
+    }),
+    prisma.topupOrder.aggregate({
+      where: { vendorId: auth.vendorId, status: "COMPLETED" },
+      _sum: { pointsToCredit: true },
+      _count: { _all: true },
+    }),
+  ]);
+
+  return res.json({
+    topups: topups.map((row) => ({
+      ...row,
+      expectedCurrencyAmount: row.expectedCurrencyAmount === null ? null : Number(row.expectedCurrencyAmount),
+    })),
+    summary: {
+      topupPoints: aggregate._sum.pointsToCredit ?? 0,
+      topupCount: aggregate._count._all ?? 0,
+    },
+  });
 });
 
 vendorRouter.get("/v1/vendor/referrals", async (req: VendorRequest, res) => {
@@ -651,10 +714,18 @@ vendorRouter.post("/v1/points/qr/redeem", async (req: VendorRequest, res) => {
       if (qr.status !== "ACTIVE") throw new Error("QR is no longer active");
       if (qr.expiresAt <= new Date()) throw new Error("QR expired");
 
-      const vendorWallet = await tx.walletAccount.findFirst({
-        where: { vendorId, userId: null },
-      });
-      if (!vendorWallet) throw new Error("Vendor source wallet not found");
+      const vendorWallet =
+        (await tx.walletAccount.findFirst({
+          where: { vendorId, userId: null },
+        })) ??
+        (await tx.walletAccount.create({
+          data: {
+            vendorId,
+            userId: null,
+            ownerLabel: "Vendor Revenue",
+            balancePoints: 0,
+          },
+        }));
       if (vendorWallet.balancePoints < qr.points) throw new Error("Vendor balance insufficient");
 
       const customerWallet = await tx.walletAccount.upsert({

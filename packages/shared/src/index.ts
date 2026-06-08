@@ -166,6 +166,10 @@ export const drawSchema = z.object({
   quantity: z.number().int().min(1).max(5000).default(1),
 });
 
+export const walletTopupSchema = z.object({
+  amountPoints: z.number().int().positive().max(100000),
+});
+
 export const createBannerSchema = z.object({
   title: z.string().min(2).max(80),
   imageUrl: imageUrlSchema,
@@ -208,6 +212,7 @@ export type CreatePackInput = z.infer<typeof createPackSchema>;
 export type UpdatePackInput = z.infer<typeof updatePackSchema>;
 export type PackTierSnapshot = z.infer<typeof packTierSnapshotSchema>;
 export type DrawInput = z.infer<typeof drawSchema>;
+export type WalletTopupInput = z.infer<typeof walletTopupSchema>;
 export type CreateBannerInput = z.infer<typeof createBannerSchema>;
 export type CreateCampaignCreativeInput = z.infer<typeof createCampaignCreativeSchema>;
 export type PublishCampaignCreativeInput = z.infer<typeof publishCampaignCreativeSchema>;

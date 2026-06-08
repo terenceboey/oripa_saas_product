@@ -17,6 +17,27 @@ type PrizeState = {
   remainingStock: number;
 };
 
+async function ensureVendorSettlementWallet(tx: Prisma.TransactionClient, vendorId: string) {
+  const existing = await tx.walletAccount.findFirst({
+    where: { vendorId, userId: null },
+  });
+  if (existing) return existing;
+
+  const vendor = await tx.vendor.findUnique({
+    where: { id: vendorId },
+    select: { name: true },
+  });
+
+  return tx.walletAccount.create({
+    data: {
+      vendorId,
+      userId: null,
+      ownerLabel: vendor?.name ? `${vendor.name} Revenue` : "Vendor Revenue",
+      balancePoints: 0,
+    },
+  });
+}
+
 function sha256Hex(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -359,7 +380,52 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
       const vendorSettings = await tx.vendorSettings.findUnique({ where: { vendorId } });
       const pointsPerCurrencyUnit = vendorSettings?.pointsPerCurrencyUnit ?? 100;
       const currencyCode = vendorSettings?.currencyCode ?? "USD";
+      const platformFeeBps = vendorSettings?.platformFeeBps ?? 100;
+      const platformFeePoints = Math.min(
+        totalCost,
+        Math.max(1, Math.round((totalCost * platformFeeBps) / 10000))
+      );
+      const vendorNetPoints = Math.max(0, totalCost - platformFeePoints);
       const currencyAmount = Number((totalCost / pointsPerCurrencyUnit).toFixed(2));
+      const platformFeeCurrency = Number((platformFeePoints / pointsPerCurrencyUnit).toFixed(2));
+      const vendorNetCurrency = Number((vendorNetPoints / pointsPerCurrencyUnit).toFixed(2));
+      const vendorWallet = await ensureVendorSettlementWallet(tx, vendorId);
+      const vendorBalanceBefore = vendorWallet.balancePoints;
+      const vendorBalanceAfter = vendorBalanceBefore + vendorNetPoints;
+
+      if (vendorNetPoints > 0) {
+        await tx.walletAccount.update({
+          where: { id: vendorWallet.id },
+          data: {
+            balancePoints: { increment: vendorNetPoints },
+            version: { increment: 1 },
+          },
+        });
+
+        await tx.walletEntry.create({
+          data: {
+            vendorId,
+            walletAccountId: vendorWallet.id,
+            type: "CREDIT",
+            amountPoints: vendorNetPoints,
+            reason: "PACK_REVENUE",
+            balanceBefore: vendorBalanceBefore,
+            balanceAfter: vendorBalanceAfter,
+            actorUserId,
+            requestId,
+            idempotencyScopeKey,
+            referenceType: "DRAW_ORDER",
+            referenceId: drawOrder.id,
+            metadata: {
+              drawOrderId: drawOrder.id,
+              packId: pack.id,
+              quantity,
+              grossPoints: totalCost,
+              platformFeePoints,
+            },
+          },
+        });
+      }
 
       await tx.vendorRevenueLedger.createMany({
         data: [
@@ -378,12 +444,23 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
             vendorId,
             drawOrderId: drawOrder.id,
             type: "TENANT_NET",
-            amountPoints: totalCost,
+            amountPoints: vendorNetPoints,
             conversionRate: new Prisma.Decimal(pointsPerCurrencyUnit),
-            amountCurrency: new Prisma.Decimal(currencyAmount),
+            amountCurrency: new Prisma.Decimal(vendorNetCurrency),
             currencyCode,
             requestId,
-            metadata: { packId: pack.id },
+            metadata: { packId: pack.id, platformFeePoints },
+          },
+          {
+            vendorId,
+            drawOrderId: drawOrder.id,
+            type: "PLATFORM_FEE",
+            amountPoints: platformFeePoints,
+            conversionRate: new Prisma.Decimal(pointsPerCurrencyUnit),
+            amountCurrency: new Prisma.Decimal(platformFeeCurrency),
+            currencyCode,
+            requestId,
+            metadata: { packId: pack.id, feeBps: platformFeeBps },
           },
         ],
       });
