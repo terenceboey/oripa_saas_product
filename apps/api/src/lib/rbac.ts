@@ -6,7 +6,6 @@ import { prisma } from "./prisma";
 
 const jwtSecret = process.env.JWT_SECRET ?? "change-me";
 export const SUPER_ADMIN_ROLE_CODE = "super_admin";
-export const SUPER_ADMIN_EMAIL = String(process.env.SUPER_ADMIN_EMAIL ?? "superadmin@gachanow.xyz").trim().toLowerCase();
 const appNodeEnv = String(process.env.NODE_ENV ?? "development").toLowerCase();
 const isProduction = appNodeEnv === "production";
 const cookieDomain = process.env.AUTH_COOKIE_DOMAIN;
@@ -563,7 +562,6 @@ export async function isSuperAdminUser(userId: string) {
   if (!user) return false;
   if (user.status !== "ACTIVE") return false;
   if (user.emailVerificationStatus !== "VERIFIED" || !user.emailVerifiedAt) return false;
-  if (user.email.toLowerCase() !== SUPER_ADMIN_EMAIL) return false;
   return user.userRoles.some((row) => row.role.code === SUPER_ADMIN_ROLE_CODE);
 }
 
@@ -596,10 +594,6 @@ export async function requireSuperAdmin(req: Request, res: Response) {
     return null;
   }
   if (user.status !== "ACTIVE") {
-    res.status(403).json({ error: "forbidden: super admin access required" });
-    return null;
-  }
-  if (user.email.toLowerCase() !== SUPER_ADMIN_EMAIL) {
     res.status(403).json({ error: "forbidden: super admin access required" });
     return null;
   }

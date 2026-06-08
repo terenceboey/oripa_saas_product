@@ -9,7 +9,6 @@ import { prisma } from "../../lib/prisma";
 import { resolveVendorHostHint, VendorRequest } from "../../middleware/vendor";
 import { sendEmail } from "../../lib/email";
 import {
-  SUPER_ADMIN_EMAIL,
   SUPER_ADMIN_ROLE_CODE,
   ensureCsrfCookie,
   getCsrfTokenFromRequest,
@@ -738,7 +737,7 @@ authRouter.post("/v1/auth/login", async (req: VendorRequest, res) => {
     return res.status(403).json({ error: "email not verified. please verify with OTP first." });
   }
   const userRoleCodes = await getUserRoleCodes(user.id);
-  if (userRoleCodes.includes(SUPER_ADMIN_ROLE_CODE) || user.email.toLowerCase() === SUPER_ADMIN_EMAIL) {
+  if (userRoleCodes.includes(SUPER_ADMIN_ROLE_CODE)) {
     return res.status(403).json({ error: "this is a super admin account. please use super admin login." });
   }
   const vendorMemberships = await getActiveVendorMemberships(user.id);
@@ -772,9 +771,6 @@ authRouter.post("/v1/auth/super-admin/login", async (req: VendorRequest, res) =>
   const email = String(req.body?.email ?? "").toLowerCase().trim();
   const password = String(req.body?.password ?? "");
   if (!email || !password) return res.status(400).json({ error: "email and password are required" });
-  if (email !== SUPER_ADMIN_EMAIL) {
-    return res.status(403).json({ error: "super admin access is restricted" });
-  }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return res.status(401).json({ error: "invalid credentials" });
@@ -1171,7 +1167,7 @@ authRouter.get("/v1/auth/google/callback", (req, res, next) => {
       return res.redirect(vendorLoginUrl);
     }
     const userRoleCodes = await getUserRoleCodes(String(user.id));
-    if (userRoleCodes.includes(SUPER_ADMIN_ROLE_CODE) || String(user.email).toLowerCase() === SUPER_ADMIN_EMAIL) {
+    if (userRoleCodes.includes(SUPER_ADMIN_ROLE_CODE)) {
       return res.redirect(`${webBaseUrl}/super-admin/login?error=super_admin_account`);
     }
 

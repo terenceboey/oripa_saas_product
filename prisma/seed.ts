@@ -6,7 +6,7 @@ const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/uploa
 const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner-desktop.webp";
 
 async function main() {
-  const superAdminEmail = String(process.env.SUPER_ADMIN_EMAIL ?? "superadmin@gachanow.xyz").trim().toLowerCase();
+  const superAdminEmail = String(process.env.SUPER_ADMIN_EMAIL ?? "esodie123@gmail.com").trim().toLowerCase();
   const superAdminPassword = String(process.env.SUPER_ADMIN_INITIAL_PASSWORD ?? "SuperAdmin!ChangeMe2026");
   const superAdminPasswordHash = await bcrypt.hash(superAdminPassword, 12);
 
