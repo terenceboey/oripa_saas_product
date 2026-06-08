@@ -107,6 +107,28 @@ const packPrizeItemSchema = catalogPrizeRefSchema.extend({
   imageUrl: imageUrlSchema.optional(),
 });
 
+const packTierSnapshotItemSchema = z.object({
+  label: z.string().min(1).max(60),
+  estimatedValue: z.number().int().nonnegative(),
+  stock: z.number().int().positive(),
+  imageUrl: z.string().max(2048).optional().nullable(),
+  catalogItemId: z.string().min(1).max(120).optional().nullable(),
+  catalogSource: z.string().min(1).max(80).optional().nullable(),
+  catalogSourceItemId: z.string().min(1).max(160).optional().nullable(),
+  language: z.string().min(2).max(12).optional().nullable(),
+});
+
+const packTierSnapshotTierSchema = z.object({
+  name: z.string().min(1).max(40),
+  percentage: z.number().positive().max(100).nullable().optional(),
+  items: z.array(packTierSnapshotItemSchema).min(1).max(5000),
+});
+
+export const packTierSnapshotSchema = z.object({
+  version: z.literal(1),
+  tiers: z.array(packTierSnapshotTierSchema).min(1).max(10),
+});
+
 export const createPackSchema = z.object({
   title: z.string().min(2).max(120),
   packBannerImageUrl: imageUrlSchema.optional(),
@@ -184,6 +206,7 @@ export type UpdateVendorThemeInput = z.infer<typeof updateVendorThemeSchema>;
 export type UpdateVendorPlanInput = z.infer<typeof updateVendorPlanSchema>;
 export type CreatePackInput = z.infer<typeof createPackSchema>;
 export type UpdatePackInput = z.infer<typeof updatePackSchema>;
+export type PackTierSnapshot = z.infer<typeof packTierSnapshotSchema>;
 export type DrawInput = z.infer<typeof drawSchema>;
 export type CreateBannerInput = z.infer<typeof createBannerSchema>;
 export type CreateCampaignCreativeInput = z.infer<typeof createCampaignCreativeSchema>;

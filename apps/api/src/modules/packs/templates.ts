@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import type { PoolSnapshotPrizeRow } from "./pool-snapshot";
 import { computePoolSnapshotHash } from "./pool-snapshot";
+import { buildPackTierSnapshotFromFlatItems } from "./tier-snapshot";
 
 export type PackTemplateSlotForPublish = {
   id: string;
@@ -128,6 +129,19 @@ export function buildPackCreateDataFromTemplateVersion(version: PackTemplateVers
     sourceTemplateId: version.templateId,
     sourceTemplateVersionId: version.id,
     poolSnapshotHash: computePoolSnapshotHash(prizeRows),
+    tierSnapshotJson: buildPackTierSnapshotFromFlatItems(
+      prizeRows.map((row) => ({
+        label: row.label,
+        estimatedValue: row.estimatedValue,
+        stock: row.stock,
+        imageUrl: row.imageUrl ?? null,
+        catalogItemId: row.catalogItemId ?? null,
+        catalogSource: row.catalogSource ?? null,
+        catalogSourceItemId: row.catalogSourceItemId ?? null,
+        language: null,
+      })),
+      "Template Pool"
+    ) as Prisma.InputJsonValue,
     poolSnapshotVersion: 1,
     publishedFromTemplateAt: context.now,
     publishedByUserId: context.actorUserId,

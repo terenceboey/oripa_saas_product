@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
+import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import {
   CATALOG_GAME_OPTIONS,
   CATALOG_ITEM_CLASS_OPTIONS,
@@ -124,6 +125,7 @@ type Pack = {
   catalogSourceItemId?: string | null;
   language?: string | null;
   }>;
+  tierSnapshotJson?: PackTierSnapshot | null;
 };
 
 type CreativeAsset = {
@@ -312,6 +314,26 @@ function createTier(index: number): TierDraft {
     percentage: "",
     items: [createItem()],
   };
+}
+
+function tierSnapshotToDrafts(snapshot: unknown): TierDraft[] | null {
+  const parsed = packTierSnapshotSchema.safeParse(snapshot);
+  if (!parsed.success) return null;
+
+  return parsed.data.tiers.map((tier) => ({
+    name: tier.name,
+    percentage: typeof tier.percentage === "number" ? String(tier.percentage) : "",
+    items: tier.items.map((item) => ({
+      label: item.label,
+      estimatedValue: String(item.estimatedValue),
+      stock: String(item.stock),
+      imageUrl: item.imageUrl || DEFAULT_CARD,
+      catalogItemId: item.catalogItemId ?? undefined,
+      catalogSource: item.catalogSource ?? undefined,
+      catalogSourceItemId: item.catalogSourceItemId ?? undefined,
+      language: item.language ?? undefined,
+    })),
+  }));
 }
 
 function toLocalInputValue(iso?: string | null) {
@@ -1148,22 +1170,27 @@ export default function VendorPage() {
     setDrawLimitValue(String(pack.drawLimitValue ?? 1));
     setDrawLimitResetTimezone(pack.drawLimitResetTimezone ?? "Asia/Singapore");
 
-    setTiers([
-      {
-        name: "A Tier",
-        percentage: "",
-        items: pack.prizes.map((prize) => ({
-          label: prize.label,
-          estimatedValue: String(prize.estimatedValue),
-          stock: String(prize.stock),
-          imageUrl: prize.imageUrl ?? DEFAULT_CARD,
-          catalogItemId: prize.catalogItemId ?? undefined,
-          catalogSource: prize.catalogSource ?? undefined,
-          catalogSourceItemId: prize.catalogSourceItemId ?? undefined,
-          language: prize.language ?? undefined,
-        })),
-      },
-    ]);
+    const snapshotTiers = tierSnapshotToDrafts(pack.tierSnapshotJson);
+    setTiers(
+      snapshotTiers && snapshotTiers.length > 0
+        ? snapshotTiers
+        : [
+            {
+              name: "A Tier",
+              percentage: "",
+              items: pack.prizes.map((prize) => ({
+                label: prize.label,
+                estimatedValue: String(prize.estimatedValue),
+                stock: String(prize.stock),
+                imageUrl: prize.imageUrl ?? DEFAULT_CARD,
+                catalogItemId: prize.catalogItemId ?? undefined,
+                catalogSource: prize.catalogSource ?? undefined,
+                catalogSourceItemId: prize.catalogSourceItemId ?? undefined,
+                language: prize.language ?? undefined,
+              })),
+            },
+          ]
+    );
     setSelectedTierIndex(0);
   }
 

@@ -362,6 +362,7 @@ model Pack {
   sourceTemplateId        String?
   sourceTemplateVersionId String?
   poolSnapshotHash        String?
+  tierSnapshotJson        Json?
   poolSnapshotVersion     Int                            @default(1)
   publishedFromTemplateAt DateTime?
   publishedByUserId       String?

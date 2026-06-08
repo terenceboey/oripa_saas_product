@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
+import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../../lib/media-url";
@@ -26,6 +27,7 @@ type Pack = {
   totalStock: number;
   limitedLabel?: string | null;
   prizes: Prize[];
+  tierSnapshotJson?: PackTierSnapshot | null;
 };
 
 type Wallet = {
@@ -89,6 +91,15 @@ function responsiveImageFromBase(url?: string | null) {
   return { mobile: resolved, desktop: resolved, fallback: resolved };
 }
 
+function resolveTierOdds(tiers: PackTierSnapshot["tiers"]) {
+  const fixedPercentTotal = tiers.reduce((sum, tier) => sum + (typeof tier.percentage === "number" ? tier.percentage : 0), 0);
+  const flexCount = tiers.filter((tier) => typeof tier.percentage !== "number").length;
+  const remainingPercent = Math.max(0, 100 - fixedPercentTotal);
+  const fallbackPercent = flexCount > 0 ? remainingPercent / flexCount : 0;
+
+  return tiers.map((tier) => (typeof tier.percentage === "number" ? tier.percentage : fallbackPercent));
+}
+
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
   const packId = String(params?.packId ?? "");
@@ -109,6 +120,14 @@ export default function PackDrawPage() {
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
   const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
+  const tierSnapshot = useMemo(() => {
+    const parsed = packTierSnapshotSchema.safeParse(pack?.tierSnapshotJson);
+    return parsed.success ? parsed.data : null;
+  }, [pack?.tierSnapshotJson]);
+  const tierOdds = useMemo(() => {
+    if (!tierSnapshot) return [];
+    return resolveTierOdds(tierSnapshot.tiers);
+  }, [tierSnapshot]);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -279,6 +298,52 @@ export default function PackDrawPage() {
               ))}
             </div>
           </section>
+
+          {tierSnapshot && tierSnapshot.tiers.length > 0 ? (
+            <section className="card" style={{ marginTop: 12 }}>
+              <h2>Tier Breakdown</h2>
+              <p className="muted">This reflects the vendor-configured tier structure preserved with the pack.</p>
+              <div className="tier-stack">
+                {tierSnapshot.tiers.map((tier, tierIndex) => {
+                  const tierChance = tierOdds[tierIndex] ?? 0;
+                  const itemChance = tier.items.length > 0 ? tierChance / tier.items.length : 0;
+                  return (
+                    <article key={`${tier.name}-${tierIndex}`} className="tier-bucket">
+                      <div className="heading-row">
+                        <strong>{tier.name}</strong>
+                        <span className="muted tiny">{tierChance.toFixed(4)}%</span>
+                      </div>
+                      <p className="muted tiny" style={{ marginBottom: 8 }}>
+                        {tier.items.length} items | {itemChance.toFixed(4)}% per item
+                      </p>
+                      <div className="card-preview-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}>
+                        {tier.items.map((item, itemIndex) => (
+                          <article key={`${tier.name}-${item.label}-${itemIndex}`} className="card-preview-item">
+                            <button
+                              type="button"
+                              className="card-image-button"
+                              onClick={() =>
+                                setImagePreview({
+                                  label: item.label,
+                                  imageUrl: item.imageUrl || defaultPokemonCardImage,
+                                })
+                              }
+                            >
+                              <img src={item.imageUrl || defaultPokemonCardImage} alt={item.label} />
+                            </button>
+                            <div className="card-preview-meta">
+                              <strong>{item.label}</strong>
+                              <span className="muted tiny">Stock {item.stock}</span>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
 
           {lastDraw ? (
             <section className="card" style={{ marginTop: 12 }}>

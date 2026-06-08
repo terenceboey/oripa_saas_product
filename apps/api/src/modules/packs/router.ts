@@ -12,6 +12,7 @@ import {
   type CatalogItemLookup,
   type ResolvedPackPrizeRow,
 } from "./prize-snapshots";
+import { buildPackTierSnapshotFromFlatItems, buildPackTierSnapshotFromTiers } from "./tier-snapshot";
 import { packPrizeMutationErrorResponse, shouldRejectPackPrizeMutation } from "./immutability";
 import {
   PackPublishFreezeError,
@@ -334,6 +335,82 @@ async function buildPrizeRows(data: {
   return resolvePackPrizeRows(data, prismaCatalogLookup);
 }
 
+function buildTierSnapshot(
+  data: {
+    tiers?: Array<{
+      name: string;
+      percentage?: number;
+      items: Array<{
+        label: string;
+        estimatedValue: number;
+        stock: number;
+        imageUrl?: string;
+        catalogItemId?: string;
+        catalogSource?: string;
+        catalogSourceItemId?: string;
+        language?: string;
+      }>;
+    }>;
+    prizes?: Array<{
+      label: string;
+      imageUrl?: string;
+      weight: number;
+      stock: number;
+      estimatedValue: number;
+      catalogItemId?: string;
+      catalogSource?: string;
+      catalogSourceItemId?: string;
+      language?: string;
+    }>;
+  },
+  prizeRows: CreatePrizeRow[]
+) {
+  if (data.tiers && data.tiers.length > 0) {
+    return buildPackTierSnapshotFromTiers(
+      data.tiers.map((tier) => ({
+        name: tier.name,
+        percentage: tier.percentage,
+        items: tier.items.map((item) => ({
+          label: item.label,
+          estimatedValue: item.estimatedValue,
+          stock: item.stock,
+          imageUrl: item.imageUrl ?? null,
+          catalogItemId: item.catalogItemId ?? null,
+          catalogSource: item.catalogSource ?? null,
+          catalogSourceItemId: item.catalogSourceItemId ?? null,
+          language: item.language ?? null,
+        })),
+      }))
+    );
+  }
+  if (data.prizes && data.prizes.length > 0) {
+    return buildPackTierSnapshotFromFlatItems(
+      data.prizes.map((item) => ({
+        label: item.label,
+        estimatedValue: item.estimatedValue,
+        stock: item.stock,
+        imageUrl: item.imageUrl ?? null,
+        catalogItemId: item.catalogItemId ?? null,
+        catalogSource: item.catalogSource ?? null,
+        catalogSourceItemId: item.catalogSourceItemId ?? null,
+        language: item.language ?? null,
+      }))
+    );
+  }
+  return buildPackTierSnapshotFromFlatItems(
+    prizeRows.map((row) => ({
+      label: row.label,
+      estimatedValue: row.estimatedValue,
+      stock: row.stock,
+      imageUrl: row.imageUrl ?? null,
+      catalogItemId: row.catalogItemId ?? null,
+      catalogSource: row.catalogSource ?? null,
+      catalogSourceItemId: row.catalogSourceItemId ?? null,
+      language: null,
+    }))
+  );
+}
+
 function catalogPrizeResolutionResponse(error: unknown) {
   if (!(error instanceof CatalogPrizeResolutionError)) return null;
   return {
@@ -524,6 +601,8 @@ async function createVendorPack(req: VendorRequest, res: any) {
     return res.status(400).json({ error: `vendor limit exceeded: max ${maxPackItems} items allowed in one draw pool` });
   }
 
+  const tierSnapshot = buildTierSnapshot(parsed.data, prizeRows);
+
   const pack = await prisma.pack.create({
     data: {
       vendorId: auth.vendorId,
@@ -541,6 +620,7 @@ async function createVendorPack(req: VendorRequest, res: any) {
       drawLimitMode: parsed.data.drawLimitMode ?? "NONE",
       drawLimitValue: parsed.data.drawLimitValue,
       drawLimitResetTimezone: parsed.data.drawLimitResetTimezone,
+      tierSnapshotJson: tierSnapshot as Prisma.InputJsonValue,
       prizes: {
         createMany: {
           data: prizeRows.map(packPrizeCreateData),
@@ -603,6 +683,8 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
     }
   }
 
+  const tierSnapshot = replacementPrizeRows ? buildTierSnapshot(parsed.data, replacementPrizeRows) : existing.tierSnapshotJson;
+
   let updatedPack;
   try {
     updatedPack = await prisma.$transaction(async (tx) => {
@@ -643,6 +725,7 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
           drawLimitMode: parsed.data.drawLimitMode,
           drawLimitValue: parsed.data.drawLimitValue,
           drawLimitResetTimezone: parsed.data.drawLimitResetTimezone,
+          tierSnapshotJson: tierSnapshot ? (tierSnapshot as Prisma.InputJsonValue) : undefined,
         },
         include: { prizes: true },
       });
