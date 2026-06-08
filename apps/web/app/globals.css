@@ -750,6 +750,12 @@ h6,
   gap: 8px;
 }
 
+.badge-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
 .banner-admin-row {
   display: grid;
   grid-template-columns: 140px 1fr auto;

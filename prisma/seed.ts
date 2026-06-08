@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -5,7 +6,11 @@ const DEFAULT_POKEMON_CARD_IMAGE = "https://archives.bulbagarden.net/media/uploa
 const DEFAULT_PACK_BANNER_IMAGE = "/default-pack-banner-desktop.webp";
 
 async function main() {
-  const [platformAdminRole, customerRole] = await Promise.all([
+  const superAdminEmail = String(process.env.SUPER_ADMIN_EMAIL ?? "superadmin@gachanow.xyz").trim().toLowerCase();
+  const superAdminPassword = String(process.env.SUPER_ADMIN_INITIAL_PASSWORD ?? "SuperAdmin!ChangeMe2026");
+  const superAdminPasswordHash = await bcrypt.hash(superAdminPassword, 12);
+
+  const [platformAdminRole, customerRole, superAdminRole] = await Promise.all([
     prisma.role.upsert({
       where: { code: "platform_admin" },
       update: {},
@@ -16,7 +21,37 @@ async function main() {
       update: {},
       create: { code: "customer", label: "Customer" },
     }),
+    prisma.role.upsert({
+      where: { code: "super_admin" },
+      update: {},
+      create: { code: "super_admin", label: "Super Admin" },
+    }),
   ]);
+
+  const superAdmin = await prisma.user.upsert({
+    where: { email: superAdminEmail },
+    update: {
+      passwordHash: superAdminPasswordHash,
+      status: "ACTIVE",
+      emailVerificationStatus: "VERIFIED",
+      emailVerifiedAt: new Date(),
+      lastLoginAt: null,
+    },
+    create: {
+      email: superAdminEmail,
+      displayName: "Super Admin",
+      passwordHash: superAdminPasswordHash,
+      status: "ACTIVE",
+      emailVerificationStatus: "VERIFIED",
+      emailVerifiedAt: new Date(),
+    },
+  });
+
+  await prisma.userRole.upsert({
+    where: { userId_roleId: { userId: superAdmin.id, roleId: superAdminRole.id } },
+    update: {},
+    create: { userId: superAdmin.id, roleId: superAdminRole.id },
+  });
 
   const platformAdmin = await prisma.user.upsert({
     where: { email: "admin@oripa.local" },

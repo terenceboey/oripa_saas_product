@@ -17,6 +17,7 @@ import { catalogRouter } from "./modules/catalog/router";
 import { creativeRouter } from "./modules/creative/router";
 import { setlistRouter } from "./modules/setlists/router";
 import { mediaRouter } from "./modules/media/router";
+import { superAdminRouter } from "./modules/super-admin/router";
 import { ensureUploadRoot } from "./lib/image-pipeline";
 import { ensureCsrfCookie, getCsrfTokenFromRequest, validateCsrfRequest } from "./lib/rbac";
 
@@ -111,6 +112,7 @@ export function createApp() {
   app.use(walletRouter);
   app.use(bannerRouter);
   app.use(authRouter);
+  app.use(superAdminRouter);
   app.use(catalogRouter);
   app.use(creativeRouter);
   app.use(setlistRouter);
