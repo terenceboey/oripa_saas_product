@@ -169,6 +169,11 @@ type ResultActionFeedback = {
 };
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+
+function proofLink(drawOrderId: string) {
+  const encoded = encodeURIComponent(drawOrderId);
+  return `/fairness-proofs?drawOrderId=${encoded}#proof-${encoded}`;
+}
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const defaultPackBannerImage = "/default-pack-banner-desktop.webp";
@@ -615,6 +620,7 @@ export default function PackDrawPage() {
         <Link href="/" className="sort-pill">Back to Catalog</Link>
         <div className="actions">
           <Link href="/customer/items" className="sort-pill">My Backpack</Link>
+          <Link href="/customer/wallet" className="sort-pill">Wallet</Link>
           <Link href="/fairness-proofs" className="sort-pill">Fairness Proofs</Link>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
@@ -844,7 +850,7 @@ export default function PackDrawPage() {
                   <h3>Draw Result</h3>
                   <p className="muted">Quantity {lastDraw.quantity} | Cost {lastDraw.totalCost.toLocaleString()} pts</p>
                 </div>
-                {lastDraw.drawOrderId ? <Link href="/fairness-proofs" className="sort-pill">Fairness Proof</Link> : null}
+                {lastDraw.drawOrderId ? <Link href={proofLink(lastDraw.drawOrderId)} className="sort-pill">Fairness Proof</Link> : null}
               </div>
               <div className="draw-result-grid">
                 {lastDraw.draws.map((draw, index) => {
@@ -870,7 +876,7 @@ export default function PackDrawPage() {
                         <div className="result-status-row">
                           <span className={`backpack-status-pill inline-status status-${formatStatus(draw.custodyStatus).replaceAll(" ", "-")}`}>{formatStatus(draw.custodyStatus)}</span>
                         </div>
-                        {lastDraw.drawOrderId ? <Link href="/fairness-proofs" className="sort-pill result-proof-link">View fairness proof</Link> : null}
+                        {lastDraw.drawOrderId ? <Link href={proofLink(lastDraw.drawOrderId)} className="sort-pill result-proof-link">View fairness proof</Link> : null}
                         <div className="result-action-stack">
                           <Link
                             href="/customer/items"

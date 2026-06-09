@@ -404,6 +404,7 @@ export default function CustomerItemsPage() {
         </div>
         <div className="actions">
           <Link href="/" className="sort-pill">Catalog</Link>
+          <Link href="/customer/wallet" className="sort-pill">Wallet</Link>
           <Link href="/fairness-proofs" className="sort-pill">Fairness Proofs</Link>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
           <button type="button" className="sort-pill" onClick={() => void loadItems()} disabled={loading}>

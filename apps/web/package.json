@@ -8,6 +8,7 @@
     "start": "next start -p 3000",
     "lint": "tsc -p tsconfig.json --noEmit",
     "test:buyback-ux": "tsx scripts/test-customer-buyback-ux.ts",
+    "test:customer-loop-smoke": "tsx scripts/test-customer-loop-smoke.ts",
     "images:optimize:banners": "node scripts/optimize-banners.mjs"
   },
   "dependencies": {

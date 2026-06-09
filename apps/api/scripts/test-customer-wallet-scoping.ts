@@ -36,7 +36,50 @@ async function main() {
   ]);
 
   const wallets = new Map([
-    ["vendor-alpha:user-one", { id: "wallet-alpha-user-one", vendorId: "vendor-alpha", userId: "user-one", balancePoints: 1000, entries: [] }],
+    ["vendor-alpha:user-one", {
+      id: "wallet-alpha-user-one",
+      vendorId: "vendor-alpha",
+      userId: "user-one",
+      ownerLabel: "customer:user-one",
+      balancePoints: 1000,
+      version: 7,
+      entries: [
+        {
+          id: "entry-buyback-credit",
+          vendorId: "vendor-alpha",
+          walletAccountId: "wallet-alpha-user-one",
+          type: "CREDIT",
+          amountPoints: 325,
+          reason: "BUYBACK_CREDIT",
+          balanceBefore: 675,
+          balanceAfter: 1000,
+          actorUserId: "ops-staff",
+          requestId: "internal-request-id",
+          idempotencyScopeKey: "buyback-credit:req_buyback",
+          referenceType: "CustodyRequest",
+          referenceId: "req_buyback",
+          metadata: { custodyItemId: "item-secret", policyVersion: "policy-1" },
+          createdAt: new Date("2026-06-09T09:30:00.000Z"),
+        },
+        {
+          id: "entry-pack-draw",
+          vendorId: "vendor-alpha",
+          walletAccountId: "wallet-alpha-user-one",
+          type: "DEBIT",
+          amountPoints: 250,
+          reason: "PACK_DRAW",
+          balanceBefore: 925,
+          balanceAfter: 675,
+          actorUserId: "user-one",
+          requestId: "draw-request-id",
+          idempotencyScopeKey: "draw:vendor-alpha:user-one:key-1",
+          referenceType: "DRAW_ORDER",
+          referenceId: "pack-alpha",
+          metadata: { drawOrderId: "draw-secret", quantity: 1 },
+          createdAt: new Date("2026-06-09T09:00:00.000Z"),
+        },
+      ],
+    }],
     ["vendor-alpha:user-two", { id: "wallet-alpha-user-two", vendorId: "vendor-alpha", userId: "user-two", balancePoints: 2000, entries: [] }],
     ["vendor-beta:user-one", { id: "wallet-beta-user-one", vendorId: "vendor-beta", userId: "user-one", balancePoints: 3000, entries: [] }],
   ]);
@@ -79,6 +122,32 @@ async function main() {
     assert.equal(alphaUserOne.response.status, 200);
     assert.equal(alphaUserOne.payload.wallet.id, "wallet-alpha-user-one");
     assert.equal(alphaUserOne.payload.wallet.balancePoints, 1000);
+    assert.deepEqual(alphaUserOne.payload.wallet.entries, [
+      {
+        id: "entry-buyback-credit",
+        type: "CREDIT",
+        amountPoints: 325,
+        reason: "BUYBACK_CREDIT",
+        balanceBefore: 675,
+        balanceAfter: 1000,
+        createdAt: "2026-06-09T09:30:00.000Z",
+        referenceLabel: "Buyback credit req_buyback",
+      },
+      {
+        id: "entry-pack-draw",
+        type: "DEBIT",
+        amountPoints: 250,
+        reason: "PACK_DRAW",
+        balanceBefore: 925,
+        balanceAfter: 675,
+        createdAt: "2026-06-09T09:00:00.000Z",
+        referenceLabel: "Draw order pack-alpha",
+      },
+    ]);
+    const serialized = JSON.stringify(alphaUserOne.payload.wallet);
+    for (const forbidden of ["vendorId", "userId", "ownerLabel", "version", "walletAccountId", "actorUserId", "requestId", "idempotencyScopeKey", "metadata", "item-secret", "draw-secret"]) {
+      assert.equal(serialized.includes(forbidden), false, `wallet payload must not expose ${forbidden}`);
+    }
 
     const alphaUserTwo = await getWallet(baseUrl, "alpha.localhost", "user-two");
     assert.equal(alphaUserTwo.response.status, 200);

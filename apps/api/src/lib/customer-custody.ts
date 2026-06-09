@@ -1,4 +1,4 @@
-type CustodyRequestStatus =
+export type CustodyRequestStatus =
   | "QUOTED"
   | "PENDING"
   | "OPS_REVIEW"
@@ -10,9 +10,9 @@ type CustodyRequestStatus =
   | "COMPLETED"
   | "CREDITED"
   | "EXPIRED";
-type CustodyRequestType = "REDEMPTION" | "BUYBACK";
-type CustodyItemStatus = "HELD" | "REDEMPTION_REQUESTED" | "BUYBACK_REQUESTED" | "REDEEMED" | "BOUGHT_BACK" | "VOIDED";
-type CustodyProvider = "ORIPA_INTERNAL" | "COLLECTOR_CRYPT" | "PHYGITALS";
+export type CustodyRequestType = "REDEMPTION" | "BUYBACK";
+export type CustodyItemStatus = "HELD" | "REDEMPTION_REQUESTED" | "BUYBACK_REQUESTED" | "REDEEMED" | "BOUGHT_BACK" | "VOIDED";
+export type CustodyProvider = "ORIPA_INTERNAL" | "COLLECTOR_CRYPT" | "PHYGITALS";
 
 const PENDING_REQUEST_STATUSES = new Set<CustodyRequestStatus>(["QUOTED", "PENDING", "OPS_REVIEW", "APPROVED", "PACKED"]);
 const OPS_UPDATABLE_STATUSES = new Set<CustodyRequestStatus>(["OPS_REVIEW", "APPROVED", "PACKED", "FULFILLED_MANUAL", "REJECTED", "CANCELLED", "COMPLETED"]);
@@ -23,6 +23,49 @@ export const BUYBACK_QUOTE_CURRENCY = "POINTS";
 export const DEFAULT_BUYBACK_PERCENT = 70;
 export const BUYBACK_QUOTE_TTL_MS = 15 * 60 * 1000;
 export const BUYBACK_VALUE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const DEFAULT_CUSTODY_PROVIDER: CustodyProvider = "ORIPA_INTERNAL";
+
+export type CustodyProviderAdapterOperation = "quoteBuyback" | "requestRedemption" | "syncStatus";
+
+export class CustodyProviderNotConfiguredError extends Error {
+  constructor(public readonly provider: Exclude<CustodyProvider, "ORIPA_INTERNAL">, public readonly operation: CustodyProviderAdapterOperation) {
+    super(`${provider} custody provider is not configured for ${String(operation)}`);
+    this.name = "CustodyProviderNotConfiguredError";
+  }
+}
+
+export type BuybackQuoteItemInput = {
+  id: string;
+  status: CustodyItemStatus;
+  estimatedValue: number | { toString(): string } | null;
+  estimatedValueSource?: string | null;
+  estimatedValueAsOf?: Date | string | null;
+  requests?: Array<{ status: CustodyRequestStatus }>;
+};
+
+export type CustodyRedemptionRequestInput = {
+  vendorId: string;
+  userId: string;
+  custodyItemId: string;
+  customerNote?: string | null;
+};
+
+export type CustodyStatusSyncInput = {
+  vendorId: string;
+  userId: string;
+  custodyItemId: string;
+  custodyRequestId?: string | null;
+  currentStatus: CustodyRequestStatus;
+  now?: Date;
+};
+
+export interface CustodyProviderAdapter {
+  provider: CustodyProvider;
+  configured: boolean;
+  quoteBuyback(item: BuybackQuoteItemInput, options?: { now?: Date; buybackPercent?: number; policyVersion?: string }): Promise<ReturnType<typeof buildBuybackQuoteForCustodyItem>>;
+  requestRedemption(input: CustodyRedemptionRequestInput): Promise<{ provider: CustodyProvider; providerRequestId: string | null; status: "PENDING" }>;
+  syncStatus(input: CustodyStatusSyncInput): Promise<{ provider: CustodyProvider; status: CustodyRequestStatus; externalStatus: string | null; syncedAt: Date }>;
+}
 
 export const CUSTOMER_CUSTODY_FEATURE_FLAG = "CUSTOMER_CUSTODY_ENABLED";
 
@@ -164,15 +207,6 @@ export function normalizeIdempotencyKey(input: unknown) {
   return key;
 }
 
-type BuybackQuoteItemInput = {
-  id: string;
-  status: CustodyItemStatus;
-  estimatedValue: number | { toString(): string } | null;
-  estimatedValueSource?: string | null;
-  estimatedValueAsOf?: Date | string | null;
-  requests?: Array<{ status: CustodyRequestStatus }>;
-};
-
 export function buildBuybackQuoteForCustodyItem(
   item: BuybackQuoteItemInput,
   options: { now?: Date; buybackPercent?: number; policyVersion?: string } = {},
@@ -214,6 +248,62 @@ export function isBuybackQuoteExpired(input: { expiresAt?: Date | string | null 
   if (!input.expiresAt) return true;
   const expiresAt = input.expiresAt instanceof Date ? input.expiresAt : new Date(input.expiresAt);
   return !Number.isFinite(expiresAt.getTime()) || expiresAt.getTime() <= now.getTime();
+}
+
+const ORIPA_INTERNAL_CUSTODY_PROVIDER_ADAPTER: CustodyProviderAdapter = {
+  provider: "ORIPA_INTERNAL",
+  configured: true,
+  async quoteBuyback(item, options) {
+    return buildBuybackQuoteForCustodyItem(item, options);
+  },
+  async requestRedemption() {
+    return { provider: "ORIPA_INTERNAL", providerRequestId: null, status: "PENDING" };
+  },
+  async syncStatus(input) {
+    return {
+      provider: "ORIPA_INTERNAL",
+      status: input.currentStatus,
+      externalStatus: null,
+      syncedAt: input.now ?? new Date(),
+    };
+  },
+};
+
+function disabledCustodyProviderAdapter(provider: Exclude<CustodyProvider, "ORIPA_INTERNAL">): CustodyProviderAdapter {
+  const fail = (operation: CustodyProviderAdapterOperation): never => {
+    throw new CustodyProviderNotConfiguredError(provider, operation);
+  };
+  return {
+    provider,
+    configured: false,
+    async quoteBuyback() {
+      return fail("quoteBuyback");
+    },
+    async requestRedemption() {
+      return fail("requestRedemption");
+    },
+    async syncStatus() {
+      return fail("syncStatus");
+    },
+  };
+}
+
+const CUSTODY_PROVIDER_ADAPTERS: Record<CustodyProvider, CustodyProviderAdapter> = {
+  ORIPA_INTERNAL: ORIPA_INTERNAL_CUSTODY_PROVIDER_ADAPTER,
+  COLLECTOR_CRYPT: disabledCustodyProviderAdapter("COLLECTOR_CRYPT"),
+  PHYGITALS: disabledCustodyProviderAdapter("PHYGITALS"),
+};
+
+export function getCustodyProviderAdapter(provider: CustodyProvider = DEFAULT_CUSTODY_PROVIDER): CustodyProviderAdapter {
+  return CUSTODY_PROVIDER_ADAPTERS[provider];
+}
+
+export function listCustodyProviderAdapters(): CustodyProviderAdapter[] {
+  return [
+    CUSTODY_PROVIDER_ADAPTERS.ORIPA_INTERNAL,
+    CUSTODY_PROVIDER_ADAPTERS.COLLECTOR_CRYPT,
+    CUSTODY_PROVIDER_ADAPTERS.PHYGITALS,
+  ];
 }
 
 export function normalizeOpsRequestStatusUpdate(input: unknown):

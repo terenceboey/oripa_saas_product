@@ -3,7 +3,8 @@ import { prisma } from "../../lib/prisma";
 import { getRequestUserId } from "../../lib/rbac";
 import { isCustomerProfileComplete } from "../../lib/customer-profile";
 import {
-  buildBuybackQuoteForCustodyItem,
+  CustodyProviderNotConfiguredError,
+  getCustodyProviderAdapter,
   isBuybackQuoteExpired,
   isCustomerCustodyEnabled,
   nextCustodyItemStatusForRequest,
@@ -150,6 +151,18 @@ async function createCustodyRequest(req: VendorRequest, res: any, type: "REDEMPT
     return res.status(409).json({ error: "Custody item already has an active request" });
   }
 
+  try {
+    await getCustodyProviderAdapter(item.provider).requestRedemption({
+      vendorId: context.vendorId,
+      userId: context.userId,
+      custodyItemId: item.id,
+      customerNote: note,
+    });
+  } catch (error) {
+    if (error instanceof CustodyProviderNotConfiguredError) return res.status(503).json({ error: error.message });
+    throw error;
+  }
+
   const nextStatus = nextCustodyItemStatusForRequest(type, "PENDING");
   const result = await prisma.$transaction(async (tx) => {
     const request = await tx.custodyRequest.create({
@@ -197,7 +210,13 @@ customerRouter.post("/v1/customer/items/:id/buyback-quotes", async (req: VendorR
   });
   if (!item) return res.status(404).json({ error: "Custody item not found" });
 
-  const quote = buildBuybackQuoteForCustodyItem(item);
+  let quote: Awaited<ReturnType<ReturnType<typeof getCustodyProviderAdapter>["quoteBuyback"]>>;
+  try {
+    quote = await getCustodyProviderAdapter(item.provider).quoteBuyback(item);
+  } catch (error) {
+    if (error instanceof CustodyProviderNotConfiguredError) return res.status(503).json({ error: error.message });
+    throw error;
+  }
   if (!quote.ok) {
     const status = quote.reasonCode === "active_request" ? 409 : 400;
     return res.status(status).json({ error: quote.error, reasonCode: quote.reasonCode });
