@@ -35,8 +35,31 @@ type Wallet = {
   balancePoints: number;
 };
 
+type CustodyRequestStatus =
+  | "QUOTED"
+  | "PENDING"
+  | "OPS_REVIEW"
+  | "APPROVED"
+  | "PACKED"
+  | "FULFILLED_MANUAL"
+  | "REJECTED"
+  | "CANCELLED"
+  | "COMPLETED"
+  | "CREDITED"
+  | "EXPIRED";
+
+type CustodyRequest = {
+  id: string;
+  type: "REDEMPTION" | "BUYBACK";
+  status: CustodyRequestStatus;
+  quoteAmount: number | null;
+  quoteCurrency: string | null;
+  expiresAt: string | null;
+};
+
 type DrawResult = {
   packId: string;
+  drawOrderId?: string | null;
   quantity: number;
   totalCost: number;
   draws: Array<{
@@ -44,6 +67,8 @@ type DrawResult = {
     prizeId: string | null;
     prizeLabel?: string | null;
     prizeImageUrl?: string | null;
+    custodyItemId?: string | null;
+    custodyStatus?: string | null;
   }>;
 };
 
@@ -61,12 +86,26 @@ type ImagePreview = {
   imageUrl: string;
 };
 
+type ResultActionState = {
+  itemId: string;
+  action: "buyback" | "redemption";
+} | null;
+
+type ResultActionFeedback = {
+  itemId: string;
+  action: "buyback" | "redemption";
+  kind: "success" | "error";
+  message: string;
+  quote?: CustodyRequest | null;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const defaultPackBannerImage = "/default-pack-banner-desktop.webp";
 const defaultPackBannerImageMobile = "/default-pack-banner-mobile.webp";
 const clientPageHeader = { "x-client-page": "/pack/[packId]" };
+const activeCustodyRequestStatuses = new Set(["QUOTED", "PENDING", "OPS_REVIEW", "APPROVED", "PACKED", "REDEMPTION_REQUESTED", "BUYBACK_REQUESTED"]);
 
 function resolveImageUrl(url?: string | null) {
   if (!url) return defaultPackBannerImage;
@@ -89,6 +128,27 @@ function responsiveImageFromBase(url?: string | null) {
     return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
   }
   return { mobile: resolved, desktop: resolved, fallback: resolved };
+}
+
+function formatStatus(value?: string | null) {
+  if (!value) return "custody unavailable";
+  return value.replaceAll("_", " ").toLowerCase();
+}
+
+function isQuoteExpired(value?: string | null) {
+  if (!value) return false;
+  const expiresAt = new Date(value).getTime();
+  return Number.isFinite(expiresAt) && expiresAt <= Date.now();
+}
+
+function formatExpiry(value?: string | null) {
+  if (!value) return "Quote expiry was not returned.";
+  if (isQuoteExpired(value)) return `Quote expired ${new Date(value).toLocaleString()}`;
+  return `Expires ${new Date(value).toLocaleString()}`;
+}
+
+function isActiveCustodyStatus(value?: string | null) {
+  return !!value && activeCustodyRequestStatuses.has(value);
 }
 
 function resolveTierOdds(tiers: PackTierSnapshot["tiers"]) {
@@ -117,6 +177,9 @@ export default function PackDrawPage() {
   const [drawing, setDrawing] = useState(false);
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
+  const [resultActionState, setResultActionState] = useState<ResultActionState>(null);
+  const [resultActionFeedback, setResultActionFeedback] = useState<Record<string, ResultActionFeedback>>({});
+  const [custodyActionsAvailable, setCustodyActionsAvailable] = useState<boolean | null>(null);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
   const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
@@ -135,10 +198,11 @@ export default function PackDrawPage() {
     setError(null);
 
     try {
-      const [packResponse, walletResponse, vendorResponse] = await Promise.all([
+      const [packResponse, walletResponse, vendorResponse, customerSummaryResponse] = await Promise.all([
         fetch(`${apiBase}/v1/packs/${packId}`, { headers, credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" }),
         fetch(`${apiBase}/v1/vendor/current`, { headers, credentials: "include", cache: "no-store" }),
+        fetch(`${apiBase}/v1/customer/summary`, { headers, credentials: "include", cache: "no-store" }),
       ]);
 
       if (!packResponse.ok) {
@@ -150,12 +214,14 @@ export default function PackDrawPage() {
       const packPayload = await packResponse.json();
       const walletPayload = await walletResponse.json();
       const vendorPayload = vendorResponse.ok ? await vendorResponse.json() : null;
+      const customerSummaryPayload = customerSummaryResponse.ok ? await customerSummaryResponse.json().catch(() => null) : null;
 
       setPack(packPayload.pack);
       setWallet(walletPayload.wallet);
       setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
       setVendorLogo(normalizeVendorLogoUrl(vendorPayload?.vendor?.logoImageUrl) || null);
       setVendorFavicon(normalizeVendorFaviconUrl(vendorPayload?.vendor?.faviconImageUrl, vendorPayload?.vendor?.logoImageUrl) || null);
+      setCustodyActionsAvailable(typeof customerSummaryPayload?.custody?.enabled === "boolean" ? customerSummaryPayload.custody.enabled : null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pack");
     } finally {
@@ -192,11 +258,76 @@ export default function PackDrawPage() {
       if (!response.ok) throw new Error(payload.error ?? "Draw failed");
 
       setLastDraw(payload);
+      setResultActionFeedback({});
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Draw failed");
     } finally {
       setDrawing(false);
+    }
+  }
+
+  async function runResultAction(itemId: string | null | undefined, action: "buyback" | "redemption") {
+    if (!itemId) return;
+    if (resultActionState?.itemId === itemId) return;
+
+    setResultActionState({ itemId, action });
+    setResultActionFeedback((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
+    setError(null);
+
+    const idempotencyKey = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    const path = action === "redemption" ? "redemption-requests" : "buyback-quotes";
+
+    try {
+      const response = await fetch(`${apiBase}/v1/customer/items/${itemId}/${path}`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "content-type": "application/json",
+          "x-idempotency-key": idempotencyKey,
+        },
+        credentials: "include",
+        body: JSON.stringify({}),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const unavailable = response.status === 404 && typeof payload.error === "string" && payload.error.toLowerCase().includes("custody");
+        if (unavailable) setCustodyActionsAvailable(false);
+        throw new Error(unavailable ? "Custody actions are not available for this storefront." : payload.error ?? `Failed to request ${action}`);
+      }
+
+      setResultActionFeedback((prev) => ({
+        ...prev,
+        [itemId]: {
+          itemId,
+          action,
+          kind: "success",
+          message: action === "redemption" ? "Redemption request submitted." : "Buyback quote ready.",
+          quote: payload.quote ?? null,
+        },
+      }));
+      setLastDraw((prev) => prev ? {
+        ...prev,
+        draws: prev.draws.map((draw) => draw.custodyItemId === itemId
+          ? { ...draw, custodyStatus: action === "redemption" ? "REDEMPTION_REQUESTED" : "QUOTED" }
+          : draw),
+      } : prev);
+    } catch (err) {
+      setResultActionFeedback((prev) => ({
+        ...prev,
+        [itemId]: {
+          itemId,
+          action,
+          kind: "error",
+          message: err instanceof Error ? err.message : `Failed to request ${action}`,
+        },
+      }));
+    } finally {
+      setResultActionState(null);
     }
   }
 
@@ -347,19 +478,66 @@ export default function PackDrawPage() {
           ) : null}
 
           {lastDraw ? (
-            <section className="card" style={{ marginTop: 12 }}>
-              <h3>Draw Result</h3>
-              <p className="muted">Quantity {lastDraw.quantity} | Cost {lastDraw.totalCost.toLocaleString()} pts</p>
+            <section className="card draw-result-panel" style={{ marginTop: 12 }} aria-live="polite">
+              <div className="heading-row">
+                <div>
+                  <h3>Draw Result</h3>
+                  <p className="muted">Quantity {lastDraw.quantity} | Cost {lastDraw.totalCost.toLocaleString()} pts</p>
+                </div>
+                {lastDraw.drawOrderId ? <Link href="/fairness-proofs" className="sort-pill">Fairness Proof</Link> : null}
+              </div>
               <div className="draw-result-grid">
-                {lastDraw.draws.map((draw) => (
-                  <article key={draw.drawId} className="draw-result-item">
-                    <img src={draw.prizeImageUrl || defaultPokemonCardImage} alt={draw.prizeLabel || "No Prize"} />
-                    <div className="card-preview-meta">
-                      <strong>{draw.prizeLabel || "No Prize"}</strong>
-                      <span className="muted tiny">ID {draw.drawId.slice(0, 10)}</span>
-                    </div>
-                  </article>
-                ))}
+                {lastDraw.draws.map((draw, index) => {
+                  const custodyItemId = draw.custodyItemId ?? null;
+                  const busy = !!custodyItemId && resultActionState?.itemId === custodyItemId;
+                  const feedback = custodyItemId ? resultActionFeedback[custodyItemId] : null;
+                  const unavailable = !custodyItemId || custodyActionsAvailable === false;
+                  const activeRequest = isActiveCustodyStatus(draw.custodyStatus);
+                  const canAct = !!custodyItemId && custodyActionsAvailable !== false && !busy && !activeRequest;
+                  const buybackBusy = busy && resultActionState?.action === "buyback";
+                  const redemptionBusy = busy && resultActionState?.action === "redemption";
+                  return (
+                    <article key={draw.drawId} className="draw-result-item result-action-card">
+                      <img src={draw.prizeImageUrl || defaultPokemonCardImage} alt={draw.prizeLabel || "Drawn prize"} />
+                      <div className="card-preview-meta result-action-body">
+                        <div>
+                          <strong>{draw.prizeLabel || "Drawn prize"}</strong>
+                          <span className="muted tiny">Pull {index + 1} | ID {draw.drawId.slice(0, 10)}</span>
+                        </div>
+                        <div className="result-status-row">
+                          <span className={`backpack-status-pill inline-status status-${formatStatus(draw.custodyStatus).replaceAll(" ", "-")}`}>{formatStatus(draw.custodyStatus)}</span>
+                        </div>
+                        {lastDraw.drawOrderId ? <Link href="/fairness-proofs" className="sort-pill result-proof-link">View fairness proof</Link> : null}
+                        <div className="result-action-stack">
+                          <Link
+                            href="/customer/items"
+                            className={`draw-button link-button result-keep-link${unavailable ? " disabled-link" : ""}`}
+                            aria-disabled={unavailable}
+                            tabIndex={unavailable ? -1 : undefined}
+                          >
+                            Keep in Backpack
+                          </Link>
+                          <button type="button" className="draw-button alt" disabled={!canAct} onClick={() => void runResultAction(custodyItemId, "buyback")}>
+                            {buybackBusy ? "Requesting..." : "Request Buyback Quote"}
+                          </button>
+                          <button type="button" className="draw-button alt-2" disabled={!canAct} onClick={() => void runResultAction(custodyItemId, "redemption")}>
+                            {redemptionBusy ? "Submitting..." : "Request Redemption"}
+                          </button>
+                        </div>
+                        {unavailable ? <p className="muted tiny">Custody actions are unavailable for this storefront. The prize is shown, but backpack actions are disabled.</p> : null}
+                        {activeRequest ? <p className="muted tiny">This item already has an active custody request.</p> : null}
+                        {feedback ? (
+                          <div className={feedback.kind === "success" ? "pending-request-banner" : "inline-error-banner"}>
+                            <strong>{feedback.message}</strong>
+                            {feedback.quote ? <span>{feedback.quote.quoteAmount?.toLocaleString() ?? "Quote details missing"} {feedback.quote.quoteCurrency ?? "pts"}</span> : null}
+                            {feedback.kind === "success" && feedback.action === "buyback" && !feedback.quote ? <span>Quote details were not returned. Refresh backpack before accepting.</span> : null}
+                            {feedback.quote ? <small>{formatExpiry(feedback.quote.expiresAt)}</small> : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             </section>
           ) : null}

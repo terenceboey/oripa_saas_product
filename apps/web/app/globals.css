@@ -825,6 +825,54 @@ h6,
   gap: 2px;
 }
 
+.draw-result-panel .heading-row {
+  align-items: flex-start;
+}
+
+.result-action-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.result-action-body {
+  gap: 10px;
+  align-content: start;
+}
+
+.result-status-row {
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+}
+
+.inline-status {
+  position: static;
+  display: inline-flex;
+  width: fit-content;
+  box-shadow: none;
+  border: 1px solid var(--border);
+}
+
+.result-proof-link {
+  width: fit-content;
+  text-decoration: none;
+}
+
+.result-action-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.result-action-stack .draw-button {
+  width: 100%;
+}
+
+.disabled-link {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
 @media (max-width: 760px) {
   .container {
     padding: 12px;
