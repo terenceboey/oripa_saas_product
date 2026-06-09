@@ -181,6 +181,10 @@ function isActiveCustodyStatus(value?: string | null) {
   return !!value && activeCustodyRequestStatuses.has(value);
 }
 
+function canRequestResultCustodyAction(value?: string | null) {
+  return value === "HELD";
+}
+
 function resolveTierOdds(tiers: PackTierSnapshot["tiers"]) {
   const fixedPercentTotal = tiers.reduce((sum, tier) => sum + (typeof tier.percentage === "number" ? tier.percentage : 0), 0);
   const flexCount = tiers.filter((tier) => typeof tier.percentage !== "number").length;
@@ -622,7 +626,7 @@ export default function PackDrawPage() {
                   const acceptBusy = acceptingQuoteId === quote?.id;
                   const unavailable = !custodyItemId || custodyActionsAvailable === false;
                   const activeRequest = isActiveCustodyStatus(draw.custodyStatus);
-                  const canAct = !!custodyItemId && custodyActionsAvailable !== false && !busy && !activeRequest && !quote;
+                  const canAct = !!custodyItemId && custodyActionsAvailable !== false && !busy && !activeRequest && !quote && canRequestResultCustodyAction(draw.custodyStatus);
                   const buybackBusy = busy && resultActionState?.action === "buyback";
                   const redemptionBusy = busy && resultActionState?.action === "redemption";
                   return (
@@ -654,7 +658,11 @@ export default function PackDrawPage() {
                           </button>
                         </div>
                         {unavailable ? <p className="muted tiny">Custody actions are unavailable for this storefront. The prize is shown, but backpack actions are disabled.</p> : null}
-                        {activeRequest ? <p className="muted tiny">This item already has an active custody request.</p> : null}
+                        {activeRequest ? <p className="muted tiny">This item already has an active request.</p> : null}
+                        {!activeRequest && draw.custodyStatus === "BOUGHT_BACK" ? <p className="muted tiny">Buyback is already complete for this item.</p> : null}
+                        {!activeRequest && draw.custodyStatus === "REDEEMED" ? <p className="muted tiny">Redemption is already complete for this item.</p> : null}
+                        {!activeRequest && draw.custodyStatus === "VOIDED" ? <p className="muted tiny">This item is no longer available for redemption or buyback.</p> : null}
+                        {canAct ? <p className="muted tiny">Need to add a note? Open My Backpack before submitting redemption.</p> : null}
                         {feedback ? (
                           <div className={feedback.kind === "success" ? "pending-request-banner" : "inline-error-banner"}>
                             <strong>{feedback.message}</strong>
@@ -708,5 +716,3 @@ export default function PackDrawPage() {
     </main>
   );
 }
-
-

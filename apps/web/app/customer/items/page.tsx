@@ -76,6 +76,10 @@ type BuybackFeedback = {
   walletBalancePoints?: number | null;
 };
 
+type RedemptionDraft = {
+  note: string;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const clientPageHeader = { "x-client-page": "/customer/items" };
@@ -127,6 +131,11 @@ function isHeld(item: CustodyItem) {
   return item.status === "HELD" && !item.pendingRequest;
 }
 
+function normalizeRedemptionNote(note: string) {
+  const normalizedNote = note.trim();
+  return normalizedNote ? normalizedNote : null;
+}
+
 function findActiveBuybackQuote(item: CustodyItem) {
   const candidates = [item.pendingRequest, ...(item.requests ?? [])].filter((request): request is CustodyRequest => !!request);
   return candidates.find((request) => request.type === "BUYBACK" && (request.status === "QUOTED" || request.status === "EXPIRED")) ?? null;
@@ -162,6 +171,7 @@ export default function CustomerItemsPage() {
   const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
   const [buybackFeedbackByItem, setBuybackFeedbackByItem] = useState<Record<string, BuybackFeedback>>({});
   const [buybackQuoteKeys, setBuybackQuoteKeys] = useState<Record<string, string>>({});
+  const [redemptionDrafts, setRedemptionDrafts] = useState<Record<string, RedemptionDraft>>({});
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
   const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
@@ -238,7 +248,8 @@ export default function CustomerItemsPage() {
   const pendingCount = items.filter((item) => item.pendingRequest || activeRequestStatuses.has(item.requests[0]?.status)).length;
 
   async function createRedemptionRequest(item: CustodyItem) {
-    await runItemAction(item, "redemption");
+    const normalizedNote = normalizeRedemptionNote(redemptionDrafts[item.id]?.note ?? "");
+    await runItemAction(item, "redemption", normalizedNote);
   }
 
   async function createBuybackQuote(item: CustodyItem) {
@@ -262,7 +273,7 @@ export default function CustomerItemsPage() {
     }
   }
 
-  async function runItemAction(item: CustodyItem, action: "redemption" | "buyback") {
+  async function runItemAction(item: CustodyItem, action: "redemption" | "buyback", normalizedNote: string | null = null) {
     const activeQuote = action === "buyback" ? findActiveBuybackQuote(item) : null;
     const activeQuoteExpired = !!activeQuote && (isQuoteExpired(activeQuote.expiresAt) || activeQuote.status === "EXPIRED");
     if (action === "buyback" && activeQuote && !activeQuoteExpired) {
@@ -302,11 +313,14 @@ export default function CustomerItemsPage() {
           "x-idempotency-key": idempotencyKey,
         },
         credentials: "include",
-        body: JSON.stringify({}),
+        body: JSON.stringify({ note: normalizedNote }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error ?? `Failed to create ${action} request`);
       setActionMessage(action === "redemption" ? "Redemption request submitted." : "Buyback quote requested.");
+      if (action === "redemption") {
+        setRedemptionDrafts((prev) => ({ ...prev, [item.id]: { note: "" } }));
+      }
       if (action === "buyback" && payload.quote) {
         setBuybackFeedbackByItem((prev) => ({
           ...prev,
@@ -442,6 +456,7 @@ export default function CustomerItemsPage() {
             const expired = quote ? isQuoteExpired(quote.expiresAt) || quote.status === "EXPIRED" : false;
             const acceptBusy = acceptingQuoteId === quote?.id;
             const buybackFeedback = buybackFeedbackByItem[item.id] ?? null;
+            const redemptionNote = redemptionDrafts[item.id]?.note ?? "";
             return (
               <article className="card backpack-item-card" key={item.id}>
                 <div className="backpack-item-image-wrap">
@@ -475,6 +490,7 @@ export default function CustomerItemsPage() {
                       <strong>Pending request</strong>
                       <span>{requestLabel(item.pendingRequest)}</span>
                       <small>Requested {formatTime(item.pendingRequest.requestedAt)}</small>
+                      {item.pendingRequest.customerNote ? <small>Note: {item.pendingRequest.customerNote}</small> : null}
                     </div>
                   ) : null}
 
@@ -494,15 +510,30 @@ export default function CustomerItemsPage() {
                     </div>
                   ) : null}
 
-                  <div className="actions backpack-actions">
-                    <button type="button" className="draw-button" disabled={!canRequest || busy} onClick={() => void createRedemptionRequest(item)}>
-                      {busy ? "Submitting..." : "Request Redemption"}
-                    </button>
-                    <button type="button" className="draw-button alt" disabled={!canRequest || busy} onClick={() => void createBuybackQuote(item)}>
-                      {busy ? "Submitting..." : "Request Buyback"}
-                    </button>
+                  <div className="backpack-request-panel">
+                    <label className="backpack-note-field">
+                      <span>Redemption note (optional)</span>
+                      <textarea
+                        value={redemptionNote}
+                        maxLength={500}
+                        placeholder="Add delivery notes or anything the team should know."
+                        onChange={(event) => {
+                          const nextNote = event.currentTarget.value;
+                          setRedemptionDrafts((prev) => ({ ...prev, [item.id]: { note: nextNote } }));
+                        }}
+                        disabled={!canRequest || busy}
+                      />
+                    </label>
+                    <div className="actions backpack-actions">
+                      <button type="button" className="draw-button" disabled={!canRequest || busy} onClick={() => void createRedemptionRequest(item)}>
+                        {busy ? "Submitting..." : "Request Redemption"}
+                      </button>
+                      <button type="button" className="draw-button alt" disabled={!canRequest || busy} onClick={() => void createBuybackQuote(item)}>
+                        {busy ? "Submitting..." : "Request Buyback"}
+                      </button>
+                    </div>
                   </div>
-                  {!canRequest ? <p className="muted tiny">Actions unlock when the item is HELD with no active request.</p> : null}
+                  {!canRequest ? <p className="muted tiny">Redemption and buyback actions unlock when the item is HELD with no active request.</p> : null}
                   {buybackFeedback ? (
                     <div className={buybackFeedback.kind === "success" ? "pending-request-banner" : "inline-error-banner"}>
                       <strong>{buybackFeedback.message}</strong>
@@ -517,8 +548,9 @@ export default function CustomerItemsPage() {
                         {recentRequests.map((request) => (
                           <li key={request.id}>
                             <span>{requestLabel(request)}</span>
-                            <small>{formatTime(request.requestedAt)}</small>
+                            <small>Requested {formatTime(request.requestedAt)}</small>
                             {request.quoteAmount != null ? <strong>{request.quoteAmount.toLocaleString()} {request.quoteCurrency ?? "pts"}</strong> : null}
+                            {request.customerNote ? <small>Note: {request.customerNote}</small> : null}
                           </li>
                         ))}
                       </ol>

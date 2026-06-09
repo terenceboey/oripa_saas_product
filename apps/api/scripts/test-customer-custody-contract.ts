@@ -32,6 +32,8 @@ assert.equal(isCustomerCustodyEnabled({ CUSTOMER_CUSTODY_ENABLED: "false" }), fa
 assert.equal(isCustomerCustodyEnabled({ CUSTOMER_CUSTODY_ENABLED: "true" }), true);
 
 assert.equal(normalizeCustomerRequestNote("  Ship to my office.  "), "Ship to my office.");
+assert.equal(normalizeCustomerRequestNote("   "), null);
+assert.equal(normalizeCustomerRequestNote("x".repeat(500)), "x".repeat(500));
 assert.equal(normalizeCustomerRequestNote("x".repeat(501)), null);
 assert.equal(normalizeCustomerRequestNote(42), null);
 
@@ -109,6 +111,10 @@ assert.equal(draw.fairnessProofId, "proof_1");
 const customerRouter = readFileSync(join(process.cwd(), "src/modules/customer/router.ts"), "utf8");
 assert.match(customerRouter, /vendorId:\s*context\.vendorId,\s*userId:\s*context\.userId/s, "customer routes must scope custody records by vendorId and userId");
 assert.match(customerRouter, /isCustomerCustodyEnabled\(process\.env\)/, "custody endpoints must be feature-flagged");
+assert.match(customerRouter, /normalizeCustomerRequestNote\(req\.body\?\.note\)/, "customer redemption flows must normalize request notes");
+assert.match(customerRouter, /Note must be 1-500 characters/, "customer redemption flows must reject overlong notes");
+assert.match(customerRouter, /Custody item already has an active request/, "customer redemption flows must block duplicate active requests");
+assert.match(customerRouter, /status\(200\)\.json\(\{\s*request:\s*serializeCustodyRequest\(existing\)/s, "buyback acceptance must reuse existing pending requests");
 
 const opsRouter = readFileSync(join(process.cwd(), "src/modules/ops/router.ts"), "utf8");
 assert.match(opsRouter, /hasRole\(role, \["OWNER", "MANAGER", "STAFF"\]\)/, "ops queue must require vendor staff role");

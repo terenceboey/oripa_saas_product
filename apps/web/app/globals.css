@@ -1389,6 +1389,44 @@ h6,
   margin: 0;
 }
 
+.backpack-request-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.backpack-note-field {
+  display: grid;
+  gap: 6px;
+}
+
+.backpack-note-field span {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.backpack-note-field textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--brand-soft) 16%, white);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
+}
+
+.backpack-note-field textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, white);
+}
+
+.backpack-note-field textarea:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .recent-requests-panel {
   border: 1px solid var(--border);
   border-radius: 12px;
