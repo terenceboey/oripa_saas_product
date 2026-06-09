@@ -18,6 +18,56 @@ type Prize = {
   dropRatePercent?: number;
 };
 
+type PackAvailability = {
+  visible?: boolean;
+  openable?: boolean;
+  status?: string | null;
+  reasonCode?: string | null;
+  errorMessage?: string | null;
+};
+
+type ProjectionPrizeOdds = {
+  prizeId?: string | null;
+  label?: string | null;
+  weight?: number | null;
+  probability?: number | null;
+  dropRatePercent?: number | null;
+};
+
+type ProjectionTierRange = {
+  name?: string | null;
+  percentage?: number | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  itemCount?: number | null;
+};
+
+type PackProjection = {
+  pricePoints?: number | null;
+  estimatedEv?: number | null;
+  minValue?: number | null;
+  maxValue?: number | null;
+  buybackPercent?: number | null;
+  valueAsOf?: string | null;
+  valueFresh?: boolean | null;
+  stock?: {
+    total?: number | null;
+    remaining?: number | null;
+  } | null;
+  odds?: {
+    totalWeight?: number | null;
+    prizes?: ProjectionPrizeOdds[] | null;
+  } | null;
+  tierRanges?: ProjectionTierRange[] | null;
+  availability?: PackAvailability | null;
+};
+
+type PullStats = {
+  lastPull?: string | null;
+  lastPullAt?: string | null;
+  pullsLast7Days?: number | null;
+};
+
 type Pack = {
   id: string;
   title: string;
@@ -28,6 +78,18 @@ type Pack = {
   limitedLabel?: string | null;
   prizes: Prize[];
   tierSnapshotJson?: PackTierSnapshot | null;
+  status?: string | null;
+  availability?: PackAvailability | null;
+  machineProjection?: PackProjection | null;
+  economicsProjection?: PackProjection | null;
+  packMachineProjection?: PackProjection | null;
+  economics?: PackProjection | null;
+  lastPull?: string | null;
+  lastPullAt?: string | null;
+  pullsLast7Days?: number | null;
+  pulls7d?: number | null;
+  sevenDayPulls?: number | null;
+  activity?: PullStats | null;
 };
 
 type Wallet = {
@@ -194,6 +256,59 @@ function resolveTierOdds(tiers: PackTierSnapshot["tiers"]) {
   return tiers.map((tier) => (typeof tier.percentage === "number" ? tier.percentage : fallbackPercent));
 }
 
+function formatPoints(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return `${value.toLocaleString()} pts`;
+}
+
+function formatPercent(value?: number | null) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  return `${value.toFixed(value >= 10 ? 1 : 2)}%`;
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString();
+}
+
+function getPackEconomics(pack: Pack | null) {
+  if (!pack) return null;
+  return pack.machineProjection ?? pack.economicsProjection ?? pack.packMachineProjection ?? pack.economics ?? null;
+}
+
+function hasFreshValues(projection: PackProjection | null | undefined) {
+  return projection?.valueFresh === true;
+}
+
+function getPullStats(pack: Pack | null) {
+  if (!pack) return { lastPullAt: null, pullsLast7Days: null };
+  return {
+    lastPullAt: pack.lastPullAt ?? pack.lastPull ?? pack.activity?.lastPullAt ?? pack.activity?.lastPull ?? null,
+    pullsLast7Days: pack.pullsLast7Days ?? pack.pulls7d ?? pack.sevenDayPulls ?? pack.activity?.pullsLast7Days ?? null,
+  };
+}
+
+function formatAvailabilityReason(pack: Pack | null, projection: PackProjection | null | undefined) {
+  const availability = projection?.availability ?? pack?.availability;
+  if (!availability) return "This pack is not open right now.";
+  if (availability.errorMessage?.trim()) return availability.errorMessage.trim();
+  if (availability.reasonCode?.trim()) return availability.reasonCode.replaceAll("_", " ").toLowerCase();
+  if (availability.status?.trim()) return availability.status.replaceAll("_", " ").toLowerCase();
+  return "This pack is not open right now.";
+}
+
+function isPackOpen(pack: Pack | null, projection: PackProjection | null | undefined) {
+  if (!pack) return false;
+  const availability = projection?.availability ?? pack.availability;
+  const remainingStock = projection?.stock?.remaining ?? pack.remainingStock;
+  if (availability?.openable === false) return false;
+  if (availability?.status && availability.status.toLowerCase() !== "open") return false;
+  if (pack.status && ["draft", "archived", "paused", "disabled", "closed"].includes(pack.status.toLowerCase())) return false;
+  return remainingStock > 0;
+}
+
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
   const packId = String(params?.packId ?? "");
@@ -223,10 +338,24 @@ export default function PackDrawPage() {
     const parsed = packTierSnapshotSchema.safeParse(pack?.tierSnapshotJson);
     return parsed.success ? parsed.data : null;
   }, [pack?.tierSnapshotJson]);
+  const projection = useMemo(() => getPackEconomics(pack), [pack]);
+  const valueFresh = hasFreshValues(projection);
+  const pullStats = useMemo(() => getPullStats(pack), [pack]);
+  const availabilityReason = useMemo(() => formatAvailabilityReason(pack, projection), [pack, projection]);
+  const packOpen = isPackOpen(pack, projection);
+  const remainingStock = projection?.stock?.remaining ?? pack?.remainingStock ?? 0;
   const tierOdds = useMemo(() => {
     if (!tierSnapshot) return [];
     return resolveTierOdds(tierSnapshot.tiers);
   }, [tierSnapshot]);
+  const projectedPrizeOdds = useMemo(() => {
+    if (!projection?.odds?.prizes?.length) return new Map<string, ProjectionPrizeOdds>();
+    return new Map(
+      projection.odds.prizes
+        .filter((item): item is ProjectionPrizeOdds => !!item && typeof item.prizeId === "string")
+        .map((item) => [item.prizeId as string, item]),
+    );
+  }, [projection]);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -517,25 +646,83 @@ export default function PackDrawPage() {
             })()}
             <div className="pack-header">
               <h1>{pack.title}</h1>
-              {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
+              <div className="pack-badges">
+                {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
+                {!packOpen ? <span className="badge warn">Closed</span> : null}
+              </div>
             </div>
-            <p className="muted remaining-text">Remaining {pack.remainingStock}/{pack.totalStock}</p>
+            <p className="muted remaining-text">Remaining {projection?.stock?.remaining ?? pack.remainingStock}/{projection?.stock?.total ?? pack.totalStock}</p>
             <div className="price-line">
               <span className="muted">1 draw</span>
-              <strong>{pack.pricePoints.toLocaleString()} pts</strong>
+              <strong>{formatPoints(projection?.pricePoints ?? pack.pricePoints) ?? `${pack.pricePoints.toLocaleString()} pts`}</strong>
+            </div>
+
+            <div className="prize-list" style={{ marginBottom: 12 }}>
+              <div className="prize-row">
+                <div>
+                  <strong>Pack status</strong>
+                  <div className="muted tiny">{packOpen ? "Open for pulls while stock remains." : availabilityReason}</div>
+                </div>
+                <div className="rate-block">
+                  <div className="rate">{projection?.availability?.status?.replaceAll("_", " ").toLowerCase() ?? pack.status?.replaceAll("_", " ").toLowerCase() ?? (packOpen ? "open" : "closed")}</div>
+                </div>
+              </div>
+              {valueFresh ? (
+                <>
+                  <div className="prize-row">
+                    <div>
+                      <strong>Estimated EV</strong>
+                      <div className="muted tiny">{formatPoints(projection?.estimatedEv) ?? "Not available"}</div>
+                    </div>
+                    <div className="rate-block">
+                      <div className="rate">{formatPercent(projection?.buybackPercent) ?? "-"}</div>
+                      <div className="muted tiny">Buyback policy</div>
+                    </div>
+                  </div>
+                  <div className="prize-row">
+                    <div>
+                      <strong>Value band</strong>
+                      <div className="muted tiny">
+                        {[formatPoints(projection?.minValue), formatPoints(projection?.maxValue)].filter(Boolean).join(" - ") || "Not available"}
+                      </div>
+                    </div>
+                    <div className="rate-block">
+                      <div className="muted tiny">{formatDateTime(projection?.valueAsOf) ? `As of ${formatDateTime(projection?.valueAsOf)}` : "Fresh value data"}</div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="prize-row">
+                  <div>
+                    <strong>Value outlook</strong>
+                    <div className="muted tiny">{projection ? "Value data is unavailable or stale right now." : "Value data is not available yet."}</div>
+                  </div>
+                </div>
+              )}
+              <div className="prize-row">
+                <div>
+                  <strong>Pull activity</strong>
+                  <div className="muted tiny">
+                    {formatDateTime(pullStats.lastPullAt) || typeof pullStats.pullsLast7Days === "number"
+                      ? [formatDateTime(pullStats.lastPullAt) ? `Last pull ${formatDateTime(pullStats.lastPullAt)}` : null, typeof pullStats.pullsLast7Days === "number" ? `${pullStats.pullsLast7Days.toLocaleString()} pulls in 7 days` : null].filter(Boolean).join(" | ")
+                      : "Pull activity not available yet."}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="actions">
-              <button type="button" className="draw-button" disabled={drawing || pack.remainingStock < 1} onClick={() => handleDraw(1)}>Draw</button>
-              <button type="button" className="draw-button alt" disabled={drawing || pack.remainingStock < 10} onClick={() => handleDraw(10)}>10 Draws</button>
-              <button type="button" className="draw-button alt-2" disabled={drawing || pack.remainingStock < 100} onClick={() => handleDraw(100)}>100 Draws</button>
+              <button type="button" className="draw-button" disabled={drawing || !packOpen || remainingStock < 1} onClick={() => handleDraw(1)}>Draw</button>
+              <button type="button" className="draw-button alt" disabled={drawing || !packOpen || remainingStock < 10} onClick={() => handleDraw(10)}>10 Draws</button>
+              <button type="button" className="draw-button alt-2" disabled={drawing || !packOpen || remainingStock < 100} onClick={() => handleDraw(100)}>100 Draws</button>
             </div>
+            {!packOpen ? <p className="muted tiny">{availabilityReason}</p> : null}
             {error ? <p className="error">{error}</p> : null}
           </section>
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Card Preview</h2>
-            <p className="muted">Each item can have vendor-uploaded art. Rates shown below are current weighted odds.</p>
+            <p className="muted">Each item can have vendor-uploaded art. Rates below show current odds when available, with tier and value ranges summarized separately.</p>
             <div className="card-preview-grid">
               {pack.prizes.map((prize) => (
                 <article key={prize.id} className="card-preview-item">
@@ -553,7 +740,7 @@ export default function PackDrawPage() {
                   </button>
                   <div className="card-preview-meta">
                     <strong>{prize.label}</strong>
-                    <span className="muted tiny">Rate {(prize.dropRatePercent ?? 0).toFixed(4)}%</span>
+                    <span className="muted tiny">Rate {(projectedPrizeOdds.get(prize.id)?.dropRatePercent ?? prize.dropRatePercent ?? 0).toFixed(4)}%</span>
                     <span className="muted tiny">Stock {prize.remainingStock}</span>
                   </div>
                 </article>
@@ -561,13 +748,42 @@ export default function PackDrawPage() {
             </div>
           </section>
 
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Odds and Value Guide</h2>
+            <p className="muted">Use this section to compare draw price, projected value range, and how likely each tier is. Value figures only appear when the pack has fresh projection data.</p>
+            <div className="prize-list">
+              {valueFresh && projection?.tierRanges?.length ? projection.tierRanges.map((tier, index) => (
+                <div className="prize-row" key={`${tier.name ?? "tier"}-${index}`}>
+                  <div>
+                    <strong>{tier.name ?? `Tier ${index + 1}`}</strong>
+                    <div className="muted tiny">
+                      {[formatPoints(tier.minValue), formatPoints(tier.maxValue)].filter(Boolean).join(" - ") || "Value range not available"}
+                    </div>
+                  </div>
+                  <div className="rate-block">
+                    <div className="rate">{formatPercent(tier.percentage) ?? "-"}</div>
+                    <div className="muted tiny">{typeof tier.itemCount === "number" ? `${tier.itemCount} items` : "Tier count unavailable"}</div>
+                  </div>
+                </div>
+              )) : (
+                <div className="prize-row">
+                  <div>
+                    <strong>Tier range data</strong>
+                    <div className="muted tiny">{valueFresh ? "Tier range data is not available for this pack yet." : "Tier value ranges are hidden until the latest projection is fresh."}</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
           {tierSnapshot && tierSnapshot.tiers.length > 0 ? (
             <section className="card" style={{ marginTop: 12 }}>
               <h2>Tier Breakdown</h2>
-              <p className="muted">This reflects the vendor-configured tier structure preserved with the pack.</p>
+              <p className="muted">This reflects the vendor-configured tier structure preserved with the pack. Percentages below show tier odds, then the per-item split inside that tier.</p>
               <div className="tier-stack">
                 {tierSnapshot.tiers.map((tier, tierIndex) => {
-                  const tierChance = tierOdds[tierIndex] ?? 0;
+                  const projectedTierChance = projection?.tierRanges?.[tierIndex]?.percentage;
+                  const tierChance = projectedTierChance ?? tierOdds[tierIndex] ?? 0;
                   const itemChance = tier.items.length > 0 ? tierChance / tier.items.length : 0;
                   return (
                     <article key={`${tier.name}-${tierIndex}`} className="tier-bucket">
@@ -577,6 +793,9 @@ export default function PackDrawPage() {
                       </div>
                       <p className="muted tiny" style={{ marginBottom: 8 }}>
                         {tier.items.length} items | {itemChance.toFixed(4)}% per item
+                        {valueFresh && (projection?.tierRanges?.[tierIndex]?.minValue != null || projection?.tierRanges?.[tierIndex]?.maxValue != null)
+                          ? ` | ${[formatPoints(projection?.tierRanges?.[tierIndex]?.minValue), formatPoints(projection?.tierRanges?.[tierIndex]?.maxValue)].filter(Boolean).join(" - ")}`
+                          : ""}
                       </p>
                       <div className="card-preview-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}>
                         {tier.items.map((item, itemIndex) => (
