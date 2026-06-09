@@ -2,7 +2,19 @@ export type InventoryAllocationFailureReason =
   | "cross_vendor_inventory"
   | "insufficient_inventory"
   | "concurrent_inventory_conflict"
-  | "partial_existing_allocation";
+  | "partial_existing_allocation"
+  | "missing_required_allocation";
+
+export type PackInventoryMode = "PHYSICAL_REQUIRED" | "DIGITAL_NO_ALLOCATION" | "PILOT_NO_ALLOCATION";
+
+export function normalizePackInventoryMode(mode: string | null | undefined): PackInventoryMode {
+  if (mode === "DIGITAL_NO_ALLOCATION" || mode === "PILOT_NO_ALLOCATION") return mode;
+  return "PHYSICAL_REQUIRED";
+}
+
+export function requiresPhysicalInventoryAllocation(mode: string | null | undefined): boolean {
+  return normalizePackInventoryMode(mode) === "PHYSICAL_REQUIRED";
+}
 
 export class PackInventoryAllocationError extends Error {
   constructor(
@@ -154,7 +166,7 @@ function remainingHeldQuantity(allocation: ExistingAllocationRow) {
 
 export async function commitInventoryAllocationForPrizeDraw(
   tx: InventoryTransactionClient,
-  input: { vendorId: string; packId: string; packPrizeId: string }
+  input: { vendorId: string; packId: string; packPrizeId: string; inventoryMode?: string | null }
 ) {
   const allocations = await tx.packPrizeInventoryAllocation.findMany({
     where: {
@@ -166,7 +178,15 @@ export async function commitInventoryAllocationForPrizeDraw(
     orderBy: { createdAt: "asc" },
   });
   const allocation = allocations.find((row) => remainingHeldQuantity(row) > 0);
-  if (!allocation) return null;
+  if (!allocation) {
+    if (requiresPhysicalInventoryAllocation(input.inventoryMode)) {
+      throw new PackInventoryAllocationError(
+        "missing_required_allocation",
+        `Physical pack ${input.packId} cannot draw prize ${input.packPrizeId} without held inventory allocation proof`
+      );
+    }
+    return null;
+  }
 
   const inventoryResult = await tx.vendorInventoryItem.updateMany({
     where: {
@@ -273,6 +293,12 @@ export function packInventoryAllocationErrorResponse(reason: InventoryAllocation
     return {
       error: "Pack inventory allocation rejected",
       message: "Physical paid packs cannot be published without enough allocatable vendor inventory.",
+    };
+  }
+  if (reason === "missing_required_allocation") {
+    return {
+      error: "Pack inventory allocation rejected",
+      message: "Physical pack draw cannot complete without held inventory allocation proof.",
     };
   }
   return {

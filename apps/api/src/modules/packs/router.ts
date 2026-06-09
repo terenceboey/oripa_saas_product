@@ -25,6 +25,7 @@ import {
   releaseHeldInventoryForPack,
   reserveInventoryForPackPublish,
 } from "./inventory-allocation";
+import { evaluatePackAvailability } from "./availability";
 
 export const packRouter = Router();
 const csvUpload = multer({
@@ -294,10 +295,24 @@ async function resolveCatalogItemForRow(
   return found;
 }
 
-function decoratePackWithRates(pack: { prizes: Array<{ weight: number }> } & Record<string, unknown>) {
+function decoratePackWithRates(
+  pack: {
+    id: string;
+    isActive: boolean;
+    status: "DRAFT" | "LIVE" | "ARCHIVED";
+    pricePoints: number;
+    remainingStock: number;
+    startsAt: Date | string | null;
+    endsAt: Date | string | null;
+    poolSnapshotHash?: string | null;
+    prizes: Array<{ weight: number }>;
+  } & Record<string, unknown>,
+  now = new Date()
+) {
   const totalWeight = pack.prizes.reduce((sum, prize) => sum + prize.weight, 0);
   return {
     ...pack,
+    availability: evaluatePackAvailability({ pack, now }),
     prizes: pack.prizes.map((prize) => ({
       ...prize,
       dropRatePercent: totalWeight > 0 ? Number(((prize.weight / totalWeight) * 100).toFixed(4)) : 0,
@@ -431,15 +446,15 @@ packRouter.get("/v1/packs", async (req: VendorRequest, res) => {
     where: {
       vendorId: req.vendorId,
       isActive: true,
-      status: "LIVE",
-      OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-      AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: now } }] }],
+      status: { not: "ARCHIVED" },
     },
     include: { prizes: true },
     orderBy: { createdAt: "desc" },
   });
 
-  const packs = packRows.map((pack) => decoratePackWithRates(pack));
+  const packs = packRows
+    .map((pack) => decoratePackWithRates(pack, now))
+    .filter((pack) => pack.availability.visible);
 
   return res.json({ packs });
 });

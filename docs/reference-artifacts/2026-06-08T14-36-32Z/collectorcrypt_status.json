@@ -1,0 +1,240 @@
+{
+  "eliteStatus": "open",
+  "freePacksStatus": "open",
+  "gachas": [
+    {
+      "code": "pokemon_50",
+      "isOpen": true,
+      "name": "Elite Pok\u00e9mon Gacha Pack",
+      "price": 50,
+      "status": "open"
+    },
+    {
+      "code": "pokemon_250",
+      "isOpen": true,
+      "name": "Legendary Pok\u00e9mon Gacha Pack",
+      "price": 250,
+      "status": "open"
+    },
+    {
+      "code": "pokemon_1000",
+      "isOpen": true,
+      "name": "Grail Pok\u00e9mon Gacha Pack",
+      "price": 1000,
+      "status": "open"
+    },
+    {
+      "code": "onepiece_250",
+      "isOpen": true,
+      "name": "One Piece Gacha Pack",
+      "price": 250,
+      "status": "open"
+    },
+    {
+      "code": "onepiece_50",
+      "isOpen": true,
+      "name": "One Piece Ocean Blue Pack",
+      "price": 50,
+      "status": "open"
+    },
+    {
+      "code": "sns_25",
+      "isOpen": null,
+      "name": "Sns 25",
+      "price": 25,
+      "status": "closed"
+    },
+    {
+      "code": "pokemon_25",
+      "isOpen": true,
+      "name": "Starter Pok\u00e9mon Gacha Pack",
+      "price": 25,
+      "status": "open"
+    },
+    {
+      "code": "comic_25",
+      "isOpen": true,
+      "name": "Comic 25",
+      "price": 25,
+      "status": "open"
+    },
+    {
+      "code": "charizard_50",
+      "isOpen": false,
+      "name": "Charizard Gacha Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "football_50",
+      "isOpen": null,
+      "name": "Football Gacha Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "gachopia_50",
+      "isOpen": false,
+      "name": "Elite Gachopia Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "comic_50",
+      "isOpen": true,
+      "name": "Comic 50",
+      "price": 50,
+      "status": "open"
+    },
+    {
+      "code": "basketball_50",
+      "isOpen": null,
+      "name": "Basketball Gacha Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "baseball_50",
+      "isOpen": null,
+      "name": "Baseball Gacha Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "pikachu_50",
+      "isOpen": false,
+      "name": "Pikachu Gacha Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "gengar_50",
+      "isOpen": false,
+      "name": "Gengar Gacha Pack",
+      "price": 50,
+      "status": "closed"
+    },
+    {
+      "code": "anime_75",
+      "isOpen": true,
+      "name": "Anime Pop Culture Gacha",
+      "price": 75,
+      "status": "open"
+    },
+    {
+      "code": "sealed_80",
+      "isOpen": true,
+      "name": "Sealed Gacha Pack",
+      "price": 80,
+      "status": "open"
+    },
+    {
+      "code": "water_100",
+      "isOpen": true,
+      "name": "Water Pack",
+      "price": 100,
+      "status": "open"
+    },
+    {
+      "code": "baseball_100",
+      "isOpen": true,
+      "name": "Baseball 100 Gacha Pack",
+      "price": 100,
+      "status": "open"
+    },
+    {
+      "code": "basketball_100",
+      "isOpen": true,
+      "name": "Basketball 100 Gacha Pack",
+      "price": 100,
+      "status": "open"
+    },
+    {
+      "code": "firegrass_100",
+      "isOpen": false,
+      "name": "Fire & Grass Pack",
+      "price": 100,
+      "status": "closed"
+    },
+    {
+      "code": "sports_100",
+      "isOpen": true,
+      "name": "Sports Gacha Pack",
+      "price": 100,
+      "status": "open"
+    },
+    {
+      "code": "football_100",
+      "isOpen": true,
+      "name": "Football 100 Gacha Pack",
+      "price": 100,
+      "status": "open"
+    },
+    {
+      "code": "dragonite_100",
+      "isOpen": false,
+      "name": "Dragonite + Friends",
+      "price": 100,
+      "status": "closed"
+    },
+    {
+      "code": "football_250",
+      "isOpen": true,
+      "name": "Football 250 Pack",
+      "price": 250,
+      "status": "open"
+    },
+    {
+      "code": "comic_250",
+      "isOpen": null,
+      "name": "Comic 250",
+      "price": 250,
+      "status": "closed"
+    },
+    {
+      "code": "baseball_250",
+      "isOpen": true,
+      "name": "Baseball 250 Gacha Pack",
+      "price": 250,
+      "status": "open"
+    },
+    {
+      "code": "mew_250",
+      "isOpen": false,
+      "name": "Mew + Friends",
+      "price": 250,
+      "status": "closed"
+    },
+    {
+      "code": "basketball_250",
+      "isOpen": true,
+      "name": "Basketball 250 Pack",
+      "price": 250,
+      "status": "open"
+    },
+    {
+      "code": "pokemon_2500",
+      "isOpen": null,
+      "name": "Mythic Pok\u00e9mon Gacha Pack",
+      "price": 2500,
+      "status": "closed"
+    },
+    {
+      "code": "sf_2500",
+      "isOpen": null,
+      "name": "Mythic Pok\u00e9mon Gacha Pack",
+      "price": 2500,
+      "status": "closed"
+    },
+    {
+      "code": "pokemon_5000",
+      "isOpen": null,
+      "name": "Celestial Pok\u00e9mon Gacha Pack",
+      "price": 5000,
+      "status": "closed"
+    }
+  ],
+  "legendaryStatus": "open",
+  "machineStatus": "running",
+  "sportsStatus": "open"
+}

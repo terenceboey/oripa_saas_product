@@ -1,0 +1,1555 @@
+{
+  "machines": [
+    {
+      "code": "pokemon_50",
+      "contains": 1,
+      "ev": 53.430764001270525,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Elite Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": true,
+      "shortName": "PKMN 50",
+      "stock": {
+        "common": 53,
+        "epic": 1106,
+        "rare": 132,
+        "uncommon": 76
+      },
+      "thumbnailUrl": "/pokemon_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pokemon_50.hevc.mp4",
+      "videoSrc": "/pokemon_50.webm"
+    },
+    {
+      "code": "pokemon_250",
+      "contains": 1,
+      "ev": 260.46848053775665,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Legendary Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": true,
+      "shortName": "PKMN 250",
+      "stock": {
+        "common": 106,
+        "epic": 215,
+        "rare": 723,
+        "uncommon": 559
+      },
+      "thumbnailUrl": "/pokemon_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pokemon_250.hevc.mp4",
+      "videoSrc": "/pokemon_250.webm"
+    },
+    {
+      "code": "pokemon_1000",
+      "contains": 1,
+      "ev": 1015.9636603090064,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 93,
+      "name": "Grail Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 20,
+      "price": 1000,
+      "public": true,
+      "shortName": "PKMN 1000",
+      "stock": {
+        "common": 123,
+        "epic": 42,
+        "rare": 248,
+        "uncommon": 39
+      },
+      "thumbnailUrl": "/pokemon_1000.png",
+      "tierRanges": {
+        "common": {
+          "end": 1000,
+          "start": 600
+        },
+        "epic": {
+          "end": 50000,
+          "start": 8000
+        },
+        "rare": {
+          "end": 8000,
+          "start": 1600
+        },
+        "uncommon": {
+          "end": 1600,
+          "start": 1000
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pokemon_1000.hevc.mp4",
+      "videoSrc": "/pokemon_1000.webm"
+    },
+    {
+      "code": "onepiece_250",
+      "contains": 1,
+      "ev": 260.42831814057496,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "One Piece Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": true,
+      "shortName": "ONEPIECE 250",
+      "stock": {
+        "common": 132,
+        "epic": 131,
+        "rare": 387,
+        "uncommon": 32
+      },
+      "thumbnailUrl": "/onepiece_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/onepiece_250.hevc.mp4",
+      "videoSrc": "/onepiece_250.webm"
+    },
+    {
+      "code": "onepiece_50",
+      "contains": 1,
+      "ev": 55.468415570721945,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "One Piece Ocean Blue Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": true,
+      "shortName": "ONEPIECE 50",
+      "stock": {
+        "common": 49,
+        "epic": 588,
+        "rare": 74,
+        "uncommon": 166
+      },
+      "thumbnailUrl": "/onepiece_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/onepiece_50.hevc.mp4",
+      "videoSrc": "/onepiece_50.webm"
+    },
+    {
+      "code": "sns_25",
+      "contains": 1,
+      "ev": 0,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Sns 25",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 0.5,
+      "price": 25,
+      "public": false,
+      "shortName": "SNS 25",
+      "stock": {
+        "common": 0,
+        "epic": 0,
+        "rare": 0,
+        "uncommon": 0
+      },
+      "thumbnailUrl": "/sns_25.png",
+      "tierRanges": {
+        "common": {
+          "end": 30,
+          "start": 13
+        },
+        "epic": {
+          "end": 500,
+          "start": 125
+        },
+        "rare": {
+          "end": 125,
+          "start": 55
+        },
+        "uncommon": {
+          "end": 55,
+          "start": 30
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/sns_25.hevc.mp4",
+      "videoSrc": "/sns_25.webm"
+    },
+    {
+      "code": "pokemon_25",
+      "contains": 1,
+      "ev": 27.098403133903133,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Starter Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 0.5,
+      "price": 25,
+      "public": true,
+      "shortName": "PKMN 25",
+      "stock": {
+        "common": 104,
+        "epic": 135,
+        "rare": 144,
+        "uncommon": 39
+      },
+      "thumbnailUrl": "/pokemon_25.png",
+      "tierRanges": {
+        "common": {
+          "end": 30,
+          "start": 13
+        },
+        "epic": {
+          "end": 500,
+          "start": 125
+        },
+        "rare": {
+          "end": 125,
+          "start": 55
+        },
+        "uncommon": {
+          "end": 55,
+          "start": 30
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pokemon_25.hevc.mp4",
+      "videoSrc": "/pokemon_25.webm"
+    },
+    {
+      "code": "comic_25",
+      "contains": 1,
+      "ev": 26.592602627257804,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Comic 25",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 0.5,
+      "price": 25,
+      "public": false,
+      "shortName": "COMIC 25",
+      "stock": {
+        "common": 58,
+        "epic": 28,
+        "rare": 18,
+        "uncommon": 3
+      },
+      "thumbnailUrl": "/comic_25.png",
+      "tierRanges": {
+        "common": {
+          "end": 30,
+          "start": 13
+        },
+        "epic": {
+          "end": 500,
+          "start": 125
+        },
+        "rare": {
+          "end": 125,
+          "start": 55
+        },
+        "uncommon": {
+          "end": 55,
+          "start": 30
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/comic_25.hevc.mp4",
+      "videoSrc": "/comic_25.webm"
+    },
+    {
+      "code": "charizard_50",
+      "contains": 1,
+      "ev": 23.732889610389606,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Charizard Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": false,
+      "shortName": "CHARIZARD 50",
+      "stock": {
+        "common": 0,
+        "epic": 24,
+        "rare": 14,
+        "uncommon": 66
+      },
+      "thumbnailUrl": "/charizard_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/charizard_50.hevc.mp4",
+      "videoSrc": "/charizard_50.webm"
+    },
+    {
+      "code": "football_50",
+      "contains": 1,
+      "ev": 0,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Football Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": true,
+      "shortName": "FOOTBALL 50",
+      "stock": {
+        "common": 0,
+        "epic": 0,
+        "rare": 0,
+        "uncommon": 0
+      },
+      "thumbnailUrl": "/football_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/football_50.hevc.mp4",
+      "videoSrc": "/football_50.webm"
+    },
+    {
+      "code": "gachopia_50",
+      "contains": 1,
+      "ev": 23.421286231884057,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Elite Gachopia Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": true,
+      "shortName": "GACHOPIA 50",
+      "stock": {
+        "common": 0,
+        "epic": 16,
+        "rare": 23,
+        "uncommon": 9
+      },
+      "thumbnailUrl": "/gachopia_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/gachopia_50.hevc.mp4",
+      "videoSrc": "/gachopia_50.webm"
+    },
+    {
+      "code": "comic_50",
+      "contains": 1,
+      "ev": 61.233745819397996,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Comic 50",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": false,
+      "shortName": "COMIC 50",
+      "stock": {
+        "common": 16,
+        "epic": 104,
+        "rare": 23,
+        "uncommon": 8
+      },
+      "thumbnailUrl": "/comic_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/comic_50.hevc.mp4",
+      "videoSrc": "/comic_50.webm"
+    },
+    {
+      "code": "basketball_50",
+      "contains": 1,
+      "ev": 0,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Basketball Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": true,
+      "shortName": "BASKETBALL 50",
+      "stock": {
+        "common": 0,
+        "epic": 0,
+        "rare": 0,
+        "uncommon": 0
+      },
+      "thumbnailUrl": "/basketball_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/basketball_50.hevc.mp4",
+      "videoSrc": "/basketball_50.webm"
+    },
+    {
+      "code": "baseball_50",
+      "contains": 1,
+      "ev": 0,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Baseball Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": true,
+      "shortName": "BASEBALL 50",
+      "stock": {
+        "common": 0,
+        "epic": 0,
+        "rare": 0,
+        "uncommon": 0
+      },
+      "thumbnailUrl": "/baseball_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/baseball_50.hevc.mp4",
+      "videoSrc": "/baseball_50.webm"
+    },
+    {
+      "code": "pikachu_50",
+      "contains": 1,
+      "ev": 73.47440894937147,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Pikachu Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": false,
+      "shortName": "PIKACHU 50",
+      "stock": {
+        "common": 14,
+        "epic": 23,
+        "rare": 29,
+        "uncommon": 78
+      },
+      "thumbnailUrl": "/pikachu_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pikachu_50.hevc.mp4",
+      "videoSrc": "/pikachu_50.webm"
+    },
+    {
+      "code": "gengar_50",
+      "contains": 1,
+      "ev": 30.825815602836876,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Gengar Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1,
+      "price": 50,
+      "public": false,
+      "shortName": "GENGAR 50",
+      "stock": {
+        "common": 0,
+        "epic": 4,
+        "rare": 6,
+        "uncommon": 47
+      },
+      "thumbnailUrl": "/gengar_50.png",
+      "tierRanges": {
+        "common": {
+          "end": 60,
+          "start": 30
+        },
+        "epic": {
+          "end": 5001,
+          "start": 250
+        },
+        "rare": {
+          "end": 250,
+          "start": 110
+        },
+        "uncommon": {
+          "end": 110,
+          "start": 60
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/gengar_50.hevc.mp4",
+      "videoSrc": "/gengar_50.webm"
+    },
+    {
+      "code": "anime_75",
+      "contains": 1,
+      "ev": 83.21173996892975,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 85,
+      "name": "Anime Pop Culture Gacha",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1.5,
+      "price": 75,
+      "public": true,
+      "shortName": "ANIME 75",
+      "stock": {
+        "common": 412,
+        "epic": 230,
+        "rare": 49,
+        "uncommon": 207
+      },
+      "thumbnailUrl": "/anime_75.png",
+      "tierRanges": {
+        "common": {
+          "end": 80,
+          "start": 40
+        },
+        "epic": {
+          "end": 5001,
+          "start": 375
+        },
+        "rare": {
+          "end": 375,
+          "start": 150
+        },
+        "uncommon": {
+          "end": 150,
+          "start": 80
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/anime_75.hevc.mp4",
+      "videoSrc": "/anime_75.webm"
+    },
+    {
+      "code": "sealed_80",
+      "contains": 1,
+      "ev": 82.75993850686399,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Sealed Gacha Pack",
+      "odds": {
+        "common": 0.8,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.15
+      },
+      "pointsMultiplier": 1.6,
+      "price": 80,
+      "public": true,
+      "shortName": "SEALED 80",
+      "stock": {
+        "common": 58,
+        "epic": 107,
+        "rare": 61,
+        "uncommon": 152
+      },
+      "thumbnailUrl": "/sealed_80.png",
+      "tierRanges": {
+        "common": {
+          "end": 80,
+          "start": 40
+        },
+        "epic": {
+          "end": 5001,
+          "start": 400
+        },
+        "rare": {
+          "end": 400,
+          "start": 160
+        },
+        "uncommon": {
+          "end": 160,
+          "start": 80
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/sealed_80.hevc.mp4",
+      "videoSrc": "/sealed_80.webm"
+    },
+    {
+      "code": "water_100",
+      "contains": 1,
+      "ev": 106.1611378270852,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Water Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": true,
+      "shortName": "WATER 100",
+      "stock": {
+        "common": 57,
+        "epic": 70,
+        "rare": 33,
+        "uncommon": 65
+      },
+      "thumbnailUrl": "/water_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 5001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/water_100.hevc.mp4",
+      "videoSrc": "/water_100.webm"
+    },
+    {
+      "code": "baseball_100",
+      "contains": 1,
+      "ev": 116.29980287424246,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Baseball 100 Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": false,
+      "shortName": "BASEBALL 100",
+      "stock": {
+        "common": 46,
+        "epic": 100,
+        "rare": 95,
+        "uncommon": 91
+      },
+      "thumbnailUrl": "/baseball_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 5001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/baseball_100.hevc.mp4",
+      "videoSrc": "/baseball_100.webm"
+    },
+    {
+      "code": "basketball_100",
+      "contains": 1,
+      "ev": 114.35795713367314,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Basketball 100 Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": false,
+      "shortName": "BASKSETBALL 100",
+      "stock": {
+        "common": 35,
+        "epic": 119,
+        "rare": 96,
+        "uncommon": 61
+      },
+      "thumbnailUrl": "/basketball_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 5001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/basketball_100.hevc.mp4",
+      "videoSrc": "/basketball_100.webm"
+    },
+    {
+      "code": "firegrass_100",
+      "contains": 1,
+      "ev": 108.91178203661327,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Fire & Grass Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": true,
+      "shortName": "FIREGRASS 100",
+      "stock": {
+        "common": 18,
+        "epic": 19,
+        "rare": 23,
+        "uncommon": 32
+      },
+      "thumbnailUrl": "/firegrass_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 15001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/firegrass_100.hevc.mp4",
+      "videoSrc": "/firegrass_100.webm"
+    },
+    {
+      "code": "sports_100",
+      "contains": 1,
+      "ev": 104.41333698224825,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Sports Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": true,
+      "shortName": "SPORTS 100",
+      "stock": {
+        "common": 129,
+        "epic": 322,
+        "rare": 252,
+        "uncommon": 204
+      },
+      "thumbnailUrl": "/sports_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 5001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/sports_100.hevc.mp4",
+      "videoSrc": "/sports_100.webm"
+    },
+    {
+      "code": "football_100",
+      "contains": 1,
+      "ev": 109.66412385762388,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Football 100 Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": false,
+      "shortName": "FOOTBALL 100",
+      "stock": {
+        "common": 54,
+        "epic": 198,
+        "rare": 135,
+        "uncommon": 112
+      },
+      "thumbnailUrl": "/football_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 5001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/football_100.hevc.mp4",
+      "videoSrc": "/football_100.webm"
+    },
+    {
+      "code": "dragonite_100",
+      "contains": 1,
+      "ev": 108.02631578947368,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Dragonite + Friends",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 2,
+      "price": 100,
+      "public": false,
+      "shortName": "DRAGON 100",
+      "stock": {
+        "common": 25,
+        "epic": 3,
+        "rare": 3,
+        "uncommon": 19
+      },
+      "thumbnailUrl": "/dragonite_100.png",
+      "tierRanges": {
+        "common": {
+          "end": 100,
+          "start": 50
+        },
+        "epic": {
+          "end": 5001,
+          "start": 500
+        },
+        "rare": {
+          "end": 500,
+          "start": 200
+        },
+        "uncommon": {
+          "end": 200,
+          "start": 100
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/dragonite_100.hevc.mp4",
+      "videoSrc": "/dragonite_100.webm"
+    },
+    {
+      "code": "football_250",
+      "contains": 1,
+      "ev": 261.61165138140547,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Football 250 Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": false,
+      "shortName": "FOOTBALL 250",
+      "stock": {
+        "common": 78,
+        "epic": 44,
+        "rare": 122,
+        "uncommon": 27
+      },
+      "thumbnailUrl": "/football_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/football_250.hevc.mp4",
+      "videoSrc": "/football_250.webm"
+    },
+    {
+      "code": "comic_250",
+      "contains": 1,
+      "ev": 259.79190835818855,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Comic 250",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": false,
+      "shortName": "COMIC 250",
+      "stock": {
+        "common": 170,
+        "epic": 19,
+        "rare": 722,
+        "uncommon": 552
+      },
+      "thumbnailUrl": "/comic_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/comic_250.hevc.mp4",
+      "videoSrc": "/comic_250.webm"
+    },
+    {
+      "code": "baseball_250",
+      "contains": 1,
+      "ev": 256.95612570483627,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Baseball 250 Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": false,
+      "shortName": "BASEBALL 250",
+      "stock": {
+        "common": 48,
+        "epic": 29,
+        "rare": 53,
+        "uncommon": 15
+      },
+      "thumbnailUrl": "/baseball_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/baseball_250.hevc.mp4",
+      "videoSrc": "/baseball_250.webm"
+    },
+    {
+      "code": "mew_250",
+      "contains": 1,
+      "ev": 128.625,
+      "freeSpins": false,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Mew + Friends",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": false,
+      "shortName": "MEW 250",
+      "stock": {
+        "common": 0,
+        "epic": 2,
+        "rare": 10,
+        "uncommon": 1
+      },
+      "thumbnailUrl": "/mew_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/mew_250.hevc.mp4",
+      "videoSrc": "/mew_250.webm"
+    },
+    {
+      "code": "basketball_250",
+      "contains": 1,
+      "ev": 261.96039793281653,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 90,
+      "name": "Basketball 250 Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 5,
+      "price": 250,
+      "public": false,
+      "shortName": "BASKETBALL 250",
+      "stock": {
+        "common": 36,
+        "epic": 40,
+        "rare": 63,
+        "uncommon": 43
+      },
+      "thumbnailUrl": "/basketball_250.png",
+      "tierRanges": {
+        "common": {
+          "end": 250,
+          "start": 150
+        },
+        "epic": {
+          "end": 50000,
+          "start": 2000
+        },
+        "rare": {
+          "end": 2000,
+          "start": 400
+        },
+        "uncommon": {
+          "end": 400,
+          "start": 250
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/basketball_250.hevc.mp4",
+      "videoSrc": "/basketball_250.webm"
+    },
+    {
+      "code": "pokemon_2500",
+      "contains": 1,
+      "ev": 2547.82166512124,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 93,
+      "name": "Mythic Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 20,
+      "price": 2500,
+      "public": false,
+      "shortName": "PKMN 2500",
+      "stock": {
+        "common": 250,
+        "epic": 76,
+        "rare": 117,
+        "uncommon": 248
+      },
+      "thumbnailUrl": "/pokemon_2500.png",
+      "tierRanges": {
+        "common": {
+          "end": 2500,
+          "start": 1250
+        },
+        "epic": {
+          "end": 150000,
+          "start": 10000
+        },
+        "rare": {
+          "end": 10000,
+          "start": 5000
+        },
+        "uncommon": {
+          "end": 5000,
+          "start": 2500
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pokemon_2500.hevc.mp4",
+      "videoSrc": "/pokemon_2500.webm"
+    },
+    {
+      "code": "sf_2500",
+      "contains": 1,
+      "ev": 2560.3617488532973,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 93,
+      "name": "Mythic Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 20,
+      "price": 2500,
+      "public": false,
+      "shortName": "PKMN 2500",
+      "stock": {
+        "common": 250,
+        "epic": 77,
+        "rare": 117,
+        "uncommon": 248
+      },
+      "thumbnailUrl": "/sf_2500.png",
+      "tierRanges": {
+        "common": {
+          "end": 2500,
+          "start": 1250
+        },
+        "epic": {
+          "end": 150000,
+          "start": 10000
+        },
+        "rare": {
+          "end": 10000,
+          "start": 5000
+        },
+        "uncommon": {
+          "end": 5000,
+          "start": 2500
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/sf_2500.hevc.mp4",
+      "videoSrc": "/sf_2500.webm"
+    },
+    {
+      "code": "pokemon_5000",
+      "contains": 1,
+      "ev": 0,
+      "freeSpins": true,
+      "image": "",
+      "instantBuyback": 93,
+      "name": "Celestial Pok\u00e9mon Gacha Pack",
+      "odds": {
+        "common": 0.75,
+        "epic": 0.01,
+        "rare": 0.04,
+        "uncommon": 0.2
+      },
+      "pointsMultiplier": 20,
+      "price": 5000,
+      "public": false,
+      "shortName": "PKMN 5000",
+      "stock": {
+        "common": 0,
+        "epic": 0,
+        "rare": 0,
+        "uncommon": 0
+      },
+      "thumbnailUrl": "/pokemon_5000.png",
+      "tierRanges": {
+        "common": {
+          "end": 5000,
+          "start": 2500
+        },
+        "epic": {
+          "end": 200000,
+          "start": 20000
+        },
+        "rare": {
+          "end": 20000,
+          "start": 10000
+        },
+        "uncommon": {
+          "end": 10000,
+          "start": 5000
+        }
+      },
+      "turboMode": true,
+      "videoHevc": "/pokemon_5000.hevc.mp4",
+      "videoSrc": "/pokemon_5000.webm"
+    }
+  ]
+}

@@ -120,6 +120,12 @@ enum PackPrizeInventoryAllocationStatus {
   RELEASED
 }
 
+enum PackInventoryMode {
+  PHYSICAL_REQUIRED
+  DIGITAL_NO_ALLOCATION
+  PILOT_NO_ALLOCATION
+}
+
 enum DrawLimitMode {
   NONE
   ONCE_PER_CUSTOMER
@@ -165,6 +171,25 @@ enum CustodyProvider {
 enum CatalogItemType {
   CARD
   SEALED_PRODUCT
+}
+
+enum CustodyRequestType {
+  REDEMPTION
+  BUYBACK
+}
+
+enum CustodyRequestStatus {
+  QUOTED
+  PENDING
+  OPS_REVIEW
+  APPROVED
+  PACKED
+  FULFILLED_MANUAL
+  REJECTED
+  CANCELLED
+  COMPLETED
+  CREDITED
+  EXPIRED
 }
 
 model Vendor {
@@ -224,6 +249,7 @@ model Vendor {
   packTemplateVersions          PackTemplateVersion[]
   packPrizeInventoryAllocations PackPrizeInventoryAllocation[]
   custodyItems                  CustodyItem[]
+  custodyRequests               CustodyRequest[]
 }
 
 model User {
@@ -259,6 +285,7 @@ model User {
   createdPointGrantQrs    VendorPointGrantQr[]    @relation("CreatedByUser")
   vendorReferralSignups   VendorReferralSignup[]
   custodyItems            CustodyItem[]
+  custodyRequests         CustodyRequest[]
   authSessions            AuthSession[]
 }
 
@@ -370,6 +397,7 @@ model Pack {
   drawLimitMode           DrawLimitMode                  @default(NONE)
   drawLimitValue          Int?
   drawLimitResetTimezone  String?                        @default("Asia/Singapore")
+  inventoryMode           PackInventoryMode              @default(PHYSICAL_REQUIRED)
   isActive                Boolean                        @default(true)
   startsAt                DateTime?
   endsAt                  DateTime?
@@ -530,6 +558,7 @@ model PackPrizeInventoryAllocation {
   pack                  Pack                               @relation(fields: [packId], references: [id], onDelete: Cascade)
   packPrize             PackPrize                          @relation(fields: [packPrizeId], references: [id], onDelete: Cascade)
   vendorInventoryItem   VendorInventoryItem                @relation(fields: [vendorInventoryItemId], references: [id], onDelete: Restrict)
+  custodyItems          CustodyItem[]
 
   @@unique([packPrizeId, vendorInventoryItemId])
   @@index([vendorId, vendorInventoryItemId])
@@ -590,6 +619,7 @@ model WalletEntry {
   @@index([vendorId, createdAt])
   @@index([walletAccountId, createdAt])
   @@index([requestId])
+  @@unique([idempotencyScopeKey])
 }
 
 model IdempotencyKey {
@@ -669,6 +699,7 @@ model CustodyItem {
   packPrizeId     String
   drawOrderId     String
   drawResultId    String            @unique
+  packPrizeInventoryAllocationId String?
   status          CustodyItemStatus @default(HELD)
   provider        CustodyProvider   @default(ORIPA_INTERNAL)
   providerItemId  String?
@@ -682,6 +713,8 @@ model CustodyItem {
   rarity          String?
   catalogSnapshot Json?
   estimatedValue  Int?
+  estimatedValueSource String?
+  estimatedValueAsOf DateTime?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   Vendor          Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
@@ -690,12 +723,51 @@ model CustodyItem {
   packPrize       PackPrize         @relation(fields: [packPrizeId], references: [id], onDelete: Restrict)
   drawOrder       DrawOrder         @relation(fields: [drawOrderId], references: [id], onDelete: Cascade)
   drawResult      DrawResult        @relation(fields: [drawResultId], references: [id], onDelete: Cascade)
+  inventoryAllocation PackPrizeInventoryAllocation? @relation(fields: [packPrizeInventoryAllocationId], references: [id], onDelete: Restrict)
+  requests        CustodyRequest[]
 
   @@index([vendorId, createdAt])
   @@index([userId, createdAt])
   @@index([vendorId, userId, status, createdAt])
   @@index([drawOrderId])
   @@index([packPrizeId])
+  @@index([packPrizeInventoryAllocationId])
+}
+
+model CustodyRequest {
+  id            String               @id @default(cuid())
+  vendorId      String
+  userId        String
+  custodyItemId String
+  type          CustodyRequestType
+  status        CustodyRequestStatus @default(PENDING)
+  customerNote  String?
+  opsNote       String?
+  quoteAmount   Int?
+  quoteCurrency String?
+  buybackPercent Int?
+  policyVersion String?
+  valueSource   String?
+  valueAsOf     DateTime?
+  expiresAt     DateTime?
+  acceptedAt    DateTime?
+  creditedAt    DateTime?
+  idempotencyKey String?
+  idempotencyScopeKey String? @unique
+  walletEntryId String?
+  requestedAt   DateTime             @default(now())
+  reviewedAt    DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  vendor        Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  custodyItem   CustodyItem          @relation(fields: [custodyItemId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, userId, status, requestedAt])
+  @@index([custodyItemId, status])
+  @@index([vendorId, type, status, requestedAt])
+  @@index([expiresAt])
 }
 
 model DrawFairnessProof {

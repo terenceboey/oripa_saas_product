@@ -1,0 +1,41 @@
+{
+  "captured_at_utc": "2026-06-08T14-36-32Z",
+  "artifacts": [
+    {
+      "name": "phygitals_available",
+      "url": "https://api.phygitals.com/api/vm/available?includeRepacks=true",
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "bytes": 195161,
+      "sha256": "ae5a003ba3c1cc06e34f46ba8b20c9c28cb7fb1755711d3ff14fbdf6d87afb43",
+      "path": "docs/reference-artifacts/2026-06-08T14-36-32Z/phygitals_available.json"
+    },
+    {
+      "name": "collectorcrypt_status",
+      "url": "https://gacha.collectorcrypt.com/api/status",
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 3261,
+      "sha256": "7ec847a6efeebbc0a9913a516a3a18b8e1b14fb61d48fdcb22e36e8bb9255848",
+      "path": "docs/reference-artifacts/2026-06-08T14-36-32Z/collectorcrypt_status.json"
+    },
+    {
+      "name": "collectorcrypt_stats_linked_send_nft_spin",
+      "url": "https://gacha.collectorcrypt.com/api/stats?data=linkedSendNftAndSpinTxns",
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 46820,
+      "sha256": "5d33775ca6bd80f049fd8836f6131b1fcd573a80fa36adeb355cce6ae8b8303f",
+      "path": "docs/reference-artifacts/2026-06-08T14-36-32Z/collectorcrypt_stats_linked_send_nft_spin.json"
+    },
+    {
+      "name": "collectorcrypt_machines",
+      "url": "https://gacha.collectorcrypt.com/api/machines",
+      "status": 200,
+      "content_type": "application/json",
+      "bytes": 19430,
+      "sha256": "67ef006b050a80fc7735329b64de131eddc97237a87e4a01760d25b81ed7bea1",
+      "path": "docs/reference-artifacts/2026-06-08T14-36-32Z/collectorcrypt_machines.json"
+    }
+  ]
+}
