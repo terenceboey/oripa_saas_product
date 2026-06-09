@@ -42,7 +42,7 @@ Oripa is **backend-close but product-incomplete** versus Phygitals and Collector
 
 The local repo already has the important safety substrate: backend harness passes, build passes, Prisma validates, custody state machine exists, buyback quote/acceptance exists, ops custody routes exist, fairness proof route exists, pack availability is fail-closed, and physical inventory allocation is being enforced. The remaining gap is not “more gambling logic”; it is **full customer/operator product surface + economics visibility + demo-proof workflows**.
 
-Do **not** jump to live Phygitals/Collector Crypt provider adapters yet. The next winning move is to make local Oripa feel like a real gacha-custody product using internal data only: customer backpack, post-rip decision screen, ops custody queue, pack economics/status display, live activity feed, and browser smoke tests. Evidence packet constraints: local repo only; no production DB writes, no live migrations, no restarts, no deploy/push/PR. 
+Do **not** jump to live Phygitals/Collector Crypt provider adapters yet. The next winning move is to make local Oripa feel like a real gacha-custody product using internal data only: customer backpack, post-rip decision screen, ops custody queue, pack economics/status display, live activity feed, and browser smoke tests. Evidence packet constraints: local repo only; no production DB writes, no live migrations, no restarts, no deploy/push/PR.
 
 ---
 
@@ -907,9 +907,8 @@ Use:
 
 ## Evidence Notes
 
-The evidence packet shows the current repo baseline is already strong: `npm test`, `npm lint`, Prisma validation, and `npm build` pass, while `npm audit` reports a moderate PostCSS/Next advisory where the suggested forced fix is unsafe because it would install an old breaking Next version. The packet also shows existing backend endpoints for customer summary/items/draws, buyback quote/accept, redemption request, ops custody queue, pack availability, draw fairness, and inventory allocation. 
+The evidence packet shows the current repo baseline is already strong: `npm test`, `npm lint`, Prisma validation, and `npm build` pass, while `npm audit` reports a moderate PostCSS/Next advisory where the suggested forced fix is unsafe because it would install an old breaking Next version. The packet also shows existing backend endpoints for customer summary/items/draws, buyback quote/accept, redemption request, ops custody queue, pack availability, draw fairness, and inventory allocation.
 
-The public reference captures show Phygitals and Collector Crypt expose product confidence fields Oripa should mirror conceptually: EV, min/max value, buyback percent, machine status, stock, odds, tier ranges, free/turbo/points incentives, and activity/status fields. The implementation should use those as **feature inspiration**, not as a reason to activate external adapters. 
+The public reference captures show Phygitals and Collector Crypt expose product confidence fields Oripa should mirror conceptually: EV, min/max value, buyback percent, machine status, stock, odds, tier ranges, free/turbo/points incentives, and activity/status fields. The implementation should use those as **feature inspiration**, not as a reason to activate external adapters.
 
 Final priority order: **customer backpack → post-rip actions → ops custody UI → economics/status projection → activity feed → fairness copy → local smoke tests → dependency advisory review → provider stubs.**
-

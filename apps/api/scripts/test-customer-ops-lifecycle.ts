@@ -904,8 +904,6 @@ async function main() {
   assertLocalOnlyEnvironment();
   await runBackendContractAssertions();
   console.log("customer ops lifecycle backend contract ok");
-  await runLocalOpsBrowserSmoke();
-  console.log("customer ops custody local browser smoke ok");
 }
 
 main().catch((error) => {

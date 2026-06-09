@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../lib/media-url";
-import { PublicActivityFeed } from "./public-activity-feed";
 
 type Banner = {
   id: string;
@@ -26,35 +25,6 @@ type Prize = {
   dropRatePercent?: number;
 };
 
-type PackAvailability = {
-  visible?: boolean;
-  openable?: boolean;
-  status?: string | null;
-  reasonCode?: string | null;
-  errorMessage?: string | null;
-};
-
-type PackProjection = {
-  pricePoints?: number | null;
-  estimatedEv?: number | null;
-  minValue?: number | null;
-  maxValue?: number | null;
-  buybackPercent?: number | null;
-  valueAsOf?: string | null;
-  valueFresh?: boolean | null;
-  stock?: {
-    total?: number | null;
-    remaining?: number | null;
-  } | null;
-  availability?: PackAvailability | null;
-};
-
-type PullStats = {
-  lastPull?: string | null;
-  lastPullAt?: string | null;
-  pullsLast7Days?: number | null;
-};
-
 type Pack = {
   id: string;
   title: string;
@@ -66,18 +36,6 @@ type Pack = {
   limitedLabel?: string | null;
   createdAt: string;
   prizes: Prize[];
-  status?: string | null;
-  availability?: PackAvailability | null;
-  machineProjection?: PackProjection | null;
-  economicsProjection?: PackProjection | null;
-  packMachineProjection?: PackProjection | null;
-  economics?: PackProjection | null;
-  lastPull?: string | null;
-  lastPullAt?: string | null;
-  pullsLast7Days?: number | null;
-  pulls7d?: number | null;
-  sevenDayPulls?: number | null;
-  activity?: PullStats | null;
 };
 
 type Wallet = {
@@ -144,60 +102,6 @@ function responsiveImageFromBase(url?: string | null) {
     return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
   }
   return { mobile: resolved, desktop: resolved, fallback: resolved };
-}
-
-function formatPoints(value?: number | null) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
-  return `${value.toLocaleString()} pts`;
-}
-
-function formatPercent(value?: number | null) {
-  if (typeof value !== "number" || !Number.isFinite(value)) return null;
-  return `${value.toFixed(value >= 10 ? 1 : 2)}%`;
-}
-
-function formatDateTime(value?: string | null) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleString();
-}
-
-function getPackEconomics(pack: Pack) {
-  return pack.machineProjection ?? pack.economicsProjection ?? pack.packMachineProjection ?? pack.economics ?? null;
-}
-
-function hasFreshValues(projection: PackProjection | null | undefined) {
-  return projection?.valueFresh === true;
-}
-
-function getPullStats(pack: Pack) {
-  return {
-    lastPullAt: pack.lastPullAt ?? pack.lastPull ?? pack.activity?.lastPullAt ?? pack.activity?.lastPull ?? null,
-    pullsLast7Days: pack.pullsLast7Days ?? pack.pulls7d ?? pack.sevenDayPulls ?? pack.activity?.pullsLast7Days ?? null,
-  };
-}
-
-function formatAvailabilityReason(pack: Pack, projection: PackProjection | null | undefined) {
-  const availability = projection?.availability ?? pack.availability;
-  if (!availability) return "This pack is not open right now.";
-  if (availability.errorMessage?.trim()) return availability.errorMessage.trim();
-  if (availability.reasonCode?.trim()) {
-    return availability.reasonCode.replaceAll("_", " ").toLowerCase();
-  }
-  if (availability.status?.trim()) {
-    return availability.status.replaceAll("_", " ").toLowerCase();
-  }
-  return "This pack is not open right now.";
-}
-
-function isPackOpen(pack: Pack, projection: PackProjection | null | undefined) {
-  const availability = projection?.availability ?? pack.availability;
-  const remainingStock = projection?.stock?.remaining ?? pack.remainingStock;
-  if (availability?.openable === false) return false;
-  if (availability?.status && availability.status.toLowerCase() !== "open") return false;
-  if (pack.status && ["draft", "archived", "paused", "disabled", "closed"].includes(pack.status.toLowerCase())) return false;
-  return remainingStock > 0;
 }
 
 export default function HomePage() {
@@ -390,8 +294,6 @@ export default function HomePage() {
           {user ? (
             <button type="button" className="sort-pill" onClick={logout}>Logout</button>
           ) : null}
-          {user ? <Link className="sort-pill" href="/customer/items">My Backpack</Link> : null}
-          {user ? <Link className="sort-pill" href="/customer/wallet">Wallet</Link> : null}
           <a className="sort-pill" href="/setlists">Setlists</a>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
@@ -487,142 +389,75 @@ export default function HomePage() {
         {error ? <p className="error">{error}</p> : null}
       </section>
 
-      <PublicActivityFeed
-        apiBase={apiBase}
-        title="Recent pulls"
-        description="A public snapshot of recent pulls across the storefront. Buyback and redemption activity are not available yet."
-        emptyMessage="No public pulls yet."
-        limit={12}
-        className="public-activity-home"
-      />
-
       <section className="pack-grid">
         {sortedPacks.map((pack) => (
           <article className="card pack-card" key={pack.id}>
             {(() => {
-              const projection = getPackEconomics(pack);
-              const valueFresh = hasFreshValues(projection);
-              const pullStats = getPullStats(pack);
-              const lastPullLabel = formatDateTime(pullStats.lastPullAt);
-              const packOpen = isPackOpen(pack, projection);
-              const priceLabel = formatPoints(projection?.pricePoints ?? pack.pricePoints);
-              const valueAsOfLabel = formatDateTime(projection?.valueAsOf);
               const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBanner);
               return (
-                <>
-                  <picture>
-                    <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
-                    <source srcSet={image.desktop} type="image/webp" />
-                    <img
-                      className="pack-card-banner"
-                      src={image.fallback}
-                      alt={`${pack.title} banner`}
-                      loading="lazy"
-                      decoding="async"
-                      onError={(e) => {
-                        e.currentTarget.src = defaultPackBannerMobile;
-                      }}
-                    />
-                  </picture>
-                  <div className="pack-header">
-                    <h2>{pack.title}</h2>
-                    <div className="pack-badges">
-                      {pack.isNew ? <span className="badge">New</span> : null}
-                      {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
-                      {!packOpen ? <span className="badge warn">Closed</span> : null}
-                    </div>
-                  </div>
-
-                  <p className="muted remaining-text">Remaining {projection?.stock?.remaining ?? pack.remainingStock}/{projection?.stock?.total ?? pack.totalStock}</p>
-
-                  <div className="prize-list" style={{ gap: 8 }}>
-                    {!packOpen ? <div className="prize-row"><div><strong>Availability</strong><div className="muted tiny">{formatAvailabilityReason(pack, projection)}</div></div></div> : null}
-                    {valueFresh ? (
-                      <>
-                        <div className="prize-row">
-                          <div>
-                            <strong>Estimated EV</strong>
-                            <div className="muted tiny">{formatPoints(projection?.estimatedEv) ?? "Not available"}</div>
-                          </div>
-                          <div className="rate-block">
-                            <div className="rate">{formatPercent(projection?.buybackPercent) ?? "-"}</div>
-                            <div className="muted tiny">Buyback policy</div>
-                          </div>
-                        </div>
-                        <div className="prize-row">
-                          <div>
-                            <strong>Value band</strong>
-                            <div className="muted tiny">
-                              {[formatPoints(projection?.minValue), formatPoints(projection?.maxValue)].filter(Boolean).join(" - ") || "Not available"}
-                            </div>
-                          </div>
-                          <div className="rate-block">
-                            <div className="muted tiny">{valueAsOfLabel ? `As of ${valueAsOfLabel}` : "Fresh value data"}</div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="prize-row">
-                        <div>
-                          <strong>Value outlook</strong>
-                          <div className="muted tiny">
-                            {projection ? "Value data is unavailable or stale right now." : "Value data is not available yet."}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div className="prize-row">
-                      <div>
-                        <strong>Pull activity</strong>
-                        <div className="muted tiny">
-                          {lastPullLabel || typeof pullStats.pullsLast7Days === "number"
-                            ? [lastPullLabel ? `Last pull ${lastPullLabel}` : null, typeof pullStats.pullsLast7Days === "number" ? `${pullStats.pullsLast7Days.toLocaleString()} pulls in 7 days` : null].filter(Boolean).join(" | ")
-                            : "Pull activity not available yet."}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="prize-list">
-                    {pack.prizes.map((prize) => (
-                      <div className="prize-row" key={prize.id}>
-                        <div>
-                          <strong>{prize.label}</strong>
-                          <div className="muted tiny">
-                            {valueFresh ? `Est. ${prize.estimatedValue.toLocaleString()} pts` : "Value hidden until projection is fresh"}
-                          </div>
-                        </div>
-                        <div className="rate-block">
-                          <div className="rate">{(prize.dropRatePercent ?? 0).toFixed(4)}%</div>
-                          <div className="muted tiny">Stock {prize.remainingStock}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="price-line">
-                    <span className="muted">1 draw</span>
-                    <strong>{priceLabel ?? `${pack.pricePoints.toLocaleString()} pts`}</strong>
-                  </div>
-
-                  <div className="actions">
-                    <Link href={`/pack/${pack.id}`} className="draw-button link-button">
-                      Open Draw Page
-                    </Link>
-                  </div>
-                </>
+                <picture>
+                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
+                  <source srcSet={image.desktop} type="image/webp" />
+                  <img
+                    className="pack-card-banner"
+                    src={image.fallback}
+                    alt={`${pack.title} banner`}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultPackBannerMobile;
+                    }}
+                  />
+                </picture>
               );
             })()}
+            <div className="pack-header">
+              <h2>{pack.title}</h2>
+              <div className="pack-badges">
+                {pack.isNew ? <span className="badge">New</span> : null}
+                {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
+              </div>
+            </div>
+
+            <p className="muted remaining-text">Remaining {pack.remainingStock}/{pack.totalStock}</p>
+
+            <div className="prize-list">
+              {pack.prizes.map((prize) => (
+                <div className="prize-row" key={prize.id}>
+                  <div>
+                    <strong>{prize.label}</strong>
+                    <div className="muted tiny">Est. {prize.estimatedValue.toLocaleString()} pts</div>
+                  </div>
+                  <div className="rate-block">
+                    <div className="rate">{(prize.dropRatePercent ?? 0).toFixed(4)}%</div>
+                    <div className="muted tiny">Stock {prize.remainingStock}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="price-line">
+              <span className="muted">1 draw</span>
+              <strong>{pack.pricePoints.toLocaleString()} pts</strong>
+            </div>
+
+            <div className="actions">
+              <Link href={`/pack/${pack.id}`} className="draw-button link-button">
+                Open Draw Page
+              </Link>
+            </div>
           </article>
         ))}
       </section>
 
       <footer className="site-footer">
-        <a className="sort-pill" href="/customer/items">My Backpack</a>
-        <a className="sort-pill" href="/customer/wallet">Wallet</a>
         <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
       </footer>
     </main>
   );
 }
+
+
+
+
 
