@@ -54,7 +54,12 @@ type CustodyRequest = {
   status: CustodyRequestStatus;
   quoteAmount: number | null;
   quoteCurrency: string | null;
+  buybackPercent?: number | null;
+  valueSource?: string | null;
+  valueAsOf?: string | null;
   expiresAt: string | null;
+  acceptedAt?: string | null;
+  creditedAt?: string | null;
 };
 
 type DrawResult = {
@@ -97,6 +102,7 @@ type ResultActionFeedback = {
   kind: "success" | "error";
   message: string;
   quote?: CustodyRequest | null;
+  walletBalancePoints?: number | null;
 };
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -147,6 +153,30 @@ function formatExpiry(value?: string | null) {
   return `Expires ${new Date(value).toLocaleString()}`;
 }
 
+function formatQuoteAmount(amount: number | null, currency: string | null) {
+  if (amount == null) return "Quote pending";
+  const code = currency?.trim() || "POINTS";
+  return `${amount.toLocaleString()} ${code}`;
+}
+
+function formatValueSource(value?: string | null) {
+  if (!value) return "Unknown";
+  return value.replaceAll("_", " ").toLowerCase();
+}
+
+function buildAcceptMessage(request: CustodyRequest, walletBalancePoints: number | null) {
+  const quoteLabel = formatQuoteAmount(request.quoteAmount, request.quoteCurrency);
+  const walletLabel = walletBalancePoints == null ? null : `Current points balance: ${walletBalancePoints.toLocaleString()}.`;
+  if (request.status === "CREDITED" || request.creditedAt) {
+    return [`Buyback credited for ${quoteLabel}.`, walletLabel].filter(Boolean).join(" ");
+  }
+  return [`Buyback request submitted for ${quoteLabel}.`, walletLabel].filter(Boolean).join(" ");
+}
+
+function buildQuoteIdempotencyKey() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+}
+
 function isActiveCustodyStatus(value?: string | null) {
   return !!value && activeCustodyRequestStatuses.has(value);
 }
@@ -178,7 +208,9 @@ export default function PackDrawPage() {
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const [resultActionState, setResultActionState] = useState<ResultActionState>(null);
+  const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
   const [resultActionFeedback, setResultActionFeedback] = useState<Record<string, ResultActionFeedback>>({});
+  const [buybackQuoteKeys, setBuybackQuoteKeys] = useState<Record<string, string>>({});
   const [custodyActionsAvailable, setCustodyActionsAvailable] = useState<boolean | null>(null);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
@@ -235,6 +267,14 @@ export default function PackDrawPage() {
 
   useBackForwardRefresh(loadData, { cooldownMs: 15000 });
 
+  const loadWallet = useCallback(async () => {
+    const walletResponse = await fetch(`${apiBase}/v1/wallet`, { headers, credentials: "include", cache: "no-store" });
+    if (!walletResponse.ok) throw new Error("Failed to load wallet");
+    const walletPayload = await walletResponse.json();
+    setWallet(walletPayload.wallet ?? null);
+    return walletPayload.wallet ?? null;
+  }, [headers]);
+
   async function handleDraw(quantity: number) {
     if (!pack) return;
     setDrawing(true);
@@ -271,6 +311,19 @@ export default function PackDrawPage() {
     if (!itemId) return;
     if (resultActionState?.itemId === itemId) return;
 
+    const existingFeedback = resultActionFeedback[itemId];
+    if (action === "buyback" && existingFeedback?.quote && (existingFeedback.quote.status === "QUOTED" || existingFeedback.quote.status === "EXPIRED")) {
+      setResultActionFeedback((prev) => ({
+        ...prev,
+        [itemId]: {
+          ...existingFeedback,
+          kind: "success",
+          message: isQuoteExpired(existingFeedback.quote?.expiresAt) ? "This quote has expired." : "Active buyback quote loaded below.",
+        },
+      }));
+      return;
+    }
+
     setResultActionState({ itemId, action });
     setResultActionFeedback((prev) => {
       const next = { ...prev };
@@ -279,7 +332,10 @@ export default function PackDrawPage() {
     });
     setError(null);
 
-    const idempotencyKey = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
+    const idempotencyKey = buybackQuoteKeys[itemId] ?? (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`);
+    if (action === "buyback" && !buybackQuoteKeys[itemId]) {
+      setBuybackQuoteKeys((prev) => ({ ...prev, [itemId]: idempotencyKey }));
+    }
     const path = action === "redemption" ? "redemption-requests" : "buyback-quotes";
 
     try {
@@ -308,6 +364,7 @@ export default function PackDrawPage() {
           kind: "success",
           message: action === "redemption" ? "Redemption request submitted." : "Buyback quote ready.",
           quote: payload.quote ?? null,
+          walletBalancePoints: wallet?.balancePoints ?? null,
         },
       }));
       setLastDraw((prev) => prev ? {
@@ -324,10 +381,79 @@ export default function PackDrawPage() {
           action,
           kind: "error",
           message: err instanceof Error ? err.message : `Failed to request ${action}`,
+          walletBalancePoints: wallet?.balancePoints ?? null,
         },
       }));
     } finally {
       setResultActionState(null);
+    }
+  }
+
+  async function acceptBuybackQuote(itemId: string | null | undefined, quote: CustodyRequest | null | undefined) {
+    if (!itemId || !quote) return;
+    if (isQuoteExpired(quote.expiresAt) || quote.status === "EXPIRED") {
+      setResultActionFeedback((prev) => ({
+        ...prev,
+        [itemId]: {
+          itemId,
+          action: "buyback",
+          kind: "error",
+          message: "This quote expired and cannot be accepted.",
+          quote: { ...quote, status: "EXPIRED" },
+          walletBalancePoints: wallet?.balancePoints ?? null,
+        },
+      }));
+      return;
+    }
+
+    setAcceptingQuoteId(quote.id);
+    setError(null);
+    try {
+      const response = await fetch(`${apiBase}/v1/customer/buyback-quotes/${quote.id}/accept`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "content-type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({}),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error ?? "Failed to accept buyback quote");
+      const refreshedWallet = await loadWallet();
+      const request = payload.request ?? quote;
+      setResultActionFeedback((prev) => ({
+        ...prev,
+        [itemId]: {
+          itemId,
+          action: "buyback",
+          kind: "success",
+          message: buildAcceptMessage(request, refreshedWallet?.balancePoints ?? null),
+          quote: request,
+          walletBalancePoints: refreshedWallet?.balancePoints ?? null,
+        },
+      }));
+      setLastDraw((prev) => prev ? {
+        ...prev,
+        draws: prev.draws.map((draw) => draw.custodyItemId === itemId
+          ? { ...draw, custodyStatus: payload.item?.status ?? "BUYBACK_REQUESTED" }
+          : draw),
+      } : prev);
+      await loadData();
+    } catch (err) {
+      setResultActionFeedback((prev) => ({
+        ...prev,
+        [itemId]: {
+          itemId,
+          action: "buyback",
+          kind: "error",
+          message: err instanceof Error ? err.message : "Failed to accept buyback quote",
+          quote,
+          walletBalancePoints: wallet?.balancePoints ?? null,
+        },
+      }));
+    } finally {
+      setAcceptingQuoteId(null);
     }
   }
 
@@ -491,9 +617,12 @@ export default function PackDrawPage() {
                   const custodyItemId = draw.custodyItemId ?? null;
                   const busy = !!custodyItemId && resultActionState?.itemId === custodyItemId;
                   const feedback = custodyItemId ? resultActionFeedback[custodyItemId] : null;
+                  const quote = feedback?.quote ?? null;
+                  const expired = !!quote && isQuoteExpired(quote.expiresAt);
+                  const acceptBusy = acceptingQuoteId === quote?.id;
                   const unavailable = !custodyItemId || custodyActionsAvailable === false;
                   const activeRequest = isActiveCustodyStatus(draw.custodyStatus);
-                  const canAct = !!custodyItemId && custodyActionsAvailable !== false && !busy && !activeRequest;
+                  const canAct = !!custodyItemId && custodyActionsAvailable !== false && !busy && !activeRequest && !quote;
                   const buybackBusy = busy && resultActionState?.action === "buyback";
                   const redemptionBusy = busy && resultActionState?.action === "redemption";
                   return (
@@ -529,9 +658,30 @@ export default function PackDrawPage() {
                         {feedback ? (
                           <div className={feedback.kind === "success" ? "pending-request-banner" : "inline-error-banner"}>
                             <strong>{feedback.message}</strong>
-                            {feedback.quote ? <span>{feedback.quote.quoteAmount?.toLocaleString() ?? "Quote details missing"} {feedback.quote.quoteCurrency ?? "pts"}</span> : null}
+                            {feedback.quote ? <span>{formatQuoteAmount(feedback.quote.quoteAmount ?? null, feedback.quote.quoteCurrency ?? null)}</span> : null}
                             {feedback.kind === "success" && feedback.action === "buyback" && !feedback.quote ? <span>Quote details were not returned. Refresh backpack before accepting.</span> : null}
-                            {feedback.quote ? <small>{formatExpiry(feedback.quote.expiresAt)}</small> : null}
+                            {feedback.walletBalancePoints != null ? <small>Current points balance: {feedback.walletBalancePoints.toLocaleString()}</small> : null}
+                            {feedback.quote ? (
+                              <>
+                                <small>Buyback rate {feedback.quote.buybackPercent != null ? `${feedback.quote.buybackPercent}%` : "Not available"}</small>
+                                <small>Value source {formatValueSource(feedback.quote.valueSource)}</small>
+                                <small>Value as of {feedback.quote.valueAsOf ? new Date(feedback.quote.valueAsOf).toLocaleString() : "Not available"}</small>
+                                <small>{formatExpiry(feedback.quote.expiresAt)}</small>
+                              </>
+                            ) : null}
+                          </div>
+                        ) : null}
+                        {quote ? (
+                          <div className={expired ? "inline-error-banner" : "pending-request-banner"}>
+                            <strong>Buyback quote card</strong>
+                            <span>{formatQuoteAmount(quote.quoteAmount ?? null, quote.quoteCurrency ?? null)}</span>
+                            <small>Buyback rate {quote.buybackPercent != null ? `${quote.buybackPercent}%` : "Not available"}</small>
+                            <small>Value source {formatValueSource(quote.valueSource)}</small>
+                            <small>Value as of {quote.valueAsOf ? new Date(quote.valueAsOf).toLocaleString() : "Not available"}</small>
+                            <small>{formatExpiry(quote.expiresAt)}</small>
+                            <button type="button" className="draw-button alt" disabled={acceptBusy || expired} onClick={() => void acceptBuybackQuote(custodyItemId, quote)}>
+                              {acceptBusy ? "Submitting..." : expired ? "Quote expired" : "Accept Buyback Quote"}
+                            </button>
                           </div>
                         ) : null}
                       </div>
@@ -558,6 +708,5 @@ export default function PackDrawPage() {
     </main>
   );
 }
-
 
 
