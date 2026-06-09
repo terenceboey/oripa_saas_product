@@ -10,6 +10,7 @@ import { vendorRouter } from "./modules/vendors/router";
 import { packRouter } from "./modules/packs/router";
 import { packTemplateRouter } from "./modules/packs/templates-router";
 import { drawRouter } from "./modules/draws/router";
+import { activityRouter } from "./modules/activity/router";
 import { walletRouter } from "./modules/wallet/router";
 import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
@@ -111,6 +112,7 @@ export function createApp() {
   app.use(packRouter);
   app.use(packTemplateRouter);
   app.use(drawRouter);
+  app.use(activityRouter);
   app.use(walletRouter);
   app.use(bannerRouter);
   app.use(authRouter);
