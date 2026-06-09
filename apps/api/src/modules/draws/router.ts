@@ -3,86 +3,17 @@ import { Router } from "express";
 import { drawSchema } from "@oripa/shared";
 import { prisma } from "../../lib/prisma";
 import { VendorRequest } from "../../middleware/vendor";
-import { createHash, createHmac, randomBytes, randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import { getRequestUserId } from "../../lib/rbac";
 import { resolveDrawPoolIntegrity } from "./pool-integrity";
+import { ALGORITHM_VERSION, computeFairnessSelection, computeServerSeedHash, type DrawFairnessPrizeState } from "./fairness";
 import { commitInventoryAllocationForPrizeDraw } from "../packs/inventory-allocation";
+import { evaluatePackAvailability, packAvailabilityErrorResponse, type PackAvailability } from "../packs/availability";
 
-const ALGORITHM_VERSION = "hmac_sha256_v1";
-
-type PrizeState = {
-  id: string;
-  label: string;
-  weight: number;
-  remainingStock: number;
-};
-
-function sha256Hex(value: string) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function hmacSha256Hex(key: string, message: string) {
-  return createHmac("sha256", key).update(message).digest("hex");
-}
-
-function hmacToUnitFloat(hmacHex: string) {
-  const first13Hex = hmacHex.slice(0, 13);
-  const intVal = Number.parseInt(first13Hex, 16);
-  return intVal / Math.pow(2, 52);
-}
-
-function tierFromLabel(label: string | null | undefined) {
-  if (!label) return null;
-  const idx = label.indexOf(" - ");
-  return idx > 0 ? label.slice(0, idx).trim() : null;
-}
-
-function selectDeterministicPrize(prizes: PrizeState[], rand01: number) {
-  const available = prizes
-    .filter((p) => p.remainingStock > 0 && p.weight > 0)
-    .sort((a, b) => a.id.localeCompare(b.id));
-
-  const totalWeight = available.reduce((sum, p) => sum + p.weight, 0);
-  if (!available.length || totalWeight <= 0) {
-    return {
-      selected: null,
-      lowerBound: null,
-      upperBound: null,
-      totalWeight,
-      randomWeightValue: 0,
-      eligiblePrizeIds: [] as string[],
-    };
+class PackAvailabilityRouteError extends Error {
+  constructor(public readonly availability: PackAvailability) {
+    super(availability.errorMessage ?? "Pack is not available");
   }
-
-  const randomWeightValue = Math.floor(rand01 * totalWeight) + 1;
-  let cursor = 0;
-
-  for (const prize of available) {
-    const lower = cursor + 1;
-    cursor += prize.weight;
-    const upper = cursor;
-
-    if (randomWeightValue >= lower && randomWeightValue <= upper) {
-      return {
-        selected: prize,
-        lowerBound: lower,
-        upperBound: upper,
-        totalWeight,
-        randomWeightValue,
-        eligiblePrizeIds: available.map((row) => row.id),
-      };
-    }
-  }
-
-  const fallback = available[available.length - 1];
-  return {
-    selected: fallback,
-    lowerBound: Math.max(1, totalWeight - fallback.weight + 1),
-    upperBound: totalWeight,
-    totalWeight,
-    randomWeightValue,
-    eligiblePrizeIds: available.map((row) => row.id),
-  };
 }
 
 export const drawRouter = Router();
@@ -127,22 +58,37 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
         where: {
           id: packId,
           vendorId,
-          isActive: true,
-          status: "LIVE",
-          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-          AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: now } }] }],
         },
       });
       if (!pack) throw new Error("Pack not found or inactive");
-      if (pack.remainingStock < quantity) throw new Error("Not enough stock remaining");
+
+      const staticAvailability = evaluatePackAvailability({
+        pack,
+        now,
+        quantity,
+        isAuthenticated: true,
+      });
+      if (!staticAvailability.openable && staticAvailability.reasonCode !== "insufficient_balance") {
+        throw new PackAvailabilityRouteError(staticAvailability);
+      }
 
       const wallet = await tx.walletAccount.findUnique({
         where: { vendorId_userId: { vendorId, userId: actorUserId } },
       });
       if (!wallet) throw new Error("Wallet not found for user");
 
+      const availability = evaluatePackAvailability({
+        pack,
+        now,
+        quantity,
+        isAuthenticated: true,
+        walletBalancePoints: wallet.balancePoints,
+      });
+      if (!availability.openable) {
+        throw new PackAvailabilityRouteError(availability);
+      }
+
       const totalCost = pack.pricePoints * quantity;
-      if (wallet.balancePoints < totalCost) throw new Error("Insufficient balance");
       const balanceBefore = wallet.balancePoints;
       const balanceAfter = wallet.balancePoints - totalCost;
 
@@ -180,7 +126,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
 
       const packPrizes = await tx.packPrize.findMany({ where: { packId: pack.id } });
       const prizeLookup = new Map(packPrizes.map((prize) => [prize.id, prize]));
-      const prizeState: PrizeState[] = packPrizes.map((prize) => ({
+      const prizeState: DrawFairnessPrizeState[] = packPrizes.map((prize) => ({
         id: prize.id,
         label: prize.label,
         weight: prize.weight,
@@ -190,7 +136,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
       const { poolSnapshotHash, poolSnapshotJson } = resolveDrawPoolIntegrity(pack, packPrizes);
 
       const serverSeed = randomBytes(32).toString("hex");
-      const serverSeedHash = sha256Hex(serverSeed);
+      const serverSeedHash = computeServerSeedHash(serverSeed);
       const clientSeed = String(req.header("x-client-seed") ?? "").trim() || randomUUID();
       const nonceBase = randomUUID();
 
@@ -243,28 +189,36 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
         prizeId: string | null;
         prizeLabel: string | null;
         prizeImageUrl: string | null;
+        custodyItemId: string | null;
+        custodyStatus: string | null;
       }[] = [];
 
       const selectionRows: Prisma.DrawFairnessSelectionCreateManyInput[] = [];
 
       for (let i = 0; i < quantity; i += 1) {
         const drawSequence = i + 1;
-        const hmacHex = hmacSha256Hex(serverSeed, `${clientSeed}:${nonceBase}:${drawSequence}`);
-        const randomFloat = hmacToUnitFloat(hmacHex);
-        const rowSeedHex = hmacSha256Hex(serverSeed, `${clientSeed}:row:${nonceBase}:${drawSequence}`);
-
-        const selectedResult = selectDeterministicPrize(prizeState, randomFloat);
-        const selected = selectedResult.selected;
+        const fairnessSelection = computeFairnessSelection({
+          serverSeed,
+          clientSeed,
+          nonceBase,
+          drawSequence,
+          prizes: prizeState,
+        });
+        const selected = fairnessSelection.chosenPackPrizeId
+          ? prizeState.find((row) => row.id === fairnessSelection.chosenPackPrizeId) ?? null
+          : null;
+        let inventoryAllocation: { id: string } | null = null;
 
         if (selected) {
           await tx.packPrize.update({
             where: { id: selected.id },
             data: { remainingStock: { decrement: 1 } },
           });
-          await commitInventoryAllocationForPrizeDraw(tx, {
+          inventoryAllocation = await commitInventoryAllocationForPrizeDraw(tx, {
             vendorId,
             packId: pack.id,
             packPrizeId: selected.id,
+            inventoryMode: (pack as { inventoryMode?: string | null }).inventoryMode,
           });
 
           const inMemoryRow = prizeState.find((row) => row.id === selected.id);
@@ -280,7 +234,7 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
           },
         });
 
-        await tx.drawResult.create({
+        const drawResult = await tx.drawResult.create({
           data: {
             vendorId,
             drawOrderId: drawOrder.id,
@@ -289,34 +243,58 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
             drawSequence,
             pointsSpent: pack.pricePoints,
             rngVersion: ALGORITHM_VERSION,
-            rngSeedHash: sha256Hex(`${serverSeedHash}:${clientSeed}:${nonceBase}:${drawSequence}:${selected?.id ?? "none"}`),
+            rngSeedHash: computeServerSeedHash(`${serverSeedHash}:${clientSeed}:${nonceBase}:${drawSequence}:${selected?.id ?? "none"}`),
             requestId,
           },
         });
+
+        const prize = selected?.id ? prizeLookup.get(selected.id) : null;
+        const custodyItem = prize
+          ? await tx.custodyItem.create({
+              data: {
+                vendorId,
+                userId: actorUserId,
+                packId: pack.id,
+                packPrizeId: prize.id,
+                drawOrderId: drawOrder.id,
+                drawResultId: drawResult.id,
+                ...(inventoryAllocation ? { packPrizeInventoryAllocationId: inventoryAllocation.id } : {}),
+                prizeLabel: prize.label,
+                imageUrl: prize.imageUrl,
+                imageLargeUrl: prize.imageLargeUrl,
+                setName: prize.setName,
+                cardName: prize.label,
+                rarity: prize.rarity,
+                catalogSnapshot: prize.catalogSnapshot ?? Prisma.JsonNull,
+                estimatedValue: prize.estimatedValue,
+              },
+            })
+          : null;
 
         selectionRows.push({
           vendorId,
           drawOrderId: drawOrder.id,
           proofId: fairnessProof.id,
           drawSequence,
-          hmacHex,
-          randomFloat: new Prisma.Decimal(randomFloat.toFixed(18)),
-          randomWeightValue: selectedResult.randomWeightValue,
-          totalWeightAtDraw: selectedResult.totalWeight,
-          tierLabel: tierFromLabel(selected?.label),
-          tierLowerBound: selectedResult.lowerBound,
-          tierUpperBound: selectedResult.upperBound,
-          rowSeedHex,
+          hmacHex: fairnessSelection.hmacHex,
+          randomFloat: new Prisma.Decimal(fairnessSelection.randomFloat.toFixed(18)),
+          randomWeightValue: fairnessSelection.randomWeightValue,
+          totalWeightAtDraw: fairnessSelection.totalWeightAtDraw,
+          tierLabel: fairnessSelection.tierLabel,
+          tierLowerBound: fairnessSelection.tierLowerBound,
+          tierUpperBound: fairnessSelection.tierUpperBound,
+          rowSeedHex: fairnessSelection.rowSeedHex,
           chosenPackPrizeId: selected?.id ?? null,
-          eligiblePrizeIds: selectedResult.eligiblePrizeIds,
+          eligiblePrizeIds: fairnessSelection.eligiblePrizeIds,
         });
 
-        const prize = selected?.id ? prizeLookup.get(selected.id) : null;
         draws.push({
           drawId: legacyDraw.id,
           prizeId: selected?.id ?? null,
           prizeLabel: prize?.label ?? null,
           prizeImageUrl: prize?.imageUrl ?? null,
+          custodyItemId: custodyItem?.id ?? null,
+          custodyStatus: custodyItem?.status ?? null,
         });
       }
 
@@ -458,6 +436,9 @@ drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
 
     return res.status(201).json(result);
   } catch (error) {
+    if (error instanceof PackAvailabilityRouteError) {
+      return res.status(400).json(packAvailabilityErrorResponse(error.availability));
+    }
     const message = error instanceof Error ? error.message : "Draw failed";
     return res.status(400).json({ error: message });
   }

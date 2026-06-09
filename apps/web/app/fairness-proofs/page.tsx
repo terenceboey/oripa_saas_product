@@ -120,6 +120,7 @@ export default function FairnessProofsPage() {
         </div>
         <div className="actions">
           <Link href="/" className="sort-pill">Back to Catalog</Link>
+          <Link href="/customer/items" className="sort-pill">My Backpack</Link>
           <button type="button" className="sort-pill" onClick={() => void loadSummaries()} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </button>

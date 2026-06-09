@@ -1,18 +1,23 @@
 import { Router } from "express";
 import { prisma } from "../../lib/prisma";
+import { getRequestUserId } from "../../lib/rbac";
 import { VendorRequest } from "../../middleware/vendor";
-import { requireVendorAccess } from "../../lib/rbac";
 
 export const walletRouter = Router();
 
 walletRouter.get("/v1/wallet", async (req: VendorRequest, res) => {
-  const auth = await requireVendorAccess(req, res, ["OWNER", "MANAGER", "STAFF"]);
-  if (!auth) return;
+  const vendorId = req.vendorId;
+  if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
 
-  const wallet = await prisma.walletAccount.findFirst({
-    where: { vendorId: auth.vendorId },
+  const userId = await getRequestUserId(req, res);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+
+  const wallet = await prisma.walletAccount.findUnique({
+    where: { vendorId_userId: { vendorId, userId } },
     include: { entries: { orderBy: { createdAt: "desc" }, take: 20 } }
   });
+
+  if (!wallet) return res.status(404).json({ error: "Wallet not found" });
 
   return res.json({ wallet });
 });

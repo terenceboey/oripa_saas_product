@@ -10,6 +10,7 @@
     "dev": "concurrently -n api,web,worker -c blue,green,yellow \"npm run dev -w @oripa/api\" \"npm run dev -w @oripa/web\" \"npm run dev -w @oripa/worker\"",
     "build": "npm run build -w @oripa/shared && npm run build -w @oripa/api && npm run build -w @oripa/web && npm run build -w @oripa/worker",
     "lint": "npm run lint -w @oripa/api && npm run lint -w @oripa/web && npm run lint -w @oripa/worker",
+    "test": "npm run test -w @oripa/api",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
     "db:studio": "prisma studio --schema prisma/schema.prisma --port 5555",
     "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",

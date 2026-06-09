@@ -13,6 +13,8 @@ import { drawRouter } from "./modules/draws/router";
 import { walletRouter } from "./modules/wallet/router";
 import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
+import { customerRouter } from "./modules/customer/router";
+import { opsRouter } from "./modules/ops/router";
 import { catalogRouter } from "./modules/catalog/router";
 import { creativeRouter } from "./modules/creative/router";
 import { setlistRouter } from "./modules/setlists/router";
@@ -112,6 +114,8 @@ export function createApp() {
   app.use(walletRouter);
   app.use(bannerRouter);
   app.use(authRouter);
+  app.use(customerRouter);
+  app.use(opsRouter);
   app.use(superAdminRouter);
   app.use(catalogRouter);
   app.use(creativeRouter);

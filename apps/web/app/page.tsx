@@ -294,6 +294,7 @@ export default function HomePage() {
           {user ? (
             <button type="button" className="sort-pill" onClick={logout}>Logout</button>
           ) : null}
+          {user ? <Link className="sort-pill" href="/customer/items">My Backpack</Link> : null}
           <a className="sort-pill" href="/setlists">Setlists</a>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>
@@ -451,6 +452,7 @@ export default function HomePage() {
       </section>
 
       <footer className="site-footer">
+        <a className="sort-pill" href="/customer/items">My Backpack</a>
         <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
       </footer>
     </main>

@@ -186,6 +186,8 @@ export function ensureCsrfCookie(res: Response, existingToken?: string | null) {
 export function validateCsrfRequest(req: Request) {
   const method = String(req.method ?? "GET").toUpperCase();
   if (method === "GET" || method === "HEAD" || method === "OPTIONS") return null;
+  const authorization = String(req.header("authorization") ?? "").trim();
+  if (authorization.startsWith("Bearer ")) return null;
   const cookieToken = getCsrfCookie(req);
   const headerToken = getCsrfHeader(req);
   if (!cookieToken || !headerToken) return "csrf token missing";
@@ -211,7 +213,7 @@ async function revokeSessionFamily(familyId: string, reason: string) {
 }
 
 async function loadActiveAccessSession(req: Request) {
-  const accessToken = getAccessCookie(req) ?? getBearerUserId(req.header("authorization") ?? undefined);
+  const accessToken = getAccessCookie(req);
   const payload = verifyAccessToken(accessToken);
   if (!payload) return null;
 
@@ -441,6 +443,14 @@ async function resolveActiveUserFromRequest(req: Request, res?: Response) {
 
   const rotated = await rotateRefreshSession(req, res);
   if (rotated) return rotated;
+
+  const bearerUserId = getBearerUserId(req.header("authorization") ?? undefined);
+  if (bearerUserId) {
+    return {
+      userId: bearerUserId,
+      session: null,
+    };
+  }
 
   if (res) {
     clearCookie(res, accessCookieName);

@@ -223,6 +223,7 @@ export default function PackDrawPage() {
       <div className="pack-draw-header">
         <Link href="/" className="sort-pill">Back to Catalog</Link>
         <div className="actions">
+          <Link href="/customer/items" className="sort-pill">My Backpack</Link>
           <Link href="/fairness-proofs" className="sort-pill">Fairness Proofs</Link>
           <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
         </div>

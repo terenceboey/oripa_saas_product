@@ -3,11 +3,21 @@ import {
   PackInventoryAllocationError,
   buildPackPrizeInventoryAllocationPlan,
   commitInventoryAllocationForPrizeDraw,
+  normalizePackInventoryMode,
   releaseHeldInventoryForPack,
+  requiresPhysicalInventoryAllocation,
   reserveInventoryForPackPublish,
 } from "../src/modules/packs/inventory-allocation";
 
 const now = new Date("2026-05-30T12:00:00.000Z");
+
+assert.equal(normalizePackInventoryMode(undefined), "PHYSICAL_REQUIRED");
+assert.equal(normalizePackInventoryMode(""), "PHYSICAL_REQUIRED");
+assert.equal(normalizePackInventoryMode("DIGITAL_NO_ALLOCATION"), "DIGITAL_NO_ALLOCATION");
+assert.equal(normalizePackInventoryMode("PILOT_NO_ALLOCATION"), "PILOT_NO_ALLOCATION");
+assert.equal(requiresPhysicalInventoryAllocation(undefined), true, "missing mode must fail closed as physical");
+assert.equal(requiresPhysicalInventoryAllocation("DIGITAL_NO_ALLOCATION"), false, "digital bypass must be explicit");
+assert.equal(requiresPhysicalInventoryAllocation("PILOT_NO_ALLOCATION"), false, "pilot bypass must be explicit");
 
 const prizeRows = [
   {
