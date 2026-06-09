@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../lib/media-url";
+import { PublicActivityFeed } from "./public-activity-feed";
 
 type Banner = {
   id: string;
@@ -485,6 +486,15 @@ export default function HomePage() {
         {error ? <p className="error">{error}</p> : null}
       </section>
 
+      <PublicActivityFeed
+        apiBase={apiBase}
+        title="Recent pulls"
+        description="A public snapshot of recent pulls across the storefront. Buyback and redemption activity are not available yet."
+        emptyMessage="No public pulls yet."
+        limit={12}
+        className="public-activity-home"
+      />
+
       <section className="pack-grid">
         {sortedPacks.map((pack) => (
           <article className="card pack-card" key={pack.id}>
@@ -613,5 +623,4 @@ export default function HomePage() {
     </main>
   );
 }
-
 

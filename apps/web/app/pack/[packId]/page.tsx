@@ -8,6 +8,7 @@ import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../../lib/media-url";
+import { PublicActivityFeed } from "../../public-activity-feed";
 
 type Prize = {
   id: string;
@@ -747,6 +748,16 @@ export default function PackDrawPage() {
               ))}
             </div>
           </section>
+
+          <PublicActivityFeed
+            apiBase={apiBase}
+            title="Recent pulls"
+            description="Recent public pulls for this pack only. Buyback and redemption activity are not available yet."
+            emptyMessage="No public pulls yet for this pack."
+            packTitle={pack.title}
+            limit={24}
+            className="public-activity-pack"
+          />
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Odds and Value Guide</h2>
