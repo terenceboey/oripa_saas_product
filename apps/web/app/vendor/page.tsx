@@ -1250,7 +1250,7 @@ export default function VendorPage() {
           items: tier.items.map((item) => ({
             label: item.label,
             estimatedValue: Number(item.estimatedValue),
-            stock: Number(item.stock),
+            stock: item.stock.trim() ? Number(item.stock) : undefined,
             imageUrl: item.imageUrl.trim() ? item.imageUrl.trim() : undefined,
             catalogItemId: item.catalogItemId,
             catalogSource: item.catalogSource,

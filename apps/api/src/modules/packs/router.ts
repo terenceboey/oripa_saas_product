@@ -213,7 +213,8 @@ function parseCsvRows(fileBuffer: Buffer) {
     const tierName = pickField(normalized, ["tier_name", "tier"]);
     const itemLabel = pickField(normalized, ["item_label", "item_name", "name"]);
     const estimatedValue = Number(pickField(normalized, ["estimated_value", "est_value", "value"]));
-    const stock = Number(pickField(normalized, ["stock", "qty", "quantity"]));
+    const stockText = pickField(normalized, ["stock", "qty", "quantity"]);
+    const stock = stockText ? Number(stockText) : 1;
     const tierPercentage = toOptionalPositiveNumber(pickField(normalized, ["tier_percentage", "percentage", "rate"]));
     const setId = pickField(normalized, ["set_id", "set"]) || undefined;
     const cardNumber = pickField(normalized, ["card_number", "number"]) || undefined;
@@ -559,8 +560,8 @@ packRouter.post("/v1/vendor/packs/import-csv", uploadCsvSingle, async (req: Vend
     },
     unmatchedRows,
     csvTemplate: {
-      requiredHeaders: ["tier_name", "item_label", "estimated_value", "stock"],
-      optionalHeaders: ["tier_percentage", "set_id", "card_number", "catalog_item_id", "source_item_id", "image_url", "game"],
+      requiredHeaders: ["tier_name", "item_label", "estimated_value"],
+      optionalHeaders: ["tier_percentage", "stock", "set_id", "card_number", "catalog_item_id", "source_item_id", "image_url", "game"],
     },
   });
 });

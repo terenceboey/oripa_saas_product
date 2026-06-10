@@ -115,10 +115,20 @@ const catalogPrizeRefSchema = z.object({
   language: z.string().min(2).max(12).optional(),
 });
 
+const optionalPackPrizeStockSchema = z.preprocess((value) => {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    return Number(trimmed);
+  }
+  return value;
+}, z.number().int().positive().default(1));
+
 const packPrizeItemSchema = catalogPrizeRefSchema.extend({
   label: z.string().min(1).max(60),
   estimatedValue: z.number().int().nonnegative(),
-  stock: z.number().int().positive(),
+  stock: optionalPackPrizeStockSchema.optional(),
   imageUrl: imageUrlSchema.optional(),
 });
 
