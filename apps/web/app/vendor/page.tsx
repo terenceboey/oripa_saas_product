@@ -409,6 +409,7 @@ export default function VendorPage() {
   const [bannerTargetUrl, setBannerTargetUrl] = useState("");
 
   const [editingPackId, setEditingPackId] = useState<string | null>(null);
+  const [editingPackStatus, setEditingPackStatus] = useState<"DRAFT" | "LIVE" | "ARCHIVED">("DRAFT");
   const [packTitle, setPackTitle] = useState("");
   const [packBannerImageUrl, setPackBannerImageUrl] = useState(DEFAULT_PACK_BANNER);
   const [startsAt, setStartsAt] = useState("");
@@ -1157,6 +1158,7 @@ export default function VendorPage() {
 
   function resetPackForm() {
     setEditingPackId(null);
+    setEditingPackStatus("DRAFT");
     setPackTitle("");
     setPackBannerImageUrl(DEFAULT_PACK_BANNER);
     setStartsAt("");
@@ -1177,6 +1179,7 @@ export default function VendorPage() {
 
   function editPack(pack: Pack) {
     setEditingPackId(pack.id);
+    setEditingPackStatus(pack.status);
     setPackTitle(pack.title);
     setPackBannerImageUrl(pack.packBannerImageUrl ?? DEFAULT_PACK_BANNER);
     setPricePoints(String(pack.pricePoints));
@@ -1336,6 +1339,33 @@ export default function VendorPage() {
         </section>
       </main>
     );
+  }
+
+  async function publishPack(packId: string) {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const idempotencyKey = crypto.randomUUID();
+      const res = await fetch(`${apiBase}/v1/vendor/packs/${packId}/publish`, {
+        method: "PATCH",
+        headers: {
+          ...authHeaders(),
+          "content-type": "application/json",
+          "x-idempotency-key": idempotencyKey,
+        },
+        credentials: "include",
+        body: JSON.stringify({ publishIdempotencyKey: idempotencyKey }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.message ?? body?.error ?? "Failed to publish pack");
+      setSuccess(body?.published ? "Pack published." : "Pack already published.");
+      await loadAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to publish pack");
+    } finally {
+      setSaving(false);
+    }
   }
 
   if (!vendor) {
@@ -1952,10 +1982,15 @@ export default function VendorPage() {
               <div className="actions">
                 <button type="button" className="draw-button alt" onClick={addTier} disabled={tiers.length >= limits.maxPackTiers}>+ Add Tier</button>
                 {editingPackId ? <button type="button" className="sort-pill" onClick={resetPackForm}>Cancel Edit</button> : null}
-                <button type="submit" className="draw-button" disabled={saving || loading}>{editingPackId ? "Update Pack" : "Create Pack"}</button>
-              </div>
-            </form>
-          </section>
+              <button type="submit" className="draw-button" disabled={saving || loading}>{editingPackId ? "Update Pack" : "Create Pack"}</button>
+              {editingPackId && editingPackStatus === "DRAFT" ? (
+                <button type="button" className="draw-button alt" onClick={() => void publishPack(editingPackId)} disabled={saving || loading}>
+                  Publish Pack
+                </button>
+              ) : null}
+            </div>
+          </form>
+        </section>
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Pack Revenue</h2>
@@ -1975,11 +2010,16 @@ export default function VendorPage() {
             <div className="result-list">
               {packs.map((pack) => (
                 <div className="result-row" key={pack.id}>
-                  <span>{pack.title} ({pack.status})</span>
+                  <span>{pack.title} <span className="muted tiny">[{pack.status}]</span></span>
                   <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
                   <div className="actions">
                     <button type="button" className="sort-pill" onClick={() => void generateCreativeDraft(pack.id)} disabled={saving || pack.prizes.length === 0}>Generate creative draft</button>
                     <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
+                    {pack.status === "DRAFT" ? (
+                      <button type="button" className="sort-pill" onClick={() => void publishPack(pack.id)} disabled={saving}>
+                        Publish
+                      </button>
+                    ) : null}
                     <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
                     <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
                   </div>
