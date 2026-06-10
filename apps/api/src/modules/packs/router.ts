@@ -23,7 +23,6 @@ import {
   PackInventoryAllocationError,
   packInventoryAllocationErrorResponse,
   releaseHeldInventoryForPack,
-  reserveInventoryForPackPublish,
 } from "./inventory-allocation";
 
 export const packRouter = Router();
@@ -770,15 +769,6 @@ packRouter.patch("/v1/vendor/packs/:packId/publish", async (req: VendorRequest, 
     }
 
     const updated = await prisma.$transaction(async (tx) => {
-      if (pack.pricePoints > 0) {
-        await reserveInventoryForPackPublish(tx, {
-          vendorId: auth.vendorId,
-          packId: pack.id,
-          prizes: pack.prizes,
-          now: new Date(),
-        });
-      }
-
       return tx.pack.update({
         where: { id: pack.id },
         data: publishData,

@@ -13,7 +13,6 @@ import {
 import {
   PackInventoryAllocationError,
   packInventoryAllocationErrorResponse,
-  reserveInventoryForPackPublish,
 } from "./inventory-allocation";
 
 export const packTemplateRouter = Router();
@@ -268,15 +267,6 @@ packTemplateRouter.post("/v1/vendor/templates/:templateId/versions/:versionId/pu
 
     const pack = await prisma.$transaction(async (tx) => {
       const createdPack = await tx.pack.create({ data: publishData, include: { prizes: true } });
-
-      if (createdPack.pricePoints > 0) {
-        await reserveInventoryForPackPublish(tx, {
-          vendorId: auth.vendorId,
-          packId: createdPack.id,
-          prizes: createdPack.prizes,
-          now: new Date(),
-        });
-      }
 
       await tx.packTemplateVersion.update({ where: { id: versionId }, data: { status: "PUBLISHED" } });
       await tx.packTemplate.update({ where: { id: templateId }, data: { activeVersionId: versionId } });
