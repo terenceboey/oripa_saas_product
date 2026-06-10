@@ -7,7 +7,7 @@ import type { CSSProperties } from "react";
 import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
-import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../../lib/media-url";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../../../lib/media-url";
 
 type Prize = {
   id: string;
@@ -67,29 +67,6 @@ const defaultPokemonCardImage = "https://archives.bulbagarden.net/media/upload/1
 const defaultPackBannerImage = "/default-pack-banner-desktop.webp";
 const defaultPackBannerImageMobile = "/default-pack-banner-mobile.webp";
 const clientPageHeader = { "x-client-page": "/pack/[packId]" };
-
-function resolveImageUrl(url?: string | null) {
-  if (!url) return defaultPackBannerImage;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/")) return url;
-  return `/${url}`;
-}
-
-function responsiveImageFromBase(url?: string | null) {
-  const resolved = resolveImageUrl(url);
-  if (!resolved.startsWith("/")) {
-    return { mobile: resolved, desktop: resolved, fallback: resolved };
-  }
-  if (resolved.endsWith("-desktop.webp")) {
-    const mobile = resolved.replace("-desktop.webp", "-mobile.webp");
-    return { mobile, desktop: resolved, fallback: resolved };
-  }
-  if (resolved.endsWith(".png")) {
-    const base = resolved.slice(0, -4);
-    return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
-  }
-  return { mobile: resolved, desktop: resolved, fallback: resolved };
-}
 
 function resolveTierOdds(tiers: PackTierSnapshot["tiers"]) {
   const fixedPercentTotal = tiers.reduce((sum, tier) => sum + (typeof tier.percentage === "number" ? tier.percentage : 0), 0);
@@ -233,11 +210,11 @@ export default function PackDrawPage() {
         <>
           <section className="card">
             {(() => {
-              const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBannerImage);
+              const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBannerImage);
               return (
                 <picture>
-                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
-                  <source srcSet={image.desktop} type="image/webp" />
+                  {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
+                  {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
                     className="pack-detail-banner"
                     src={image.fallback}

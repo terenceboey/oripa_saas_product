@@ -5,7 +5,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
-import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../lib/media-url";
+import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../lib/media-url";
 
 type Banner = {
   id: string;
@@ -80,29 +80,6 @@ const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
 const clientPageHeader = { "x-client-page": "/" };
 const defaultPackBanner = "/default-pack-banner-desktop.webp";
 const defaultPackBannerMobile = "/default-pack-banner-mobile.webp";
-
-function resolveImageUrl(url?: string | null) {
-  if (!url) return defaultPackBanner;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  if (url.startsWith("/")) return url;
-  return `/${url}`;
-}
-
-function responsiveImageFromBase(url?: string | null) {
-  const resolved = resolveImageUrl(url);
-  if (!resolved.startsWith("/")) {
-    return { mobile: resolved, desktop: resolved, fallback: resolved };
-  }
-  if (resolved.endsWith("-desktop.webp")) {
-    const mobile = resolved.replace("-desktop.webp", "-mobile.webp");
-    return { mobile, desktop: resolved, fallback: resolved };
-  }
-  if (resolved.endsWith(".png")) {
-    const base = resolved.slice(0, -4);
-    return { mobile: `${base}-mobile.webp`, desktop: `${base}-desktop.webp`, fallback: resolved };
-  }
-  return { mobile: resolved, desktop: resolved, fallback: resolved };
-}
 
 export default function HomePage() {
   const runtimeVendorHost = useMemo(() => {
@@ -316,11 +293,11 @@ export default function HomePage() {
         {currentBanner ? (
           <a className="banner-link" href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer">
             {(() => {
-              const image = responsiveImageFromBase(currentBanner.imageUrl);
+              const image = resolvePackBannerMediaUrl(currentBanner.imageUrl, defaultPackBanner);
               return (
                 <picture>
-                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
-                  <source srcSet={image.desktop} type="image/webp" />
+                  {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
+                  {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
                     className="banner-image"
                     src={image.fallback}
@@ -393,11 +370,11 @@ export default function HomePage() {
         {sortedPacks.map((pack) => (
           <article className="card pack-card" key={pack.id}>
             {(() => {
-              const image = responsiveImageFromBase(pack.packBannerImageUrl || defaultPackBanner);
+              const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBanner);
               return (
                 <picture>
-                  <source media="(max-width: 760px)" srcSet={image.mobile} type="image/webp" />
-                  <source srcSet={image.desktop} type="image/webp" />
+                  {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
+                  {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
                     className="pack-card-banner"
                     src={image.fallback}

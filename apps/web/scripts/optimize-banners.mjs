@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -6,11 +7,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, "../public");
 
-const targets = [
+const targetRoots = [
   "default-pack-banner.png",
-  "carousel/bonus-points-weekend.png",
-  "carousel/one-pack-magic.png",
-  "carousel/pokemon-mania.png",
+  "carousel",
+  "pack-presets",
 ];
 
 const variants = [
@@ -32,7 +32,28 @@ async function processImage(relativePath) {
   }
 }
 
+function collectTargets() {
+  const targets = [];
+  for (const entry of targetRoots) {
+    const fullPath = path.join(publicDir, entry);
+    if (!fs.existsSync(fullPath)) continue;
+
+    const stats = fs.statSync(fullPath);
+    if (stats.isFile()) {
+      if (entry.toLowerCase().endsWith(".png")) targets.push(entry);
+      continue;
+    }
+
+    for (const child of fs.readdirSync(fullPath, { withFileTypes: true })) {
+      if (!child.isFile() || !child.name.toLowerCase().endsWith(".png")) continue;
+      targets.push(path.posix.join(entry.replace(/\\/g, "/"), child.name));
+    }
+  }
+  return targets;
+}
+
 async function main() {
+  const targets = collectTargets();
   for (const target of targets) {
     await processImage(target);
   }
