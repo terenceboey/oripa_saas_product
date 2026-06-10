@@ -112,6 +112,10 @@ export function buildPackPrizeInventoryAllocationPlan({
       .filter((item) => item.status === "ACTIVE")
       .sort((left, right) => left.id.localeCompare(right.id));
 
+    if (candidates.length === 0) {
+      continue;
+    }
+
     let remainingToAllocate = prize.stock;
     for (const item of candidates) {
       const quantityAllocated = Math.min(remainingToAllocate, allocatableQuantity(item, plannedByInventoryId));
