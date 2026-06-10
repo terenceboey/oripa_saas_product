@@ -415,7 +415,6 @@ export default function VendorPage() {
   const [endsAt, setEndsAt] = useState("");
   const [pricePoints, setPricePoints] = useState("100");
   const [totalStock, setTotalStock] = useState("100");
-  const [status, setStatus] = useState<"DRAFT" | "LIVE">("DRAFT");
   const [isNew, setIsNew] = useState(true);
   const [limitedLabel, setLimitedLabel] = useState("");
   const [importantNotes, setImportantNotes] = useState("");
@@ -1164,7 +1163,6 @@ export default function VendorPage() {
     setEndsAt("");
     setPricePoints("100");
     setTotalStock("100");
-    setStatus("DRAFT");
     setIsNew(true);
     setLimitedLabel("");
     setImportantNotes("");
@@ -1185,7 +1183,6 @@ export default function VendorPage() {
     setTotalStock(String(pack.totalStock));
     setStartsAt(toLocalInputValue(pack.startsAt));
     setEndsAt(toLocalInputValue(pack.endsAt));
-    setStatus(pack.status === "ARCHIVED" ? "DRAFT" : pack.status);
     setIsNew(Boolean(pack.isNew ?? true));
     setLimitedLabel(pack.limitedLabel ?? "");
     setImportantNotes(pack.importantNotes ?? "");
@@ -1238,7 +1235,6 @@ export default function VendorPage() {
         totalStock: Number(totalStock),
         startsAt: toIsoDateTime(startsAt),
         endsAt: toIsoDateTime(endsAt),
-        status,
         isNew,
         limitedLabel: limitedLabel.trim() ? limitedLabel.trim() : undefined,
         importantNotes: importantNotes.trim() ? importantNotes.trim() : undefined,
@@ -1719,13 +1715,6 @@ export default function VendorPage() {
                 <label className="muted tiny">
                   End date-time
                   <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
-                </label>
-                <label className="muted tiny">
-                  Pack status
-                  <select value={status} onChange={(e) => setStatus(e.target.value as "DRAFT" | "LIVE")}>
-                    <option value="DRAFT">DRAFT</option>
-                    <option value="LIVE">LIVE</option>
-                  </select>
                 </label>
                 <label className="muted tiny">
                   Draw limit mode
