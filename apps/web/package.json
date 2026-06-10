@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
+    "prebuild": "npm run build -w @oripa/shared",
     "build": "next build",
     "start": "next start -p 3000",
     "lint": "tsc -p tsconfig.json --noEmit",
     "images:optimize:banners": "node scripts/optimize-banners.mjs"
   },
   "dependencies": {
+    "@oripa/shared": "0.1.0",
     "next": "^16.2.6",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
