@@ -13,6 +13,21 @@ const imageUrlSchema = z
     }
   }, "Image URL must be an absolute http/https URL");
 
+const packBannerImageUrlSchema = z
+  .string()
+  .max(2048)
+  .refine((value) => {
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    if (trimmed.startsWith("/")) return true;
+    try {
+      const parsed = new URL(trimmed);
+      return parsed.protocol === "https:" || parsed.protocol === "http:";
+    } catch {
+      return false;
+    }
+  }, "Pack banner must be a relative path or an absolute http/https URL");
+
 const optionalTrimmedStringSchema = (maxLength: number) =>
   z.preprocess((value) => {
     if (typeof value !== "string") return value;
@@ -131,7 +146,7 @@ export const packTierSnapshotSchema = z.object({
 
 export const createPackSchema = z.object({
   title: z.string().min(2).max(120),
-  packBannerImageUrl: imageUrlSchema.optional(),
+  packBannerImageUrl: packBannerImageUrlSchema.optional(),
   pricePoints: z.number().int().positive(),
   totalStock: z.number().int().positive(),
   startsAt: z.string().datetime().optional(),
