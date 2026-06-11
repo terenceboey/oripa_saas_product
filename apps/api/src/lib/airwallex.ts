@@ -187,7 +187,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export function extractAirwallexWebhookDetails(payload: unknown) {
   const root = isRecord(payload) ? payload : {};
-  const data = isRecord(root.data) ? root.data : isRecord(root.object) ? root.object : isRecord(root.resource) ? root.resource : root;
+  const rootData = isRecord(root.data) ? root.data : null;
+  const nestedDataObject = rootData && isRecord(rootData.object) ? rootData.object : null;
+  const data =
+    nestedDataObject ??
+    (isRecord(root.object) ? root.object : null) ??
+    (isRecord(root.resource) ? root.resource : null) ??
+    rootData ??
+    root;
 
   const eventType =
     String(root.name ?? root.event_type ?? root.eventType ?? root.type ?? "").trim() ||
