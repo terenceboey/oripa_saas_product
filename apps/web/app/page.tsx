@@ -398,21 +398,6 @@ export default function HomePage() {
 
             <p className="muted remaining-text">Remaining {pack.remainingStock}/{pack.totalStock}</p>
 
-            <div className="prize-list">
-              {pack.prizes.map((prize) => (
-                <div className="prize-row" key={prize.id}>
-                  <div>
-                    <strong>{prize.label}</strong>
-                    <div className="muted tiny">Est. {prize.estimatedValue.toLocaleString()} pts</div>
-                  </div>
-                  <div className="rate-block">
-                    <div className="rate">{(prize.dropRatePercent ?? 0).toFixed(4)}%</div>
-                    <div className="muted tiny">Stock {prize.remainingStock}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
             <div className="price-line">
               <span className="muted">1 draw</span>
               <strong>{pack.pricePoints.toLocaleString()} pts</strong>

@@ -246,37 +246,9 @@ export default function PackDrawPage() {
             {error ? <p className="error">{error}</p> : null}
           </section>
 
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Card Preview</h2>
-            <p className="muted">Each item can have vendor-uploaded art. Rates shown below are current weighted odds.</p>
-            <div className="card-preview-grid">
-              {pack.prizes.map((prize) => (
-                <article key={prize.id} className="card-preview-item">
-                  <button
-                    type="button"
-                    className="card-image-button"
-                    onClick={() =>
-                      setImagePreview({
-                        label: prize.label,
-                        imageUrl: prize.imageUrl || defaultPokemonCardImage,
-                      })
-                    }
-                  >
-                    <img src={prize.imageUrl || defaultPokemonCardImage} alt={prize.label} />
-                  </button>
-                  <div className="card-preview-meta">
-                    <strong>{prize.label}</strong>
-                    <span className="muted tiny">Rate {(prize.dropRatePercent ?? 0).toFixed(4)}%</span>
-                    <span className="muted tiny">Stock {prize.remainingStock}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-
           {tierSnapshot && tierSnapshot.tiers.length > 0 ? (
             <section className="card" style={{ marginTop: 12 }}>
-              <h2>Tier Breakdown</h2>
+              <h2>Contents</h2>
               <p className="muted">This reflects the vendor-configured tier structure preserved with the pack.</p>
               <div className="tier-stack">
                 {tierSnapshot.tiers.map((tier, tierIndex) => {
