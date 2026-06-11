@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
@@ -60,6 +60,10 @@ type ImagePreview = {
   label: string;
   imageUrl: string;
 };
+type DrawShowcaseCard = {
+  label: string;
+  imageUrl: string;
+};
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -94,9 +98,17 @@ export default function PackDrawPage() {
   const [drawing, setDrawing] = useState(false);
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
+  const [drawShowcase, setDrawShowcase] = useState<DrawResult | null>(null);
+  const [drawShowcaseIndex, setDrawShowcaseIndex] = useState(0);
+  const [drawShowcasePhase, setDrawShowcasePhase] = useState<"spinning" | "revealing" | "done" | null>(null);
+  const [drawShowcaseCard, setDrawShowcaseCard] = useState<DrawShowcaseCard | null>(null);
+  const [drawShowcaseSoundEnabled, setDrawShowcaseSoundEnabled] = useState(true);
+  const [confettiBurstKey, setConfettiBurstKey] = useState(0);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
   const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const drawShowcaseSoundEnabledRef = useRef(drawShowcaseSoundEnabled);
   const tierSnapshot = useMemo(() => {
     const parsed = packTierSnapshotSchema.safeParse(pack?.tierSnapshotJson);
     return parsed.success ? parsed.data : null;
@@ -144,10 +156,74 @@ export default function PackDrawPage() {
 
   useBackForwardRefresh(loadData, { cooldownMs: 15000 });
 
+  const isDrawShowcaseOpen = Boolean(drawShowcase);
+  const drawShowcasePool = useMemo(() => {
+    return (pack?.prizes ?? []).map((prize) => ({
+      label: prize.label,
+      imageUrl: prize.imageUrl || defaultPokemonCardImage,
+    }));
+  }, [pack?.prizes]);
+
+  async function ensureAudioContext() {
+    if (typeof window === "undefined") return null;
+    if (!audioContextRef.current) {
+      const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContextCtor) return null;
+      audioContextRef.current = new AudioContextCtor();
+    }
+    if (audioContextRef.current.state === "suspended") {
+      await audioContextRef.current.resume().catch(() => null);
+    }
+    return audioContextRef.current;
+  }
+
+  async function playTone(frequency: number, durationMs: number, options?: { type?: OscillatorType; gain?: number; whenMs?: number }) {
+    const context = await ensureAudioContext();
+    if (!context) return;
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    oscillator.type = options?.type ?? "sine";
+    oscillator.frequency.value = frequency;
+    gainNode.gain.value = options?.gain ?? 0.04;
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    const startAt = context.currentTime + ((options?.whenMs ?? 0) / 1000);
+    oscillator.start(startAt);
+    gainNode.gain.setValueAtTime(options?.gain ?? 0.04, startAt);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, startAt + durationMs / 1000);
+    oscillator.stop(startAt + durationMs / 1000 + 0.05);
+  }
+
+  async function playSpinTick() {
+    if (!drawShowcaseSoundEnabledRef.current) return;
+    void playTone(760, 55, { type: "square", gain: 0.015 });
+  }
+
+  async function playRevealChime() {
+    if (!drawShowcaseSoundEnabledRef.current) return;
+    void playTone(523.25, 120, { type: "triangle", gain: 0.03 });
+    void playTone(659.25, 140, { type: "triangle", gain: 0.03, whenMs: 110 });
+    void playTone(783.99, 180, { type: "triangle", gain: 0.035, whenMs: 220 });
+  }
+
+  function closeDrawShowcase() {
+    setDrawShowcase(null);
+    setDrawShowcaseIndex(0);
+    setDrawShowcasePhase(null);
+    setDrawShowcaseCard(null);
+    setConfettiBurstKey((value) => value + 1);
+  }
+
   async function handleDraw(quantity: number) {
     if (!pack) return;
     setDrawing(true);
     setError(null);
+    setDrawShowcase(null);
+    setDrawShowcaseIndex(0);
+    setDrawShowcasePhase(null);
+    setDrawShowcaseCard(null);
+    setConfettiBurstKey((value) => value + 1);
+    void ensureAudioContext();
 
     const idempotencyKey = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
 
@@ -167,6 +243,7 @@ export default function PackDrawPage() {
       if (!response.ok) throw new Error(payload.error ?? "Draw failed");
 
       setLastDraw(payload);
+      setDrawShowcase(payload);
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Draw failed");
@@ -192,6 +269,60 @@ export default function PackDrawPage() {
   useEffect(() => {
     applyVendorFavicon(normalizeVendorFaviconUrl(vendorFavicon, vendorLogo));
   }, [vendorFavicon, vendorLogo]);
+
+  useEffect(() => {
+    drawShowcaseSoundEnabledRef.current = drawShowcaseSoundEnabled;
+  }, [drawShowcaseSoundEnabled]);
+
+  useEffect(() => {
+    if (!drawShowcase || !pack) return undefined;
+    let active = true;
+    const currentDraw = drawShowcase.draws[drawShowcaseIndex];
+    const fallbackCard = drawShowcasePool[0] ?? { label: "Mystery Card", imageUrl: defaultPokemonCardImage };
+    const spinPool = drawShowcasePool.length > 0 ? drawShowcasePool : [fallbackCard];
+    let spinInterval: number | null = null;
+    let revealTimeout: number | null = null;
+    let nextTimeout: number | null = null;
+
+    setDrawShowcasePhase("spinning");
+    setDrawShowcaseCard((current) => current ?? fallbackCard);
+
+    spinInterval = window.setInterval(() => {
+      if (!active) return;
+      const randomCard = spinPool[Math.floor(Math.random() * spinPool.length)] ?? fallbackCard;
+      setDrawShowcaseCard(randomCard);
+      void playSpinTick();
+    }, 85);
+
+    revealTimeout = window.setTimeout(() => {
+      if (!active || !currentDraw) return;
+      if (spinInterval) window.clearInterval(spinInterval);
+      const finalCard = {
+        label: currentDraw.prizeLabel || "No Prize",
+        imageUrl: currentDraw.prizeImageUrl || defaultPokemonCardImage,
+      };
+      setDrawShowcaseCard(finalCard);
+      setDrawShowcasePhase("revealing");
+      setConfettiBurstKey((value) => value + 1);
+      void playRevealChime();
+
+      nextTimeout = window.setTimeout(() => {
+        if (!active) return;
+        if (drawShowcaseIndex < drawShowcase.draws.length - 1) {
+          setDrawShowcaseIndex((value) => value + 1);
+          return;
+        }
+        setDrawShowcasePhase("done");
+      }, 1000);
+    }, 1200);
+
+    return () => {
+      active = false;
+      if (spinInterval) window.clearInterval(spinInterval);
+      if (revealTimeout) window.clearTimeout(revealTimeout);
+      if (nextTimeout) window.clearTimeout(nextTimeout);
+    };
+  }, [drawShowcase, drawShowcaseIndex, drawShowcasePool, pack]);
 
   return (
     <main className="container" style={storefrontThemeStyle}>
@@ -239,9 +370,8 @@ export default function PackDrawPage() {
             </div>
 
             <div className="actions">
-              <button type="button" className="draw-button" disabled={drawing || pack.remainingStock < 1} onClick={() => handleDraw(1)}>Draw</button>
-              <button type="button" className="draw-button alt" disabled={drawing || pack.remainingStock < 10} onClick={() => handleDraw(10)}>10 Draws</button>
-              <button type="button" className="draw-button alt-2" disabled={drawing || pack.remainingStock < 100} onClick={() => handleDraw(100)}>100 Draws</button>
+              <button type="button" className="draw-button" disabled={drawing || isDrawShowcaseOpen || pack.remainingStock < 1} onClick={() => handleDraw(1)}>Draw</button>
+              <button type="button" className="draw-button alt" disabled={drawing || isDrawShowcaseOpen || pack.remainingStock < 10} onClick={() => handleDraw(10)}>10x Draw</button>
             </div>
             {error ? <p className="error">{error}</p> : null}
           </section>
@@ -310,6 +440,67 @@ export default function PackDrawPage() {
             </section>
           ) : null}
         </>
+      ) : null}
+
+      {drawShowcase ? (
+        <div className="draw-showcase-backdrop" onClick={drawShowcasePhase === "done" ? closeDrawShowcase : undefined}>
+          <section className="draw-showcase-modal card" onClick={(event) => event.stopPropagation()}>
+            <div key={confettiBurstKey} className="draw-showcase-confetti" aria-hidden="true">
+              {Array.from({ length: 36 }).map((_, index) => {
+                const left = (index * 13) % 100;
+                const delay = (index % 6) * 0.05;
+                const duration = 1.6 + (index % 5) * 0.18;
+                const hue = (index * 37) % 360;
+                const drift = ((index % 9) - 4) * 14;
+                return <span key={`${confettiBurstKey}-${index}`} className="confetti-piece" style={{ ["--drift" as string]: `${drift}px`, left: `${left}%`, background: `hsl(${hue} 85% 60%)`, animationDelay: `${delay}s`, animationDuration: `${duration}s` }} />;
+              })}
+            </div>
+            <div className="heading-row">
+              <div>
+                <h3>Lottery Reveal</h3>
+                <p className="muted tiny">
+                  {drawShowcasePhase === "spinning"
+                    ? "Spinning the lottery..."
+                    : drawShowcasePhase === "revealing"
+                      ? "Result locked in."
+                      : "Draw complete."}
+                </p>
+              </div>
+              <div className="actions">
+                <button type="button" className={`sort-pill ${drawShowcaseSoundEnabled ? "active" : ""}`} onClick={() => setDrawShowcaseSoundEnabled((value) => !value)}>
+                  Sound {drawShowcaseSoundEnabled ? "On" : "Off"}
+                </button>
+                {drawShowcasePhase === "done" ? (
+                  <button type="button" className="sort-pill" onClick={closeDrawShowcase}>
+                    Close
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={`draw-lottery-stage ${drawShowcasePhase ?? "spinning"}`}>
+              <div className="draw-lottery-badge">#{drawShowcaseIndex + 1} of {drawShowcase.draws.length}</div>
+              <div className="draw-lottery-card">
+                <img src={drawShowcaseCard?.imageUrl ?? defaultPokemonCardImage} alt={drawShowcaseCard?.label ?? "Lottery draw"} />
+              </div>
+              <div className="draw-lottery-label">
+                <strong>{drawShowcaseCard?.label ?? "Spinning..."}</strong>
+                {drawShowcasePhase === "revealing" ? <span className="badge warn">Winner</span> : null}
+              </div>
+            </div>
+
+            <div className="draw-showcase-footer">
+              <p className="muted tiny">
+                {drawShowcase.quantity} draw{drawShowcase.quantity > 1 ? "s" : ""} | Cost {drawShowcase.totalCost.toLocaleString()} pts
+              </p>
+              {drawShowcasePhase === "done" ? (
+                <button type="button" className="draw-button" onClick={closeDrawShowcase}>
+                  Continue
+                </button>
+              ) : null}
+            </div>
+          </section>
+        </div>
       ) : null}
 
       {imagePreview ? (
