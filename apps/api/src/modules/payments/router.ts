@@ -38,8 +38,14 @@ async function loadTopupOrder(tx: Prisma.TransactionClient, merchantOrderId: str
   });
 }
 
+const terminalAirwallexPaymentIntentEvents = new Set([
+  "payment_intent.succeeded",
+  "payment_intent.failed",
+  "payment_intent.cancelled",
+]);
+
 paymentsRouter.post("/v1/webhooks/airwallex", async (req, res) => {
-  const rawBody = String((req as RawBodyRequest).rawBody ?? "").trim();
+  const rawBody = String((req as RawBodyRequest).rawBody ?? "");
   if (!rawBody) return res.status(400).json({ error: "Missing raw webhook body" });
 
   const timestamp = String(req.header("x-timestamp") ?? "").trim();
@@ -58,6 +64,15 @@ paymentsRouter.post("/v1/webhooks/airwallex", async (req, res) => {
   const details = extractAirwallexWebhookDetails(payload);
   if (!details.eventType || !details.eventId) {
     return res.status(400).json({ error: "Invalid webhook payload" });
+  }
+  if (!terminalAirwallexPaymentIntentEvents.has(details.eventType)) {
+    return res.status(200).json({
+      acknowledged: true,
+      ignored: true,
+      reason: "non-terminal event",
+      eventType: details.eventType,
+      eventId: details.eventId,
+    });
   }
 
   const dedupeScopeKey = `airwallex:webhook:${details.eventId}`;
