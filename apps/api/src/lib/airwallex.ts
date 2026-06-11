@@ -97,7 +97,7 @@ async function getAirwallexAccessToken() {
 }
 
 export type AirwallexPaymentIntentCreateInput = {
-  amountMinor: number;
+  amountMajor: number;
   currencyCode: string;
   merchantOrderId: string;
   returnUrl: string;
@@ -108,7 +108,7 @@ export type AirwallexPaymentIntentCreateInput = {
 export type AirwallexPaymentIntentCreateResult = {
   id: string;
   clientSecret: string;
-  amountMinor: number;
+  amountMajor: number;
   currencyCode: string;
   merchantOrderId: string;
   raw: Record<string, unknown>;
@@ -124,7 +124,7 @@ export async function createAirwallexPaymentIntent(input: AirwallexPaymentIntent
     },
     body: JSON.stringify({
       request_id: input.requestId ?? crypto.randomUUID(),
-      amount: input.amountMinor,
+      amount: input.amountMajor,
       currency: input.currencyCode,
       merchant_order_id: input.merchantOrderId,
       return_url: input.returnUrl,
@@ -140,7 +140,7 @@ export async function createAirwallexPaymentIntent(input: AirwallexPaymentIntent
   const payload = (await response.json()) as Record<string, unknown>;
   const id = String(payload.id ?? "").trim();
   const clientSecret = String(payload.client_secret ?? payload.clientSecret ?? "").trim();
-  const amountMinor = Number(payload.amount ?? input.amountMinor);
+  const amountMajor = Number(payload.amount ?? input.amountMajor);
   const currencyCode = String(payload.currency ?? input.currencyCode).trim().toUpperCase();
   const merchantOrderId = String(payload.merchant_order_id ?? input.merchantOrderId).trim();
 
@@ -151,7 +151,7 @@ export async function createAirwallexPaymentIntent(input: AirwallexPaymentIntent
   return {
     id,
     clientSecret,
-    amountMinor,
+    amountMajor,
     currencyCode,
     merchantOrderId,
     raw: payload,

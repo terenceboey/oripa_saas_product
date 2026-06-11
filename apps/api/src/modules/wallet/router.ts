@@ -5,7 +5,6 @@ import { prisma } from "../../lib/prisma";
 import { getRequestUserId } from "../../lib/rbac";
 import { VendorRequest } from "../../middleware/vendor";
 import {
-  convertCurrencyMajorToMinor,
   convertPointsToCurrencyMajor,
   createAirwallexPaymentIntent,
   formatCurrencyAmount,
@@ -209,8 +208,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
   const currencyCode = resolveCurrencyCodeForCountry(auth.countryCode, settings?.currencyCode ?? undefined);
   const estimatedCurrencyAmountMajor = convertPointsToCurrencyMajor(amountPoints, pointsPerCurrencyUnit);
   const estimatedCurrencyAmount = new Prisma.Decimal(estimatedCurrencyAmountMajor.toFixed(2));
-  const amountMinor = convertCurrencyMajorToMinor(estimatedCurrencyAmountMajor, currencyCode);
-  if (amountMinor <= 0) {
+  if (estimatedCurrencyAmountMajor <= 0) {
     return res.status(400).json({ error: "top-up amount is too small for the selected currency" });
   }
   if (getCurrencyMinorUnitDigits(currencyCode) === 0 && amountPoints % 100 !== 0) {
@@ -267,7 +265,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
           metadata: {
             fixedAmount: FIXED_TOPUP_AMOUNTS.has(amountPoints),
             pointsPerCurrencyUnit,
-            amountMinor,
+            amountMajor: estimatedCurrencyAmountMajor,
             returnUrl,
             provider: "airwallex",
           },
@@ -291,7 +289,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
     bootstrapWalletSnapshot = bootstrap.walletSnapshot;
 
     checkoutIntent = await createAirwallexPaymentIntent({
-      amountMinor,
+      amountMajor: estimatedCurrencyAmountMajor,
       currencyCode,
       merchantOrderId: bootstrap.topupOrder.id,
       requestId,
@@ -336,7 +334,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
           metadata: {
             fixedAmount: FIXED_TOPUP_AMOUNTS.has(amountPoints),
             pointsPerCurrencyUnit,
-            amountMinor,
+            amountMajor: estimatedCurrencyAmountMajor,
             returnUrl,
             provider: "airwallex",
             paymentIntentId: intent.id,
@@ -401,7 +399,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
           clientSecret: intent.clientSecret,
           currencyCode: intent.currencyCode,
           countryCode: auth.countryCode ?? null,
-          amountMinor,
+          amountMajor: estimatedCurrencyAmountMajor,
           amountCurrency: estimatedCurrencyAmountMajor,
           returnUrl,
           successUrl: returnUrl,
@@ -435,7 +433,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
           metadata: {
             amountPoints,
             currencyCode,
-            amountMinor,
+            amountMajor: estimatedCurrencyAmountMajor,
           },
         },
       });
@@ -467,7 +465,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
             metadata: {
               fixedAmount: FIXED_TOPUP_AMOUNTS.has(amountPoints),
               pointsPerCurrencyUnit,
-              amountMinor,
+              amountMajor: estimatedCurrencyAmountMajor,
               returnUrl,
               provider: "airwallex",
               paymentIntentId: checkoutIntent?.id ?? null,

@@ -58,7 +58,7 @@ type WalletTopupCheckout = {
   clientSecret: string;
   currencyCode: string;
   countryCode?: string | null;
-  amountMinor: number;
+  amountMajor: number;
   amountCurrency: number;
   returnUrl: string;
   successUrl: string;
@@ -334,7 +334,7 @@ function CustomerProfileContent() {
         clientSecret: payload.checkout.clientSecret,
         currencyCode: payload.checkout.currencyCode,
         countryCode: payload.checkout.countryCode ?? user.countryCode ?? null,
-        amountMinor: Number(payload.checkout.amountMinor ?? 0),
+        amountMajor: Number(payload.checkout.amountMajor ?? payload.checkout.amountCurrency ?? 0),
         amountCurrency: Number(payload.checkout.amountCurrency ?? 0),
         returnUrl: String(payload.checkout.returnUrl ?? window.location.href),
         successUrl: String(payload.checkout.successUrl ?? window.location.href),
