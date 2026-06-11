@@ -12,6 +12,16 @@ const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const clientPageHeader = { "x-client-page": "/login" };
 
+function buildVendorLoginUrl(vendorHost: string, error?: string | null) {
+  const host = String(vendorHost ?? "").trim().toLowerCase();
+  const url = new URL("/vendor/login", window.location.origin);
+  if (host && host !== window.location.host.toLowerCase()) {
+    url.host = host;
+  }
+  if (error) url.searchParams.set("error", error);
+  return url.toString();
+}
+
 type AuthUser = {
   id: string;
   email: string;
@@ -180,7 +190,7 @@ export default function LoginPage() {
       const payload = await response.json();
       if (!response.ok) {
         if (payload?.vendorHost || String(payload?.error ?? "").toLowerCase().includes("vendor account")) {
-          window.location.href = "/vendor/login?error=vendor_account";
+          window.location.href = buildVendorLoginUrl(String(payload?.vendorHost ?? runtimeVendorHost), "vendor_account");
           return;
         }
         throw new Error(payload.error ?? "Login failed");

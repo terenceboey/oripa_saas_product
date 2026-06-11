@@ -600,6 +600,7 @@ authRouter.post("/v1/auth/register", async (req: VendorRequest, res) => {
     if (vendorMemberships.length > 0) {
       return res.status(403).json({
         error: "this email is registered as a vendor account. please use vendor login.",
+        vendorHost: vendorMemberships[0]?.Vendor?.host ?? null,
       });
     }
     return res.status(409).json({ error: "email already registered. please login instead." });
