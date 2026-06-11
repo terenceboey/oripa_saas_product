@@ -77,10 +77,8 @@ type PackEarning = {
 type TopupActivity = {
   id: string;
   pointsToCredit: number;
-  expectedCurrencyAmount: number | null;
+  amountCurrency: number | null;
   currencyCode: string | null;
-  status: string;
-  provider: string | null;
   createdAt: string;
   user?: {
     email: string;
@@ -1432,26 +1430,27 @@ export default function VendorPage() {
               <div className="stat"><div className="stat-label">Tenant Net</div><div className="stat-value">{summary?.tenantNetPoints?.toLocaleString() ?? "0"}</div></div>
               <div className="stat"><div className="stat-label">Wallet Balance</div><div className="stat-value">{summary?.vendorWalletBalance?.toLocaleString() ?? "0"}</div></div>
               <div className="stat"><div className="stat-label">Currency Revenue</div><div className="stat-value">{summary ? `${summary.totalRevenueCurrency.toFixed(2)} ${summary.currencyCode}` : "0"}</div></div>
-              <div className="stat"><div className="stat-label">Wallet Top-ups</div><div className="stat-value">{summary?.topupPoints?.toLocaleString() ?? "0"}</div></div>
-              <div className="stat"><div className="stat-label">Top-up Orders</div><div className="stat-value">{summary?.topupCount?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Successful Wallet Top-ups</div><div className="stat-value">{summary?.topupPoints?.toLocaleString() ?? "0"}</div></div>
+              <div className="stat"><div className="stat-label">Completed Top-ups</div><div className="stat-value">{summary?.topupCount?.toLocaleString() ?? "0"}</div></div>
             </div>
           </section>
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Wallet Funding</h2>
-            <p className="muted tiny">This shows points loaded into customer wallets on this storefront. It is currently simulated and will later map to regional payment providers.</p>
+            <p className="muted tiny">This shows completed wallet top-ups on this storefront.</p>
             <div className="result-list">
               {topups.map((row) => (
                 <div className="result-row" key={row.id}>
                   <span>
                     {row.user?.displayName || row.user?.email || "Customer"} · {row.pointsToCredit.toLocaleString()} pts
+                    {row.amountCurrency !== null ? ` (${row.amountCurrency.toFixed(2)} ${row.currencyCode ?? "USD"})` : ""}
                   </span>
                   <span>
                     {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
                   </span>
                 </div>
               ))}
-              {topups.length === 0 ? <p className="muted tiny">No top-up activity yet.</p> : null}
+              {topups.length === 0 ? <p className="muted tiny">No completed top-ups yet.</p> : null}
             </div>
           </section>
 

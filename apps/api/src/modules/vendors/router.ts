@@ -515,9 +515,9 @@ vendorRouter.get("/v1/vendor/earnings/summary", async (req: VendorRequest, res) 
       where: { vendorId: auth.vendorId, type: "DEBIT", reason: "PACK_DRAW" },
       _sum: { amountPoints: true },
     }),
-    prisma.topupOrder.aggregate({
-      where: { vendorId: auth.vendorId, status: "COMPLETED" },
-      _sum: { pointsToCredit: true },
+    prisma.walletEntry.aggregate({
+      where: { vendorId: auth.vendorId, type: "CREDIT", reason: "WALLET_TOPUP" },
+      _sum: { amountPoints: true },
       _count: { _all: true },
     }),
     prisma.walletAccount.findFirst({
@@ -531,7 +531,7 @@ vendorRouter.get("/v1/vendor/earnings/summary", async (req: VendorRequest, res) 
   const tenantNetPoints = entries.filter((row) => row.type === "TENANT_NET").reduce((sum, row) => sum + row.amountPoints, 0);
   const totalRevenueCurrency = entries.filter((row) => row.type === "DRAW_GROSS").reduce((sum, row) => sum + Number(row.amountCurrency ?? 0), 0);
   const vendorSpentPoints = walletAgg._sum.amountPoints ?? 0;
-  const topupPoints = topupAgg._sum.pointsToCredit ?? 0;
+  const topupPoints = topupAgg._sum.amountPoints ?? 0;
   const topupCount = topupAgg._count._all ?? 0;
   const vendorWalletBalance = vendorWallet?.balancePoints ?? 0;
 
@@ -584,40 +584,48 @@ vendorRouter.get("/v1/vendor/earnings/topups", async (req: VendorRequest, res) =
   if (!auth) return;
 
   const [topups, aggregate] = await Promise.all([
-    prisma.topupOrder.findMany({
-      where: { vendorId: auth.vendorId, status: "COMPLETED" },
+    prisma.walletEntry.findMany({
+      where: { vendorId: auth.vendorId, type: "CREDIT", reason: "WALLET_TOPUP" },
       orderBy: { createdAt: "desc" },
       take: 20,
       select: {
         id: true,
-        pointsToCredit: true,
-        expectedCurrencyAmount: true,
-        currencyCode: true,
-        status: true,
-        provider: true,
+        amountPoints: true,
+        metadata: true,
         createdAt: true,
-        user: {
+        walletAccount: {
           select: {
-            email: true,
-            displayName: true,
+            user: {
+              select: {
+                email: true,
+                displayName: true,
+              },
+            },
           },
         },
       },
     }),
-    prisma.topupOrder.aggregate({
-      where: { vendorId: auth.vendorId, status: "COMPLETED" },
-      _sum: { pointsToCredit: true },
+    prisma.walletEntry.aggregate({
+      where: { vendorId: auth.vendorId, type: "CREDIT", reason: "WALLET_TOPUP" },
+      _sum: { amountPoints: true },
       _count: { _all: true },
     }),
   ]);
 
   return res.json({
-    topups: topups.map((row) => ({
-      ...row,
-      expectedCurrencyAmount: row.expectedCurrencyAmount === null ? null : Number(row.expectedCurrencyAmount),
-    })),
+    topups: topups.map((row) => {
+      const metadata = (row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)) ? row.metadata as Record<string, unknown> : {};
+      return {
+        id: row.id,
+        pointsToCredit: row.amountPoints,
+        amountCurrency: typeof metadata.amountCurrency === "number" ? metadata.amountCurrency : Number(metadata.amountCurrency ?? 0),
+        currencyCode: typeof metadata.currencyCode === "string" ? metadata.currencyCode : null,
+        createdAt: row.createdAt,
+        user: row.walletAccount?.user ?? null,
+      };
+    }),
     summary: {
-      topupPoints: aggregate._sum.pointsToCredit ?? 0,
+      topupPoints: aggregate._sum.amountPoints ?? 0,
       topupCount: aggregate._count._all ?? 0,
     },
   });

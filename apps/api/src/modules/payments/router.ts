@@ -247,33 +247,37 @@ paymentsRouter.post("/v1/webhooks/airwallex", async (req, res) => {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          vendorId: topupOrder.vendorId,
-          actorUserId: topupOrder.userId,
-          action: paymentStatus === "COMPLETED" ? "WALLET_TOPUP_COMPLETED" : "WALLET_TOPUP_FAILED",
-          entityType: "TopupOrder",
-          entityId: topupOrder.id,
-          requestId,
-          afterState: responsePayload as unknown as Prisma.JsonObject,
-          metadata: {
-            provider: "airwallex",
-            paymentIntentId: details.paymentIntentId || null,
-            merchantOrderId: details.merchantOrderId || null,
+      if (paymentStatus === "COMPLETED") {
+        await tx.auditLog.create({
+          data: {
+            vendorId: topupOrder.vendorId,
+            actorUserId: topupOrder.userId,
+            action: "WALLET_TOPUP_COMPLETED",
+            entityType: "TopupOrder",
+            entityId: topupOrder.id,
+            requestId,
+            afterState: responsePayload as unknown as Prisma.JsonObject,
+            metadata: {
+              provider: "airwallex",
+              paymentIntentId: details.paymentIntentId || null,
+              merchantOrderId: details.merchantOrderId || null,
+            },
           },
-        },
-      });
+        });
 
-      await tx.outboxEvent.create({
-        data: {
-          vendorId: topupOrder.vendorId,
-          aggregateType: "TopupOrder",
-          aggregateId: topupOrder.id,
-          eventType: paymentStatus === "COMPLETED" ? "wallet.topup.completed" : "wallet.topup.failed",
-          payload: responsePayload as unknown as Prisma.JsonObject,
-          requestId,
-        },
-      });
+        await tx.outboxEvent.create({
+          data: {
+            vendorId: topupOrder.vendorId,
+            aggregateType: "TopupOrder",
+            aggregateId: topupOrder.id,
+            eventType: "wallet.topup.completed",
+            payload: responsePayload as unknown as Prisma.JsonObject,
+            requestId,
+          },
+        });
+      }
+
+      await tx.topupOrder.delete({ where: { id: topupOrder.id } }).catch(() => null);
 
       return responsePayload;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });

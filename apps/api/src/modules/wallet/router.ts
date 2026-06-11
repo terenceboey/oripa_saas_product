@@ -381,34 +381,6 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
         },
       });
 
-      await tx.auditLog.create({
-        data: {
-          vendorId: auth.vendorId,
-          actorUserId: auth.userId,
-          action: "WALLET_TOPUP_STARTED",
-          entityType: "TopupOrder",
-          entityId: bootstrap.topupOrder.id,
-          requestId,
-          afterState: responsePayload as unknown as Prisma.JsonObject,
-          metadata: {
-            amountPoints,
-            currencyCode,
-            amountMajor: estimatedCurrencyAmountMajor,
-          },
-        },
-      });
-
-      await tx.outboxEvent.create({
-        data: {
-          vendorId: auth.vendorId,
-          aggregateType: "TopupOrder",
-          aggregateId: bootstrap.topupOrder.id,
-          eventType: "wallet.topup.started",
-          payload: responsePayload as unknown as Prisma.JsonObject,
-          requestId,
-        },
-      });
-
       return responsePayload;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
@@ -433,6 +405,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
             },
           },
         });
+        await tx.topupOrder.delete({ where: { id: topupOrderId } }).catch(() => null);
 
         await tx.idempotencyKey.update({
           where: { scopeKey: idempotencyScopeKey },
