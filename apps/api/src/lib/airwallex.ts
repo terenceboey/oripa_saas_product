@@ -35,8 +35,12 @@ export function getCurrencyMinorUnitDigits(currencyCode: string) {
   return digits;
 }
 
-export function convertPointsToCurrencyMajor(pointsToCredit: number) {
-  return Number((pointsToCredit / 100).toFixed(2));
+export function convertPointsToCurrencyMajor(pointsToCredit: number, pointsPerCurrencyUnit = 100) {
+  const normalizedPointsPerCurrencyUnit = Number(pointsPerCurrencyUnit);
+  const divisor = Number.isFinite(normalizedPointsPerCurrencyUnit) && normalizedPointsPerCurrencyUnit > 0
+    ? normalizedPointsPerCurrencyUnit
+    : 100;
+  return Number((pointsToCredit / divisor).toFixed(2));
 }
 
 export function convertCurrencyMajorToMinor(currencyAmountMajor: number, currencyCode: string) {

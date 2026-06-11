@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { CSSProperties } from "react";
+import { AirwallexDropInCheckout } from "../../components/airwallex-dropin-checkout";
 import { FormField } from "../../components/form-field";
 import { COUNTRY_OPTIONS } from "../../lib/countries";
-import { formatCurrencyAmount, redirectCustomerTopupCheckout, resolveCurrencyCodeForCountry } from "../../lib/airwallex";
+import { formatCurrencyAmount, resolveCurrencyCodeForCountry } from "../../lib/airwallex";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
@@ -50,6 +51,18 @@ type WalletTopupOrder = {
   provider: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+type WalletTopupCheckout = {
+  intentId: string;
+  clientSecret: string;
+  currencyCode: string;
+  countryCode?: string | null;
+  amountMinor: number;
+  amountCurrency: number;
+  returnUrl: string;
+  successUrl: string;
+  cancelUrl: string;
 };
 
 type WalletDrawOrder = {
@@ -110,6 +123,9 @@ function CustomerProfileContent() {
   const [topupSaving, setTopupSaving] = useState(false);
   const [topupAmount, setTopupAmount] = useState("1000");
   const [customTopupAmount, setCustomTopupAmount] = useState("");
+  const [topupCheckout, setTopupCheckout] = useState<WalletTopupCheckout | null>(null);
+  const [topupPointsPerCurrencyUnit, setTopupPointsPerCurrencyUnit] = useState(100);
+  const [walletRefreshNonce, setWalletRefreshNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [walletMessage, setWalletMessage] = useState<string | null>(null);
@@ -210,7 +226,7 @@ function CustomerProfileContent() {
     return () => {
       active = false;
     };
-  }, [user, runtimeVendorHost]);
+  }, [user, runtimeVendorHost, walletRefreshNonce]);
 
   const storefrontThemeStyle = useMemo(() => {
     if (!theme) return undefined;
@@ -274,6 +290,17 @@ function CustomerProfileContent() {
     return value.toLocaleString();
   }
 
+  function formatTopupCharge(amountPoints: number) {
+    return formatCurrencyAmount(amountPoints / topupPointsPerCurrencyUnit, customerCurrencyCode);
+  }
+
+  function handleCheckoutSuccess() {
+    setWalletMessage("Payment received. Waiting for wallet confirmation...");
+    window.setTimeout(() => {
+      setWalletRefreshNonce((value) => value + 1);
+    }, 2500);
+  }
+
   async function submitTopup(amountPoints: number) {
     if (!user) return;
     setTopupSaving(true);
@@ -298,17 +325,22 @@ function CustomerProfileContent() {
         throw new Error(payload.error ?? "Failed to top up points.");
       }
       setWallet(payload.wallet ?? null);
+      setTopupPointsPerCurrencyUnit(Number(payload.pricing?.pointsPerCurrencyUnit ?? 100));
       if (!payload.checkout?.intentId || !payload.checkout?.clientSecret || !payload.checkout?.currencyCode) {
         throw new Error("Checkout session was not created.");
       }
-      setWalletMessage("Redirecting to Airwallex checkout...");
-      await redirectCustomerTopupCheckout({
+      setTopupCheckout({
         intentId: payload.checkout.intentId,
         clientSecret: payload.checkout.clientSecret,
         currencyCode: payload.checkout.currencyCode,
         countryCode: payload.checkout.countryCode ?? user.countryCode ?? null,
-        successUrl: payload.checkout.successUrl ?? window.location.href,
+        amountMinor: Number(payload.checkout.amountMinor ?? 0),
+        amountCurrency: Number(payload.checkout.amountCurrency ?? 0),
+        returnUrl: String(payload.checkout.returnUrl ?? window.location.href),
+        successUrl: String(payload.checkout.successUrl ?? window.location.href),
+        cancelUrl: String(payload.checkout.cancelUrl ?? window.location.href),
       });
+      setWalletMessage("Complete the payment below.");
       setCustomTopupAmount("");
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : "Failed to top up points.");
@@ -408,7 +440,7 @@ function CustomerProfileContent() {
             </div>
 
             <p className="muted tiny" style={{ marginTop: 8 }}>
-              Top-ups are processed through Airwallex sandbox. Your amount is charged in your local currency at a fixed rate of 100 points = 1 {customerCurrencyCode}.
+              Top-ups are processed through Airwallex sandbox. Your amount is charged in your local currency at a fixed rate of {topupPointsPerCurrencyUnit} points = 1 {customerCurrencyCode}.
             </p>
 
             <div className="actions" style={{ marginTop: 12 }}>
@@ -423,7 +455,7 @@ function CustomerProfileContent() {
                     void submitTopup(amount);
                   }}
                 >
-                  +{formatPoints(amount)} pts ({formatCurrencyAmount(amount / 100, customerCurrencyCode)})
+                  +{formatPoints(amount)} pts ({formatTopupCharge(amount)})
                 </button>
               ))}
             </div>
@@ -439,7 +471,7 @@ function CustomerProfileContent() {
                   placeholder="Enter custom points amount"
                 />
                 <div className="muted tiny" style={{ marginTop: 6 }}>
-                  Estimated charge: {formatCurrencyAmount((Number(customTopupAmount) || 0) / 100, customerCurrencyCode)}
+                  Estimated charge: {formatTopupCharge(Number(customTopupAmount) || 0)}
                 </div>
               </FormField>
               <button type="submit" className="draw-button" disabled={topupSaving}>
@@ -449,6 +481,18 @@ function CustomerProfileContent() {
 
             {walletMessage ? <p className="badge" style={{ marginTop: 10 }}>{walletMessage}</p> : null}
             {walletError ? <p className="error">{walletError}</p> : null}
+
+            {topupCheckout ? (
+              <AirwallexDropInCheckout
+                containerId="airwallex-dropin-checkout"
+                intentId={topupCheckout.intentId}
+                clientSecret={topupCheckout.clientSecret}
+                currencyCode={topupCheckout.currencyCode}
+                countryCode={topupCheckout.countryCode ?? user.countryCode ?? null}
+                onSuccess={handleCheckoutSuccess}
+                onError={(nextError) => setWalletError(nextError)}
+              />
+            ) : null}
 
             <div style={{ marginTop: 16 }}>
               <h3>Purchase history</h3>

@@ -207,7 +207,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
   const settings = await prisma.vendorSettings.findUnique({ where: { vendorId: auth.vendorId } });
   const pointsPerCurrencyUnit = settings?.pointsPerCurrencyUnit ?? 100;
   const currencyCode = resolveCurrencyCodeForCountry(auth.countryCode, settings?.currencyCode ?? undefined);
-  const estimatedCurrencyAmountMajor = convertPointsToCurrencyMajor(amountPoints);
+  const estimatedCurrencyAmountMajor = convertPointsToCurrencyMajor(amountPoints, pointsPerCurrencyUnit);
   const estimatedCurrencyAmount = new Prisma.Decimal(estimatedCurrencyAmountMajor.toFixed(2));
   const amountMinor = convertCurrencyMajorToMinor(estimatedCurrencyAmountMajor, currencyCode);
   if (amountMinor <= 0) {
@@ -411,6 +411,7 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
           pointsPerCurrencyUnit,
           currencyCode,
           amountCurrencyLabel: formatCurrencyAmount(estimatedCurrencyAmountMajor, currencyCode),
+          amountCurrencyMajor: estimatedCurrencyAmountMajor,
         },
       };
 
