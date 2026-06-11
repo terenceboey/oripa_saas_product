@@ -342,46 +342,6 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
         },
       });
 
-      const existingPaymentTransaction = await tx.paymentTransaction.findFirst({
-        where: {
-          topupOrderId: bootstrap.topupOrder.id,
-          provider: "airwallex",
-        },
-      });
-      const paymentTransactionStatus = currentTopupOrder.status === "COMPLETED"
-        ? "CAPTURED"
-        : currentTopupOrder.status === "CANCELLED" || currentTopupOrder.status === "FAILED"
-          ? "FAILED"
-          : "AUTHORIZED";
-      if (existingPaymentTransaction) {
-        await tx.paymentTransaction.update({
-          where: { id: existingPaymentTransaction.id },
-          data: {
-            providerPaymentRef: intent.id,
-            status: paymentTransactionStatus,
-            amountCurrency: estimatedCurrencyAmount,
-            currencyCode,
-            rawPayload: intent.raw as Prisma.InputJsonValue,
-            requestId,
-          },
-        });
-      } else {
-        await tx.paymentTransaction.create({
-          data: {
-            vendorId: auth.vendorId,
-            userId: auth.userId,
-            topupOrderId: bootstrap.topupOrder.id,
-            provider: "airwallex",
-            providerPaymentRef: intent.id,
-            status: paymentTransactionStatus,
-            amountCurrency: estimatedCurrencyAmount,
-            currencyCode,
-            rawPayload: intent.raw as Prisma.InputJsonValue,
-            requestId,
-          },
-        });
-      }
-
       const responsePayload = {
         topupOrder: {
           id: bootstrap.topupOrder.id,
@@ -473,26 +433,6 @@ walletRouter.post("/v1/wallet/topups", async (req: VendorRequest, res) => {
             },
           },
         });
-
-        if (checkoutIntent) {
-          await tx.paymentTransaction.create({
-            data: {
-              vendorId: auth.vendorId,
-              userId: auth.userId,
-              topupOrderId,
-              provider: "airwallex",
-              providerPaymentRef: checkoutIntent.id,
-              status: "FAILED",
-              amountCurrency: estimatedCurrencyAmount,
-              currencyCode,
-              rawPayload: {
-                error: error instanceof Error ? error.message : "Airwallex top-up creation failed",
-                checkoutIntent: checkoutIntent.raw,
-              } as unknown as Prisma.InputJsonValue,
-              requestId,
-            },
-          });
-        }
 
         await tx.idempotencyKey.update({
           where: { scopeKey: idempotencyScopeKey },

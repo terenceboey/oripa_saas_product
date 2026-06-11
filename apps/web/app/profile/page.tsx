@@ -86,6 +86,7 @@ type WalletState = {
     reason: string;
     balanceBefore: number;
     balanceAfter: number;
+    metadata: Record<string, unknown> | null;
     createdAt: string;
   }>;
   topupOrders: WalletTopupOrder[];
@@ -131,6 +132,9 @@ function CustomerProfileContent() {
   const [walletMessage, setWalletMessage] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
   const customerCurrencyCode = useMemo(() => resolveCurrencyCodeForCountry(user?.countryCode ?? null, "USD"), [user?.countryCode]);
+  const topupHistoryEntries = useMemo(() => {
+    return (wallet?.entries ?? []).filter((entry) => entry.type === "CREDIT" && entry.reason === "WALLET_TOPUP");
+  }, [wallet?.entries]);
 
   useEffect(() => {
     let active = true;
@@ -431,7 +435,7 @@ function CustomerProfileContent() {
               </div>
               <div className="stat">
                 <div className="stat-label">Top-ups</div>
-                <div className="stat-value">{wallet?.topupOrders?.length ?? 0}</div>
+                <div className="stat-value">{topupHistoryEntries.length}</div>
               </div>
               <div className="stat">
                 <div className="stat-label">Spends</div>
@@ -497,19 +501,22 @@ function CustomerProfileContent() {
             <div style={{ marginTop: 16 }}>
               <h3>Purchase history</h3>
               <div className="result-list">
-                {wallet?.topupOrders?.length ? wallet.topupOrders.map((topup) => (
-                  <div className="result-row" key={topup.id}>
-                    <span>
-                      {formatPoints(topup.pointsToCredit)} pts {topup.status}{" "}
-                      {topup.expectedCurrencyAmount !== null && topup.expectedCurrencyAmount !== undefined
-                        ? `(${formatCurrencyAmount(Number(topup.expectedCurrencyAmount ?? 0), topup.currencyCode ?? customerCurrencyCode)})`
-                        : ""}
-                    </span>
-                    <span className="muted tiny">
-                      {topup.createdAt ? new Date(topup.createdAt).toLocaleString() : ""}
-                    </span>
-                  </div>
-                )) : <p className="muted tiny">No top-up history yet.</p>}
+                {topupHistoryEntries.length ? topupHistoryEntries.map((entry) => {
+                  const entryMetadata = entry.metadata as { currencyCode?: string | null; amountCurrency?: number | string | null } | null;
+                  const entryCurrencyCode = entryMetadata?.currencyCode ?? customerCurrencyCode;
+                  const entryAmountCurrency = Number(entryMetadata?.amountCurrency ?? 0);
+                  return (
+                    <div className="result-row" key={entry.id}>
+                      <span>
+                        {formatPoints(entry.amountPoints)} pts purchased{" "}
+                        {entryAmountCurrency ? `(${formatCurrencyAmount(entryAmountCurrency, entryCurrencyCode)})` : ""}
+                      </span>
+                      <span className="muted tiny">
+                        {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ""}
+                      </span>
+                    </div>
+                  );
+                }) : <p className="muted tiny">No top-up history yet.</p>}
               </div>
             </div>
 

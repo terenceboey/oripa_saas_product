@@ -194,17 +194,42 @@ paymentsRouter.post("/v1/webhooks/airwallex", async (req, res) => {
         },
       });
 
-      await tx.paymentTransaction.updateMany({
-        where: {
-          topupOrderId: topupOrder.id,
-          provider: "airwallex",
-        },
-        data: {
-          status: paymentStatus === "COMPLETED" ? "CAPTURED" : "FAILED",
-          providerPaymentRef: details.paymentIntentId || topupOrder.providerOrderRef || null,
-          rawPayload: payload as Prisma.InputJsonValue,
-        },
-      });
+      if (paymentStatus === "COMPLETED") {
+        const existingPaymentTransaction = await tx.paymentTransaction.findFirst({
+          where: {
+            topupOrderId: topupOrder.id,
+            provider: "airwallex",
+          },
+        });
+        if (existingPaymentTransaction) {
+          await tx.paymentTransaction.update({
+            where: { id: existingPaymentTransaction.id },
+            data: {
+              status: "CAPTURED",
+              providerPaymentRef: details.paymentIntentId || topupOrder.providerOrderRef || null,
+              amountCurrency: topupOrder.expectedCurrencyAmount,
+              currencyCode: topupOrder.currencyCode,
+              rawPayload: payload as Prisma.InputJsonValue,
+              requestId,
+            },
+          });
+        } else {
+          await tx.paymentTransaction.create({
+            data: {
+              vendorId: topupOrder.vendorId,
+              userId: topupOrder.userId,
+              topupOrderId: topupOrder.id,
+              provider: "airwallex",
+              providerPaymentRef: details.paymentIntentId || topupOrder.providerOrderRef || null,
+              status: "CAPTURED",
+              amountCurrency: topupOrder.expectedCurrencyAmount,
+              currencyCode: topupOrder.currencyCode,
+              rawPayload: payload as Prisma.InputJsonValue,
+              requestId,
+            },
+          });
+        }
+      }
 
       responsePayload = {
         acknowledged: true,
