@@ -6,6 +6,7 @@ import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { CSSProperties } from "react";
 import { FormField } from "../../components/form-field";
 import { COUNTRY_OPTIONS } from "../../lib/countries";
+import { formatCurrencyAmount, redirectCustomerTopupCheckout, resolveCurrencyCodeForCountry } from "../../lib/airwallex";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
@@ -113,6 +114,7 @@ function CustomerProfileContent() {
   const [message, setMessage] = useState<string | null>(null);
   const [walletMessage, setWalletMessage] = useState<string | null>(null);
   const [walletError, setWalletError] = useState<string | null>(null);
+  const customerCurrencyCode = useMemo(() => resolveCurrencyCodeForCountry(user?.countryCode ?? null, "USD"), [user?.countryCode]);
 
   useEffect(() => {
     let active = true;
@@ -296,7 +298,17 @@ function CustomerProfileContent() {
         throw new Error(payload.error ?? "Failed to top up points.");
       }
       setWallet(payload.wallet ?? null);
-      setWalletMessage(`Top-up completed: ${amountPoints.toLocaleString()} points added.`);
+      if (!payload.checkout?.intentId || !payload.checkout?.clientSecret || !payload.checkout?.currencyCode) {
+        throw new Error("Checkout session was not created.");
+      }
+      setWalletMessage("Redirecting to Airwallex checkout...");
+      await redirectCustomerTopupCheckout({
+        intentId: payload.checkout.intentId,
+        clientSecret: payload.checkout.clientSecret,
+        currencyCode: payload.checkout.currencyCode,
+        countryCode: payload.checkout.countryCode ?? user.countryCode ?? null,
+        successUrl: payload.checkout.successUrl ?? window.location.href,
+      });
       setCustomTopupAmount("");
     } catch (err) {
       setWalletError(err instanceof Error ? err.message : "Failed to top up points.");
@@ -396,7 +408,7 @@ function CustomerProfileContent() {
             </div>
 
             <p className="muted tiny" style={{ marginTop: 8 }}>
-              Top-ups are currently simulated until payment integrations are connected. The ledger and history are already live, so we can swap in regional payment providers later without changing the customer flow.
+              Top-ups are processed through Airwallex sandbox. Your amount is charged in your local currency at a fixed rate of 100 points = 1 {customerCurrencyCode}.
             </p>
 
             <div className="actions" style={{ marginTop: 12 }}>
@@ -411,7 +423,7 @@ function CustomerProfileContent() {
                     void submitTopup(amount);
                   }}
                 >
-                  +{formatPoints(amount)}
+                  +{formatPoints(amount)} pts ({formatCurrencyAmount(amount / 100, customerCurrencyCode)})
                 </button>
               ))}
             </div>
@@ -426,6 +438,9 @@ function CustomerProfileContent() {
                   onChange={(e) => setCustomTopupAmount(e.target.value)}
                   placeholder="Enter custom points amount"
                 />
+                <div className="muted tiny" style={{ marginTop: 6 }}>
+                  Estimated charge: {formatCurrencyAmount((Number(customTopupAmount) || 0) / 100, customerCurrencyCode)}
+                </div>
               </FormField>
               <button type="submit" className="draw-button" disabled={topupSaving}>
                 {topupSaving ? "Top-up..." : "Top up custom amount"}
@@ -441,7 +456,10 @@ function CustomerProfileContent() {
                 {wallet?.topupOrders?.length ? wallet.topupOrders.map((topup) => (
                   <div className="result-row" key={topup.id}>
                     <span>
-                      {formatPoints(topup.pointsToCredit)} pts {topup.status}
+                      {formatPoints(topup.pointsToCredit)} pts {topup.status}{" "}
+                      {topup.expectedCurrencyAmount !== null && topup.expectedCurrencyAmount !== undefined
+                        ? `(${formatCurrencyAmount(Number(topup.expectedCurrencyAmount ?? 0), topup.currencyCode ?? customerCurrencyCode)})`
+                        : ""}
                     </span>
                     <span className="muted tiny">
                       {topup.createdAt ? new Date(topup.createdAt).toLocaleString() : ""}

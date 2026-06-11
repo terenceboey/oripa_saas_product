@@ -312,7 +312,7 @@ async function buildPrizeRows(data: {
     items: Array<{
       label: string;
       estimatedValue: number;
-      stock: number;
+      stock?: number;
       imageUrl?: string;
       catalogItemId?: string;
       catalogSource?: string;
@@ -324,7 +324,7 @@ async function buildPrizeRows(data: {
     label: string;
     imageUrl?: string;
     weight: number;
-    stock: number;
+    stock?: number;
     estimatedValue: number;
     catalogItemId?: string;
     catalogSource?: string;
@@ -332,7 +332,23 @@ async function buildPrizeRows(data: {
     language?: string;
   }>;
 }) {
-  return resolvePackPrizeRows(data, prismaCatalogLookup);
+  return resolvePackPrizeRows(
+    {
+      tiers: data.tiers?.map((tier) => ({
+        name: tier.name,
+        percentage: tier.percentage,
+        items: tier.items.map((item) => ({
+          ...item,
+          stock: item.stock ?? 1,
+        })),
+      })),
+      prizes: data.prizes?.map((item) => ({
+        ...item,
+        stock: item.stock ?? 1,
+      })),
+    },
+    prismaCatalogLookup
+  );
 }
 
 function buildTierSnapshot(
@@ -343,7 +359,7 @@ function buildTierSnapshot(
       items: Array<{
         label: string;
         estimatedValue: number;
-        stock: number;
+        stock?: number;
         imageUrl?: string;
         catalogItemId?: string;
         catalogSource?: string;
@@ -355,7 +371,7 @@ function buildTierSnapshot(
       label: string;
       imageUrl?: string;
       weight: number;
-      stock: number;
+      stock?: number;
       estimatedValue: number;
       catalogItemId?: string;
       catalogSource?: string;
@@ -373,7 +389,7 @@ function buildTierSnapshot(
         items: tier.items.map((item) => ({
           label: item.label,
           estimatedValue: item.estimatedValue,
-          stock: item.stock,
+          stock: item.stock ?? 1,
           imageUrl: item.imageUrl ?? null,
           catalogItemId: item.catalogItemId ?? null,
           catalogSource: item.catalogSource ?? null,
@@ -388,7 +404,7 @@ function buildTierSnapshot(
       data.prizes.map((item) => ({
         label: item.label,
         estimatedValue: item.estimatedValue,
-        stock: item.stock,
+        stock: item.stock ?? 1,
         imageUrl: item.imageUrl ?? null,
         catalogItemId: item.catalogItemId ?? null,
         catalogSource: item.catalogSource ?? null,
@@ -401,7 +417,7 @@ function buildTierSnapshot(
     prizeRows.map((row) => ({
       label: row.label,
       estimatedValue: row.estimatedValue,
-      stock: row.stock,
+      stock: row.stock ?? 1,
       imageUrl: row.imageUrl ?? null,
       catalogItemId: row.catalogItemId ?? null,
       catalogSource: row.catalogSource ?? null,

@@ -15,6 +15,7 @@ import { bannerRouter } from "./modules/banners/router";
 import { authRouter } from "./modules/auth/router";
 import { catalogRouter } from "./modules/catalog/router";
 import { creativeRouter } from "./modules/creative/router";
+import { paymentsRouter } from "./modules/payments/router";
 import { setlistRouter } from "./modules/setlists/router";
 import { mediaRouter } from "./modules/media/router";
 import { superAdminRouter } from "./modules/super-admin/router";
@@ -86,8 +87,16 @@ export function createApp() {
     optionsSuccessStatus: 204,
   }));
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.json({ limit: "64kb" }));
+  app.use(express.json({
+    limit: "64kb",
+    verify: (req, _res, buf) => {
+      (req as express.Request & { rawBody?: string }).rawBody = buf.toString("utf8");
+    },
+  }));
   app.use((req, res, next) => {
+    if (req.path === "/v1/webhooks/airwallex") {
+      return next();
+    }
     ensureCsrfCookie(res, getCsrfTokenFromRequest(req));
     const csrfError = validateCsrfRequest(req);
     if (csrfError) {
@@ -115,6 +124,7 @@ export function createApp() {
   app.use(superAdminRouter);
   app.use(catalogRouter);
   app.use(creativeRouter);
+  app.use(paymentsRouter);
   app.use(setlistRouter);
   app.use(mediaRouter);
 
