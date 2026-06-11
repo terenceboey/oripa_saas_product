@@ -3,7 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import passport from "passport";
-import path from "node:path";
+import path from "path";
 import { vendorResolver } from "./middleware/vendor";
 import { healthRouter } from "./modules/health/router";
 import { vendorRouter } from "./modules/vendors/router";

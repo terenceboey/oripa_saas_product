@@ -40,6 +40,7 @@
     "test:activity:public-feed": "tsx scripts/test-activity-public-feed.ts",
     "test:catalog:tcgtracking:guardrails": "tsx scripts/test-sync-tcgtracking-guardrails.ts",
     "test:creative:mvp": "tsx scripts/test-campaign-creative-mvp.ts",
+    "test:creative:banner-template-demo": "tsx scripts/test-banner-template-demo-contract.ts",
     "test:customer:phase2": "tsx scripts/test-customer-custody-contract.ts && tsx scripts/test-custody-provider-adapters.ts && tsx scripts/test-customer-buyback-policy.ts && tsx scripts/test-customer-ops-lifecycle.ts",
     "test:customer:buyback": "tsx scripts/test-customer-buyback-policy.ts",
     "test:customer:ops-lifecycle": "tsx scripts/test-customer-ops-lifecycle.ts",

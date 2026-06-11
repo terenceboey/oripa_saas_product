@@ -81,6 +81,12 @@ export function resolveVendorHostHint(req: Request) {
 }
 
 export const vendorResolver: RequestHandler = (req: Request, _res: Response, next: NextFunction) => {
+  const routePath = req.path || req.originalUrl || "";
+  if (routePath === "/health" || routePath === "/v1/health" || routePath.startsWith("/v1/demo/")) {
+    next();
+    return;
+  }
+
   void (async () => {
     const vendorReq = req as VendorRequest;
     const resolved = resolveBrowserVendorHost(vendorReq);

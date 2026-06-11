@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export { PROMPT_PACK_TEMPLATES, UNIVERSAL_GACHA_NEGATIVE_PROMPT } from "./banner-template-pack";
+
 const imageUrlSchema = z
   .string()
   .max(2048)
@@ -12,6 +14,28 @@ const imageUrlSchema = z
       return false;
     }
   }, "Image URL must be an absolute http/https URL");
+
+const privateCreativeStorageImageUrlSchema = z.string().max(4096).refine((value) => {
+  const pathname = value.startsWith("/creative-storage/")
+    ? value.split(/[?#]/)[0]
+    : (() => {
+        try {
+          const parsed = new URL(value);
+          if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+          return parsed.pathname;
+        } catch {
+          return "";
+        }
+      })();
+  const decodedPathname = (() => {
+    try {
+      return decodeURIComponent(pathname);
+    } catch {
+      return pathname;
+    }
+  })();
+  return decodedPathname.startsWith("/creative-storage/private/") && !decodedPathname.includes("..");
+}, "Image URL must be a private creative-storage URL");
 
 const optionalTrimmedStringSchema = (maxLength: number) =>
   z.preprocess((value) => {
@@ -181,13 +205,72 @@ export const campaignCreativeStyleSchema = z.enum([
   "clean_showcase",
 ]);
 
+export const bannerTemplateIdSchema = z.string().min(1).max(120);
+export const bannerRatioSchema = z.enum(["3:2", "16:9"]);
+export const bannerStyleIntensitySchema = z.enum(["flashy", "ultra_flashy", "insane_arcade"]);
+export const bannerMascotModeSchema = z.enum(["primary_card_inspired", "lucky_arcade_host", "no_mascot"]);
+export const bannerCardDisplayStyleSchema = z.enum([
+  "auto",
+  "raw_cards",
+  "glossy_card_frames",
+  "generic_graded_slabs",
+  "real_slab_only",
+]);
+
+const creativeHeroAssetSchema = z.object({
+  assetId: z.string().min(1).max(160),
+  source: z.enum(["upload", "pack_prize"]),
+  imageUrl: privateCreativeStorageImageUrlSchema,
+  displayName: z.string().min(1).max(120),
+  snapshotHash: z.string().min(8).max(128),
+  contentHash: z.string().min(8).max(128).optional(),
+});
+
 export const createCampaignCreativeSchema = z.object({
-  stylePreset: campaignCreativeStyleSchema.optional().default("premium_foil"),
-  aspectRatio: z.enum(["16:9", "1:1", "4:5"]).optional().default("16:9"),
+  templateId: bannerTemplateIdSchema.optional().default("jp_arcade_guaranteed_hit_v1"),
+  stylePreset: campaignCreativeStyleSchema.optional().default("neon_arcade"),
+  aspectRatio: z.enum(["16:9", "1:1", "4:5", "3:2"]).optional().default("3:2"),
+  bannerRatio: bannerRatioSchema.optional().default("3:2"),
+  styleIntensity: bannerStyleIntensitySchema.optional().default("ultra_flashy"),
+  mascotMode: bannerMascotModeSchema.optional().default("primary_card_inspired"),
+  cardDisplayStyle: bannerCardDisplayStyleSchema.optional().default("auto"),
+  heroCardIds: z.array(z.string().min(1)).min(1).max(5).optional(),
+  primaryCardId: z.string().min(1).optional(),
+  heroAssets: z.array(creativeHeroAssetSchema).min(1).max(5).optional(),
+  primaryHeroAssetId: z.string().min(1).optional(),
+  fields: z.object({
+    headline: z.string().min(2).max(64),
+    topLeftBadge: z.string().max(64),
+    topCenterBadge: z.string().max(64),
+    topRightBadge: z.string().max(48),
+    roundSticker: z.string().max(40).optional().default(""),
+  }).optional(),
+}).refine((value) => Boolean(value.heroAssets?.length || value.heroCardIds?.length), {
+  message: "Choose uploaded source assets or pack-prize hero cards",
+  path: ["heroAssets"],
+});
+
+export const createGptImage2CreativeGenerationSchema = z.object({
+  imageCount: z.number().int().min(1).max(4).optional().default(1),
 });
 
 export const publishCampaignCreativeSchema = z.object({
   assetId: z.string().cuid(),
+});
+
+export const createManualCreativeCandidatesSchema = z.object({
+  candidates: z.array(z.object({
+    imageUrl: privateCreativeStorageImageUrlSchema,
+    title: z.string().min(2).max(120).optional(),
+    width: z.number().int().min(320).max(4096).optional().default(1536),
+    height: z.number().int().min(320).max(4096).optional().default(1024),
+    notes: z.string().max(500).optional().default(""),
+  })).min(1).max(4),
+});
+
+export const reviewCreativeAssetSchema = z.object({
+  reviewStatus: z.enum(["APPROVED_PRIVATE", "REJECTED", "PENDING_REVIEW"]),
+  reviewNotes: z.string().max(500).optional().default(""),
 });
 
 export const updateVendorLimitsSchema = z.object({
@@ -211,4 +294,7 @@ export type DrawInput = z.infer<typeof drawSchema>;
 export type CreateBannerInput = z.infer<typeof createBannerSchema>;
 export type CreateCampaignCreativeInput = z.infer<typeof createCampaignCreativeSchema>;
 export type PublishCampaignCreativeInput = z.infer<typeof publishCampaignCreativeSchema>;
+export type CreateGptImage2CreativeGenerationInput = z.infer<typeof createGptImage2CreativeGenerationSchema>;
+export type CreateManualCreativeCandidatesInput = z.infer<typeof createManualCreativeCandidatesSchema>;
+export type ReviewCreativeAssetInput = z.infer<typeof reviewCreativeAssetSchema>;
 export type UpdateVendorLimitsInput = z.infer<typeof updateVendorLimitsSchema>;

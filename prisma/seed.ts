@@ -221,6 +221,100 @@ async function main() {
     });
   }
 
+  const demoBannerPrizeImages = [
+    {
+      label: "Charizard ex SAR",
+      imageUrl: "https://images.pokemontcg.io/sv3pt5/199_hires.png",
+      estimatedValue: 85000,
+      weight: 1,
+      stock: 2,
+      remainingStock: 2,
+    },
+    {
+      label: "Blastoise ex SAR",
+      imageUrl: "https://images.pokemontcg.io/sv3pt5/200_hires.png",
+      estimatedValue: 62000,
+      weight: 2,
+      stock: 3,
+      remainingStock: 3,
+    },
+    {
+      label: "Venusaur ex SAR",
+      imageUrl: "https://images.pokemontcg.io/sv3pt5/198_hires.png",
+      estimatedValue: 58000,
+      weight: 2,
+      stock: 3,
+      remainingStock: 3,
+    },
+    {
+      label: "Mew ex SAR",
+      imageUrl: "https://images.pokemontcg.io/sv3pt5/205_hires.png",
+      estimatedValue: 72000,
+      weight: 1,
+      stock: 2,
+      remainingStock: 2,
+    },
+    {
+      label: "Pikachu Secret Rare",
+      imageUrl: "https://images.pokemontcg.io/swsh4/188_hires.png",
+      estimatedValue: 45000,
+      weight: 4,
+      stock: 6,
+      remainingStock: 6,
+    },
+    {
+      label: "Gengar VMAX Alt Art",
+      imageUrl: "https://images.pokemontcg.io/swsh8/271_hires.png",
+      estimatedValue: 110000,
+      weight: 1,
+      stock: 1,
+      remainingStock: 1,
+    },
+  ];
+
+  const existingDemoBannerPack = await prisma.pack.findFirst({
+    where: { vendorId: tenant.id, title: "MVP Banner Demo Pack" },
+    select: { id: true },
+  });
+
+  if (existingDemoBannerPack) {
+    await prisma.pack.update({
+      where: { id: existingDemoBannerPack.id },
+      data: {
+        packBannerImageUrl: DEFAULT_PACK_BANNER_IMAGE,
+        pricePoints: 5500,
+        totalStock: 120,
+        remainingStock: 120,
+        isNew: true,
+        limitedLabel: "Banner MVP",
+        importantNotes: "Seeded pack with real card image URLs for the banner-maker MVP.",
+        status: "DRAFT",
+        prizes: {
+          deleteMany: {},
+          createMany: { data: demoBannerPrizeImages },
+        },
+      },
+    });
+  } else {
+    await prisma.pack.create({
+      data: {
+        vendorId: tenant.id,
+        title: "MVP Banner Demo Pack",
+        packBannerImageUrl: DEFAULT_PACK_BANNER_IMAGE,
+        pricePoints: 5500,
+        totalStock: 120,
+        remainingStock: 120,
+        isNew: true,
+        limitedLabel: "Banner MVP",
+        importantNotes: "Seeded pack with real card image URLs for the banner-maker MVP.",
+        status: "DRAFT",
+        prizes: {
+          createMany: { data: demoBannerPrizeImages },
+        },
+      },
+    });
+  }
+
   const existingBannerCount = await prisma.vendorBanner.count({ where: { vendorId: tenant.id } });
   if (existingBannerCount === 0) {
     await prisma.vendorBanner.createMany({
