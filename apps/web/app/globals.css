@@ -1222,6 +1222,13 @@ h6,
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.34);
 }
 
+.draw-confirm-modal {
+  position: relative;
+  width: min(560px, 96vw);
+  overflow: hidden;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
+}
+
 .draw-showcase-confetti {
   position: absolute;
   inset: 0;
@@ -1314,6 +1321,22 @@ h6,
   gap: 10px;
   flex-wrap: wrap;
   padding-top: 8px;
+}
+
+.draw-confirm-summary {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.draw-confirm-pill {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 86%, var(--secondary) 14%);
 }
 
 @media (max-width: 760px) {

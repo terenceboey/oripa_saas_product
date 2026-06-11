@@ -104,6 +104,7 @@ export default function PackDrawPage() {
   const [drawShowcaseCard, setDrawShowcaseCard] = useState<DrawShowcaseCard | null>(null);
   const [drawShowcaseSoundEnabled, setDrawShowcaseSoundEnabled] = useState(true);
   const [confettiBurstKey, setConfettiBurstKey] = useState(0);
+  const [pendingDrawQuantity, setPendingDrawQuantity] = useState<number | null>(null);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
   const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
@@ -157,6 +158,7 @@ export default function PackDrawPage() {
   useBackForwardRefresh(loadData, { cooldownMs: 15000 });
 
   const isDrawShowcaseOpen = Boolean(drawShowcase);
+  const isDrawConfirmationOpen = pendingDrawQuantity !== null;
   const drawShowcasePool = useMemo(() => {
     return (pack?.prizes ?? []).map((prize) => ({
       label: prize.label,
@@ -214,6 +216,15 @@ export default function PackDrawPage() {
     setConfettiBurstKey((value) => value + 1);
   }
 
+  function openDrawConfirmation(quantity: number) {
+    if (!pack || drawing || isDrawShowcaseOpen) return;
+    setPendingDrawQuantity(quantity);
+  }
+
+  function cancelDrawConfirmation() {
+    setPendingDrawQuantity(null);
+  }
+
   async function handleDraw(quantity: number) {
     if (!pack) return;
     setDrawing(true);
@@ -250,6 +261,13 @@ export default function PackDrawPage() {
     } finally {
       setDrawing(false);
     }
+  }
+
+  async function confirmDraw() {
+    if (pendingDrawQuantity === null) return;
+    const quantity = pendingDrawQuantity;
+    setPendingDrawQuantity(null);
+    await handleDraw(quantity);
   }
 
   const storefrontThemeStyle = useMemo(() => {
@@ -370,8 +388,8 @@ export default function PackDrawPage() {
             </div>
 
             <div className="actions">
-              <button type="button" className="draw-button" disabled={drawing || isDrawShowcaseOpen || pack.remainingStock < 1} onClick={() => handleDraw(1)}>Draw</button>
-              <button type="button" className="draw-button alt" disabled={drawing || isDrawShowcaseOpen || pack.remainingStock < 10} onClick={() => handleDraw(10)}>10x Draw</button>
+              <button type="button" className="draw-button" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1} onClick={() => openDrawConfirmation(1)}>Draw</button>
+              <button type="button" className="draw-button alt" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 10} onClick={() => openDrawConfirmation(10)}>10x Draw</button>
             </div>
             {error ? <p className="error">{error}</p> : null}
           </section>
@@ -498,6 +516,50 @@ export default function PackDrawPage() {
                   Continue
                 </button>
               ) : null}
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {isDrawConfirmationOpen && pack && pendingDrawQuantity !== null ? (
+        <div className="draw-showcase-backdrop" onClick={cancelDrawConfirmation}>
+          <section className="draw-confirm-modal card" onClick={(event) => event.stopPropagation()}>
+            <div className="heading-row">
+              <div>
+                <h3>Confirm Draw</h3>
+                <p className="muted tiny">Please confirm before the draw begins.</p>
+              </div>
+              <button type="button" className="sort-pill" onClick={cancelDrawConfirmation}>
+                Cancel
+              </button>
+            </div>
+
+            <div className="draw-confirm-summary">
+              <div className="draw-confirm-pill">
+                <span className="muted tiny">Pack</span>
+                <strong>{pack.title}</strong>
+              </div>
+              <div className="draw-confirm-pill">
+                <span className="muted tiny">Quantity</span>
+                <strong>{pendingDrawQuantity} draw{pendingDrawQuantity > 1 ? "s" : ""}</strong>
+              </div>
+              <div className="draw-confirm-pill">
+                <span className="muted tiny">Cost</span>
+                <strong>{(pack.pricePoints * pendingDrawQuantity).toLocaleString()} pts</strong>
+              </div>
+            </div>
+
+            <p className="muted" style={{ marginTop: 10 }}>
+              Once confirmed, the lottery animation and reveal sequence will begin.
+            </p>
+
+            <div className="draw-showcase-footer">
+              <button type="button" className="sort-pill" onClick={cancelDrawConfirmation}>
+                Cancel
+              </button>
+              <button type="button" className="draw-button" onClick={() => void confirmDraw()} disabled={drawing}>
+                Confirm Draw
+              </button>
             </div>
           </section>
         </div>
