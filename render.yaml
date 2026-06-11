@@ -29,6 +29,16 @@ services:
         sync: false
       - key: GOOGLE_CALLBACK_URL
         sync: false
+      - key: AIRWALLEX_ENV
+        value: demo
+      - key: AIRWALLEX_CLIENT_ID
+        sync: false
+      - key: AIRWALLEX_API_KEY
+        sync: false
+      - key: AIRWALLEX_WEBHOOK_SECRET
+        sync: false
+      - key: AIRWALLEX_DEFAULT_CURRENCY_CODE
+        value: USD
       - key: SMTP_HOST
         value: smtp.gmail.com
       - key: SMTP_PORT
@@ -59,6 +69,8 @@ services:
         sync: false
       - key: NEXT_PUBLIC_TENANT_HOST
         sync: false
+      - key: NEXT_PUBLIC_AIRWALLEX_ENV
+        value: demo
 
   - type: worker
     name: oripa-worker
