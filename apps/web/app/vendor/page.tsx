@@ -300,7 +300,7 @@ const DEFAULT_PACK_BANNER_OPTIONS = [
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
-type ActiveTab = "BUSINESS" | "PACKS" | "FULFILMENT";
+type ActiveTab = "BUSINESS" | "STORE_SETTINGS" | "PACKS" | "FULFILMENT";
 
 function formatFulfillmentAddress(customer?: PackWinner["customer"] | null) {
   if (!customer) return "No customer record";
@@ -404,12 +404,14 @@ function matchesPreset(
 
 function parseTabValue(tab: string | null): ActiveTab {
   if (tab === "pack-studio") return "PACKS";
+  if (tab === "store-settings" || tab === "store_settings") return "STORE_SETTINGS";
   if (tab === "fulfilment" || tab === "fulfillment") return "FULFILMENT";
   return "BUSINESS";
 }
 
-function toTabValue(tab: ActiveTab): "business" | "pack-studio" | "fulfilment" {
+function toTabValue(tab: ActiveTab): "business" | "store-settings" | "pack-studio" | "fulfilment" {
   if (tab === "PACKS") return "pack-studio";
+  if (tab === "STORE_SETTINGS") return "store-settings";
   if (tab === "FULFILMENT") return "fulfilment";
   return "business";
 }
@@ -1692,6 +1694,13 @@ export default function VendorPage() {
           </button>
           <button
             type="button"
+            className={`sort-pill ${activeTab === "STORE_SETTINGS" ? "active" : ""}`}
+            onClick={() => setActiveTabInUrl("STORE_SETTINGS")}
+          >
+            Store Settings
+          </button>
+          <button
+            type="button"
             className={`sort-pill ${activeTab === "PACKS" ? "active" : ""}`}
             onClick={() => setActiveTabInUrl("PACKS")}
           >
@@ -1790,6 +1799,48 @@ export default function VendorPage() {
             </div>
           </section>
 
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Referral Signups</h2>
+            <p className="muted tiny">Referral URL: <code>/register?ref={vendor?.referralCode ?? ""}</code></p>
+            <div className="result-list">
+              {referrals.map((row) => (
+                <div className="result-row" key={row.id}>
+                  <span>{row.displayName || row.email}</span>
+                  <span>{new Date(row.referredAt).toLocaleString()}</span>
+                </div>
+              ))}
+              {referrals.length === 0 ? <p className="muted tiny">No referral signups yet.</p> : null}
+            </div>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Generate QR Points</h2>
+            <form className="vendor-form" onSubmit={generateQr}>
+              <label className="muted tiny">
+                Points to grant
+                <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
+              </label>
+              <label className="muted tiny">
+                Expiry minutes
+                <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
+              </label>
+              <button type="submit" className="draw-button" disabled={saving}>Generate QR Token</button>
+            </form>
+            <div className="result-list">
+              {qrs.map((row) => (
+                <div className="result-row" key={row.id}>
+                  <span>{row.token}</span>
+                  <span>{row.points} pts | {row.status}</span>
+                  <button type="button" className="sort-pill" onClick={() => setActiveQr(row)}>Display QR</button>
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      {activeTab === "STORE_SETTINGS" ? (
+        <>
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Vendor Profile / Business / Referral</h2>
             <form className="vendor-form" onSubmit={saveVendorProfile}>
@@ -1923,19 +1974,19 @@ export default function VendorPage() {
                 Banner title
                 <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
               </label>
-                <label className="muted tiny">
-                  Banner image URL
-                  <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
-                </label>
-                <label className="muted tiny">
-                  Upload banner image (max 5MB)
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={(e) => void handleBannerImageUpload(e.target.files?.[0] ?? null)}
-                    disabled={uploadingBannerImage}
-                  />
-                </label>
+              <label className="muted tiny">
+                Banner image URL
+                <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
+              </label>
+              <label className="muted tiny">
+                Upload banner image (max 5MB)
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => void handleBannerImageUpload(e.target.files?.[0] ?? null)}
+                  disabled={uploadingBannerImage}
+                />
+              </label>
               <label className="muted tiny">
                 Target URL (optional)
                 <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
@@ -1952,44 +2003,6 @@ export default function VendorPage() {
                     <div className="muted tiny">Order {banner.sortOrder}</div>
                   </div>
                   <button type="button" className="sort-pill" onClick={() => void deleteBanner(banner.id)} disabled={saving}>Delete</button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Referral Signups</h2>
-            <p className="muted tiny">Referral URL: <code>/register?ref={vendor?.referralCode ?? ""}</code></p>
-            <div className="result-list">
-              {referrals.map((row) => (
-                <div className="result-row" key={row.id}>
-                  <span>{row.displayName || row.email}</span>
-                  <span>{new Date(row.referredAt).toLocaleString()}</span>
-                </div>
-              ))}
-              {referrals.length === 0 ? <p className="muted tiny">No referral signups yet.</p> : null}
-            </div>
-          </section>
-
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Generate QR Points</h2>
-            <form className="vendor-form" onSubmit={generateQr}>
-              <label className="muted tiny">
-                Points to grant
-                <input value={qrPoints} onChange={(e) => setQrPoints(e.target.value)} type="number" min={1} placeholder="Points to grant" required />
-              </label>
-              <label className="muted tiny">
-                Expiry minutes
-                <input value={qrExpiryMinutes} onChange={(e) => setQrExpiryMinutes(e.target.value)} type="number" min={1} max={1440} placeholder="Expiry minutes" required />
-              </label>
-              <button type="submit" className="draw-button" disabled={saving}>Generate QR Token</button>
-            </form>
-            <div className="result-list">
-              {qrs.map((row) => (
-                <div className="result-row" key={row.id}>
-                  <span>{row.token}</span>
-                  <span>{row.points} pts | {row.status}</span>
-                  <button type="button" className="sort-pill" onClick={() => setActiveQr(row)}>Display QR</button>
                 </div>
               ))}
             </div>
