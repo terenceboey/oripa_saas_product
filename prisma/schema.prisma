@@ -186,11 +186,28 @@ model Vendor {
   identificationDocumentType    VendorIdentificationDocumentType?
   identificationDocumentUrl     String?
   businessRegistrationNumber    String?
-  registeredBusinessAddress     String?
+  registeredBusinessAddressLine1 String?
+  registeredBusinessAddressLine2 String?
+  registeredBusinessAddressCity String?
+  registeredBusinessAddressStateProvince String?
+  registeredBusinessAddressPostalCode String?
+  registeredBusinessAddressCountry String?
   contactPhoneNumber            String?
   businessEmail                 String?
-  websiteOrSocialLinks          String?
-  payoutBankDetails             String?
+  businessWebsiteUrl             String?
+  facebookUrl                   String?
+  instagramUrl                  String?
+  tiktokUrl                     String?
+  xUrl                          String?
+  linkedinUrl                   String?
+  youtubeUrl                    String?
+  payoutBankAccountHolderName    String?
+  payoutBankName                String?
+  payoutBankCountry             String?
+  payoutBankAccountNumber       String?
+  payoutBankIban                String?
+  payoutBankSwiftBic            String?
+  payoutBankBranchCode          String?
   applicationSubmittedAt        DateTime?
   applicationReviewedAt         DateTime?
   applicationReviewNotes        String?

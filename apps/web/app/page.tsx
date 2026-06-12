@@ -276,19 +276,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      <nav className="category-strip category-top">
-        {categories.map((category) => (
-          <button
-            key={category}
-            type="button"
-            className={`chip ${activeCategory === category ? "chip-active" : ""}`}
-            onClick={() => setActiveCategory(category)}
-          >
-            {category}
-          </button>
-        ))}
-      </nav>
-
       <section className="banner-wrap">
         {currentBanner ? (
           <a className="banner-link" href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer">
@@ -347,20 +334,11 @@ export default function HomePage() {
       <section className="catalog-hero card">
         <div className="heading-row">
           <div>
-            <span className="badge">Oripa MVP</span>
             <h1 className="hero-title">{activeCategory} Mystery Packs</h1>
           </div>
           <button type="button" className="refresh-button" onClick={() => void loadData(true)} disabled={loading}>
             {loading ? "Loading..." : "Refresh"}
           </button>
-        </div>
-
-        <div className="sort-strip">
-          <button type="button" className={`sort-pill ${sortKey === "recommended" ? "active" : ""}`} onClick={() => setSortKey("recommended")}>Recommended</button>
-          <button type="button" className={`sort-pill ${sortKey === "remaining_asc" ? "active" : ""}`} onClick={() => setSortKey("remaining_asc")}>Nearly Sold Out</button>
-          <button type="button" className={`sort-pill ${sortKey === "newest" ? "active" : ""}`} onClick={() => setSortKey("newest")}>Newest</button>
-          <button type="button" className={`sort-pill ${sortKey === "price_asc" ? "active" : ""}`} onClick={() => setSortKey("price_asc")}>Low Price</button>
-          <button type="button" className={`sort-pill ${sortKey === "price_desc" ? "active" : ""}`} onClick={() => setSortKey("price_desc")}>High Price</button>
         </div>
 
         {error ? <p className="error">{error}</p> : null}

@@ -18,18 +18,73 @@ type SuperAdminVendor = {
   personInCharge?: string | null;
   personInChargeCountry?: string | null;
   businessRegistrationNumber?: string | null;
-  registeredBusinessAddress?: string | null;
+  registeredBusinessAddressLine1?: string | null;
+  registeredBusinessAddressLine2?: string | null;
+  registeredBusinessAddressCity?: string | null;
+  registeredBusinessAddressStateProvince?: string | null;
+  registeredBusinessAddressPostalCode?: string | null;
+  registeredBusinessAddressCountry?: string | null;
   contactPhoneNumber?: string | null;
   businessEmail?: string | null;
-  websiteOrSocialLinks?: string | null;
+  businessWebsiteUrl?: string | null;
+  facebookUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  xUrl?: string | null;
+  linkedinUrl?: string | null;
+  youtubeUrl?: string | null;
   identificationDocumentType?: string | null;
   identificationDocumentUrl?: string | null;
+  payoutBankAccountHolderName?: string | null;
+  payoutBankName?: string | null;
+  payoutBankCountry?: string | null;
+  payoutBankAccountNumber?: string | null;
+  payoutBankIban?: string | null;
+  payoutBankSwiftBic?: string | null;
+  payoutBankBranchCode?: string | null;
   applicationSubmittedAt?: string | null;
   applicationReviewedAt?: string | null;
   applicationReviewNotes?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 };
+
+function formatAddress(vendor: SuperAdminVendor) {
+  const parts = [
+    vendor.registeredBusinessAddressLine1,
+    vendor.registeredBusinessAddressLine2,
+    [vendor.registeredBusinessAddressCity, vendor.registeredBusinessAddressStateProvince].filter(Boolean).join(", ") || null,
+    vendor.registeredBusinessAddressPostalCode,
+    vendor.registeredBusinessAddressCountry,
+  ].map((part) => String(part ?? "").trim()).filter(Boolean);
+  return parts.length ? parts.join(" | ") : "-";
+}
+
+function formatBank(vendor: SuperAdminVendor) {
+  const parts = [
+    vendor.payoutBankAccountHolderName && `Holder: ${vendor.payoutBankAccountHolderName}`,
+    vendor.payoutBankName && `Bank: ${vendor.payoutBankName}`,
+    vendor.payoutBankCountry && `Country: ${vendor.payoutBankCountry}`,
+    vendor.payoutBankAccountNumber && `Account: ${vendor.payoutBankAccountNumber}`,
+    vendor.payoutBankIban && `IBAN: ${vendor.payoutBankIban}`,
+    vendor.payoutBankSwiftBic && `SWIFT/BIC: ${vendor.payoutBankSwiftBic}`,
+    vendor.payoutBankBranchCode && `Branch: ${vendor.payoutBankBranchCode}`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" | ") : "-";
+}
+
+function formatSocial(vendor: SuperAdminVendor) {
+  const parts = [
+    vendor.businessWebsiteUrl && `Website: ${vendor.businessWebsiteUrl}`,
+    vendor.facebookUrl && `Facebook: ${vendor.facebookUrl}`,
+    vendor.instagramUrl && `Instagram: ${vendor.instagramUrl}`,
+    vendor.tiktokUrl && `TikTok: ${vendor.tiktokUrl}`,
+    vendor.xUrl && `X: ${vendor.xUrl}`,
+    vendor.linkedinUrl && `LinkedIn: ${vendor.linkedinUrl}`,
+    vendor.youtubeUrl && `YouTube: ${vendor.youtubeUrl}`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" | ") : "-";
+}
 
 type DashboardResponse = {
   summary: {
@@ -166,7 +221,7 @@ export default function SuperAdminDashboardPage() {
                   <div>
                     <h3 style={{ marginBottom: 4 }}>{vendor.name}</h3>
                     <p className="muted" style={{ margin: 0 }}>
-                      {vendor.host} · {vendor.applicationStatus}
+                      {vendor.host} | {vendor.applicationStatus}
                     </p>
                   </div>
                   <span className="badge">{vendor.isActive ? "Active" : "Inactive"}</span>
@@ -182,8 +237,10 @@ export default function SuperAdminDashboardPage() {
                 <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
                   <div><strong>Business email:</strong> {vendor.businessEmail ?? "-"}</div>
                   <div><strong>Contact phone:</strong> {vendor.contactPhoneNumber ?? "-"}</div>
-                  <div><strong>Website/social:</strong> {vendor.websiteOrSocialLinks ?? "-"}</div>
-                  <div><strong>Document:</strong> {vendor.identificationDocumentType ?? "-"}{vendor.identificationDocumentUrl ? ` · ${vendor.identificationDocumentUrl}` : ""}</div>
+                  <div><strong>Website/social:</strong> {formatSocial(vendor)}</div>
+                  <div><strong>Registered address:</strong> {formatAddress(vendor)}</div>
+                  <div><strong>Payout details:</strong> {formatBank(vendor)}</div>
+                  <div><strong>Document:</strong> {vendor.identificationDocumentType ?? "-"}{vendor.identificationDocumentUrl ? ` | ${vendor.identificationDocumentUrl}` : ""}</div>
                 </div>
 
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
