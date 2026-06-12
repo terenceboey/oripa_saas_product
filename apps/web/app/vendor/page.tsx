@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -84,6 +84,86 @@ type TopupActivity = {
     email: string;
     displayName?: string | null;
   } | null;
+};
+
+type PackWinner = {
+  id: string;
+  packId: string;
+  packTitle: string;
+  drawSequence: number;
+  pointsSpent: number;
+  createdAt: string;
+  drawOrderId: string;
+  drawOrderQuantity: number;
+  customer?: {
+    id: string;
+    email: string;
+    displayName?: string | null;
+    fullName?: string | null;
+    phoneNumber?: string | null;
+    shippingAddressLine1?: string | null;
+    shippingAddressLine2?: string | null;
+    shippingAddressCity?: string | null;
+    shippingAddressState?: string | null;
+    shippingAddressPostalCode?: string | null;
+    shippingAddressCountry?: string | null;
+  } | null;
+  prize: {
+    id: string | null;
+    label: string;
+    imageUrl?: string | null;
+    estimatedValue?: number | null;
+    rarity?: string | null;
+  };
+};
+
+type FulfilmentItem = {
+  id: string;
+  status: "HELD" | "REDEMPTION_REQUESTED" | "BUYBACK_REQUESTED" | "REDEEMED" | "BOUGHT_BACK" | "VOIDED";
+  provider?: string | null;
+  providerMemo?: string | null;
+  providerTxSig?: string | null;
+  prizeLabel: string;
+  prizeImageUrl?: string | null;
+  prizeEstimatedValue?: number | null;
+  prizeRarity?: string | null;
+  setName?: string | null;
+  cardName?: string | null;
+  drawOrderId: string;
+  drawOrderQuantity: number;
+  pack: {
+    id: string;
+    title: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  shippingComplete: boolean;
+  customer?: {
+    id: string;
+    email: string;
+    displayName?: string | null;
+    fullName?: string | null;
+    phoneNumber?: string | null;
+    shippingAddressLine1?: string | null;
+    shippingAddressLine2?: string | null;
+    shippingAddressCity?: string | null;
+    shippingAddressState?: string | null;
+    shippingAddressPostalCode?: string | null;
+    shippingAddressCountry?: string | null;
+  } | null;
+};
+
+type FulfilmentSummary = {
+  total: number;
+  shippingComplete: number;
+  shippingMissing: number;
+  byStatus: Record<string, number>;
+};
+
+type FulfilmentDraft = {
+  status: string;
+  providerMemo: string;
+  providerTxSig: string;
 };
 
 type ReferralCustomer = {
@@ -220,7 +300,22 @@ const DEFAULT_PACK_BANNER_OPTIONS = [
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
-type ActiveTab = "BUSINESS" | "PACKS";
+type ActiveTab = "BUSINESS" | "PACKS" | "FULFILMENT";
+
+function formatFulfillmentAddress(customer?: PackWinner["customer"] | null) {
+  if (!customer) return "No customer record";
+  const parts = [
+    customer.shippingAddressLine1,
+    customer.shippingAddressLine2,
+    customer.shippingAddressCity,
+    customer.shippingAddressState,
+    customer.shippingAddressPostalCode,
+    customer.shippingAddressCountry,
+  ]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : "No shipping address on file";
+}
 
 function isLocalhostLike(host: string) {
   const normalized = host.trim().toLowerCase();
@@ -309,11 +404,14 @@ function matchesPreset(
 
 function parseTabValue(tab: string | null): ActiveTab {
   if (tab === "pack-studio") return "PACKS";
+  if (tab === "fulfilment" || tab === "fulfillment") return "FULFILMENT";
   return "BUSINESS";
 }
 
-function toTabValue(tab: ActiveTab): "business" | "pack-studio" {
-  return tab === "PACKS" ? "pack-studio" : "business";
+function toTabValue(tab: ActiveTab): "business" | "pack-studio" | "fulfilment" {
+  if (tab === "PACKS") return "pack-studio";
+  if (tab === "FULFILMENT") return "fulfilment";
+  return "business";
 }
 
 function createItem(): ItemDraft {
@@ -387,6 +485,9 @@ export default function VendorPage() {
   const [summary, setSummary] = useState<EarningsSummary | null>(null);
   const [packEarnings, setPackEarnings] = useState<PackEarning[]>([]);
   const [topups, setTopups] = useState<TopupActivity[]>([]);
+  const [packWins, setPackWins] = useState<PackWinner[]>([]);
+  const [fulfilmentItems, setFulfilmentItems] = useState<FulfilmentItem[]>([]);
+  const [fulfilmentSummary, setFulfilmentSummary] = useState<FulfilmentSummary | null>(null);
   const [referrals, setReferrals] = useState<ReferralCustomer[]>([]);
   const [qrs, setQrs] = useState<VendorQr[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -433,6 +534,13 @@ export default function VendorPage() {
   const [csvImportSummary, setCsvImportSummary] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
+  const [packWinsLoading, setPackWinsLoading] = useState(true);
+  const [selectedPackWinnerId, setSelectedPackWinnerId] = useState("all");
+  const [fulfilmentLoading, setFulfilmentLoading] = useState(true);
+  const [selectedFulfilmentPackId, setSelectedFulfilmentPackId] = useState("all");
+  const [selectedFulfilmentStatus, setSelectedFulfilmentStatus] = useState("all");
+  const [fulfilmentSearch, setFulfilmentSearch] = useState("");
+  const [fulfilmentDrafts, setFulfilmentDrafts] = useState<Record<string, FulfilmentDraft>>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -441,6 +549,7 @@ export default function VendorPage() {
     const found = THEME_PRESETS.find((preset) => matchesPreset(themeDraft, preset));
     return found?.id ?? "custom";
   }, [themeDraft]);
+  const packWinsInitialLoadRef = useRef(false);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
   const {
@@ -478,6 +587,18 @@ export default function VendorPage() {
   const gameSelected = Boolean(catalogGameFilter);
   const setSelected = Boolean(catalogFilters.setId);
   const isCardPicker = catalogItemClass === "CARD";
+  const fulfilmentStatusOptions = useMemo(
+    () => [
+      { value: "all", label: "All statuses" },
+      { value: "HELD", label: "Held" },
+      { value: "REDEMPTION_REQUESTED", label: "Redemption requested" },
+      { value: "BUYBACK_REQUESTED", label: "Buyback requested" },
+      { value: "REDEEMED", label: "Redeemed" },
+      { value: "BOUGHT_BACK", label: "Bought back" },
+      { value: "VOIDED", label: "Voided" },
+    ],
+    []
+  );
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -575,6 +696,152 @@ export default function VendorPage() {
     }
   }, [authHeaders, pathname, router]);
 
+  const loadPackWins = useCallback(async () => {
+    setPackWinsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "50");
+      if (selectedPackWinnerId !== "all") {
+        params.set("packId", selectedPackWinnerId);
+      }
+      const response = await fetch(`${apiBase}/v1/vendor/wins?${params.toString()}`, {
+        headers: authHeaders(),
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (response.status === 401 || response.status === 403) {
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error ?? "Failed to load winner dashboard");
+      setPackWins(payload.wins ?? []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load winner dashboard");
+      setPackWins([]);
+    } finally {
+      setPackWinsLoading(false);
+    }
+  }, [authHeaders, selectedPackWinnerId]);
+
+  const loadFulfilment = useCallback(async () => {
+    setFulfilmentLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set("limit", "100");
+      if (selectedFulfilmentPackId !== "all") {
+        params.set("packId", selectedFulfilmentPackId);
+      }
+      if (selectedFulfilmentStatus !== "all") {
+        params.set("status", selectedFulfilmentStatus);
+      }
+      if (fulfilmentSearch.trim()) {
+        params.set("q", fulfilmentSearch.trim());
+      }
+      const response = await fetch(`${apiBase}/v1/vendor/fulfilment?${params.toString()}`, {
+        headers: authHeaders(),
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (response.status === 401 || response.status === 403) {
+        return;
+      }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error ?? "Failed to load fulfilment dashboard");
+      setFulfilmentItems(payload.items ?? []);
+      setFulfilmentSummary(payload.summary ?? null);
+      const nextDrafts: Record<string, FulfilmentDraft> = {};
+      for (const item of payload.items ?? []) {
+        nextDrafts[item.id] = {
+          status: String(item.status ?? "HELD"),
+          providerMemo: String(item.providerMemo ?? ""),
+          providerTxSig: String(item.providerTxSig ?? ""),
+        };
+      }
+      setFulfilmentDrafts(nextDrafts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load fulfilment dashboard");
+      setFulfilmentItems([]);
+      setFulfilmentSummary(null);
+      setFulfilmentDrafts({});
+    } finally {
+      setFulfilmentLoading(false);
+    }
+  }, [authHeaders, fulfilmentSearch, selectedFulfilmentPackId, selectedFulfilmentStatus]);
+
+  const refreshDashboard = useCallback(async () => {
+    await Promise.all([loadAll(), loadPackWins(), loadFulfilment()]);
+  }, [loadAll, loadPackWins, loadFulfilment]);
+
+  function updateFulfilmentDraft(itemId: string, patch: Partial<FulfilmentDraft>) {
+    setFulfilmentDrafts((current) => ({
+      ...current,
+      [itemId]: {
+        ...current[itemId],
+        status: current[itemId]?.status ?? "HELD",
+        providerMemo: current[itemId]?.providerMemo ?? "",
+        providerTxSig: current[itemId]?.providerTxSig ?? "",
+        ...patch,
+      },
+    }));
+  }
+
+  async function saveFulfilmentItem(itemId: string) {
+    const draft = fulfilmentDrafts[itemId];
+    if (!draft) return;
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch(`${apiBase}/v1/vendor/fulfilment/${itemId}`, {
+        method: "PATCH",
+        headers: {
+          ...authHeaders(),
+          "content-type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          status: draft.status,
+          providerMemo: draft.providerMemo,
+          providerTxSig: draft.providerTxSig,
+          provider: draft.providerTxSig ? "MANUAL" : undefined,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error ?? "Failed to update fulfilment item");
+      setSuccess("Fulfilment item updated.");
+      await loadFulfilment();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update fulfilment item");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function quickFulfilmentAction(itemId: string, status: FulfilmentDraft["status"]) {
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      const response = await fetch(`${apiBase}/v1/vendor/fulfilment/${itemId}`, {
+        method: "PATCH",
+        headers: {
+          ...authHeaders(),
+          "content-type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ status, providerMemo: `Marked ${status.toLowerCase().replace(/_/g, " ")} from vendor dashboard` }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error ?? "Failed to update fulfilment status");
+      setSuccess("Fulfilment status updated.");
+      await loadFulfilment();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update fulfilment status");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function logout() {
     await fetch(`${apiBase}/v1/auth/logout`, {
       method: "POST",
@@ -586,10 +853,28 @@ export default function VendorPage() {
   }
 
   useEffect(() => {
-    void loadAll();
-  }, [loadAll]);
+    void refreshDashboard();
+  }, [refreshDashboard]);
 
-  useBackForwardRefresh(loadAll, { cooldownMs: 20000 });
+  useBackForwardRefresh(refreshDashboard, { cooldownMs: 20000 });
+
+  useEffect(() => {
+    if (!packWinsInitialLoadRef.current) {
+      packWinsInitialLoadRef.current = true;
+      return;
+    }
+    void loadPackWins();
+  }, [loadPackWins]);
+
+  const fulfilmentInitialLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (!fulfilmentInitialLoadRef.current) {
+      fulfilmentInitialLoadRef.current = true;
+      return;
+    }
+    void loadFulfilment();
+  }, [loadFulfilment]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1412,6 +1697,13 @@ export default function VendorPage() {
           >
             Pack Studio
           </button>
+          <button
+            type="button"
+            className={`sort-pill ${activeTab === "FULFILMENT" ? "active" : ""}`}
+            onClick={() => setActiveTabInUrl("FULFILMENT")}
+          >
+            Fulfilment
+          </button>
         </div>
       </section>
 
@@ -1451,6 +1743,50 @@ export default function VendorPage() {
                 </div>
               ))}
               {topups.length === 0 ? <p className="muted tiny">No completed top-ups yet.</p> : null}
+            </div>
+          </section>
+
+          <section className="card" style={{ marginTop: 12 }}>
+            <h2>Prize Winners</h2>
+            <p className="muted tiny">Latest completed draws showing which customer won which prize on each pack.</p>
+            <div className="vendor-form" style={{ marginTop: 12, gridTemplateColumns: "minmax(0, 320px)" }}>
+              <label className="muted tiny">
+                Pack filter
+                <select value={selectedPackWinnerId} onChange={(e) => setSelectedPackWinnerId(e.target.value)}>
+                  <option value="all">All packs</option>
+                  {packs.map((pack) => (
+                    <option key={pack.id} value={pack.id}>
+                      {pack.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            {packWinsLoading ? <p className="muted tiny">Loading winner dashboard...</p> : null}
+            <div className="result-list">
+              {packWins.map((row) => (
+                <div className="result-row" key={row.id}>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    <div>
+                      <strong>{row.customer?.displayName || row.customer?.fullName || row.customer?.email || "Customer"}</strong>{" "}
+                      won <strong>{row.prize.label}</strong>
+                      {row.prize.rarity ? ` (${row.prize.rarity})` : ""} from <strong>{row.packTitle}</strong>
+                    </div>
+                    <div className="muted tiny">
+                      Draw #{row.drawSequence}, {row.pointsSpent.toLocaleString()} pts, {row.drawOrderQuantity}x
+                    </div>
+                    <div className="muted tiny">
+                      <strong>Customer:</strong> {row.customer?.email ?? "-"}{" "}
+                      {row.customer?.phoneNumber ? `· ${row.customer.phoneNumber}` : ""}
+                    </div>
+                    <div className="muted tiny">
+                      <strong>Shipping:</strong> {formatFulfillmentAddress(row.customer)}
+                    </div>
+                  </div>
+                  <span>{row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}</span>
+                </div>
+              ))}
+              {packWins.length === 0 && !packWinsLoading ? <p className="muted tiny">No winner records found for this filter.</p> : null}
             </div>
           </section>
 
@@ -1659,6 +1995,149 @@ export default function VendorPage() {
             </div>
           </section>
         </>
+      ) : null}
+
+      {activeTab === "FULFILMENT" ? (
+        <section className="card" style={{ marginTop: 12 }}>
+          <div className="heading-row">
+            <div>
+              <h2>Fulfilment Dashboard</h2>
+              <p className="muted tiny">Customer shipping details and prize winners for your own packs only.</p>
+            </div>
+            <span className="muted tiny">{fulfilmentSummary?.total?.toLocaleString() ?? "0"} items</span>
+          </div>
+
+          <div className="stats-grid" style={{ marginTop: 12 }}>
+            <div className="stat">
+              <div className="stat-label">Ready for fulfilment</div>
+              <div className="stat-value">{fulfilmentSummary?.shippingComplete?.toLocaleString() ?? "0"}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Needs shipping details</div>
+              <div className="stat-value">{fulfilmentSummary?.shippingMissing?.toLocaleString() ?? "0"}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Held</div>
+              <div className="stat-value">{fulfilmentSummary?.byStatus?.HELD?.toLocaleString() ?? "0"}</div>
+            </div>
+            <div className="stat">
+              <div className="stat-label">Redemption requested</div>
+              <div className="stat-value">{fulfilmentSummary?.byStatus?.REDEMPTION_REQUESTED?.toLocaleString() ?? "0"}</div>
+            </div>
+          </div>
+
+          <div className="vendor-form" style={{ marginTop: 12, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+            <label className="muted tiny">
+              Pack filter
+              <select value={selectedFulfilmentPackId} onChange={(e) => setSelectedFulfilmentPackId(e.target.value)}>
+                <option value="all">All packs</option>
+                {packs.map((pack) => (
+                  <option key={pack.id} value={pack.id}>
+                    {pack.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="muted tiny">
+              Status filter
+              <select value={selectedFulfilmentStatus} onChange={(e) => setSelectedFulfilmentStatus(e.target.value)}>
+                {fulfilmentStatusOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="muted tiny">
+              Search customer / prize
+              <input
+                value={fulfilmentSearch}
+                onChange={(e) => setFulfilmentSearch(e.target.value)}
+                placeholder="Search customer, pack, prize, or shipping..."
+              />
+            </label>
+          </div>
+
+          {fulfilmentLoading ? <p className="muted tiny" style={{ marginTop: 12 }}>Loading fulfilment dashboard...</p> : null}
+
+          <div className="result-list" style={{ marginTop: 12 }}>
+            {fulfilmentItems.map((row) => (
+              <div className="result-row" key={row.id} style={{ alignItems: "start" }}>
+                <div style={{ display: "grid", gap: 8, width: "100%" }}>
+                  <div>
+                    <strong>{row.customer?.displayName || row.customer?.fullName || row.customer?.email || "Customer"}</strong>{" "}
+                    won <strong>{row.prizeLabel}</strong>
+                    {row.prizeRarity ? ` (${row.prizeRarity})` : ""} from <strong>{row.pack.title}</strong>
+                  </div>
+                  <div className="muted tiny">
+                    Status: {row.status} - Draw qty {row.drawOrderQuantity} - Created {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
+                  </div>
+                  <div className="muted tiny">
+                    <strong>Customer:</strong> {row.customer?.email ?? "-"} {row.customer?.phoneNumber ? ` - ${row.customer.phoneNumber}` : ""}
+                  </div>
+                  <div className="muted tiny">
+                    <strong>Shipping:</strong> {formatFulfillmentAddress(row.customer)}
+                  </div>
+                  <div className="muted tiny">
+                    <strong>Fulfilment readiness:</strong> {row.shippingComplete ? "Ready" : "Missing shipping details"}
+                  </div>
+                  {row.providerMemo ? (
+                    <div className="muted tiny">
+                      <strong>Vendor memo:</strong> {row.providerMemo}
+                    </div>
+                  ) : null}
+                  <div className="vendor-form" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginTop: 4 }}>
+                    <label className="muted tiny">
+                      Status
+                      <select
+                        value={fulfilmentDrafts[row.id]?.status ?? row.status}
+                        onChange={(e) => updateFulfilmentDraft(row.id, { status: e.target.value })}
+                      >
+                        {fulfilmentStatusOptions.filter((option) => option.value !== "all").map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="muted tiny">
+                      Provider reference / tracking ID
+                      <input
+                        value={fulfilmentDrafts[row.id]?.providerTxSig ?? ""}
+                        onChange={(e) => updateFulfilmentDraft(row.id, { providerTxSig: e.target.value })}
+                        placeholder="Tracking ID or provider reference"
+                      />
+                    </label>
+                    <label className="muted tiny">
+                      Vendor memo
+                      <input
+                        value={fulfilmentDrafts[row.id]?.providerMemo ?? ""}
+                        onChange={(e) => updateFulfilmentDraft(row.id, { providerMemo: e.target.value })}
+                        placeholder="Add fulfilment note"
+                      />
+                    </label>
+                  </div>
+                  <div className="actions" style={{ marginTop: 4 }}>
+                    <button type="button" className="sort-pill" onClick={() => void quickFulfilmentAction(row.id, "REDEMPTION_REQUESTED")} disabled={saving}>
+                      Mark ready
+                    </button>
+                    <button type="button" className="sort-pill" onClick={() => void quickFulfilmentAction(row.id, "REDEEMED")} disabled={saving}>
+                      Mark fulfilled
+                    </button>
+                    <button type="button" className="sort-pill" onClick={() => void quickFulfilmentAction(row.id, "VOIDED")} disabled={saving}>
+                      Void
+                    </button>
+                    <button type="button" className="draw-button" onClick={() => void saveFulfilmentItem(row.id)} disabled={saving}>
+                      Save update
+                    </button>
+                  </div>
+                </div>
+                <span className="badge" style={{ alignSelf: "start" }}>{row.status}</span>
+              </div>
+            ))}
+            {fulfilmentItems.length === 0 && !fulfilmentLoading ? <p className="muted tiny">No fulfilment records found for this filter.</p> : null}
+          </div>
+        </section>
       ) : null}
 
       {activeTab === "PACKS" ? (

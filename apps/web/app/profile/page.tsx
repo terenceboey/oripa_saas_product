@@ -23,8 +23,16 @@ type AuthUser = {
   fullName: string | null;
   dateOfBirth: string | null;
   countryCode: string | null;
+  phoneNumber: string | null;
+  shippingAddressLine1: string | null;
+  shippingAddressLine2: string | null;
+  shippingAddressCity: string | null;
+  shippingAddressState: string | null;
+  shippingAddressPostalCode: string | null;
+  shippingAddressCountry: string | null;
   status: string;
   profileComplete: boolean;
+  shippingComplete: boolean;
 };
 
 type VendorTheme = {
@@ -115,6 +123,13 @@ function CustomerProfileContent() {
   const [fullName, setFullName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [countryCode, setCountryCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [shippingAddressLine1, setShippingAddressLine1] = useState("");
+  const [shippingAddressLine2, setShippingAddressLine2] = useState("");
+  const [shippingAddressCity, setShippingAddressCity] = useState("");
+  const [shippingAddressState, setShippingAddressState] = useState("");
+  const [shippingAddressPostalCode, setShippingAddressPostalCode] = useState("");
+  const [shippingAddressCountry, setShippingAddressCountry] = useState("");
   const [theme, setTheme] = useState<VendorTheme | null>(null);
   const [branding, setBranding] = useState<VendorBranding | null>(null);
   const [wallet, setWallet] = useState<WalletState | null>(null);
@@ -157,6 +172,13 @@ function CustomerProfileContent() {
         setFullName(nextUser.fullName ?? nextUser.displayName ?? "");
         setDateOfBirth(nextUser.dateOfBirth ?? "");
         setCountryCode(nextUser.countryCode ?? "");
+        setPhoneNumber(nextUser.phoneNumber ?? "");
+        setShippingAddressLine1(nextUser.shippingAddressLine1 ?? "");
+        setShippingAddressLine2(nextUser.shippingAddressLine2 ?? "");
+        setShippingAddressCity(nextUser.shippingAddressCity ?? "");
+        setShippingAddressState(nextUser.shippingAddressState ?? "");
+        setShippingAddressPostalCode(nextUser.shippingAddressPostalCode ?? "");
+        setShippingAddressCountry(nextUser.shippingAddressCountry ?? "");
       })
       .catch((err: unknown) => {
         if (!active) return;
@@ -280,6 +302,44 @@ function CustomerProfileContent() {
     }
   }
 
+  async function saveShippingDetails(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`${apiBase}/v1/auth/profile/shipping`, {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          ...clientPageHeader,
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          phoneNumber,
+          shippingAddressLine1,
+          shippingAddressLine2,
+          shippingAddressCity,
+          shippingAddressState,
+          shippingAddressPostalCode,
+          shippingAddressCountry,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const issues = Array.isArray(payload.issues) ? ` ${payload.issues.join(", ")}` : "";
+        throw new Error(`${payload.error ?? "Failed to save shipping details."}${issues}`);
+      }
+      setUser(payload.user ?? null);
+      setMessage("Shipping details saved.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save shipping details.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function logout() {
     await fetch(`${apiBase}/v1/auth/logout`, {
       method: "POST",
@@ -392,6 +452,7 @@ function CustomerProfileContent() {
             <div className="auth-profile-card">
               <strong>{user.profileComplete ? "Profile complete" : "Profile incomplete"}</strong>
               <div className="muted tiny">{user.email}</div>
+              <div className="muted tiny">{user.shippingComplete ? "Shipping details on file" : "Shipping details missing"}</div>
             </div>
 
             <form className="auth-form" onSubmit={saveProfile}>
@@ -415,6 +476,89 @@ function CustomerProfileContent() {
                 {saving ? "Saving..." : "Save Profile"}
               </button>
             </form>
+
+            <section className="card" style={{ marginTop: 18 }}>
+              <h2>Shipping / Fulfilment Details</h2>
+              <p className="muted tiny">
+                These details are shown to vendors after a win so they can arrange shipping or fulfilment.
+              </p>
+              <form className="auth-form" onSubmit={saveShippingDetails}>
+                <FormField label="Phone number">
+                  <input
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="Phone number"
+                    autoComplete="tel"
+                    required
+                  />
+                </FormField>
+                <FormField label="Address line 1">
+                  <input
+                    value={shippingAddressLine1}
+                    onChange={(e) => setShippingAddressLine1(e.target.value)}
+                    placeholder="Street address"
+                    autoComplete="address-line1"
+                    required
+                  />
+                </FormField>
+                <FormField label="Address line 2">
+                  <input
+                    value={shippingAddressLine2}
+                    onChange={(e) => setShippingAddressLine2(e.target.value)}
+                    placeholder="Apartment, unit, building, floor"
+                    autoComplete="address-line2"
+                  />
+                </FormField>
+                <div className="pack-builder-grid">
+                  <FormField label="City">
+                    <input
+                      value={shippingAddressCity}
+                      onChange={(e) => setShippingAddressCity(e.target.value)}
+                      placeholder="City"
+                      autoComplete="address-level2"
+                      required
+                    />
+                  </FormField>
+                  <FormField label="State / Province">
+                    <input
+                      value={shippingAddressState}
+                      onChange={(e) => setShippingAddressState(e.target.value)}
+                      placeholder="State / Province"
+                      autoComplete="address-level1"
+                    />
+                  </FormField>
+                </div>
+                <div className="pack-builder-grid">
+                  <FormField label="Postal code">
+                    <input
+                      value={shippingAddressPostalCode}
+                      onChange={(e) => setShippingAddressPostalCode(e.target.value)}
+                      placeholder="Postal code"
+                      autoComplete="postal-code"
+                      required
+                    />
+                  </FormField>
+                  <FormField label="Country">
+                    <select
+                      value={shippingAddressCountry}
+                      onChange={(e) => setShippingAddressCountry(e.target.value)}
+                      autoComplete="country"
+                      required
+                    >
+                      <option value="">Select country</option>
+                      {COUNTRY_OPTIONS.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.name}
+                        </option>
+                      ))}
+                    </select>
+                  </FormField>
+                </div>
+                <button type="submit" className="draw-button" disabled={saving}>
+                  {saving ? "Saving..." : "Save Shipping Details"}
+                </button>
+              </form>
+            </section>
           </>
         ) : null}
 

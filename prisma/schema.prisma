@@ -252,6 +252,13 @@ model User {
   dateOfBirth             DateTime?
   age                     Int?
   country                 String?
+  phoneNumber             String?
+  shippingAddressLine1    String?
+  shippingAddressLine2    String?
+  shippingAddressCity     String?
+  shippingAddressState    String?
+  shippingAddressPostalCode String?
+  shippingAddressCountry   String?
   status                  UserStatus              @default(ACTIVE)
   emailVerificationStatus EmailVerificationStatus @default(PENDING)
   emailVerifiedAt         DateTime?

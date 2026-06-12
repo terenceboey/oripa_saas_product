@@ -142,6 +142,13 @@ type AuthUserRecord = {
   dateOfBirth: Date | null;
   age: number | null;
   country: string | null;
+  phoneNumber: string | null;
+  shippingAddressLine1: string | null;
+  shippingAddressLine2: string | null;
+  shippingAddressCity: string | null;
+  shippingAddressState: string | null;
+  shippingAddressPostalCode: string | null;
+  shippingAddressCountry: string | null;
   status: string;
   emailVerificationStatus: string;
   emailVerifiedAt: Date | null;
@@ -177,6 +184,25 @@ function isCustomerProfileComplete(user: Pick<AuthUserRecord, "fullName" | "date
   return Boolean(user.fullName?.trim() && user.dateOfBirth && countryToCode(user.country));
 }
 
+function isCustomerShippingComplete(
+  user: Pick<
+    AuthUserRecord,
+    | "phoneNumber"
+    | "shippingAddressLine1"
+    | "shippingAddressCity"
+    | "shippingAddressPostalCode"
+    | "shippingAddressCountry"
+  >
+) {
+  return Boolean(
+    user.phoneNumber?.trim() &&
+      user.shippingAddressLine1?.trim() &&
+      user.shippingAddressCity?.trim() &&
+      user.shippingAddressPostalCode?.trim() &&
+      countryToCode(user.shippingAddressCountry)
+  );
+}
+
 function serializeAuthUser(user: AuthUserRecord) {
   return {
     id: user.id,
@@ -186,12 +212,20 @@ function serializeAuthUser(user: AuthUserRecord) {
     dateOfBirth: formatDateOnly(user.dateOfBirth),
     country: user.country,
     countryCode: countryToCode(user.country),
+    phoneNumber: user.phoneNumber,
+    shippingAddressLine1: user.shippingAddressLine1,
+    shippingAddressLine2: user.shippingAddressLine2,
+    shippingAddressCity: user.shippingAddressCity,
+    shippingAddressState: user.shippingAddressState,
+    shippingAddressPostalCode: user.shippingAddressPostalCode,
+    shippingAddressCountry: user.shippingAddressCountry,
     age: user.age,
     status: user.status,
     emailVerificationStatus: user.emailVerificationStatus,
     emailVerifiedAt: user.emailVerifiedAt,
     lastLoginAt: user.lastLoginAt,
     profileComplete: isCustomerProfileComplete(user),
+    shippingComplete: isCustomerShippingComplete(user),
   };
 }
 
@@ -201,6 +235,11 @@ function normalizeFullName(input: unknown) {
 
 function normalizeCountryCode(input: unknown) {
   return String(input ?? "").trim().toUpperCase();
+}
+
+function normalizeOptionalText(input: unknown) {
+  const text = String(input ?? "").trim().replace(/\s+/g, " ");
+  return text.length > 0 ? text : null;
 }
 
 function parseDateOfBirth(input: unknown) {
@@ -261,6 +300,62 @@ function validateCustomerProfileInput(body: unknown, options: { required?: boole
       dateOfBirth,
       countryCode: /^[A-Z]{2}$/.test(countryCode) ? countryCode : null,
       age: calculateAge(dateOfBirth),
+    },
+  };
+}
+
+function validateCustomerShippingInput(body: unknown, options: { required?: boolean } = {}) {
+  const required = options.required ?? true;
+  const input = (body ?? {}) as Record<string, unknown>;
+  const phoneNumber = normalizeOptionalText(input.phoneNumber);
+  const shippingAddressLine1 = normalizeOptionalText(input.shippingAddressLine1);
+  const shippingAddressLine2 = normalizeOptionalText(input.shippingAddressLine2);
+  const shippingAddressCity = normalizeOptionalText(input.shippingAddressCity);
+  const shippingAddressState = normalizeOptionalText(input.shippingAddressState);
+  const shippingAddressPostalCode = normalizeOptionalText(input.shippingAddressPostalCode);
+  const shippingAddressCountryInput = normalizeOptionalText(input.shippingAddressCountry);
+  const shippingAddressCountry =
+    countryToCode(shippingAddressCountryInput) ?? normalizeCountryCode(shippingAddressCountryInput);
+  const providedValues = [
+    phoneNumber,
+    shippingAddressLine1,
+    shippingAddressLine2,
+    shippingAddressCity,
+    shippingAddressState,
+    shippingAddressPostalCode,
+    shippingAddressCountryInput,
+  ].filter((value) => Boolean(String(value ?? "").trim())).length;
+  const shouldValidate = required || providedValues > 0;
+  const errors: string[] = [];
+
+  if (shouldValidate) {
+    if (!phoneNumber) errors.push("phoneNumber is required");
+    if (!shippingAddressLine1) errors.push("shippingAddressLine1 is required");
+    if (!shippingAddressCity) errors.push("shippingAddressCity is required");
+    if (!shippingAddressPostalCode) errors.push("shippingAddressPostalCode is required");
+    if (!shippingAddressCountryInput || !/^[A-Z]{2}$/.test(shippingAddressCountry)) {
+      errors.push("shippingAddressCountry must be a valid 2-letter country code");
+    }
+    if (phoneNumber && phoneNumber.length > 40) errors.push("phoneNumber must be 40 characters or fewer");
+    if (shippingAddressLine1 && shippingAddressLine1.length > 200) errors.push("shippingAddressLine1 must be 200 characters or fewer");
+    if (shippingAddressLine2 && shippingAddressLine2.length > 200) errors.push("shippingAddressLine2 must be 200 characters or fewer");
+    if (shippingAddressCity && shippingAddressCity.length > 120) errors.push("shippingAddressCity must be 120 characters or fewer");
+    if (shippingAddressState && shippingAddressState.length > 120) errors.push("shippingAddressState must be 120 characters or fewer");
+    if (shippingAddressPostalCode && shippingAddressPostalCode.length > 32) {
+      errors.push("shippingAddressPostalCode must be 32 characters or fewer");
+    }
+  }
+
+  return {
+    errors,
+    data: {
+      phoneNumber,
+      shippingAddressLine1,
+      shippingAddressLine2,
+      shippingAddressCity,
+      shippingAddressState,
+      shippingAddressPostalCode,
+      shippingAddressCountry: /^[A-Z]{2}$/.test(shippingAddressCountry) ? shippingAddressCountry : null,
     },
   };
 }
@@ -993,6 +1088,29 @@ authRouter.patch("/v1/auth/profile", async (req: VendorRequest, res) => {
       dateOfBirth: profileInput.data.dateOfBirth,
       age: profileInput.data.age,
       country: profileInput.data.countryCode,
+    },
+  });
+
+  return res.json({ user: serializeAuthUser(user) });
+});
+
+authRouter.patch("/v1/auth/profile/shipping", async (req: VendorRequest, res) => {
+  const userId = await getRequestUserId(req, res);
+  if (!userId) return res.status(401).json({ error: "unauthorized" });
+
+  const shippingInput = validateCustomerShippingInput(req.body);
+  if (shippingInput.errors.length) return res.status(400).json({ error: "invalid shipping details", issues: shippingInput.errors });
+
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      phoneNumber: shippingInput.data.phoneNumber,
+      shippingAddressLine1: shippingInput.data.shippingAddressLine1,
+      shippingAddressLine2: shippingInput.data.shippingAddressLine2,
+      shippingAddressCity: shippingInput.data.shippingAddressCity,
+      shippingAddressState: shippingInput.data.shippingAddressState,
+      shippingAddressPostalCode: shippingInput.data.shippingAddressPostalCode,
+      shippingAddressCountry: shippingInput.data.shippingAddressCountry,
     },
   });
 

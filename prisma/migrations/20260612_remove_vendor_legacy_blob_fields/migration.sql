@@ -1,4 +1,4 @@
 -- AlterTable
-ALTER TABLE "Vendor" DROP COLUMN "payoutBankDetails",
-DROP COLUMN "registeredBusinessAddress",
-DROP COLUMN "websiteOrSocialLinks";
+ALTER TABLE "Vendor" DROP COLUMN IF EXISTS "payoutBankDetails",
+DROP COLUMN IF EXISTS "registeredBusinessAddress",
+DROP COLUMN IF EXISTS "websiteOrSocialLinks";
