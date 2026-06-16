@@ -589,6 +589,10 @@ export default function PackDrawPage() {
               preset={drawAnimationPreset}
               phase={drawShowcasePhase}
               currentCard={currentDrawShowcaseCard}
+              targetCard={{
+                label: drawShowcase.draws[drawShowcaseIndex]?.prizeLabel || "No Prize",
+                imageUrl: drawShowcase.draws[drawShowcaseIndex]?.prizeImageUrl || defaultPokemonCardImage,
+              }}
               pool={drawShowcasePool}
               index={drawShowcaseIndex}
               total={drawShowcase.draws.length}

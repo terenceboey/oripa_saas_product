@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useRef } from "react";
+
 import { Badge, Card, Group, Image, Paper, Stack, Text } from "@mantine/core";
 
 export type DrawAnimationPreset = "reel" | "wheel" | "flip";
@@ -13,58 +15,138 @@ type Props = {
   preset: DrawAnimationPreset;
   phase: "spinning" | "revealing" | "done" | null;
   currentCard: DrawShowcaseCard;
+  targetCard: DrawShowcaseCard;
   pool: DrawShowcaseCard[];
   index: number;
   total: number;
 };
 
-export function DrawShowcaseVisual({ preset, phase, currentCard, pool, index, total }: Props) {
+export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, pool, index, total }: Props) {
   const showSpin = phase === "spinning";
   const showReveal = phase === "revealing";
-  const displayPool = pool.length > 0 ? pool : [currentCard];
-  const rouletteSlots = Array.from({ length: Math.max(displayPool.length, 10) }, (_, slotIndex) => {
-    const item = displayPool[slotIndex % displayPool.length] ?? currentCard;
-    return { item, slotIndex };
-  });
+  const displayPool = pool.length > 0 ? pool : [targetCard];
+  const rouletteSlots = useMemo(() => {
+    const totalSlots = Math.max(displayPool.length * 6, 24);
+    const landingIndex = Math.max(Math.floor(totalSlots * 0.72), 14);
+
+    return Array.from({ length: totalSlots }, (_, slotIndex) => {
+      const item = slotIndex === landingIndex ? targetCard : displayPool[slotIndex % displayPool.length] ?? targetCard;
+      return { item, slotIndex, landingIndex };
+    });
+  }, [displayPool, targetCard]);
+
+  const carouselViewportRef = useRef<HTMLDivElement | null>(null);
+  const carouselTrackRef = useRef<HTMLDivElement | null>(null);
+  const carouselFrameRef = useRef<HTMLDivElement | null>(null);
+  const carouselAnimationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (preset !== "wheel") return undefined;
+    const viewport = carouselViewportRef.current;
+    const track = carouselTrackRef.current;
+    if (!viewport || !track) return undefined;
+
+    if (carouselAnimationRef.current) {
+      window.cancelAnimationFrame(carouselAnimationRef.current);
+      carouselAnimationRef.current = null;
+    }
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const landingCard = track.querySelector<HTMLElement>("[data-landing-card='true']");
+    if (!landingCard) return undefined;
+
+    const cardWidth = landingCard.getBoundingClientRect().width;
+    const targetScroll = Math.max(0, landingCard.offsetLeft - viewport.clientWidth / 2 + cardWidth / 2);
+
+    if (reduceMotion || phase === "done") {
+      viewport.scrollLeft = targetScroll;
+      return undefined;
+    }
+
+    const startScroll = phase === "spinning" ? Math.max(0, targetScroll * 0.04) : viewport.scrollLeft;
+    viewport.scrollLeft = startScroll;
+
+    const duration = phase === "spinning" ? 3200 : 900;
+    const startTime = performance.now();
+    const settleTarget = targetScroll;
+
+    const easeOutQuint = (value: number) => 1 - Math.pow(1 - value, 5);
+    const easeOutBack = (value: number) => {
+      const overshoot = 1.70158;
+      const t = value - 1;
+      return 1 + t * t * ((overshoot + 1) * t + overshoot);
+    };
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = phase === "revealing" ? easeOutBack(progress) : easeOutQuint(progress);
+      const scroll = startScroll + (settleTarget - startScroll) * eased;
+      viewport.scrollLeft = scroll;
+
+      if (progress < 1) {
+        carouselAnimationRef.current = window.requestAnimationFrame(tick);
+      } else {
+        carouselAnimationRef.current = null;
+        viewport.scrollLeft = settleTarget;
+      }
+    };
+
+    carouselAnimationRef.current = window.requestAnimationFrame(tick);
+
+    return () => {
+      if (carouselAnimationRef.current) {
+        window.cancelAnimationFrame(carouselAnimationRef.current);
+        carouselAnimationRef.current = null;
+      }
+    };
+  }, [phase, preset, rouletteSlots]);
 
   return (
     <Paper withBorder radius="xl" p="lg" className={`draw-showcase-shell draw-showcase-${preset} draw-showcase-${phase ?? "idle"}`}>
       {preset === "wheel" ? (
         <div className="draw-wheel-stage">
-          <div className={`draw-wheel-frame ${showSpin ? "is-spinning" : showReveal ? "is-settling" : "is-idle"}`}>
-            <div className="draw-wheel-halo" aria-hidden="true" />
-            <div className={`draw-wheel-disc ${showSpin ? "is-spinning" : showReveal ? "is-settling" : "is-idle"}`}>
-              <div className="draw-wheel-rim" aria-hidden="true" />
-              {rouletteSlots.map(({ item, slotIndex }) => {
-                const angle = (360 / rouletteSlots.length) * slotIndex;
-                const offset = Math.max(rouletteSlots.length, 1) * 17;
-                const segmentHue = (slotIndex * 34) % 360;
-                return (
-                  <div
-                    key={`${item.label}-${slotIndex}`}
-                    className={`draw-wheel-slot ${showSpin ? "is-spinning" : ""}`}
-                    style={{
-                      transform: `rotate(${angle}deg) translateY(-${offset}px) rotate(${-angle}deg)`,
-                      ["--slot-hue" as string]: `${segmentHue}`,
-                    }}
-                  >
-                    <Card withBorder radius="md" p={4} className="draw-wheel-card">
-                      <Image src={item.imageUrl} alt={item.label} radius="sm" fit="cover" />
-                    </Card>
-                  </div>
-                );
-              })}
-              <div className="draw-wheel-core">
-                <div className="draw-wheel-core-ring" aria-hidden="true" />
-                <Image src={currentCard.imageUrl} alt={currentCard.label} radius="xl" fit="contain" className="draw-result-image draw-wheel-result" />
-                <Text size="sm" fw={700} ta="center" className="draw-wheel-core-label">
-                  {currentCard.label}
-                </Text>
+          <div ref={carouselFrameRef} className={`draw-carousel-frame ${showSpin ? "is-spinning" : showReveal ? "is-settling" : "is-idle"}`}>
+            <div className="draw-carousel-needle" aria-hidden="true">
+              <div className="draw-carousel-needle-tip" />
+              <div className="draw-carousel-needle-shadow" />
+            </div>
+
+            <div ref={carouselViewportRef} className="draw-carousel-viewport">
+              <div ref={carouselTrackRef} className={`draw-carousel-track ${showSpin ? "is-spinning" : showReveal ? "is-settling" : "is-idle"}`}>
+                {rouletteSlots.map(({ item, slotIndex, landingIndex }) => {
+                  const isLandingCard = slotIndex === landingIndex;
+                  const bandHue = (slotIndex * 29) % 360;
+                  return (
+                    <div
+                      key={`${item.label}-${slotIndex}`}
+                      className={`draw-carousel-slot ${isLandingCard ? "is-landing" : ""}`}
+                      data-landing-card={isLandingCard ? "true" : "false"}
+                      style={{
+                        ["--band-hue" as string]: `${bandHue}`,
+                      }}
+                    >
+                      <Card withBorder radius="lg" p={4} className="draw-carousel-card">
+                        <Image src={item.imageUrl} alt={item.label} radius="md" fit="cover" />
+                      </Card>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-            <div className="draw-wheel-needle" aria-hidden="true">
-              <div className="draw-wheel-needle-tip" />
-              <div className="draw-wheel-needle-shadow" />
+
+            <div className="draw-carousel-window" aria-hidden="true" />
+            <div className="draw-carousel-center-glow" aria-hidden="true" />
+            <div className="draw-carousel-result">
+              <Image
+                src={showSpin ? currentCard.imageUrl : targetCard.imageUrl}
+                alt={showSpin ? currentCard.label : targetCard.label}
+                radius="lg"
+                fit="contain"
+                className="draw-result-image draw-carousel-result-image"
+              />
+              <Text size="sm" fw={700} ta="center" className="draw-carousel-result-label">
+                {showSpin ? currentCard.label : targetCard.label}
+              </Text>
             </div>
           </div>
         </div>
@@ -135,68 +217,185 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, pool, index, to
           width: 100%;
         }
 
-        .draw-wheel-frame {
+        .draw-carousel-frame {
           position: relative;
-          width: min(82vw, 460px);
-          aspect-ratio: 1;
-          display: grid;
-          place-items: center;
-          filter: drop-shadow(0 24px 48px rgba(96, 68, 180, 0.16));
-        }
-
-        .draw-wheel-frame::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: 999px;
+          width: min(94vw, 860px);
+          padding: 26px 18px 20px;
+          border-radius: 32px;
           background:
-            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.98) 0 12%, transparent 12.5% 100%),
-            conic-gradient(
-              from -90deg,
-              rgba(122, 92, 250, 0.96) 0deg 18deg,
-              rgba(255, 209, 102, 0.96) 18deg 36deg,
-              rgba(91, 192, 222, 0.96) 36deg 54deg,
-              rgba(255, 140, 122, 0.96) 54deg 72deg,
-              rgba(140, 114, 255, 0.96) 72deg 90deg,
-              rgba(97, 214, 167, 0.96) 90deg 108deg,
-              rgba(255, 209, 102, 0.96) 108deg 126deg,
-              rgba(122, 92, 250, 0.96) 126deg 144deg,
-              rgba(255, 140, 122, 0.96) 144deg 162deg,
-              rgba(91, 192, 222, 0.96) 162deg 180deg,
-              rgba(140, 114, 255, 0.96) 180deg 198deg,
-              rgba(97, 214, 167, 0.96) 198deg 216deg,
-              rgba(255, 209, 102, 0.96) 216deg 234deg,
-              rgba(122, 92, 250, 0.96) 234deg 252deg,
-              rgba(255, 140, 122, 0.96) 252deg 270deg,
-              rgba(91, 192, 222, 0.96) 270deg 288deg,
-              rgba(140, 114, 255, 0.96) 288deg 306deg,
-              rgba(97, 214, 167, 0.96) 306deg 324deg,
-              rgba(255, 209, 102, 0.96) 324deg 342deg,
-              rgba(122, 92, 250, 0.96) 342deg 360deg
-            );
+            linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 241, 255, 0.9)),
+            radial-gradient(circle at 50% 20%, rgba(123, 92, 250, 0.2), transparent 42%);
           box-shadow:
-            inset 0 0 0 18px rgba(255, 255, 255, 0.78),
-            inset 0 0 0 34px rgba(122, 92, 250, 0.12),
-            0 20px 48px rgba(96, 68, 180, 0.22);
-          opacity: 0.9;
+            inset 0 0 0 1px rgba(122, 92, 250, 0.14),
+            0 24px 48px rgba(96, 68, 180, 0.14);
+          overflow: hidden;
         }
 
-        .draw-wheel-frame::after {
+        .draw-carousel-frame::before {
           content: "";
           position: absolute;
-          inset: 16px;
-          border-radius: 999px;
-          border: 2px solid rgba(255, 255, 255, 0.72);
-          box-shadow: inset 0 0 0 1px rgba(122, 92, 250, 0.12);
+          inset: 12px;
+          border-radius: 26px;
+          border: 1px solid rgba(255, 255, 255, 0.68);
           pointer-events: none;
         }
 
-        .draw-wheel-frame.is-spinning {
-          animation: wheel-breathe 1.1s ease-in-out infinite;
+        .draw-carousel-viewport {
+          position: relative;
+          overflow-x: auto;
+          overflow-y: hidden;
+          scroll-behavior: auto;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding: 14px 0 24px;
         }
 
-        .draw-wheel-frame.is-settling {
-          animation: wheel-settle 1.2s cubic-bezier(0.18, 0.84, 0.2, 1) 1;
+        .draw-carousel-viewport::-webkit-scrollbar {
+          display: none;
+        }
+
+        .draw-carousel-track {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          width: max-content;
+          padding: 0 50vw;
+          will-change: scroll-position;
+        }
+
+        .draw-carousel-slot {
+          position: relative;
+          flex: 0 0 auto;
+          width: clamp(96px, 14vw, 128px);
+          transition: transform 220ms ease, filter 220ms ease, opacity 220ms ease;
+          opacity: 0.76;
+        }
+
+        .draw-carousel-slot.is-landing {
+          opacity: 1;
+          transform: scale(1.08);
+          z-index: 2;
+        }
+
+        .draw-carousel-slot::before {
+          content: "";
+          position: absolute;
+          inset: -6px;
+          border-radius: 22px;
+          background: linear-gradient(180deg, hsla(var(--band-hue), 90%, 70%, 0.24), hsla(var(--band-hue), 90%, 70%, 0.06));
+          filter: blur(1px);
+          opacity: 0.85;
+        }
+
+        .draw-carousel-card {
+          position: relative;
+          width: 100%;
+          aspect-ratio: 3 / 4;
+          overflow: hidden;
+          border-radius: 20px;
+          background: rgba(255, 255, 255, 0.98);
+          border: 1px solid rgba(122, 92, 250, 0.14);
+          box-shadow:
+            inset 0 0 0 3px rgba(255, 255, 255, 0.9),
+            0 10px 22px rgba(0, 0, 0, 0.12);
+        }
+
+        .draw-carousel-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .draw-carousel-needle {
+          position: absolute;
+          top: 6px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 52px;
+          height: 58px;
+          z-index: 4;
+          display: grid;
+          place-items: start center;
+          pointer-events: none;
+        }
+
+        .draw-carousel-needle-tip {
+          width: 0;
+          height: 0;
+          border-left: 16px solid transparent;
+          border-right: 16px solid transparent;
+          border-bottom: 30px solid var(--mantine-color-grape-6, #7a5cfa);
+          filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.24));
+        }
+
+        .draw-carousel-needle-shadow {
+          width: 28px;
+          height: 10px;
+          margin-top: -2px;
+          border-radius: 999px;
+          background: rgba(0, 0, 0, 0.12);
+          filter: blur(4px);
+          opacity: 0.56;
+        }
+
+        .draw-carousel-window {
+          position: absolute;
+          inset: 50% auto auto 50%;
+          transform: translate(-50%, -50%);
+          width: clamp(138px, 19vw, 188px);
+          height: clamp(220px, 30vw, 304px);
+          border-radius: 28px;
+          border: 2px solid rgba(123, 92, 250, 0.28);
+          box-shadow:
+            0 0 0 9999px rgba(37, 20, 74, 0.02),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+            0 14px 30px rgba(96, 68, 180, 0.14);
+          pointer-events: none;
+          z-index: 3;
+        }
+
+        .draw-carousel-center-glow {
+          position: absolute;
+          inset: 50% auto auto 50%;
+          transform: translate(-50%, -50%);
+          width: clamp(150px, 21vw, 214px);
+          height: clamp(238px, 33vw, 332px);
+          border-radius: 34px;
+          background: radial-gradient(circle at center, rgba(123, 92, 250, 0.14), transparent 68%);
+          filter: blur(10px);
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .draw-carousel-result {
+          position: absolute;
+          inset: 50% auto auto 50%;
+          transform: translate(-50%, -50%);
+          width: clamp(124px, 18vw, 176px);
+          display: grid;
+          place-items: center;
+          gap: 6px;
+          z-index: 2;
+          pointer-events: none;
+        }
+
+        .draw-carousel-result-image {
+          max-width: 100%;
+          max-height: clamp(170px, 24vw, 250px);
+          border-radius: 20px;
+          box-shadow: 0 18px 32px rgba(0, 0, 0, 0.16);
+          background: rgba(255, 255, 255, 0.95);
+        }
+
+        .draw-carousel-result-label {
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.82);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .draw-reel-track {
@@ -242,173 +441,6 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, pool, index, to
           background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 242, 255, 0.92));
           box-shadow: 0 22px 44px rgba(96, 68, 180, 0.14);
           padding: 14px;
-        }
-
-        .draw-wheel-disc {
-          position: relative;
-          width: min(76vw, 400px);
-          aspect-ratio: 1;
-          border-radius: 999px;
-          overflow: hidden;
-          background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.92) 0%, rgba(248, 244, 255, 0.86) 54%, rgba(234, 227, 255, 0.72) 100%);
-          transform-origin: center center;
-        }
-
-        .draw-wheel-disc::before {
-          content: "";
-          position: absolute;
-          inset: 8px;
-          border-radius: 999px;
-          background:
-            radial-gradient(circle at 50% 50%, transparent 0 48%, rgba(255, 255, 255, 0.18) 48.5% 51%, transparent 51.5% 100%),
-            repeating-conic-gradient(
-              from -90deg,
-              rgba(255, 255, 255, 0.22) 0deg 3deg,
-              transparent 3deg 15deg
-            );
-          mix-blend-mode: screen;
-          opacity: 0.75;
-          pointer-events: none;
-        }
-
-        .draw-wheel-disc.is-spinning {
-          animation: roulette-spin 1.05s linear infinite;
-        }
-
-        .draw-wheel-disc.is-settling {
-          animation: roulette-settle 1.15s cubic-bezier(0.2, 0.9, 0.18, 1) 1;
-        }
-
-        .draw-wheel-rim {
-          position: absolute;
-          inset: 0;
-          border-radius: 999px;
-          box-shadow:
-            inset 0 0 0 12px rgba(255, 255, 255, 0.42),
-            inset 0 0 0 26px rgba(122, 92, 250, 0.14),
-            inset 0 -18px 36px rgba(0, 0, 0, 0.08);
-          pointer-events: none;
-        }
-
-        .draw-wheel-slot {
-          position: absolute;
-          inset: 50% auto auto 50%;
-          transform-origin: center center;
-          width: 76px;
-          height: 76px;
-          margin: -38px 0 0 -38px;
-          filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.12));
-        }
-
-        .draw-wheel-slot::before {
-          content: "";
-          position: absolute;
-          inset: -8px;
-          border-radius: 999px;
-          background: conic-gradient(from 0deg, hsla(var(--slot-hue), 90%, 66%, 0.12), hsla(var(--slot-hue), 90%, 66%, 0.35));
-          opacity: 0.85;
-          filter: blur(1px);
-          transform: scale(0.92);
-        }
-
-        .draw-wheel-card {
-          position: relative;
-          width: 76px;
-          height: 76px;
-          overflow: hidden;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.96);
-          border: 1px solid rgba(122, 92, 250, 0.15);
-          box-shadow:
-            inset 0 0 0 3px rgba(255, 255, 255, 0.88),
-            0 12px 18px rgba(0, 0, 0, 0.12);
-        }
-
-        .draw-wheel-card img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .draw-wheel-slot.is-spinning {
-          animation: roulette-slot-pulse 0.9s ease-in-out infinite;
-        }
-
-        .draw-wheel-needle {
-          position: absolute;
-          top: -10px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 52px;
-          height: 54px;
-          z-index: 2;
-          display: grid;
-          place-items: start center;
-          pointer-events: none;
-        }
-
-        .draw-wheel-needle-tip {
-          width: 0;
-          height: 0;
-          border-left: 16px solid transparent;
-          border-right: 16px solid transparent;
-          border-bottom: 30px solid var(--mantine-color-grape-6, #7a5cfa);
-          filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.22));
-        }
-
-        .draw-wheel-needle-shadow {
-          width: 24px;
-          height: 10px;
-          margin-top: -2px;
-          border-radius: 999px;
-          background: rgba(0, 0, 0, 0.1);
-          filter: blur(4px);
-          opacity: 0.55;
-        }
-
-        .draw-wheel-core {
-          position: absolute;
-          inset: 50% auto auto 50%;
-          transform: translate(-50%, -50%);
-          width: min(42vw, 186px);
-          aspect-ratio: 1;
-          border-radius: 999px;
-          display: grid;
-          place-items: center;
-          gap: 6px;
-          padding: 16px;
-          background:
-            radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.98) 0 55%, rgba(244, 239, 255, 0.96) 72%, rgba(227, 217, 255, 0.92) 100%);
-          box-shadow:
-            inset 0 0 0 1px rgba(122, 92, 250, 0.14),
-            inset 0 0 0 14px rgba(255, 255, 255, 0.8),
-            0 20px 44px rgba(0, 0, 0, 0.14);
-          z-index: 1;
-        }
-
-        .draw-wheel-core-ring {
-          position: absolute;
-          inset: 10px;
-          border-radius: inherit;
-          border: 2px solid rgba(122, 92, 250, 0.14);
-          box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.85);
-        }
-
-        .draw-wheel-result {
-          max-width: 100%;
-          width: 100%;
-          max-height: 64%;
-          border-radius: 20px;
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
-        }
-
-        .draw-wheel-core-label {
-          position: relative;
-          z-index: 1;
-          max-width: 92%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
 
         .draw-flip-stage {
@@ -473,52 +505,6 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, pool, index, to
           }
         }
 
-        @keyframes roulette-spin {
-          0% {
-            transform: rotate(0deg) scale(0.995);
-          }
-          100% {
-            transform: rotate(360deg) scale(1);
-          }
-        }
-
-        @keyframes roulette-settle {
-          0% {
-            transform: rotate(0deg) scale(1);
-          }
-          45% {
-            transform: rotate(12deg) scale(1.01);
-          }
-          75% {
-            transform: rotate(-4deg) scale(0.998);
-          }
-          100% {
-            transform: rotate(0deg) scale(1);
-          }
-        }
-
-        @keyframes wheel-breathe {
-          0%,
-          100% {
-            filter: drop-shadow(0 24px 48px rgba(96, 68, 180, 0.16)) saturate(1);
-          }
-          50% {
-            filter: drop-shadow(0 28px 60px rgba(96, 68, 180, 0.22)) saturate(1.05);
-          }
-        }
-
-        @keyframes roulette-slot-pulse {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          50% {
-            transform: scale(1.03);
-            opacity: 0.92;
-          }
-        }
-
         @keyframes flip-bob {
           0%, 100% {
             transform: rotateY(180deg) rotateZ(-4deg) translateY(0);
@@ -539,27 +525,31 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, pool, index, to
             display: none;
           }
 
-          .draw-wheel-frame {
-            width: min(88vw, 380px);
+          .draw-carousel-frame {
+            width: min(96vw, 540px);
+            padding: 22px 12px 18px;
           }
 
-          .draw-wheel-slot {
-            width: 60px;
-            height: 60px;
-            margin: -30px 0 0 -30px;
+          .draw-carousel-track {
+            gap: 10px;
+            padding: 0 54vw;
           }
 
-          .draw-wheel-card {
-            width: 60px;
-            height: 60px;
+          .draw-carousel-slot {
+            width: clamp(84px, 22vw, 108px);
           }
 
-          .draw-wheel-core {
-            width: min(48vw, 152px);
+          .draw-carousel-window {
+            width: clamp(124px, 34vw, 168px);
+            height: clamp(204px, 46vw, 270px);
           }
 
-          .draw-wheel-result {
-            max-height: 60%;
+          .draw-carousel-result {
+            width: clamp(112px, 30vw, 156px);
+          }
+
+          .draw-carousel-result-image {
+            max-height: clamp(160px, 38vw, 224px);
           }
         }
       `}</style>
