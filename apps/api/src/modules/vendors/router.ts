@@ -273,12 +273,18 @@ vendorRouter.patch("/v1/vendor/theme", async (req: VendorRequest, res) => {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
+  const { storefrontThemePreset, ...themeFields } = parsed.data;
+  const themeData = {
+    ...themeFields,
+    ...(storefrontThemePreset != null ? { storefrontThemePreset } : {}),
+  };
+
   const theme = await prisma.vendorSettings.upsert({
     where: { vendorId: auth.vendorId },
-    update: parsed.data,
+    update: themeData,
     create: {
       vendorId: auth.vendorId,
-      ...parsed.data,
+      ...themeData,
     },
     select: {
       storefrontPrimary: true,
