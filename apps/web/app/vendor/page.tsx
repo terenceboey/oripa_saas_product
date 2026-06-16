@@ -300,7 +300,7 @@ const DEFAULT_PACK_BANNER_OPTIONS = [
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 const clientPageHeader = { "x-client-page": "/vendor" };
-type ActiveTab = "BUSINESS" | "STORE_SETTINGS" | "PACKS" | "FULFILMENT";
+type ActiveTab = "BUSINESS" | "GROWTH" | "STORE_SETTINGS" | "PACKS" | "FULFILMENT";
 
 function formatFulfillmentAddress(customer?: PackWinner["customer"] | null) {
   if (!customer) return "No customer record";
@@ -404,13 +404,15 @@ function matchesPreset(
 
 function parseTabValue(tab: string | null): ActiveTab {
   if (tab === "pack-studio") return "PACKS";
+  if (tab === "growth" || tab === "referrals") return "GROWTH";
   if (tab === "store-settings" || tab === "store_settings") return "STORE_SETTINGS";
   if (tab === "fulfilment" || tab === "fulfillment") return "FULFILMENT";
   return "BUSINESS";
 }
 
-function toTabValue(tab: ActiveTab): "business" | "store-settings" | "pack-studio" | "fulfilment" {
+function toTabValue(tab: ActiveTab): "business" | "growth" | "store-settings" | "pack-studio" | "fulfilment" {
   if (tab === "PACKS") return "pack-studio";
+  if (tab === "GROWTH") return "growth";
   if (tab === "STORE_SETTINGS") return "store-settings";
   if (tab === "FULFILMENT") return "fulfilment";
   return "business";
@@ -528,6 +530,8 @@ export default function VendorPage() {
   const [qrExpiryMinutes, setQrExpiryMinutes] = useState("15");
   const [activeQr, setActiveQr] = useState<VendorQr | null>(null);
   const [activeQrDataUrl, setActiveQrDataUrl] = useState<string | null>(null);
+  const [activeReferralQrLink, setActiveReferralQrLink] = useState<string | null>(null);
+  const [activeReferralQrDataUrl, setActiveReferralQrDataUrl] = useState<string | null>(null);
   const [selectedTierIndex, setSelectedTierIndex] = useState(0);
   const [uploadingBannerImage, setUploadingBannerImage] = useState(false);
   const [uploadingPackBannerImage, setUploadingPackBannerImage] = useState(false);
@@ -551,6 +555,14 @@ export default function VendorPage() {
     const found = THEME_PRESETS.find((preset) => matchesPreset(themeDraft, preset));
     return found?.id ?? "custom";
   }, [themeDraft]);
+  const referralSignupUrl = useMemo(() => {
+    const code = referralCode.trim();
+    if (!code) return "";
+    const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : `https://${runtimeVendorHost}`;
+    const url = new URL("/register", origin);
+    url.searchParams.set("ref", code);
+    return url.toString();
+  }, [referralCode, runtimeVendorHost]);
   const packWinsInitialLoadRef = useRef(false);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
@@ -1102,6 +1114,32 @@ export default function VendorPage() {
     }
   }
 
+  async function openReferralQrPopup() {
+    if (!referralSignupUrl) {
+      setError("Referral code is not set.");
+      return;
+    }
+    setActiveReferralQrLink(referralSignupUrl);
+  }
+
+  async function copyReferralSignupLink() {
+    if (!referralSignupUrl) return;
+    try {
+      await navigator.clipboard.writeText(referralSignupUrl);
+      setSuccess("Referral signup link copied.");
+    } catch {
+      setError("Unable to copy referral signup link.");
+    }
+  }
+
+  async function saveReferralQrImage() {
+    if (!activeReferralQrDataUrl || !activeReferralQrLink) return;
+    const anchor = document.createElement("a");
+    anchor.href = activeReferralQrDataUrl;
+    anchor.download = `referral-signup-${referralCode.trim() || "link"}.png`;
+    anchor.click();
+  }
+
   useEffect(() => {
     if (!activeQr?.token) {
       setActiveQrDataUrl(null);
@@ -1127,6 +1165,32 @@ export default function VendorPage() {
       mounted = false;
     };
   }, [activeQr]);
+
+  useEffect(() => {
+    if (!activeReferralQrLink) {
+      setActiveReferralQrDataUrl(null);
+      return;
+    }
+    let mounted = true;
+    QRCode.toDataURL(activeReferralQrLink, {
+      width: 320,
+      margin: 1,
+      errorCorrectionLevel: "M",
+      color: {
+        dark: "#0f172a",
+        light: "#ffffff",
+      },
+    })
+      .then((url: string) => {
+        if (mounted) setActiveReferralQrDataUrl(url);
+      })
+      .catch(() => {
+        if (mounted) setActiveReferralQrDataUrl(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [activeReferralQrLink]);
 
   async function addBanner(event: FormEvent) {
     event.preventDefault();
@@ -1694,6 +1758,13 @@ export default function VendorPage() {
           </button>
           <button
             type="button"
+            className={`sort-pill ${activeTab === "GROWTH" ? "active" : ""}`}
+            onClick={() => setActiveTabInUrl("GROWTH")}
+          >
+            Referrals & QR
+          </button>
+          <button
+            type="button"
             className={`sort-pill ${activeTab === "STORE_SETTINGS" ? "active" : ""}`}
             onClick={() => setActiveTabInUrl("STORE_SETTINGS")}
           >
@@ -1774,8 +1845,21 @@ export default function VendorPage() {
             {packWinsLoading ? <p className="muted tiny">Loading winner dashboard...</p> : null}
             <div className="result-list">
               {packWins.map((row) => (
-                <div className="result-row" key={row.id}>
-                  <div style={{ display: "grid", gap: 6 }}>
+                <div className="result-row" key={row.id} style={{ alignItems: "start", gap: 12 }}>
+                  <img
+                    src={row.prize.imageUrl || DEFAULT_CARD}
+                    alt={row.prize.label}
+                    style={{
+                      width: 72,
+                      height: 100,
+                      objectFit: "cover",
+                      borderRadius: 10,
+                      border: "1px solid var(--border)",
+                      background: "#fff",
+                      flex: "0 0 auto",
+                    }}
+                  />
+                  <div style={{ display: "grid", gap: 6, minWidth: 0, flex: "1 1 auto" }}>
                     <div>
                       <strong>{row.customer?.displayName || row.customer?.fullName || row.customer?.email || "Customer"}</strong>{" "}
                       won <strong>{row.prize.label}</strong>
@@ -1792,16 +1876,36 @@ export default function VendorPage() {
                       <strong>Shipping:</strong> {formatFulfillmentAddress(row.customer)}
                     </div>
                   </div>
-                  <span>{row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}</span>
+                  <span style={{ whiteSpace: "nowrap" }}>{row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}</span>
                 </div>
               ))}
               {packWins.length === 0 && !packWinsLoading ? <p className="muted tiny">No winner records found for this filter.</p> : null}
             </div>
           </section>
+        </>
+      ) : null}
 
+      {activeTab === "GROWTH" ? (
+        <>
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Referral Signups</h2>
-            <p className="muted tiny">Referral URL: <code>/register?ref={vendor?.referralCode ?? ""}</code></p>
+            <p className="muted tiny">
+              Use this link on your own site, social channels, or customer support flows. Signups using the code are recorded here.
+            </p>
+            <div className="vendor-form" style={{ marginTop: 12 }}>
+              <label className="muted tiny">
+                Referral signup link
+                <input value={referralSignupUrl} readOnly />
+              </label>
+              <div className="actions">
+                <button type="button" className="sort-pill" onClick={() => void copyReferralSignupLink()} disabled={!referralSignupUrl}>
+                  Copy Link
+                </button>
+                <button type="button" className="sort-pill" onClick={() => void openReferralQrPopup()} disabled={!referralSignupUrl}>
+                  Show QR
+                </button>
+              </div>
+            </div>
             <div className="result-list">
               {referrals.map((row) => (
                 <div className="result-row" key={row.id}>
@@ -1815,6 +1919,7 @@ export default function VendorPage() {
 
           <section className="card" style={{ marginTop: 12 }}>
             <h2>Generate QR Points</h2>
+            <p className="muted tiny">Create a short-lived QR token for adding points to a customer wallet.</p>
             <form className="vendor-form" onSubmit={generateQr}>
               <label className="muted tiny">
                 Points to grant
@@ -1842,7 +1947,7 @@ export default function VendorPage() {
       {activeTab === "STORE_SETTINGS" ? (
         <>
           <section className="card" style={{ marginTop: 12 }}>
-            <h2>Vendor Profile / Business / Referral</h2>
+            <h2>Vendor Profile / Business</h2>
             <form className="vendor-form" onSubmit={saveVendorProfile}>
               <label className="muted tiny">
                 Vendor name
@@ -2558,6 +2663,36 @@ export default function VendorPage() {
               <p className="muted tiny">Generating QR image...</p>
             )}
             <p className="muted tiny" style={{ wordBreak: "break-all" }}>{activeQr.token}</p>
+          </div>
+        </div>
+      ) : null}
+
+      {activeReferralQrLink ? (
+        <div className="qr-modal-backdrop" onClick={() => setActiveReferralQrLink(null)}>
+          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
+            <div className="heading-row">
+              <h3>Referral Signup QR</h3>
+              <button type="button" className="sort-pill" onClick={() => setActiveReferralQrLink(null)}>Close</button>
+            </div>
+            <p className="muted tiny">Use this QR for vendor signup referrals. New registrations using the link are recorded under this vendor.</p>
+            {activeReferralQrDataUrl ? (
+              <img
+                className="qr-image"
+                src={activeReferralQrDataUrl}
+                alt={`QR for referral link ${activeReferralQrLink}`}
+              />
+            ) : (
+              <p className="muted tiny">Generating QR image...</p>
+            )}
+            <p className="muted tiny" style={{ wordBreak: "break-all" }}>{activeReferralQrLink}</p>
+            <div className="actions" style={{ marginTop: 12 }}>
+              <button type="button" className="sort-pill" onClick={() => void copyReferralSignupLink()} disabled={!referralSignupUrl}>
+                Copy Link
+              </button>
+              <button type="button" className="sort-pill" onClick={() => void saveReferralQrImage()} disabled={!activeReferralQrDataUrl}>
+                Save QR
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
