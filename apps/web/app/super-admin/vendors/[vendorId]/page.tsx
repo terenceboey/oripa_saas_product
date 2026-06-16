@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { apiBaseUrl, apiFetch } from "../../../../lib/api";
+import { Alert, Badge, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 type VendorMember = {
   id: string;
@@ -167,86 +168,94 @@ export default function SuperAdminVendorDetailPage() {
   }
 
   return (
-    <main className="container">
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/super-admin" className="sort-pill">
-          Back to Dashboard
-        </Link>
-        <Link href="/" className="sort-pill">
-          Home
-        </Link>
-      </header>
+    <Container size="xl" py="lg">
+      <Stack gap="md">
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <Group justify="space-between" align="center" wrap="wrap">
+            <Group gap="xs" wrap="wrap">
+              <Button component={Link} href="/super-admin" variant="light">
+                Back to Dashboard
+              </Button>
+              <Button component={Link} href="/" variant="subtle">
+                Home
+              </Button>
+            </Group>
+            <Badge variant="light">Risk {vendor?.riskLevel ?? "-"}</Badge>
+          </Group>
+        </Paper>
 
-      <section className="card auth-card">
-        <h1>Vendor Review</h1>
-        <p className="muted">Inspect and update vendor application state.</p>
-        {loading ? <p className="muted">Loading vendor...</p> : null}
-        {error ? <p className="error">{error}</p> : null}
-      </section>
+        <Card withBorder radius="xl" p="lg" shadow="sm">
+          <Stack gap="sm">
+            <Title order={1}>Vendor Review</Title>
+            <Text c="dimmed">Inspect and update vendor application state.</Text>
+            {loading ? <Text c="dimmed">Loading vendor...</Text> : null}
+            {error ? <Alert color="red" variant="light">{error}</Alert> : null}
+          </Stack>
+        </Card>
 
-      {vendor ? (
-        <>
-          <section className="card auth-card">
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-              <div>
-                <h2>{vendor.name}</h2>
-                <p className="muted" style={{ margin: 0 }}>
-                  {vendor.host} | {vendor.applicationStatus} | {vendor.isActive ? "active" : "inactive"}
-                </p>
-              </div>
-              <span className="badge">Risk {vendor.riskLevel}</span>
-            </div>
+        {vendor ? (
+          <Stack gap="md">
+            <Card withBorder radius="xl" p="lg" shadow="sm">
+              <Stack gap="md">
+                <Group justify="space-between" align="start" wrap="wrap">
+                  <div>
+                    <Title order={2}>{vendor.name}</Title>
+                    <Text c="dimmed">{vendor.host} | {vendor.applicationStatus} | {vendor.isActive ? "active" : "inactive"}</Text>
+                  </div>
+                  <Badge variant="light">Risk {vendor.riskLevel}</Badge>
+                </Group>
 
-            <div className="badge-grid" style={{ marginTop: 16 }}>
-              <div className="badge">Entity: {vendor.entityName ?? "-"}</div>
-              <div className="badge">PIC: {vendor.personInCharge ?? "-"}</div>
-              <div className="badge">Years: {vendor.yearsOfOperations ?? "-"}</div>
-              <div className="badge">Country: {vendor.personInChargeCountry ?? "-"}</div>
-              <div className="badge">Business Reg: {vendor.businessRegistrationNumber ?? "-"}</div>
-              <div className="badge">Phone: {vendor.contactPhoneNumber ?? "-"}</div>
-            </div>
+                <SimpleGrid cols={{ base: 2, md: 3 }} spacing="sm">
+                  <Card withBorder radius="md" p="sm"><Text size="sm">Entity: {vendor.entityName ?? "-"}</Text></Card>
+                  <Card withBorder radius="md" p="sm"><Text size="sm">PIC: {vendor.personInCharge ?? "-"}</Text></Card>
+                  <Card withBorder radius="md" p="sm"><Text size="sm">Years: {vendor.yearsOfOperations ?? "-"}</Text></Card>
+                  <Card withBorder radius="md" p="sm"><Text size="sm">Country: {vendor.personInChargeCountry ?? "-"}</Text></Card>
+                  <Card withBorder radius="md" p="sm"><Text size="sm">Business Reg: {vendor.businessRegistrationNumber ?? "-"}</Text></Card>
+                  <Card withBorder radius="md" p="sm"><Text size="sm">Phone: {vendor.contactPhoneNumber ?? "-"}</Text></Card>
+                </SimpleGrid>
 
-            <div style={{ display: "grid", gap: 8, marginTop: 16 }}>              <div><strong>Business email:</strong> {vendor.businessEmail ?? "-"}</div>
-              <div><strong>Website/social:</strong> {formatSocial(vendor)}</div>
-              <div><strong>Registered address:</strong> {formatAddress(vendor)}</div>
-              <div><strong>Payout details:</strong> {formatBank(vendor)}</div>
-              <div><strong>Document:</strong> {vendor.identificationDocumentType ?? "-"}{vendor.identificationDocumentUrl ? ` | ${vendor.identificationDocumentUrl}` : ""}</div>
-              <div><strong>Submitted:</strong> {vendor.applicationSubmittedAt ?? "-"}</div>
-              <div><strong>Reviewed:</strong> {vendor.applicationReviewedAt ?? "-"}</div>
-              <div><strong>Notes:</strong> {vendor.applicationReviewNotes ?? "-"}</div>
-            </div>
+                <Stack gap={4}>
+                  <Text size="sm"><strong>Business email:</strong> {vendor.businessEmail ?? "-"}</Text>
+                  <Text size="sm"><strong>Website/social:</strong> {formatSocial(vendor)}</Text>
+                  <Text size="sm"><strong>Registered address:</strong> {formatAddress(vendor)}</Text>
+                  <Text size="sm"><strong>Payout details:</strong> {formatBank(vendor)}</Text>
+                  <Text size="sm"><strong>Document:</strong> {vendor.identificationDocumentType ?? "-"}{vendor.identificationDocumentUrl ? ` | ${vendor.identificationDocumentUrl}` : ""}</Text>
+                  <Text size="sm"><strong>Submitted:</strong> {vendor.applicationSubmittedAt ?? "-"}</Text>
+                  <Text size="sm"><strong>Reviewed:</strong> {vendor.applicationReviewedAt ?? "-"}</Text>
+                  <Text size="sm"><strong>Notes:</strong> {vendor.applicationReviewNotes ?? "-"}</Text>
+                </Stack>
 
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
-              <button type="button" className="draw-button" disabled={actionLoading !== null} onClick={() => void reviewVendor("approve")}>
-                Approve
-              </button>
-              <button type="button" className="sort-pill" disabled={actionLoading !== null} onClick={() => void reviewVendor("reject")}>
-                Reject
-              </button>
-            </div>
-          </section>
+                <Group gap="xs" wrap="wrap">
+                  <Button loading={actionLoading === "approve"} onClick={() => void reviewVendor("approve")}>Approve</Button>
+                  <Button variant="outline" color="red" loading={actionLoading === "reject"} onClick={() => void reviewVendor("reject")}>Reject</Button>
+                </Group>
+              </Stack>
+            </Card>
 
-          <section className="card auth-card">
-            <h2>Members</h2>
-            {vendor.members.length ? (
-              <div style={{ display: "grid", gap: 12 }}>
-                {vendor.members.map((member) => (
-                  <article key={member.id} className="card" style={{ background: "var(--card)" }}>
-                    <strong>{member.user.email}</strong>
-                    <div className="muted" style={{ marginTop: 4 }}>
-                      Role: {member.role} | {member.isActive ? "active" : "inactive"}
-                    </div>
-                    <div className="muted">Display name: {member.user.displayName ?? "-"}</div>
-                    <div className="muted">Status: {member.user.status}</div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <p className="muted">No members found.</p>
-            )}
-          </section>
-        </>
-      ) : null}
-    </main>
+            <Card withBorder radius="xl" p="lg" shadow="sm">
+              <Stack gap="md">
+                <Title order={2} size="h3">Members</Title>
+                {vendor.members.length ? (
+                  <Stack gap="sm">
+                    {vendor.members.map((member) => (
+                      <Card key={member.id} withBorder radius="md" p="md">
+                        <Stack gap={4}>
+                          <Text fw={600}>{member.user.email}</Text>
+                          <Text size="sm" c="dimmed">Role: {member.role} | {member.isActive ? "active" : "inactive"}</Text>
+                          <Text size="sm" c="dimmed">Display name: {member.user.displayName ?? "-"}</Text>
+                          <Text size="sm" c="dimmed">Status: {member.user.status}</Text>
+                        </Stack>
+                      </Card>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Text c="dimmed">No members found.</Text>
+                )}
+              </Stack>
+            </Card>
+          </Stack>
+        ) : null}
+      </Stack>
+    </Container>
   );
 }

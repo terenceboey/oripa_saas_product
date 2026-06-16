@@ -32,12 +32,14 @@ export default function VendorRegisterPage() {
 
 function VendorRegisterShell() {
   return (
-    <main className="container">
-      <section className="card auth-card">
-        <h1>Vendor Register</h1>
-        <p className="muted">Loading vendor onboarding...</p>
-      </section>
-    </main>
+    <Container size="sm" py="xl">
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Stack gap="sm">
+          <Title order={1}>Vendor Register</Title>
+          <Text c="dimmed">Loading vendor onboarding...</Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 

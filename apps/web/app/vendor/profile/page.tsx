@@ -1,9 +1,11 @@
 "use client";
 
-import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { Button, Container, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { VendorApplicationForm } from "../../../components/vendor-application-form";
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const clientPageHeader = { "x-client-page": "/vendor/profile" };
@@ -30,12 +32,14 @@ export default function VendorProfilePage() {
 
 function VendorProfileFallback() {
   return (
-    <main className="container">
-      <section className="card auth-card">
-        <h1>Vendor Profile</h1>
-        <p className="muted">Loading vendor profile...</p>
-      </section>
-    </main>
+    <Container size="sm" py="xl">
+      <Paper withBorder radius="xl" p="xl" shadow="sm">
+        <Stack gap="sm">
+          <Title order={1}>Vendor Profile</Title>
+          <Text c="dimmed">Loading vendor profile...</Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 
@@ -56,21 +60,32 @@ function VendorProfileContent() {
   }
 
   return (
-    <main className="container">
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/vendor" className="sort-pill">
-          Back to Dashboard
-        </Link>
-        <button type="button" className="sort-pill" onClick={() => void logout()}>
-          Logout
-        </button>
-      </header>
-      <VendorApplicationForm
-        title="Vendor Profile"
-        description="Complete your vendor application after email verification and keep your business details updated. This information is used for approval review."
-        primaryActionLabel="Save Vendor Profile"
-        note="Please upload your identifying document before submitting the final application."
-      />
-    </main>
+    <Container size="xl" py="lg">
+      <Stack gap="md">
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <Stack gap="sm">
+            <Group justify="space-between" align="center" wrap="wrap">
+              <Button component={Link} href="/vendor" variant="light">
+                Back to Dashboard
+              </Button>
+              <Button onClick={() => void logout()} variant="outline">
+                Logout
+              </Button>
+            </Group>
+            <div>
+              <Title order={1}>Vendor Profile</Title>
+              <Text c="dimmed">Current tenant host: {runtimeVendorHost}</Text>
+            </div>
+          </Stack>
+        </Paper>
+
+        <VendorApplicationForm
+          title="Vendor Profile"
+          description="Complete your vendor application after email verification and keep your business details updated. This information is used for approval review."
+          primaryActionLabel="Save Vendor Profile"
+          note="Please upload your identifying document before submitting the final application."
+        />
+      </Stack>
+    </Container>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { apiBaseUrl, apiFetch } from "../../lib/api";
+import { Alert, Badge, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 type SuperAdminVendor = {
   id: string;
@@ -49,6 +50,20 @@ type SuperAdminVendor = {
   updatedAt?: string | null;
 };
 
+type DashboardResponse = {
+  summary: {
+    totalPending: number;
+    draft: number;
+    submitted: number;
+    underReview: number;
+    approved: number;
+    rejected: number;
+    platformFeePoints: number;
+    platformFeeCurrency: number;
+  };
+  pendingVendors: SuperAdminVendor[];
+};
+
 function formatAddress(vendor: SuperAdminVendor) {
   const parts = [
     vendor.registeredBusinessAddressLine1,
@@ -85,20 +100,6 @@ function formatSocial(vendor: SuperAdminVendor) {
   ].filter(Boolean);
   return parts.length ? parts.join(" | ") : "-";
 }
-
-type DashboardResponse = {
-  summary: {
-    totalPending: number;
-    draft: number;
-    submitted: number;
-    underReview: number;
-    approved: number;
-    rejected: number;
-    platformFeePoints: number;
-    platformFeeCurrency: number;
-  };
-  pendingVendors: SuperAdminVendor[];
-};
 
 export default function SuperAdminDashboardPage() {
   const router = useRouter();
@@ -176,102 +177,98 @@ export default function SuperAdminDashboardPage() {
   }
 
   return (
-    <main className="container">
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/" className="sort-pill">
-          Back to Home
-        </Link>
-        <button type="button" className="sort-pill" onClick={() => void logout()}>
-          Logout
-        </button>
-      </header>
-
-      <section className="card auth-card">
-        <h1>Super Admin</h1>
-        <p className="muted">
-          Review vendor approvals, inspect sensitive vendor details, and manage the platform.
-        </p>
-
-        <div className="badge-grid">
-          {summaryCards.map((card) => (
-            <div className="badge" key={card.label}>
-              <strong style={{ display: "block", fontSize: 18 }}>{card.value}</strong>
-              <span>{card.label}</span>
+    <Container size="xl" py="lg">
+      <Stack gap="md">
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <Group justify="space-between" align="center" wrap="wrap">
+            <div>
+              <Title order={1}>Super Admin</Title>
+              <Text c="dimmed">Review vendor approvals, inspect sensitive vendor details, and manage the platform.</Text>
             </div>
-          ))}
-          <div className="badge">
-            <strong style={{ display: "block", fontSize: 18 }}>
-              {dashboard?.summary?.platformFeeCurrency?.toFixed(2) ?? "0.00"}
-            </strong>
-            <span>Platform Fee Currency</span>
-          </div>
-        </div>
+            <Group gap="xs" wrap="wrap">
+              <Button component={Link} href="/" variant="light">
+                Back to Home
+              </Button>
+              <Button onClick={() => void logout()} variant="outline">
+                Logout
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
 
-        {loading ? <p className="muted">Loading dashboard...</p> : null}
-        {error ? <p className="error">{error}</p> : null}
-      </section>
-
-      <section className="card auth-card">
-        <h2>Pending Vendor Applications</h2>
-        {dashboard?.pendingVendors.length ? (
-          <div style={{ display: "grid", gap: 16 }}>
-            {dashboard.pendingVendors.map((vendor) => (
-              <article key={vendor.id} className="card" style={{ background: "var(--card)", borderRadius: 18 }}>
-                <div className="vendor-card-header" style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "start" }}>
-                  <div>
-                    <h3 style={{ marginBottom: 4 }}>{vendor.name}</h3>
-                    <p className="muted" style={{ margin: 0 }}>
-                      {vendor.host} | {vendor.applicationStatus}
-                    </p>
-                  </div>
-                  <span className="badge">{vendor.isActive ? "Active" : "Inactive"}</span>
-                </div>
-
-                <div className="badge-grid" style={{ marginTop: 12 }}>
-                  <div className="badge">Entity: {vendor.entityName ?? "-"}</div>
-                  <div className="badge">PIC: {vendor.personInCharge ?? "-"}</div>
-                  <div className="badge">Country: {vendor.personInChargeCountry ?? "-"}</div>
-                  <div className="badge">Business Reg: {vendor.businessRegistrationNumber ?? "-"}</div>
-                </div>
-
-                <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
-                  <div><strong>Business email:</strong> {vendor.businessEmail ?? "-"}</div>
-                  <div><strong>Contact phone:</strong> {vendor.contactPhoneNumber ?? "-"}</div>
-                  <div><strong>Website/social:</strong> {formatSocial(vendor)}</div>
-                  <div><strong>Registered address:</strong> {formatAddress(vendor)}</div>
-                  <div><strong>Payout details:</strong> {formatBank(vendor)}</div>
-                  <div><strong>Document:</strong> {vendor.identificationDocumentType ?? "-"}{vendor.identificationDocumentUrl ? ` | ${vendor.identificationDocumentUrl}` : ""}</div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 16 }}>
-                  <button
-                    type="button"
-                    className="draw-button"
-                    style={{ minWidth: 140 }}
-                    disabled={actionLoading === vendor.id}
-                    onClick={() => void reviewVendor(vendor.id, "approve")}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    className="sort-pill"
-                    disabled={actionLoading === vendor.id}
-                    onClick={() => void reviewVendor(vendor.id, "reject")}
-                  >
-                    Reject
-                  </button>
-                  <Link href={`/super-admin/vendors/${vendor.id}`} className="sort-pill">
-                    Open
-                  </Link>
-                </div>
-              </article>
+        <Paper withBorder radius="xl" p="lg" shadow="sm">
+          <SimpleGrid cols={{ base: 2, md: 3, lg: 4 }} spacing="md">
+            {summaryCards.map((card) => (
+              <Card key={card.label} withBorder radius="lg" p="md">
+                <Text size="sm" c="dimmed">{card.label}</Text>
+                <Title order={3}>{card.value}</Title>
+              </Card>
             ))}
-          </div>
-        ) : (
-          <p className="muted">No pending vendor applications right now.</p>
-        )}
-      </section>
-    </main>
+            <Card withBorder radius="lg" p="md">
+              <Text size="sm" c="dimmed">Platform Fee Currency</Text>
+              <Title order={3}>{dashboard?.summary?.platformFeeCurrency?.toFixed(2) ?? "0.00"}</Title>
+            </Card>
+          </SimpleGrid>
+        </Paper>
+
+        {loading ? <Text c="dimmed">Loading dashboard...</Text> : null}
+        {error ? <Alert color="red" variant="light">{error}</Alert> : null}
+
+        <Card withBorder radius="xl" p="lg" shadow="sm">
+          <Stack gap="md">
+            <Title order={2} size="h3">Pending Vendor Applications</Title>
+            {dashboard?.pendingVendors.length ? (
+              <Stack gap="md">
+                {dashboard.pendingVendors.map((vendor) => (
+                  <Card key={vendor.id} withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Group justify="space-between" align="start" wrap="wrap">
+                        <div>
+                          <Title order={3} size="h4">{vendor.name}</Title>
+                          <Text c="dimmed" size="sm">{vendor.host} | {vendor.applicationStatus}</Text>
+                        </div>
+                        <Badge variant="light">{vendor.isActive ? "Active" : "Inactive"}</Badge>
+                      </Group>
+
+                      <SimpleGrid cols={{ base: 2, md: 3 }} spacing="sm">
+                        <Card withBorder radius="md" p="sm"><Text size="sm">Entity: {vendor.entityName ?? "-"}</Text></Card>
+                        <Card withBorder radius="md" p="sm"><Text size="sm">PIC: {vendor.personInCharge ?? "-"}</Text></Card>
+                        <Card withBorder radius="md" p="sm"><Text size="sm">Country: {vendor.personInChargeCountry ?? "-"}</Text></Card>
+                        <Card withBorder radius="md" p="sm"><Text size="sm">Business Reg: {vendor.businessRegistrationNumber ?? "-"}</Text></Card>
+                        <Card withBorder radius="md" p="sm"><Text size="sm">Phone: {vendor.contactPhoneNumber ?? "-"}</Text></Card>
+                        <Card withBorder radius="md" p="sm"><Text size="sm">Risk: {vendor.riskLevel}</Text></Card>
+                      </SimpleGrid>
+
+                      <Stack gap={4}>
+                        <Text size="sm"><strong>Business email:</strong> {vendor.businessEmail ?? "-"}</Text>
+                        <Text size="sm"><strong>Contact phone:</strong> {vendor.contactPhoneNumber ?? "-"}</Text>
+                        <Text size="sm"><strong>Website/social:</strong> {formatSocial(vendor)}</Text>
+                        <Text size="sm"><strong>Registered address:</strong> {formatAddress(vendor)}</Text>
+                        <Text size="sm"><strong>Payout details:</strong> {formatBank(vendor)}</Text>
+                        <Text size="sm"><strong>Document:</strong> {vendor.identificationDocumentType ?? "-"}{vendor.identificationDocumentUrl ? ` | ${vendor.identificationDocumentUrl}` : ""}</Text>
+                      </Stack>
+
+                      <Group gap="xs" wrap="wrap">
+                        <Button loading={actionLoading === vendor.id} onClick={() => void reviewVendor(vendor.id, "approve")}>
+                          Approve
+                        </Button>
+                        <Button variant="outline" color="red" loading={actionLoading === vendor.id} onClick={() => void reviewVendor(vendor.id, "reject")}>
+                          Reject
+                        </Button>
+                        <Button component={Link} href={`/super-admin/vendors/${vendor.id}`} variant="light">
+                          Open
+                        </Button>
+                      </Group>
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            ) : (
+              <Text c="dimmed">No pending vendor applications right now.</Text>
+            )}
+          </Stack>
+        </Card>
+      </Stack>
+    </Container>
   );
 }

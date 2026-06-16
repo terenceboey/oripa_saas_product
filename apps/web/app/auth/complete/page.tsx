@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
+import { Alert, Anchor, Button, Container, Paper, Stack, Text, Title } from "@mantine/core";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -24,12 +25,14 @@ export default function AuthCompletePage() {
 
 function AuthCompleteShell({ message }: { message: string }) {
   return (
-    <main className="container">
-      <section className="card auth-card">
-        <h1>Finishing Customer Sign-In</h1>
-        <p className="muted">{message}</p>
-      </section>
-    </main>
+    <Container size="sm" py="xl">
+      <Paper withBorder radius="xl" p="xl" shadow="sm">
+        <Stack gap="sm">
+          <Title order={1}>Finishing Customer Sign-In</Title>
+          <Text c="dimmed">{message}</Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 
@@ -77,6 +80,7 @@ function AuthCompleteContent() {
           router.replace("/vendor");
           return;
         }
+
         const nextUser = await loadProfileWithRetry();
         if (!active) return;
         if (!nextUser?.profileComplete) {
@@ -99,16 +103,21 @@ function AuthCompleteContent() {
   }, [router, runtimeVendorHost]);
 
   return (
-    <main className="container">
-      <section className="card auth-card">
-        <h1>Finishing Customer Sign-In</h1>
-        <p className="muted">{message}</p>
-        {error ? (
-          <p className="error">
-            {error} <Link href="/login">Return to login</Link>
-          </p>
-        ) : null}
-      </section>
-    </main>
+    <Container size="sm" py="xl">
+      <Paper withBorder radius="xl" p="xl" shadow="sm">
+        <Stack gap="md">
+          <Title order={1}>Finishing Customer Sign-In</Title>
+          <Text c="dimmed">{message}</Text>
+          {error ? (
+            <Alert color="red" variant="light">
+              {error} <Anchor component={Link} href="/login">Return to login</Anchor>
+            </Alert>
+          ) : null}
+          <Button component={Link} href="/" variant="subtle">
+            Return to homepage
+          </Button>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

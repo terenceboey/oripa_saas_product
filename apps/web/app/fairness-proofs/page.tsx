@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 
 type FairnessProofSummary = {
   drawOrderId: string;
@@ -112,73 +113,63 @@ export default function FairnessProofsPage() {
   }
 
   return (
-    <main className="container fairness-page">
-      <header className="site-header">
-        <div className="brand-text">
-          <strong>Your Fairness Proofs</strong>
-          <span>Last 100 proofs. Each proof is reproducible via server/client seeds.</span>
-        </div>
-        <div className="actions">
-          <Link href="/" className="sort-pill">Back to Catalog</Link>
-          <button type="button" className="sort-pill" onClick={() => void loadSummaries()} disabled={loading}>
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-        </div>
-      </header>
+    <Container size="lg" py="lg">
+      <Stack gap="md">
+        <Paper withBorder radius="xl" p="lg" shadow="sm">
+          <Group justify="space-between" align="center" wrap="wrap">
+            <div>
+              <Title order={1}>Your Fairness Proofs</Title>
+              <Text c="dimmed">Last 100 proofs. Each proof is reproducible via server/client seeds.</Text>
+            </div>
+            <Group gap="xs" wrap="wrap">
+              <Button component={Link} href="/" variant="light">
+                Back to Catalog
+              </Button>
+              <Button onClick={() => void loadSummaries()} loading={loading} variant="outline">
+                Refresh
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
 
-      {error ? <p className="error">{error}</p> : null}
+        {error ? <Alert color="red" variant="light">{error}</Alert> : null}
 
-      <section className="fairness-list">
-        {proofs.map((proof) => {
-          const detail = detailsByOrderId[proof.drawOrderId];
-          const howToVerify = howToVerifyByOrderId[proof.drawOrderId] ?? [];
-          const loadingDetail = loadingByOrderId[proof.drawOrderId];
+        <Stack gap="md">
+          {proofs.map((proof) => {
+            const detail = detailsByOrderId[proof.drawOrderId];
+            const howToVerify = howToVerifyByOrderId[proof.drawOrderId] ?? [];
+            const loadingDetail = loadingByOrderId[proof.drawOrderId];
 
-          return (
-            <article className="fairness-card" key={proof.drawOrderId}>
-              <div className="fairness-topline">
-                <strong>{formatTime(proof.createdAt)}</strong>
-                <span>Claw: {proof.drawOrderId.slice(0, 12)}</span>
-              </div>
+            return (
+              <Card withBorder radius="xl" shadow="sm" key={proof.drawOrderId} padding="lg">
+                <Stack gap="md">
+                  <Group justify="space-between" align="start" wrap="wrap">
+                    <div>
+                      <Title order={3} size="h4">{formatTime(proof.createdAt)}</Title>
+                      <Text size="sm" c="dimmed">Claw: {proof.drawOrderId.slice(0, 12)}</Text>
+                    </div>
+                    <Text size="sm" c="dimmed">Quantity: {proof.quantity}</Text>
+                  </Group>
 
-              <div className="fairness-grid">
-                <div>
-                  <div><strong>Version:</strong> v1</div>
-                  <div><strong>Algorithm:</strong> {proof.algorithmVersion}</div>
-                  <div><strong>ServerSeedHash:</strong> {proof.serverSeedHash}</div>
-                  <div><strong>ClientSeed:</strong> {proof.clientSeed}</div>
-                  <div><strong>Session:</strong> {proof.nonceBase}</div>
-                </div>
-                <div>
-                  <div><strong>ServerSeed:</strong> {proof.revealedServerSeed}</div>
-                  <div><strong>Amount:</strong> {proof.quantity}</div>
-                  <div><strong>PoolSnapshotHash:</strong> {proof.poolSnapshotHash}</div>
-                </div>
-              </div>
+                  <SimpleProofGrid proof={proof} />
 
-              <details className="fairness-details" onToggle={(e) => {
-                if ((e.currentTarget as HTMLDetailsElement).open) {
-                  void loadDetail(proof.drawOrderId);
-                }
-              }}>
-                <summary>View selections JSON</summary>
-                {loadingDetail ? <p className="muted">Loading proof detail...</p> : null}
-                <pre className="fairness-json">{JSON.stringify(detail?.selections ?? [], null, 2)}</pre>
-              </details>
+                  <details onToggle={(e) => {
+                    if ((e.currentTarget as HTMLDetailsElement).open) void loadDetail(proof.drawOrderId);
+                  }}>
+                    <summary>View selections JSON</summary>
+                    {loadingDetail ? <Text size="sm" c="dimmed">Loading proof detail...</Text> : null}
+                    <pre style={{ whiteSpace: "pre-wrap", overflowX: "auto" }}>{JSON.stringify(detail?.selections ?? [], null, 2)}</pre>
+                  </details>
 
-              <details className="fairness-details" onToggle={(e) => {
-                if ((e.currentTarget as HTMLDetailsElement).open) {
-                  void loadDetail(proof.drawOrderId);
-                }
-              }}>
-                <summary>How to verify</summary>
-                {loadingDetail ? <p className="muted">Loading verification steps...</p> : null}
-                <ol className="fairness-verify-list">
-                  {howToVerify.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ol>
-                <pre className="fairness-json">{`const crypto = require("crypto");
+                  <details onToggle={(e) => {
+                    if ((e.currentTarget as HTMLDetailsElement).open) void loadDetail(proof.drawOrderId);
+                  }}>
+                    <summary>How to verify</summary>
+                    {loadingDetail ? <Text size="sm" c="dimmed">Loading verification steps...</Text> : null}
+                    <ol>
+                      {howToVerify.map((line) => <li key={line}>{line}</li>)}
+                    </ol>
+                    <pre style={{ whiteSpace: "pre-wrap", overflowX: "auto" }}>{`const crypto = require("crypto");
 
 function sha256Hex(s) {
   return crypto.createHash("sha256").update(s).digest("hex");
@@ -196,17 +187,42 @@ function hexToFloat01(hex) {
 
 // verify commitment
 // sha256Hex(serverSeed) === serverSeedHash`}</pre>
-              </details>
-            </article>
-          );
-        })}
+                  </details>
+                </Stack>
+              </Card>
+            );
+          })}
 
-        {!loading && proofs.length === 0 ? (
-          <article className="fairness-card">
-            <p>No fairness proofs yet. Draw a pack first and they will appear here.</p>
-          </article>
-        ) : null}
-      </section>
-    </main>
+          {!loading && proofs.length === 0 ? (
+            <Paper withBorder radius="xl" p="lg" shadow="sm">
+              <Text>No fairness proofs yet. Draw a pack first and they will appear here.</Text>
+            </Paper>
+          ) : null}
+        </Stack>
+      </Stack>
+    </Container>
+  );
+}
+
+function SimpleProofGrid({ proof }: { proof: FairnessProofSummary }) {
+  return (
+    <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+      <Paper withBorder radius="lg" p="md">
+        <Stack gap={4}>
+          <Text size="sm"><strong>Version:</strong> v1</Text>
+          <Text size="sm"><strong>Algorithm:</strong> {proof.algorithmVersion}</Text>
+          <Text size="sm"><strong>ServerSeedHash:</strong> {proof.serverSeedHash}</Text>
+          <Text size="sm"><strong>ClientSeed:</strong> {proof.clientSeed}</Text>
+          <Text size="sm"><strong>Session:</strong> {proof.nonceBase}</Text>
+        </Stack>
+      </Paper>
+      <Paper withBorder radius="lg" p="md">
+        <Stack gap={4}>
+          <Text size="sm"><strong>ServerSeed:</strong> {proof.revealedServerSeed}</Text>
+          <Text size="sm"><strong>Amount:</strong> {proof.quantity}</Text>
+          <Text size="sm"><strong>PoolSnapshotHash:</strong> {proof.poolSnapshotHash}</Text>
+        </Stack>
+      </Paper>
+    </SimpleGrid>
   );
 }

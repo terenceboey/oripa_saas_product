@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Badge, Button, Card, Container, FileButton, Group, Image, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Textarea, Title } from "@mantine/core";
+import { Badge, Button, Card, Container, FileButton, Group, Image, Modal, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
@@ -2713,57 +2713,53 @@ export default function VendorPage() {
         </>
       ) : null}
 
-      {activeQr ? (
-        <div className="qr-modal-backdrop" onClick={() => setActiveQr(null)}>
-          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
-            <div className="heading-row">
-              <h3>QR Token</h3>
-              <button type="button" className="sort-pill" onClick={() => setActiveQr(null)}>Close</button>
-            </div>
-            <p className="muted tiny">Points: {activeQr.points} | Status: {activeQr.status}</p>
+      <Modal opened={Boolean(activeQr)} onClose={() => setActiveQr(null)} centered radius="lg" title="QR Token">
+        {activeQr ? (
+          <Stack gap="sm">
+            <Text size="sm" c="dimmed">
+              Points: {activeQr.points} | Status: {activeQr.status}
+            </Text>
             {activeQrDataUrl ? (
-              <img
-                className="qr-image"
-                src={activeQrDataUrl}
-                alt={`QR for token ${activeQr.token}`}
-              />
+              <Image src={activeQrDataUrl} alt={`QR for token ${activeQr.token}`} radius="md" />
             ) : (
-              <p className="muted tiny">Generating QR image...</p>
+              <Text size="sm" c="dimmed">
+                Generating QR image...
+              </Text>
             )}
-            <p className="muted tiny" style={{ wordBreak: "break-all" }}>{activeQr.token}</p>
-          </div>
-        </div>
-      ) : null}
+            <Text size="xs" style={{ wordBreak: "break-all" }}>
+              {activeQr.token}
+            </Text>
+          </Stack>
+        ) : null}
+      </Modal>
 
-      {activeReferralQrLink ? (
-        <div className="qr-modal-backdrop" onClick={() => setActiveReferralQrLink(null)}>
-          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
-            <div className="heading-row">
-              <h3>Referral Signup QR</h3>
-              <button type="button" className="sort-pill" onClick={() => setActiveReferralQrLink(null)}>Close</button>
-            </div>
-            <p className="muted tiny">Use this QR for vendor signup referrals. New registrations using the link are recorded under this vendor.</p>
+      <Modal opened={Boolean(activeReferralQrLink)} onClose={() => setActiveReferralQrLink(null)} centered radius="lg" title="Referral Signup QR">
+        {activeReferralQrLink ? (
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              Use this QR for vendor signup referrals. New registrations using the link are recorded under this vendor.
+            </Text>
             {activeReferralQrDataUrl ? (
-              <img
-                className="qr-image"
-                src={activeReferralQrDataUrl}
-                alt={`QR for referral link ${activeReferralQrLink}`}
-              />
+              <Image src={activeReferralQrDataUrl} alt={`QR for referral link ${activeReferralQrLink}`} radius="md" />
             ) : (
-              <p className="muted tiny">Generating QR image...</p>
+              <Text size="sm" c="dimmed">
+                Generating QR image...
+              </Text>
             )}
-            <p className="muted tiny" style={{ wordBreak: "break-all" }}>{activeReferralQrLink}</p>
-            <div className="actions" style={{ marginTop: 12 }}>
-              <button type="button" className="sort-pill" onClick={() => void copyReferralSignupLink()} disabled={!referralSignupUrl}>
+            <Text size="xs" style={{ wordBreak: "break-all" }}>
+              {activeReferralQrLink}
+            </Text>
+            <Group mt="xs">
+              <Button variant="light" onClick={() => void copyReferralSignupLink()} disabled={!referralSignupUrl}>
                 Copy Link
-              </button>
-              <button type="button" className="sort-pill" onClick={() => void saveReferralQrImage()} disabled={!activeReferralQrDataUrl}>
+              </Button>
+              <Button variant="outline" onClick={() => void saveReferralQrImage()} disabled={!activeReferralQrDataUrl}>
                 Save QR
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+              </Button>
+            </Group>
+          </Stack>
+        ) : null}
+      </Modal>
       </Stack>
     </Container>
   );

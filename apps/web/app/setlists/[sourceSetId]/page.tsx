@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import { useEffect, useState } from "react";
+import { Alert, Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
 
 type SetInfo = {
   sourceSetId: string;
@@ -62,6 +62,7 @@ export default function SetlistDetailPage() {
     let active = true;
     setLoading(true);
     setFetchError(null);
+
     const url = new URL(`${apiBase}/v1/public/setlists/${sourceSetId}/cards`);
     url.searchParams.set("game", game);
     if (source) url.searchParams.set("source", source);
@@ -71,9 +72,9 @@ export default function SetlistDetailPage() {
     if (rarity.trim()) url.searchParams.set("rarity", rarity.trim());
 
     fetch(url.toString(), { cache: "no-store" })
-      .then(async (r) => {
-        const payload = await r.json().catch(() => ({}));
-        if (!r.ok) {
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
           throw new Error(payload?.error ?? "Failed to load set cards");
         }
         return payload;
@@ -103,72 +104,76 @@ export default function SetlistDetailPage() {
   const pageTitle = setInfo?.name ?? "Set";
 
   return (
-    <main style={styles.page}>
-      <div style={styles.container}>
-        <Link href={`/setlists?game=${game}${source ? `&source=${source}` : ""}`} style={styles.backLink}>
-          {"<- All Sets"}
-        </Link>
+    <Container size="xl" py="xl">
+      <Stack gap="lg">
+        <Group justify="space-between" align="center" wrap="wrap">
+          <Button component={Link} href={`/setlists?game=${game}${source ? `&source=${source}` : ""}`} variant="light">
+            Back to setlists
+          </Button>
+          <Group gap="xs" wrap="wrap">
+            <Badge variant="light">{game}</Badge>
+            <Badge variant="outline">{data?.total ?? 0} cards</Badge>
+          </Group>
+        </Group>
 
-        <section style={styles.setHeader}>
-          <div style={styles.logoBox}>
+        <Paper withBorder radius="xl" p="lg" shadow="sm" style={{ background: "linear-gradient(120deg, rgba(159,144,255,.18), rgba(116,200,255,.16))" }}>
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
             <SetHeaderImage set={setInfo} title={pageTitle} />
-          </div>
-          <div>
-            <h1 style={styles.setTitle}>{pageTitle}</h1>
-            <div style={styles.statsRow}>
-              <span style={styles.pillPrimary}>{data?.total ?? 0} cards</span>
-              <span style={styles.pillNeutral}>{setInfo?.releaseDate ? new Date(setInfo.releaseDate).toLocaleDateString() : "Unknown date"}</span>
-            </div>
-            <p style={styles.muted}>Click any card to view details and pricing (later module).</p>
-          </div>
-        </section>
+            <Stack gap="sm" justify="center">
+              <Title order={1}>{pageTitle}</Title>
+              <Text c="dimmed">
+                {setInfo?.releaseDate ? new Date(setInfo.releaseDate).toLocaleDateString() : "Unknown date"}
+              </Text>
+              <Group gap="xs" wrap="wrap">
+                <Badge variant="light">{data?.total ?? 0} cards</Badge>
+                {setInfo?.setCode ? <Badge variant="outline">{setInfo.setCode}</Badge> : null}
+              </Group>
+              <Text c="dimmed">Click any card to view details and pricing later.</Text>
+            </Stack>
+          </SimpleGrid>
+        </Paper>
 
-        <section style={styles.filterBar}>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search cards..." style={styles.input} />
-          <select value={rarity} onChange={(e) => setRarity(e.target.value)} style={styles.inputSmall}>
-            <option value="">All Rarities</option>
-            {(data?.rarities ?? []).map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-          <div style={styles.pageCtrls}>
-            <button type="button" style={styles.pageBtn} disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-              {"<"}
-            </button>
-            <span style={styles.pageInfo}>
-              {currentPage} / {Math.max(1, data?.totalPages ?? 1)}
-            </span>
-            <button
-              type="button"
-              style={styles.pageBtn}
-              disabled={currentPage >= Math.max(1, data?.totalPages ?? 1)}
-              onClick={() => setPage((p) => Math.min(Math.max(1, data?.totalPages ?? 1), p + 1))}
-            >
-              {">"}
-            </button>
-          </div>
-        </section>
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            <TextInput label="Search cards" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search cards..." />
+            <Select
+              label="Rarity"
+              value={rarity}
+              onChange={(value) => setRarity(value ?? "")}
+              clearable
+              data={(data?.rarities ?? []).map((item) => ({ value: item, label: item }))}
+            />
+            <Group align="end" grow>
+              <Button variant="default" disabled={currentPage <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>
+                Previous
+              </Button>
+              <Button variant="default" disabled={currentPage >= Math.max(1, data?.totalPages ?? 1)} onClick={() => setPage((value) => Math.min(Math.max(1, data?.totalPages ?? 1), value + 1))}>
+                Next
+              </Button>
+            </Group>
+          </SimpleGrid>
+        </Paper>
 
-        {loading ? <p style={styles.loading}>Loading cards...</p> : null}
-        {fetchError ? <p style={styles.loading}>{fetchError}</p> : null}
-        <section style={styles.grid}>
+        {loading ? <Text c="dimmed">Loading cards...</Text> : null}
+        {fetchError ? <Alert color="red" variant="light">{fetchError}</Alert> : null}
+
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing="md">
           {cards.map((card) => (
-            <article key={card.id} style={styles.card}>
-              <img src={card.imageLargeUrl || card.imageThumbUrl || card.imageBaseUrl || "/default-pack-banner-desktop.webp"} alt={card.name} style={styles.cardImage} />
-              <div style={styles.cardBody}>
-                <div style={styles.cardName}>{card.name}</div>
-                <div style={styles.cardMeta}>
-                  {card.cardNumber ? `#${card.cardNumber}` : "No number"}
-                  {card.rarity ? ` | ${card.rarity}` : ""}
-                </div>
-              </div>
-            </article>
+            <Card key={card.id} withBorder radius="lg" p="md">
+              <Card.Section>
+                <Image src={card.imageLargeUrl || card.imageThumbUrl || card.imageBaseUrl || "/default-pack-banner-desktop.webp"} alt={card.name} h={280} fit="cover" />
+              </Card.Section>
+              <Stack gap={4} mt="sm">
+                <Text fw={800} lineClamp={2}>{card.name}</Text>
+                <Text c="dimmed" size="sm">
+                  {card.cardNumber ? `#${card.cardNumber}` : "No number"}{card.rarity ? ` | ${card.rarity}` : ""}
+                </Text>
+              </Stack>
+            </Card>
           ))}
-        </section>
-      </div>
-    </main>
+        </SimpleGrid>
+      </Stack>
+    </Container>
   );
 }
 
@@ -179,63 +184,16 @@ function setImageForHeader(set?: SetInfo | null) {
 function SetHeaderImage({ set, title }: { set?: SetInfo | null; title: string }) {
   const [failed, setFailed] = useState(false);
   const src = failed ? null : setImageForHeader(set);
+
   if (!src) {
-    return <div style={styles.logoFallback}>{set?.setCode || title.slice(0, 3).toUpperCase()}</div>;
+    return (
+      <Paper withBorder radius="lg" p="xl" ta="center" style={{ minHeight: 280, display: "grid", placeItems: "center" }}>
+        <Text fw={900} size="2rem">
+          {set?.setCode || title.slice(0, 3).toUpperCase()}
+        </Text>
+      </Paper>
+    );
   }
-  return <img src={src} alt={title} style={styles.logo} onError={() => setFailed(true)} />;
+
+  return <Image src={src} alt={title} radius="lg" fit="contain" h={280} onError={() => setFailed(true)} />;
 }
-
-const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(180deg,#f3f0ff 0%, #edf6ff 45%, #f9fcff 100%)",
-    color: "#2c2450",
-    padding: "18px 14px 28px",
-  },
-  container: { maxWidth: 1320, margin: "0 auto" },
-  backLink: { color: "#7668a3", textDecoration: "none", fontWeight: 700 },
-  setHeader: {
-    marginTop: 12,
-    border: "1px solid #d8d0ec",
-    borderRadius: 16,
-    padding: 16,
-    display: "grid",
-    gridTemplateColumns: "110px 1fr",
-    gap: 16,
-    alignItems: "center",
-    background: "linear-gradient(120deg, rgba(159,144,255,.20), rgba(116,200,255,.18))",
-    boxShadow: "0 12px 24px rgba(86,58,170,.12)",
-  },
-  logoBox: { width: 100, height: 100, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.6)", border: "1px solid #e3dcf4" },
-  logo: { width: 92, height: 92, objectFit: "contain" },
-  logoFallback: { width: 92, height: 92, borderRadius: 10, display: "grid", placeItems: "center", background: "#f7f6ff", border: "1px dashed #d8d0ec", color: "#6b5f95", fontWeight: 900, fontSize: 18, letterSpacing: ".06em" },
-  setTitle: { margin: 0, fontSize: "clamp(30px,4.2vw,44px)", lineHeight: 1.05 },
-  statsRow: { display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" },
-  pillPrimary: { padding: "5px 10px", borderRadius: 8, background: "linear-gradient(135deg,#9f90ff,#74c8ff)", color: "#1c1340", fontWeight: 800, fontSize: 12 },
-  pillNeutral: { padding: "5px 10px", borderRadius: 8, border: "1px solid #d8d0ec", background: "#fff", color: "#665a92", fontWeight: 700, fontSize: 12 },
-  muted: { marginTop: 8, color: "#7568a2" },
-  filterBar: {
-    marginTop: 14,
-    border: "1px solid #d8d0ec",
-    borderRadius: 14,
-    background: "#ffffffcc",
-    padding: 10,
-    display: "grid",
-    gridTemplateColumns: "minmax(160px,1fr) minmax(170px,220px) 130px",
-    gap: 10,
-    alignItems: "center",
-  },
-  input: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 10, padding: "10px 12px" },
-  inputSmall: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 10, padding: "10px 12px" },
-  pageCtrls: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 },
-  pageBtn: { border: "1px solid #d8d0ec", background: "#fff", color: "#483c71", borderRadius: 8, width: 36, height: 36, fontSize: 18, cursor: "pointer" },
-  pageInfo: { color: "#70639d", fontWeight: 700, fontSize: 13 },
-  loading: { marginTop: 12, color: "#7568a2", fontWeight: 700 },
-  grid: { marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(170px,1fr))", gap: 8 },
-  card: { border: "1px solid #d8d0ec", borderRadius: 12, padding: 7, background: "#ffffffdd", boxShadow: "0 8px 18px rgba(80,59,150,.08)" },
-  cardImage: { width: "100%", aspectRatio: "63/88", objectFit: "cover", borderRadius: 8, border: "1px solid #ebe5f8" },
-  cardBody: { marginTop: 8 },
-  cardName: { fontWeight: 800, lineHeight: 1.2, minHeight: 38 },
-  cardMeta: { color: "#70639d", fontSize: 13, marginTop: 4 },
-};
-

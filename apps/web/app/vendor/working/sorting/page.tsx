@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Alert, Button, Container, Group, Image, Paper, ScrollArea, Select, SimpleGrid, Stack, Table, Text, TextInput, Title } from "@mantine/core";
 
 type CatalogSearchItem = {
   id: string;
@@ -29,14 +30,7 @@ const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
 
 function isLocalhostLike(host: string) {
   const normalized = host.trim().toLowerCase();
-  return (
-    normalized === "localhost" ||
-    normalized.startsWith("localhost:") ||
-    normalized === "demo.localhost" ||
-    normalized.endsWith(".localhost") ||
-    normalized.startsWith("127.0.0.1") ||
-    normalized.startsWith("0.0.0.0")
-  );
+  return normalized === "localhost" || normalized.startsWith("localhost:") || normalized === "demo.localhost" || normalized.endsWith(".localhost") || normalized.startsWith("127.0.0.1") || normalized.startsWith("0.0.0.0");
 }
 
 function currentVendorHost() {
@@ -89,9 +83,7 @@ export default function VendorSortingWorkbenchPage() {
     void (async () => {
       try {
         const response = await fetch(`${apiBase}/v1/vendor/me`, {
-          headers: {
-            "x-client-page": "/vendor/working/sorting",
-          },
+          headers: { "x-client-page": "/vendor/working/sorting" },
           credentials: "include",
           cache: "no-store",
         });
@@ -132,9 +124,7 @@ export default function VendorSortingWorkbenchPage() {
       if (source) url.searchParams.set("source", source);
 
       const response = await fetch(url.toString(), {
-        headers: {
-          "x-client-page": "/vendor/working/sorting",
-        },
+        headers: { "x-client-page": "/vendor/working/sorting" },
         credentials: "include",
         cache: "no-store",
       });
@@ -150,125 +140,115 @@ export default function VendorSortingWorkbenchPage() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#080b12", color: "#f8fafc", padding: "32px" }}>
-      <section style={{ margin: "0 auto", maxWidth: "1180px" }}>
+    <Container size="xl" py="xl">
+      <Stack gap="lg">
         {accessState !== "allowed" ? (
-          <div style={{ border: "1px solid #1e293b", borderRadius: "16px", background: "#0f172a", padding: "24px" }}>
-            <h1 style={{ fontSize: "28px", lineHeight: 1.1, margin: "0 0 8px" }}>Vendor Access Required</h1>
-            <p style={{ color: "#cbd5e1", margin: 0 }}>
-              {accessState === "checking" ? "Checking approved vendor access..." : "This page is restricted to approved vendor accounts only."}
-            </p>
-          </div>
+          <Paper withBorder radius="xl" p="xl" shadow="sm">
+            <Stack gap="sm">
+              <Title order={1}>Vendor Access Required</Title>
+              <Text c="dimmed">
+                {accessState === "checking" ? "Checking approved vendor access..." : "This page is restricted to approved vendor accounts only."}
+              </Text>
+            </Stack>
+          </Paper>
         ) : (
           <>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: "16px", alignItems: "center", marginBottom: "24px" }}>
-          <div>
-            <p style={{ color: "#94a3b8", margin: "0 0 6px" }}>Vendor working tools</p>
-            <h1 style={{ fontSize: "32px", lineHeight: 1.1, margin: 0 }}>Catalog sorting workbench</h1>
-            <p style={{ color: "#cbd5e1", maxWidth: "720px" }}>
-              Fast operator view for searching broad TCG catalog results, sorting by set/name/value, and picking candidates for pack construction.
-            </p>
-          </div>
-          <Link href="/vendor" style={{ color: "#93c5fd", textDecoration: "none", border: "1px solid #334155", padding: "10px 14px", borderRadius: "999px" }}>
-            Back to vendor
-          </Link>
-        </div>
+            <Paper withBorder radius="xl" p="lg" shadow="sm">
+              <Group justify="space-between" align="start" wrap="wrap">
+                <Stack gap={4} maw={780}>
+                  <Text c="dimmed" fw={700} tt="uppercase" size="sm">
+                    Vendor working tools
+                  </Text>
+                  <Title order={1}>Catalog sorting workbench</Title>
+                  <Text c="dimmed">
+                    Fast operator view for searching broad TCG catalog results, sorting by set, name, and value, and picking candidates for pack construction.
+                  </Text>
+                </Stack>
+                <Button component={Link} href="/vendor" variant="light">
+                  Back to vendor
+                </Button>
+              </Group>
+            </Paper>
 
-        <form onSubmit={runSearch} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr auto", gap: "12px", marginBottom: "20px" }}>
-          <label style={{ display: "grid", gap: "6px", color: "#cbd5e1" }}>
-            Search
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Charizard, Pikachu, Moonbreon..." style={inputStyle} />
-          </label>
-          <label style={{ display: "grid", gap: "6px", color: "#cbd5e1" }}>
-            Source
-            <input value={source} onChange={(event) => setSource(event.target.value)} placeholder="tcgplayer" style={inputStyle} />
-          </label>
-          <label style={{ display: "grid", gap: "6px", color: "#cbd5e1" }}>
-            Language
-            <input value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="en" style={inputStyle} />
-          </label>
-          <label style={{ display: "grid", gap: "6px", color: "#cbd5e1" }}>
-            Sort
-            <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} style={inputStyle}>
-              <option value="relevance">Relevance</option>
-              <option value="name">Name A-Z</option>
-              <option value="set">Set / number</option>
-              <option value="value-desc">Value high-low</option>
-              <option value="value-asc">Value low-high</option>
-            </select>
-          </label>
-          <button disabled={loading} style={{ ...buttonStyle, alignSelf: "end" }}>{loading ? "Searching..." : "Search"}</button>
-        </form>
+            <Paper withBorder radius="xl" p="md" shadow="sm">
+              <form onSubmit={runSearch}>
+                <SimpleGrid cols={{ base: 1, sm: 2, lg: 5 }} spacing="md">
+                  <TextInput label="Search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Charizard, Pikachu, Moonbreon..." />
+                  <TextInput label="Source" value={source} onChange={(event) => setSource(event.target.value)} placeholder="tcgplayer" />
+                  <TextInput label="Language" value={language} onChange={(event) => setLanguage(event.target.value)} placeholder="en" />
+                  <Select
+                    label="Sort"
+                    value={sortMode}
+                    onChange={(value) => setSortMode((value as SortMode) ?? "relevance")}
+                    data={[
+                      { value: "relevance", label: "Relevance" },
+                      { value: "name", label: "Name A-Z" },
+                      { value: "set", label: "Set / number" },
+                      { value: "value-desc", label: "Value high-low" },
+                      { value: "value-asc", label: "Value low-high" },
+                    ]}
+                  />
+                  <Button type="submit" loading={loading} fullWidth mt={26}>
+                    Search
+                  </Button>
+                </SimpleGrid>
+              </form>
+            </Paper>
 
-        {error && <div style={{ color: "#fecaca", background: "#7f1d1d", border: "1px solid #ef4444", borderRadius: "12px", padding: "12px", marginBottom: "16px" }}>{error}</div>}
+            {error ? <Alert color="red" variant="light">{error}</Alert> : null}
 
-        <div style={{ overflowX: "auto", border: "1px solid #1e293b", borderRadius: "16px", background: "#0f172a" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "920px" }}>
-            <thead>
-              <tr style={{ color: "#93c5fd", textAlign: "left", background: "#111827" }}>
-                <th style={thStyle}>Card</th>
-                <th style={thStyle}>Set</th>
-                <th style={thStyle}>No.</th>
-                <th style={thStyle}>Rarity</th>
-                <th style={thStyle}>Language</th>
-                <th style={thStyle}>Source</th>
-                <th style={thStyle}>estimatedValue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedItems.map((item) => (
-                <tr key={item.id} style={{ borderTop: "1px solid #1e293b" }}>
-                  <td style={tdStyle}>
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      {item.imageThumbUrl || item.imageUrl ? <img src={item.imageThumbUrl ?? item.imageUrl ?? ""} alt="" style={{ width: "40px", height: "56px", objectFit: "cover", borderRadius: "6px" }} /> : null}
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{item.name}</div>
-                        <div style={{ color: "#94a3b8", fontSize: "12px" }}>{item.itemType}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={tdStyle}>{item.setName ?? "—"}</td>
-                  <td style={tdStyle}>{item.localId ?? item.cardNumber ?? "—"}</td>
-                  <td style={tdStyle}>{item.rarity ?? "—"}</td>
-                  <td style={tdStyle}>{item.language ?? "—"}</td>
-                  <td style={tdStyle}>{item.source}</td>
-                  <td style={tdStyle}>{numericValue(item) ? numericValue(item).toFixed(2) : "—"}</td>
-                </tr>
-              ))}
-              {!sortedItems.length && (
-                <tr>
-                  <td colSpan={7} style={{ ...tdStyle, color: "#94a3b8", textAlign: "center", padding: "36px" }}>
-                    Search the catalog to populate sorting candidates.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            <Paper withBorder radius="xl" p="0" shadow="sm">
+              <ScrollArea type="auto" offsetScrollbars>
+                <Table horizontalSpacing="md" verticalSpacing="sm" striped highlightOnHover miw={920}>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Card</Table.Th>
+                      <Table.Th>Set</Table.Th>
+                      <Table.Th>No.</Table.Th>
+                      <Table.Th>Rarity</Table.Th>
+                      <Table.Th>Language</Table.Th>
+                      <Table.Th>Source</Table.Th>
+                      <Table.Th>estimatedValue</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {sortedItems.map((item) => (
+                      <Table.Tr key={item.id}>
+                        <Table.Td>
+                          <Group gap="sm" wrap="nowrap" align="center">
+                            {item.imageThumbUrl || item.imageUrl ? <Image src={item.imageThumbUrl ?? item.imageUrl ?? ""} alt="" w={44} h={60} radius="sm" fit="cover" /> : null}
+                            <div>
+                              <Text fw={700}>{item.name}</Text>
+                              <Text c="dimmed" size="xs">
+                                {item.itemType}
+                              </Text>
+                            </div>
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>{item.setName ?? "-"}</Table.Td>
+                        <Table.Td>{item.localId ?? item.cardNumber ?? "-"}</Table.Td>
+                        <Table.Td>{item.rarity ?? "-"}</Table.Td>
+                        <Table.Td>{item.language ?? "-"}</Table.Td>
+                        <Table.Td>{item.source}</Table.Td>
+                        <Table.Td>{numericValue(item) ? numericValue(item).toFixed(2) : "-"}</Table.Td>
+                      </Table.Tr>
+                    ))}
+                    {!sortedItems.length ? (
+                      <Table.Tr>
+                        <Table.Td colSpan={7}>
+                          <Text c="dimmed" ta="center" py="xl">
+                            Search the catalog to populate sorting candidates.
+                          </Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ) : null}
+                  </Table.Tbody>
+                </Table>
+              </ScrollArea>
+            </Paper>
           </>
         )}
-      </section>
-    </main>
+      </Stack>
+    </Container>
   );
 }
-
-const inputStyle = {
-  background: "#020617",
-  border: "1px solid #334155",
-  borderRadius: "10px",
-  color: "#f8fafc",
-  padding: "10px 12px",
-} as const;
-
-const buttonStyle = {
-  background: "#2563eb",
-  border: "0",
-  borderRadius: "10px",
-  color: "white",
-  cursor: "pointer",
-  fontWeight: 700,
-  padding: "11px 16px",
-} as const;
-
-const thStyle = { padding: "12px", fontSize: "12px", textTransform: "uppercase", letterSpacing: "0.08em" } as const;
-const tdStyle = { padding: "12px", color: "#e2e8f0", verticalAlign: "middle" } as const;

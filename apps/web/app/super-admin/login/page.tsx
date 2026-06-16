@@ -61,12 +61,14 @@ export default function SuperAdminLoginPage() {
 
   if (checking) {
     return (
-      <main className="container">
-        <section className="card auth-card">
-          <h1>Super Admin Login</h1>
-          <p className="muted">Checking session...</p>
-        </section>
-      </main>
+      <Container size="sm" py="xl">
+        <Paper radius="xl" p="xl" shadow="md" withBorder>
+          <Stack gap="sm">
+            <Title order={1}>Super Admin Login</Title>
+            <Text c="dimmed">Checking session...</Text>
+          </Stack>
+        </Paper>
+      </Container>
     );
   }
 

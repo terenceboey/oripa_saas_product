@@ -32,12 +32,14 @@ export default function VendorLoginPage() {
 
 function VendorLoginShell() {
   return (
-    <main className="container">
-      <section className="card auth-card">
-        <h1>Vendor Login</h1>
-        <p className="muted">Loading vendor access...</p>
-      </section>
-    </main>
+    <Container size="sm" py="xl">
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Stack gap="sm">
+          <Title order={1}>Vendor Login</Title>
+          <Text c="dimmed">Loading vendor access...</Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 

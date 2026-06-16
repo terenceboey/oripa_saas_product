@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { Badge, Button, Card, Container, Group, Image, Modal, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
@@ -343,240 +344,294 @@ export default function PackDrawPage() {
   }, [drawShowcase, drawShowcaseIndex, drawShowcasePool, pack]);
 
   return (
-    <main className="container" style={storefrontThemeStyle}>
-      <div className="pack-draw-header">
-        <Link href="/" className="sort-pill">Back to Catalog</Link>
-        <div className="actions">
-          <Link href="/fairness-proofs" className="sort-pill">Fairness Proofs</Link>
-          <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
-        </div>
-      </div>
+    <Container size="xl" py="lg" style={storefrontThemeStyle}>
+      <Stack gap="lg">
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <Group justify="space-between" align="center" wrap="wrap">
+            <Button component={Link} href="/" variant="light">
+              Back to Catalog
+            </Button>
+            <Group gap="xs" wrap="wrap">
+              <Button component={Link} href="/fairness-proofs" variant="light">
+                Fairness Proofs
+              </Button>
+              <Badge variant="light" size="lg">
+                Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
+              </Badge>
+            </Group>
+          </Group>
+        </Paper>
 
-      {loading ? <section className="card"><p className="muted">Loading pack...</p></section> : null}
-      {!loading && !pack ? <section className="card"><p className="error">Pack not found</p></section> : null}
+        {loading ? (
+          <Paper withBorder radius="xl" p="lg" shadow="sm">
+            <Text c="dimmed">Loading pack...</Text>
+          </Paper>
+        ) : null}
+        {!loading && !pack ? (
+          <Paper withBorder radius="xl" p="lg" shadow="sm">
+            <Text c="red">Pack not found</Text>
+          </Paper>
+        ) : null}
 
-      {pack ? (
-        <>
-          <section className="card">
-            {(() => {
-              const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBannerImage);
-              return (
-                <picture>
-                  {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
-                  {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
-                  <img
-                    className="pack-detail-banner"
-                    src={image.fallback}
-                    alt={`${pack.title} banner`}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.src = defaultPackBannerImageMobile;
-                    }}
-                  />
-                </picture>
-              );
-            })()}
-            <div className="pack-header">
-              <h1>{pack.title}</h1>
-              {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
-            </div>
-            <p className="muted remaining-text">Remaining {pack.remainingStock}/{pack.totalStock}</p>
-            <div className="price-line">
-              <span className="muted">1 draw</span>
-              <strong>{pack.pricePoints.toLocaleString()} pts</strong>
-            </div>
-
-            <div className="actions">
-              <button type="button" className="draw-button" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1} onClick={() => openDrawConfirmation(1)}>Draw</button>
-              <button type="button" className="draw-button alt" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 10} onClick={() => openDrawConfirmation(10)}>10x Draw</button>
-            </div>
-            {error ? <p className="error">{error}</p> : null}
-          </section>
-
-          {tierSnapshot && tierSnapshot.tiers.length > 0 ? (
-            <section className="card" style={{ marginTop: 12 }}>
-              <h2>Contents</h2>
-              <p className="muted">This reflects the vendor-configured tier structure preserved with the pack.</p>
-              <div className="tier-stack">
-                {tierSnapshot.tiers.map((tier, tierIndex) => {
-                  const tierChance = tierOdds[tierIndex] ?? 0;
-                  const itemChance = tier.items.length > 0 ? tierChance / tier.items.length : 0;
+        {pack ? (
+          <>
+            <Paper withBorder radius="xl" p="lg" shadow="sm">
+              <Stack gap="md">
+                {(() => {
+                  const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBannerImage);
                   return (
-                    <article key={`${tier.name}-${tierIndex}`} className="tier-bucket">
-                      <div className="heading-row">
-                        <strong>{tier.name}</strong>
-                        <span className="muted tiny">{tierChance.toFixed(4)}%</span>
-                      </div>
-                      <p className="muted tiny" style={{ marginBottom: 8 }}>
-                        {tier.items.length} items | {itemChance.toFixed(4)}% per item
-                      </p>
-                      <div className="card-preview-grid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}>
-                        {tier.items.map((item, itemIndex) => (
-                          <article key={`${tier.name}-${item.label}-${itemIndex}`} className="card-preview-item">
-                            <button
-                              type="button"
-                              className="card-image-button"
-                              onClick={() =>
-                                setImagePreview({
-                                  label: item.label,
-                                  imageUrl: item.imageUrl || defaultPokemonCardImage,
-                                })
-                              }
-                            >
-                              <img src={item.imageUrl || defaultPokemonCardImage} alt={item.label} />
-                            </button>
-                            <div className="card-preview-meta">
-                              <strong>{item.label}</strong>
-                              <span className="muted tiny">Stock {item.stock}</span>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    </article>
+                    <picture>
+                      {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
+                      {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
+                      <img
+                        src={image.fallback}
+                        alt={`${pack.title} banner`}
+                        loading="lazy"
+                        decoding="async"
+                        style={{ width: "100%", height: "auto", display: "block", borderRadius: 16, objectFit: "cover" }}
+                        onError={(e) => {
+                          e.currentTarget.src = defaultPackBannerImageMobile;
+                        }}
+                      />
+                    </picture>
                   );
-                })}
-              </div>
-            </section>
-          ) : null}
+                })()}
 
-          {lastDraw ? (
-            <section className="card" style={{ marginTop: 12 }}>
-              <h3>Draw Result</h3>
-              <p className="muted">Quantity {lastDraw.quantity} | Cost {lastDraw.totalCost.toLocaleString()} pts</p>
-              <div className="draw-result-grid">
-                {lastDraw.draws.map((draw) => (
-                  <article key={draw.drawId} className="draw-result-item">
-                    <img src={draw.prizeImageUrl || defaultPokemonCardImage} alt={draw.prizeLabel || "No Prize"} />
-                    <div className="card-preview-meta">
-                      <strong>{draw.prizeLabel || "No Prize"}</strong>
-                      <span className="muted tiny">ID {draw.drawId.slice(0, 10)}</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ) : null}
-        </>
-      ) : null}
+                <Group justify="space-between" align="start" wrap="wrap">
+                  <div>
+                    <Title order={1}>{pack.title}</Title>
+                    <Text c="dimmed">
+                      Remaining {pack.remainingStock}/{pack.totalStock}
+                    </Text>
+                  </div>
+                  {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
+                </Group>
 
-      {drawShowcase ? (
-        <div className="draw-showcase-backdrop" onClick={drawShowcasePhase === "done" ? closeDrawShowcase : undefined}>
-          <section className="draw-showcase-modal card" onClick={(event) => event.stopPropagation()}>
-            <div key={confettiBurstKey} className="draw-showcase-confetti" aria-hidden="true">
+                <Group justify="space-between" align="center" wrap="wrap">
+                  <Text c="dimmed">1 draw</Text>
+                  <Text fw={800} size="lg">
+                    {pack.pricePoints.toLocaleString()} pts
+                  </Text>
+                </Group>
+
+                <Group gap="sm" wrap="wrap">
+                  <Button disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1} onClick={() => openDrawConfirmation(1)}>
+                    Draw
+                  </Button>
+                  <Button variant="outline" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 10} onClick={() => openDrawConfirmation(10)}>
+                    10x Draw
+                  </Button>
+                </Group>
+
+                {error ? <Text c="red">{error}</Text> : null}
+              </Stack>
+            </Paper>
+
+            {tierSnapshot && tierSnapshot.tiers.length > 0 ? (
+              <Paper withBorder radius="xl" p="lg" shadow="sm">
+                <Stack gap="md">
+                  <div>
+                    <Title order={2}>Contents</Title>
+                    <Text c="dimmed">This reflects the vendor-configured tier structure preserved with the pack.</Text>
+                  </div>
+                  <Stack gap="md">
+                    {tierSnapshot.tiers.map((tier, tierIndex) => {
+                      const tierChance = tierOdds[tierIndex] ?? 0;
+                      const itemChance = tier.items.length > 0 ? tierChance / tier.items.length : 0;
+                      return (
+                        <Card key={`${tier.name}-${tierIndex}`} withBorder radius="lg" p="md">
+                          <Stack gap="sm">
+                            <Group justify="space-between" align="center">
+                              <Text fw={800}>{tier.name}</Text>
+                              <Badge variant="light">{tierChance.toFixed(4)}%</Badge>
+                            </Group>
+                            <Text size="sm" c="dimmed">
+                              {tier.items.length} items | {itemChance.toFixed(4)}% per item
+                            </Text>
+                            <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 6 }} spacing="sm">
+                              {tier.items.map((item, itemIndex) => (
+                                <Card
+                                  key={`${tier.name}-${item.label}-${itemIndex}`}
+                                  withBorder
+                                  radius="md"
+                                  p="xs"
+                                  style={{ cursor: "pointer" }}
+                                  onClick={() =>
+                                    setImagePreview({
+                                      label: item.label,
+                                      imageUrl: item.imageUrl || defaultPokemonCardImage,
+                                    })
+                                  }
+                                >
+                                  <Image src={item.imageUrl || defaultPokemonCardImage} alt={item.label} radius="sm" h={140} fit="cover" />
+                                  <Stack gap={2} mt={6}>
+                                    <Text fw={700} size="sm" lineClamp={2}>
+                                      {item.label}
+                                    </Text>
+                                    <Text size="xs" c="dimmed">
+                                      Stock {item.stock}
+                                    </Text>
+                                  </Stack>
+                                </Card>
+                              ))}
+                            </SimpleGrid>
+                          </Stack>
+                        </Card>
+                      );
+                    })}
+                  </Stack>
+                </Stack>
+              </Paper>
+            ) : null}
+
+            {lastDraw ? (
+              <Paper withBorder radius="xl" p="lg" shadow="sm">
+                <Stack gap="sm">
+                  <div>
+                    <Title order={2}>Draw Result</Title>
+                    <Text c="dimmed">
+                      Quantity {lastDraw.quantity} | Cost {lastDraw.totalCost.toLocaleString()} pts
+                    </Text>
+                  </div>
+                  <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
+                    {lastDraw.draws.map((draw) => (
+                      <Card key={draw.drawId} withBorder radius="md" p="xs">
+                        <Image src={draw.prizeImageUrl || defaultPokemonCardImage} alt={draw.prizeLabel || "No Prize"} radius="sm" h={160} fit="cover" />
+                        <Stack gap={2} mt={6}>
+                          <Text fw={700} size="sm" lineClamp={2}>
+                            {draw.prizeLabel || "No Prize"}
+                          </Text>
+                          <Text c="dimmed" size="xs">
+                            ID {draw.drawId.slice(0, 10)}
+                          </Text>
+                        </Stack>
+                      </Card>
+                    ))}
+                  </SimpleGrid>
+                </Stack>
+              </Paper>
+            ) : null}
+          </>
+        ) : null}
+      </Stack>
+
+      <Modal opened={isDrawShowcaseOpen} onClose={drawShowcasePhase === "done" ? closeDrawShowcase : () => null} centered size="lg" withCloseButton={false} radius="lg">
+        {drawShowcase ? (
+          <Stack gap="md" style={{ position: "relative", overflow: "hidden" }}>
+            <div key={confettiBurstKey} aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
               {Array.from({ length: 36 }).map((_, index) => {
                 const left = (index * 13) % 100;
                 const delay = (index % 6) * 0.05;
                 const duration = 1.6 + (index % 5) * 0.18;
                 const hue = (index * 37) % 360;
                 const drift = ((index % 9) - 4) * 14;
-                return <span key={`${confettiBurstKey}-${index}`} className="confetti-piece" style={{ ["--drift" as string]: `${drift}px`, left: `${left}%`, background: `hsl(${hue} 85% 60%)`, animationDelay: `${delay}s`, animationDuration: `${duration}s` }} />;
+                return (
+                  <span
+                    key={`${confettiBurstKey}-${index}`}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: `${left}%`,
+                      width: 10,
+                      height: 18,
+                      borderRadius: 4,
+                      background: `hsl(${hue} 85% 60%)`,
+                      opacity: 0.9,
+                      animation: `pack-confetti ${duration}s ease-in ${delay}s forwards`,
+                      ["--drift" as string]: `${drift}px`,
+                    }}
+                  />
+                );
               })}
             </div>
-            <div className="heading-row">
+
+            <Group justify="space-between" align="start" wrap="wrap">
               <div>
-                <h3>Lottery Reveal</h3>
-                <p className="muted tiny">
-                  {drawShowcasePhase === "spinning"
-                    ? "Spinning the lottery..."
-                    : drawShowcasePhase === "revealing"
-                      ? "Result locked in."
-                      : "Draw complete."}
-                </p>
+                <Title order={3}>Lottery Reveal</Title>
+                <Text c="dimmed" size="sm">
+                  {drawShowcasePhase === "spinning" ? "Spinning the lottery..." : drawShowcasePhase === "revealing" ? "Result locked in." : "Draw complete."}
+                </Text>
               </div>
-              <div className="actions">
-                <button type="button" className={`sort-pill ${drawShowcaseSoundEnabled ? "active" : ""}`} onClick={() => setDrawShowcaseSoundEnabled((value) => !value)}>
+              <Group gap="xs">
+                <Button variant={drawShowcaseSoundEnabled ? "filled" : "light"} onClick={() => setDrawShowcaseSoundEnabled((value) => !value)}>
                   Sound {drawShowcaseSoundEnabled ? "On" : "Off"}
-                </button>
+                </Button>
                 {drawShowcasePhase === "done" ? (
-                  <button type="button" className="sort-pill" onClick={closeDrawShowcase}>
+                  <Button variant="outline" onClick={closeDrawShowcase}>
                     Close
-                  </button>
+                  </Button>
                 ) : null}
-              </div>
-            </div>
+              </Group>
+            </Group>
 
-            <div className={`draw-lottery-stage ${drawShowcasePhase ?? "spinning"}`}>
-              <div className="draw-lottery-badge">#{drawShowcaseIndex + 1} of {drawShowcase.draws.length}</div>
-              <div className="draw-lottery-card">
-                <img src={drawShowcaseCard?.imageUrl ?? defaultPokemonCardImage} alt={drawShowcaseCard?.label ?? "Lottery draw"} />
-              </div>
-              <div className="draw-lottery-label">
-                <strong>{drawShowcaseCard?.label ?? "Spinning..."}</strong>
-                {drawShowcasePhase === "revealing" ? <span className="badge warn">Winner</span> : null}
-              </div>
-            </div>
+            <Paper withBorder radius="lg" p="lg" ta="center">
+              <Stack gap="sm" align="center">
+                <Badge variant="light">
+                  #{drawShowcaseIndex + 1} of {drawShowcase.draws.length}
+                </Badge>
+                <Image src={drawShowcaseCard?.imageUrl ?? defaultPokemonCardImage} alt={drawShowcaseCard?.label ?? "Lottery draw"} radius="lg" h={320} fit="contain" />
+                <Group gap="xs" justify="center">
+                  <Text fw={800}>{drawShowcaseCard?.label ?? "Spinning..."}</Text>
+                  {drawShowcasePhase === "revealing" ? <Badge color="yellow">Winner</Badge> : null}
+                </Group>
+              </Stack>
+            </Paper>
 
-            <div className="draw-showcase-footer">
-              <p className="muted tiny">
+            <Group justify="space-between" align="center" wrap="wrap">
+              <Text c="dimmed" size="sm">
                 {drawShowcase.quantity} draw{drawShowcase.quantity > 1 ? "s" : ""} | Cost {drawShowcase.totalCost.toLocaleString()} pts
-              </p>
-              {drawShowcasePhase === "done" ? (
-                <button type="button" className="draw-button" onClick={closeDrawShowcase}>
-                  Continue
-                </button>
-              ) : null}
-            </div>
-          </section>
-        </div>
-      ) : null}
+              </Text>
+              {drawShowcasePhase === "done" ? <Button onClick={closeDrawShowcase}>Continue</Button> : null}
+            </Group>
+          </Stack>
+        ) : null}
+      </Modal>
 
-      {isDrawConfirmationOpen && pack && pendingDrawQuantity !== null ? (
-        <div className="draw-showcase-backdrop" onClick={cancelDrawConfirmation}>
-          <section className="draw-confirm-modal card" onClick={(event) => event.stopPropagation()}>
-            <div className="heading-row">
-              <div>
-                <h3>Confirm Draw</h3>
-                <p className="muted tiny">Please confirm before the draw begins.</p>
-              </div>
-              <button type="button" className="sort-pill" onClick={cancelDrawConfirmation}>
-                Cancel
-              </button>
-            </div>
-
-            <div className="draw-confirm-summary">
-              <div className="draw-confirm-pill">
-                <span className="muted tiny">Pack</span>
-                <strong>{pack.title}</strong>
-              </div>
-              <div className="draw-confirm-pill">
-                <span className="muted tiny">Quantity</span>
-                <strong>{pendingDrawQuantity} draw{pendingDrawQuantity > 1 ? "s" : ""}</strong>
-              </div>
-              <div className="draw-confirm-pill">
-                <span className="muted tiny">Cost</span>
-                <strong>{(pack.pricePoints * pendingDrawQuantity).toLocaleString()} pts</strong>
-              </div>
-            </div>
-
-            <p className="muted" style={{ marginTop: 10 }}>
+      <Modal opened={Boolean(isDrawConfirmationOpen && pack && pendingDrawQuantity !== null)} onClose={cancelDrawConfirmation} centered radius="lg" title="Confirm Draw">
+        {pack && pendingDrawQuantity !== null ? (
+          <Stack gap="md">
+            <Text c="dimmed">Please confirm before the draw begins.</Text>
+            <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+              <Paper withBorder radius="md" p="sm">
+                <Text size="xs" c="dimmed">
+                  Pack
+                </Text>
+                <Text fw={700}>{pack.title}</Text>
+              </Paper>
+              <Paper withBorder radius="md" p="sm">
+                <Text size="xs" c="dimmed">
+                  Quantity
+                </Text>
+                <Text fw={700}>
+                  {pendingDrawQuantity} draw{pendingDrawQuantity > 1 ? "s" : ""}
+                </Text>
+              </Paper>
+              <Paper withBorder radius="md" p="sm">
+                <Text size="xs" c="dimmed">
+                  Cost
+                </Text>
+                <Text fw={700}>{(pack.pricePoints * pendingDrawQuantity).toLocaleString()} pts</Text>
+              </Paper>
+            </SimpleGrid>
+            <Text c="dimmed" size="sm">
               Once confirmed, the lottery animation and reveal sequence will begin.
-            </p>
-
-            <div className="draw-showcase-footer">
-              <button type="button" className="sort-pill" onClick={cancelDrawConfirmation}>
+            </Text>
+            <Group justify="space-between">
+              <Button variant="default" onClick={cancelDrawConfirmation}>
                 Cancel
-              </button>
-              <button type="button" className="draw-button" onClick={() => void confirmDraw()} disabled={drawing}>
+              </Button>
+              <Button onClick={() => void confirmDraw()} loading={drawing}>
                 Confirm Draw
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
+              </Button>
+            </Group>
+          </Stack>
+        ) : null}
+      </Modal>
 
-      {imagePreview ? (
-        <div className="qr-modal-backdrop" onClick={() => setImagePreview(null)}>
-          <div className="qr-modal card" onClick={(e) => e.stopPropagation()}>
-            <div className="heading-row">
-              <h3>{imagePreview.label}</h3>
-              <button type="button" className="sort-pill" onClick={() => setImagePreview(null)}>Close</button>
-            </div>
-            <img className="card-image-preview" src={imagePreview.imageUrl} alt={imagePreview.label} />
-          </div>
-        </div>
-      ) : null}
-    </main>
+      <Modal opened={Boolean(imagePreview)} onClose={() => setImagePreview(null)} centered radius="lg" title={imagePreview?.label ?? "Card preview"}>
+        {imagePreview ? <Image src={imagePreview.imageUrl} alt={imagePreview.label} radius="lg" fit="contain" /> : null}
+      </Modal>
+    </Container>
   );
 }
 

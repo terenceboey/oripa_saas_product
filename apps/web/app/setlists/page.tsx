@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import { Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Title } from "@mantine/core";
 
 type SetlistItem = {
   id: string;
@@ -37,9 +37,14 @@ type SetlistStatsResponse = {
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PAGE_SIZE = 18;
+const gameOptions = [
+  { value: "pokemon", label: "Pokemon" },
+  { value: "one-piece", label: "One Piece" },
+  { value: "pokemon-japan", label: "Pokemon Japan" },
+] as const;
 
 export default function SetlistsPage() {
-  const [game, setGame] = useState<"pokemon" | "one-piece" | "pokemon-japan">("pokemon");
+  const [game, setGame] = useState<(typeof gameOptions)[number]["value"]>("pokemon");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
   const [page, setPage] = useState(1);
@@ -83,6 +88,7 @@ export default function SetlistsPage() {
       if (params.q?.trim()) url.searchParams.set("q", params.q.trim());
       return url.toString();
     };
+
     const statsUrl = new URL(`${apiBase}/v1/public/setlists/stats`);
 
     const fetchTabCounts = async (statsPayload: unknown, mainPayload: SetlistResponse) => {
@@ -96,8 +102,6 @@ export default function SetlistsPage() {
         };
       }
 
-      // Older deployed APIs may not have /setlists/stats yet. Fall back to the list
-      // endpoint so an optional stats failure cannot blank the whole setlist page.
       const [pokemonPayload, onePiecePayload, japanPayload] = await Promise.all([
         fetchOptionalJson(buildListUrl("pokemon", { page: 1, limit: 1, sort: "newest" })),
         fetchOptionalJson(buildListUrl("one-piece", { page: 1, limit: 1, sort: "newest" })),
@@ -152,93 +156,128 @@ export default function SetlistsPage() {
   const currentPage = Math.min(Math.max(1, mainData.page || page), totalPages);
 
   return (
-    <main style={styles.page}>
-      <div style={styles.container}>
-        <header style={styles.header}>
-          <div>
-            <h1 style={styles.title}>Setlists</h1>
-            <p style={styles.subtitle}>Browse every release across the platform.</p>
-          </div>
-          <div style={styles.tabs}>
-            <button type="button" style={tabStyle(game === "pokemon")} onClick={() => setGame("pokemon")}>
-              Pokemon {tabCounts.pokemon}
-            </button>
-            <button type="button" style={tabStyle(game === "one-piece", true)} onClick={() => setGame("one-piece")}>
-              One Piece {tabCounts.onePiece}
-            </button>
-            <button type="button" style={tabStyle(game === "pokemon-japan")} onClick={() => setGame("pokemon-japan")}>
-              Pokemon Japan {tabCounts.pokemonJapan}
-            </button>
-          </div>
-        </header>
+    <Container size="xl" py="xl">
+      <Stack gap="lg">
+        <Paper withBorder radius="xl" p="lg" shadow="sm">
+          <Stack gap="md">
+            <Group justify="space-between" align="start" wrap="wrap">
+              <div>
+                <Title order={1}>Setlists</Title>
+                <Text c="dimmed" mt={4}>
+                  Browse every release across the platform.
+                </Text>
+              </div>
+              <Group gap="xs" wrap="wrap">
+                <Button component={Link} href="/" variant="light">
+                  Home
+                </Button>
+                <Button component={Link} href="/pack" variant="outline">
+                  Packs
+                </Button>
+              </Group>
+            </Group>
 
-        <section style={styles.filterRow}>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search sets..." style={styles.input} />
-          <select value={sort} onChange={(e) => setSort(e.target.value as "newest" | "oldest" | "name")} style={styles.select}>
-            <option value="newest">Release Date: Newest</option>
-            <option value="oldest">Release Date: Oldest</option>
-            <option value="name">Name: A-Z</option>
-          </select>
-        </section>
+            <Tabs value={game} onChange={(value) => setGame((value as typeof game) ?? "pokemon")} variant="pills" radius="xl">
+              <Tabs.List>
+                {gameOptions.map((option) => (
+                  <Tabs.Tab key={option.value} value={option.value}>
+                    {option.label} <Badge ml={8} variant="light">{option.value === "pokemon" ? tabCounts.pokemon : option.value === "one-piece" ? tabCounts.onePiece : tabCounts.pokemonJapan}</Badge>
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs>
+          </Stack>
+        </Paper>
+
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+            <TextInput label="Search sets" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search sets..." />
+            <Select
+              label="Sort"
+              value={sort}
+              onChange={(value) => setSort((value as "newest" | "oldest" | "name") ?? "newest")}
+              data={[
+                { value: "newest", label: "Release Date: Newest" },
+                { value: "oldest", label: "Release Date: Oldest" },
+                { value: "name", label: "Name: A-Z" },
+              ]}
+            />
+          </SimpleGrid>
+        </Paper>
 
         {featured ? (
-          <section style={styles.hero}>
-            <div style={styles.heroInner}>
-              <div style={styles.heroSide}>{fanCards(featured)}</div>
-              <div style={styles.heroCenter}>
-                <span style={styles.latest}>LATEST RELEASE</span>
-                <SetImage set={featured} hero />
-                <h2 style={styles.heroTitle}>{featured.name}</h2>
-                <p style={styles.heroMeta}>
-                  {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} • {featured.cardCount} cards
-                </p>
-                <Link
-                  href={`/setlists/${featured.sourceSetId}?game=${game}&source=${encodeURIComponent(featured.source)}`}
-                  style={styles.heroButton}
-                >
-                  Browse Cards →
-                </Link>
-              </div>
-              <div style={styles.heroSide}>{fanCards(featured, true)}</div>
-            </div>
-          </section>
+          <Paper withBorder radius="xl" p="lg" shadow="sm" style={{ background: "linear-gradient(120deg, rgba(159,144,255,.18), rgba(116,200,255,.18))" }}>
+            <SimpleGrid cols={{ base: 1, md: 3 }} spacing="lg" verticalSpacing="lg">
+              <SetImage set={featured} hero />
+              <Stack gap="sm" justify="center">
+                <Badge variant="light">Latest release</Badge>
+                <Title order={2}>{featured.name}</Title>
+                <Text c="dimmed">
+                  {(featured.releaseDate ? new Date(featured.releaseDate).toLocaleDateString() : "Unknown date")} | {featured.cardCount} cards
+                </Text>
+                <Button component={Link} href={`/setlists/${featured.sourceSetId}?game=${game}&source=${encodeURIComponent(featured.source)}`}>
+                  Browse cards
+                </Button>
+              </Stack>
+              <Group justify="center" align="center" wrap="nowrap">
+                {fanCards(featured).map((card, index) => (
+                  <Card key={`${card.label}-${index}`} withBorder radius="lg" p="xs" style={{ width: 120, transform: index === 0 ? "rotate(-14deg)" : index === 2 ? "rotate(10deg)" : "none" }}>
+                    <Image src={card.imageUrl} alt="" radius="md" h={160} fit="cover" />
+                  </Card>
+                ))}
+              </Group>
+            </SimpleGrid>
+          </Paper>
         ) : null}
 
-        <section style={styles.sectionHeader}>
-          <h3 style={styles.sectionTitle}>Recent Releases</h3>
-          <span style={styles.viewAll}>{"View all ->"}</span>
-        </section>
+        <Paper withBorder radius="xl" p="lg" shadow="sm">
+          <Group justify="space-between" mb="md">
+            <Title order={2} size="h3">
+              Recent Releases
+            </Title>
+            <Text c="dimmed" fw={700}>
+              View all sets
+            </Text>
+          </Group>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+            {recentItems.map((set) => (
+              <SetCard key={`recent-${set.id}`} set={set} game={game} recent />
+            ))}
+          </SimpleGrid>
+        </Paper>
 
-        <section style={styles.recentGrid}>
-          {recentItems.map((set) => (
-            <SetCard key={`recent-${set.id}`} set={set} game={game} recent />
-          ))}
-        </section>
+        <Paper withBorder radius="xl" p="lg" shadow="sm">
+          <Group justify="space-between" mb="md">
+            <Title order={2} size="h3">
+              All Sets
+            </Title>
+            <Text c="dimmed" size="sm">
+              {mainData.total} total sets
+            </Text>
+          </Group>
 
-        <section style={styles.sectionHeader}>
-          <h3 style={styles.sectionTitle}>All Sets</h3>
-        </section>
+          {loading ? <Text c="dimmed">Loading setlists...</Text> : null}
 
-        {loading ? <p style={styles.loading}>Loading setlists...</p> : null}
-        <section style={styles.allGrid}>
-          {mainData.items.map((set) => (
-            <SetCard key={`set-${set.id}`} set={set} game={game} />
-          ))}
-        </section>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3, xl: 4 }} spacing="md">
+            {mainData.items.map((set) => (
+              <SetCard key={`set-${set.id}`} set={set} game={game} />
+            ))}
+          </SimpleGrid>
 
-        <footer style={styles.pagination}>
-          <button type="button" style={styles.pageBtn} disabled={currentPage <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
-            Previous
-          </button>
-          <span style={styles.pageText}>
-            {currentPage} / {totalPages} ({mainData.total} sets)
-          </span>
-          <button type="button" style={styles.pageBtn} disabled={currentPage >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>
-            Next
-          </button>
-        </footer>
-      </div>
-    </main>
+          <Group justify="center" mt="lg">
+            <Button variant="default" disabled={currentPage <= 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>
+              Previous
+            </Button>
+            <Text c="dimmed" fw={700}>
+              {currentPage} / {totalPages}
+            </Text>
+            <Button variant="default" disabled={currentPage >= totalPages} onClick={() => setPage((value) => Math.min(totalPages, value + 1))}>
+              Next
+            </Button>
+          </Group>
+        </Paper>
+      </Stack>
+    </Container>
   );
 }
 
@@ -255,107 +294,52 @@ function SetImage({ set, hero = false }: { set: SetlistItem; hero?: boolean }) {
   }, [imageSrc]);
 
   const src = imageSrc && failedSrc !== imageSrc ? imageSrc : null;
-  if (!src) {
-    return (
-      <div style={hero ? styles.heroImageFallback : styles.cardImageFallback}>
-        <span style={hero ? styles.fallbackCodeHero : styles.fallbackCode}>{set.setCode || set.name.slice(0, 3).toUpperCase()}</span>
-        <span style={hero ? styles.fallbackLabelHero : styles.fallbackLabel}>image missing</span>
-      </div>
-    );
-  }
-  return <img src={src} alt={set.name} style={hero ? styles.heroLogo : styles.cardLogo} onError={() => setFailedSrc(src)} />;
+  const fallback = (
+    <Paper withBorder radius="lg" p="lg" ta="center" style={{ minHeight: hero ? 240 : 180, display: "grid", placeItems: "center" }}>
+      <Stack gap={4} align="center">
+        <Text fw={900} size={hero ? "2rem" : "1.5rem"}>
+          {set.setCode || set.name.slice(0, 3).toUpperCase()}
+        </Text>
+        <Text size="xs" tt="uppercase" c="dimmed" fw={800}>
+          image missing
+        </Text>
+      </Stack>
+    </Paper>
+  );
+
+  if (!src) return fallback;
+
+  return <Image src={src} alt={set.name} radius="lg" fit="contain" h={hero ? 240 : 180} onError={() => setFailedSrc(src)} />;
 }
 
 function SetCard({ set, game, recent = false }: { set: SetlistItem; game: string; recent?: boolean }) {
   return (
-    <Link href={`/setlists/${set.sourceSetId}?game=${game}&source=${encodeURIComponent(set.source)}`} style={styles.card}>
-      <div style={styles.cardLogoWrap}>
-        <SetImage set={set} />
-      </div>
-      <div style={styles.cardName}>{set.name}</div>
-      <div style={styles.cardMeta}>
-        {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} • {set.cardCount} cards
-      </div>
-      {recent ? <span style={styles.cardArrow}>{">"}</span> : null}
-    </Link>
+    <Card component={Link} href={`/setlists/${set.sourceSetId}?game=${game}&source=${encodeURIComponent(set.source)}`} withBorder radius="lg" p="md">
+      <Card.Section>
+        <Paper withBorder radius={0} p="xs" style={{ display: "grid", placeItems: "center", minHeight: 180 }}>
+          <SetImage set={set} />
+        </Paper>
+      </Card.Section>
+      <Stack gap={4} mt="sm">
+        <Title order={4} lineClamp={2}>{set.name}</Title>
+        <Text size="sm" c="dimmed">
+          {(set.releaseDate ? new Date(set.releaseDate).toLocaleDateString() : "Unknown")} | {set.cardCount} cards
+        </Text>
+        <Group gap="xs">
+          <Badge variant="light">{set.game}</Badge>
+          {set.setCode ? <Badge variant="outline">{set.setCode}</Badge> : null}
+          {recent ? <Badge color="green">Recent</Badge> : null}
+        </Group>
+      </Stack>
+    </Card>
   );
 }
 
-function fanCards(set: SetlistItem, reverse = false) {
-  const baseImage = imageForSet(set);
-  if (!baseImage) return <div style={styles.fanRoot} />;
-  return (
-    <div style={{ ...styles.fanRoot, transform: reverse ? "scaleX(-1)" : "none" }}>
-      <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 56, left: 6, transform: "rotate(-16deg)" }} />
-      <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 28, left: 66, transform: "rotate(-4deg)" }} />
-      <img src={baseImage} alt="" style={{ ...styles.fanCard, top: 56, left: 128, transform: "rotate(11deg)" }} />
-    </div>
-  );
+function fanCards(set: SetlistItem) {
+  const baseImage = imageForSet(set) ?? "/default-pack-banner-desktop.webp";
+  return [
+    { label: set.name, imageUrl: baseImage },
+    { label: set.name, imageUrl: baseImage },
+    { label: set.name, imageUrl: baseImage },
+  ];
 }
-
-function tabStyle(active: boolean, alt = false, disabled = false): CSSProperties {
-  if (disabled) {
-    return {
-      ...styles.tab,
-      opacity: 0.7,
-      cursor: "not-allowed",
-    };
-  }
-  const gradient = alt ? "linear-gradient(135deg,#ff9eb5,#ff6c8a)" : "linear-gradient(135deg,#9f90ff,#74c8ff)";
-  return {
-    ...styles.tab,
-    background: active ? gradient : "#f7f6ff",
-    color: active ? "#20153a" : "#473d66",
-    border: active ? "1px solid transparent" : "1px solid #d8d0ec",
-  };
-}
-
-const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(180deg,#f3f0ff 0%, #edf6ff 45%, #f9fcff 100%)",
-    color: "#2c2450",
-    padding: "18px 14px 28px",
-  },
-  container: { maxWidth: 1280, margin: "0 auto" },
-  header: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" },
-  title: { fontSize: "clamp(34px,4.4vw,46px)", margin: 0, lineHeight: 1.05, letterSpacing: "-0.02em" },
-  subtitle: { margin: "8px 0 0", color: "#70639d" },
-  tabs: { display: "flex", gap: 8, flexWrap: "wrap" },
-  tab: { padding: "9px 14px", borderRadius: 999, fontWeight: 700, fontSize: 14, cursor: "pointer" },
-  filterRow: { marginTop: 18, display: "grid", gridTemplateColumns: "minmax(160px,1fr) minmax(190px,240px)", gap: 10 },
-  input: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 12, padding: "11px 14px", boxShadow: "0 5px 20px rgba(77,52,146,.08)" },
-  select: { background: "#fff", border: "1px solid #d8d0ec", color: "#2f2455", borderRadius: 12, padding: "11px 14px", boxShadow: "0 5px 20px rgba(77,52,146,.08)" },
-  hero: { marginTop: 20, borderRadius: 18, border: "1px solid #d7cfed", background: "linear-gradient(120deg, rgba(159,144,255,.20), rgba(116,200,255,.18))", boxShadow: "0 14px 28px rgba(93,69,172,.14)" },
-  heroInner: { display: "grid", gridTemplateColumns: "minmax(120px,1fr) minmax(230px, 430px) minmax(120px,1fr)", gap: 8, alignItems: "center", padding: 12 },
-  heroSide: { display: "grid", placeItems: "center" },
-  heroCenter: { textAlign: "center", padding: "8px 6px" },
-  latest: { display: "inline-block", padding: "6px 10px", borderRadius: 999, background: "rgba(255,255,255,.78)", border: "1px solid #e2daf4", fontSize: 12, fontWeight: 800, letterSpacing: ".08em", color: "#5a4b88" },
-  heroLogo: { width: "min(390px,90%)", maxHeight: 140, objectFit: "contain", marginTop: 12 },
-  heroTitle: { margin: "10px 0 4px", fontSize: "clamp(28px,3.4vw,40px)", lineHeight: 1.06 },
-  heroMeta: { margin: 0, color: "#6f629f", fontWeight: 600 },
-  heroButton: { display: "inline-block", marginTop: 12, padding: "10px 18px", borderRadius: 10, background: "linear-gradient(135deg,#9f90ff,#74c8ff)", color: "#1c1340", textDecoration: "none", fontWeight: 800 },
-  sectionHeader: { marginTop: 20, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
-  sectionTitle: { margin: 0, fontSize: 22 },
-  viewAll: { color: "#7d71a8", fontWeight: 700, fontSize: 14 },
-  recentGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))", gap: 10 },
-  allGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(185px,1fr))", gap: 10 },
-  card: { position: "relative", textDecoration: "none", color: "inherit", border: "1px solid #d8d0ec", background: "#ffffffcc", borderRadius: 14, padding: 10, boxShadow: "0 10px 24px rgba(80,59,150,.08)" },
-  cardLogoWrap: { height: 100, display: "grid", placeItems: "center", borderRadius: 10, background: "linear-gradient(180deg,#fbf9ff,#f1ecff)", overflow: "hidden" },
-  cardLogo: { maxWidth: "100%", maxHeight: 88, objectFit: "contain" },
-  cardImageFallback: { width: "100%", height: "100%", display: "grid", placeItems: "center", alignContent: "center", gap: 3, borderRadius: 10, background: "radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 24%), linear-gradient(135deg,#8f7cff,#62c7ff 52%,#ff9eb5)", color: "#20153a", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.45)" },
-  fallbackCode: { fontSize: 27, lineHeight: 1, fontWeight: 950, letterSpacing: ".02em", textShadow: "0 1px 0 rgba(255,255,255,.35)" },
-  fallbackLabel: { fontSize: 10, fontWeight: 900, letterSpacing: ".12em", textTransform: "uppercase", opacity: .72 },
-  heroImageFallback: { width: "min(390px,90%)", minHeight: 136, margin: "12px auto 0", display: "grid", placeItems: "center", alignContent: "center", gap: 4, borderRadius: 18, background: "radial-gradient(circle at 20% 15%, rgba(255,255,255,.55), transparent 24%), linear-gradient(135deg,#8f7cff,#62c7ff 52%,#ff9eb5)", color: "#20153a", boxShadow: "inset 0 0 0 1px rgba(255,255,255,.45), 0 14px 26px rgba(80,59,150,.18)" },
-  fallbackCodeHero: { fontSize: 46, lineHeight: 1, fontWeight: 950, letterSpacing: ".02em", textShadow: "0 1px 0 rgba(255,255,255,.35)" },
-  fallbackLabelHero: { fontSize: 12, fontWeight: 900, letterSpacing: ".14em", textTransform: "uppercase", opacity: .72 },
-  cardName: { marginTop: 8, fontWeight: 800, lineHeight: 1.2, minHeight: 36 },
-  cardMeta: { marginTop: 6, color: "#72669f", fontSize: 13 },
-  cardArrow: { position: "absolute", right: 10, bottom: 10, width: 20, height: 20, display: "grid", placeItems: "center", borderRadius: 6, background: "#efeafe", color: "#6f5ea8", fontWeight: 900 },
-  pagination: { marginTop: 18, display: "flex", alignItems: "center", justifyContent: "center", gap: 12 },
-  pageBtn: { border: "1px solid #d7cfee", background: "#fff", color: "#433869", borderRadius: 10, padding: "9px 14px", fontWeight: 700, cursor: "pointer" },
-  pageText: { color: "#6a5f97", fontWeight: 700 },
-  loading: { color: "#6f639d", fontWeight: 600 },
-  fanRoot: { position: "relative", width: "min(240px,42vw)", height: 190 },
-  fanCard: { position: "absolute", width: 110, aspectRatio: "63/88", objectFit: "cover", borderRadius: 10, border: "1px solid #f4f0ff", boxShadow: "0 10px 20px rgba(64,42,133,.26)" },
-};
