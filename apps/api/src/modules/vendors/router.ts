@@ -107,6 +107,7 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
           storefrontMuted: true,
           storefrontRadius: true,
           storefrontThemePreset: true,
+          drawAnimationPreset: true,
         },
       },
     },
@@ -273,10 +274,11 @@ vendorRouter.patch("/v1/vendor/theme", async (req: VendorRequest, res) => {
     return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
   }
 
-  const { storefrontThemePreset, ...themeFields } = parsed.data;
+  const { storefrontThemePreset, drawAnimationPreset, ...themeFields } = parsed.data;
   const themeData = {
     ...themeFields,
     ...(storefrontThemePreset != null ? { storefrontThemePreset } : {}),
+    ...(drawAnimationPreset != null ? { drawAnimationPreset } : {}),
   };
 
   const theme = await prisma.vendorSettings.upsert({
@@ -295,6 +297,7 @@ vendorRouter.patch("/v1/vendor/theme", async (req: VendorRequest, res) => {
       storefrontMuted: true,
       storefrontRadius: true,
       storefrontThemePreset: true,
+      drawAnimationPreset: true,
     },
   });
 

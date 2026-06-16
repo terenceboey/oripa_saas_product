@@ -10,6 +10,7 @@ import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../../../lib/media-url";
 import { VendorThemeProvider } from "../../../lib/vendor-theme";
+import { DrawShowcaseVisual } from "../../../components/draw-showcase-visual";
 
 type Prize = {
   id: string;
@@ -51,6 +52,7 @@ type DrawResult = {
 
 type VendorTheme = {
   storefrontThemePreset?: string | null;
+  drawAnimationPreset?: "reel" | "wheel" | "flip" | null;
   storefrontPrimary: string;
   storefrontSecondary: string;
   storefrontAccent: string;
@@ -168,6 +170,8 @@ export default function PackDrawPage() {
       imageUrl: prize.imageUrl || defaultPokemonCardImage,
     }));
   }, [pack?.prizes]);
+  const drawShowcaseFallbackCard = drawShowcasePool[0] ?? { label: "Mystery Card", imageUrl: defaultPokemonCardImage };
+  const currentDrawShowcaseCard = drawShowcaseCard ?? drawShowcaseFallbackCard;
 
   async function ensureAudioContext() {
     if (typeof window === "undefined") return null;
@@ -286,6 +290,7 @@ export default function PackDrawPage() {
       ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
     } as CSSProperties;
   }, [theme]);
+  const drawAnimationPreset = theme?.drawAnimationPreset ?? "reel";
 
   useEffect(() => {
     applyVendorFavicon(normalizeVendorFaviconUrl(vendorFavicon, vendorLogo));
@@ -558,7 +563,9 @@ export default function PackDrawPage() {
 
             <Group justify="space-between" align="start" wrap="wrap">
               <div>
-                <Title order={3}>Lottery Reveal</Title>
+                <Title order={3}>
+                  {drawAnimationPreset === "wheel" ? "Lottery Wheel" : drawAnimationPreset === "flip" ? "Card Flip Reveal" : "Reel Spin"}
+                </Title>
                 <Text c="dimmed" size="sm">
                   {drawShowcasePhase === "spinning" ? "Spinning the lottery..." : drawShowcasePhase === "revealing" ? "Result locked in." : "Draw complete."}
                 </Text>
@@ -575,18 +582,14 @@ export default function PackDrawPage() {
               </Group>
             </Group>
 
-            <Paper withBorder radius="lg" p="lg" ta="center">
-              <Stack gap="sm" align="center">
-                <Badge variant="light">
-                  #{drawShowcaseIndex + 1} of {drawShowcase.draws.length}
-                </Badge>
-                <Image src={drawShowcaseCard?.imageUrl ?? defaultPokemonCardImage} alt={drawShowcaseCard?.label ?? "Lottery draw"} radius="lg" h={320} fit="contain" />
-                <Group gap="xs" justify="center">
-                  <Text fw={800}>{drawShowcaseCard?.label ?? "Spinning..."}</Text>
-                  {drawShowcasePhase === "revealing" ? <Badge color="yellow">Winner</Badge> : null}
-                </Group>
-              </Stack>
-            </Paper>
+            <DrawShowcaseVisual
+              preset={drawAnimationPreset}
+              phase={drawShowcasePhase}
+              currentCard={currentDrawShowcaseCard}
+              pool={drawShowcasePool}
+              index={drawShowcaseIndex}
+              total={drawShowcase.draws.length}
+            />
 
             <Group justify="space-between" align="center" wrap="wrap">
               <Text c="dimmed" size="sm">

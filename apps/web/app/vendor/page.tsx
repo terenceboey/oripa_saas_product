@@ -8,7 +8,7 @@ import { Badge, Button, Card, Container, FileButton, Group, Image, Modal, Paper,
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
-import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
+import { packTierSnapshotSchema, type PackTierSnapshot, vendorDrawAnimationPresetIds } from "@oripa/shared";
 import {
   CATALOG_GAME_OPTIONS,
   CATALOG_ITEM_CLASS_OPTIONS,
@@ -38,6 +38,7 @@ type Vendor = {
   faviconImageUrl?: string | null;
   vendorSettings?: {
     storefrontThemePreset?: string | null;
+    drawAnimationPreset?: string | null;
     storefrontPrimary: string;
     storefrontSecondary: string;
     storefrontAccent: string;
@@ -342,6 +343,12 @@ const DEFAULT_THEME = {
   storefrontRadius: 18,
 };
 
+const DRAW_ANIMATION_PRESET_OPTIONS = vendorDrawAnimationPresetIds.map((id) => ({
+  value: id,
+  label:
+    id === "reel" ? "Reel spin" : id === "wheel" ? "Lottery wheel" : "Card flip",
+}));
+
 const THEME_PRESETS = [
   { id: "lavender-dawn", label: "Lavender Dawn (Default)", ...DEFAULT_THEME },
   {
@@ -512,6 +519,7 @@ export default function VendorPage() {
   const [faviconImageUrl, setFaviconImageUrl] = useState("");
   const [themeDraft, setThemeDraft] = useState(DEFAULT_THEME);
   const [themePresetId, setThemePresetId] = useState<string>("lavender-dawn");
+  const [drawAnimationPresetId, setDrawAnimationPresetId] = useState<string>("reel");
 
   const [bannerTitle, setBannerTitle] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
@@ -703,6 +711,7 @@ export default function VendorPage() {
       };
       setThemeDraft(nextTheme);
       setThemePresetId(resolveThemePresetId(nextTheme, v?.vendorSettings?.storefrontThemePreset));
+      setDrawAnimationPresetId(v?.vendorSettings?.drawAnimationPreset ?? "reel");
 
       setLimits(limitsJson.limits ?? { planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
       setSummary(summaryJson.summary ?? null);
@@ -1083,6 +1092,7 @@ export default function VendorPage() {
         credentials: "include",
         body: JSON.stringify({
           storefrontThemePreset: selectedThemePresetId === "custom" ? null : selectedThemePresetId,
+          drawAnimationPreset: drawAnimationPresetId,
           ...themeDraft,
         }),
       });
@@ -2096,6 +2106,27 @@ export default function VendorPage() {
                     </Button>
                   );
                 })}
+              </SimpleGrid>
+              <Select
+                label="Pack draw animation"
+                description="Choose how the prize draw reveal animates for customers on mobile and desktop."
+                value={drawAnimationPresetId}
+                onChange={(value) => setDrawAnimationPresetId(value ?? "reel")}
+                data={DRAW_ANIMATION_PRESET_OPTIONS}
+              />
+              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+                <Paper withBorder radius="md" p="sm">
+                  <Text fw={700}>Reel spin</Text>
+                  <Text size="xs" c="dimmed">Fast moving card reel with a strong lottery feel.</Text>
+                </Paper>
+                <Paper withBorder radius="md" p="sm">
+                  <Text fw={700}>Lottery wheel</Text>
+                  <Text size="xs" c="dimmed">A circular wheel that rotates before locking on the winner.</Text>
+                </Paper>
+                <Paper withBorder radius="md" p="sm">
+                  <Text fw={700}>Card flip</Text>
+                  <Text size="xs" c="dimmed">A face-down prize card flips into the final result.</Text>
+                </Paper>
               </SimpleGrid>
               <Button type="submit" loading={saving || loading}>Save Theme</Button>
             </Stack>

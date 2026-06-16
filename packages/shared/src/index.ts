@@ -50,6 +50,13 @@ export const vendorThemePresetIds = [
 ] as const;
 export const vendorThemePresetSchema = z.enum(vendorThemePresetIds);
 
+export const vendorDrawAnimationPresetIds = [
+  "reel",
+  "wheel",
+  "flip",
+] as const;
+export const vendorDrawAnimationPresetSchema = z.enum(vendorDrawAnimationPresetIds);
+
 export const createVendorSchema = z.object({
   name: z.string().min(2).max(80),
   slug: z.string().min(2).max(50).regex(/^[a-z0-9-]+$/),
@@ -122,6 +129,7 @@ export const updateVendorReferralSchema = z.object({
 const hexColorSchema = z.string().regex(/^#([A-Fa-f0-9]{6})$/, "Color must be a 6-digit hex like #A1B2C3");
 export const updateVendorThemeSchema = z.object({
   storefrontThemePreset: vendorThemePresetSchema.optional().nullable(),
+  drawAnimationPreset: vendorDrawAnimationPresetSchema.optional().nullable(),
   storefrontPrimary: hexColorSchema,
   storefrontSecondary: hexColorSchema,
   storefrontAccent: hexColorSchema,
