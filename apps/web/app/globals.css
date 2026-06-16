@@ -1111,6 +1111,10 @@ h6,
 }
 
 @media (max-width: 760px) {
+  .pack-grid {
+    grid-template-columns: 1fr;
+  }
+
   .pack-builder-two-panel {
     grid-template-columns: 1fr;
   }
