@@ -422,14 +422,15 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
         }
 
         .draw-carousel-result {
-          position: absolute;
-          inset: 50% auto auto 50%;
+          position: fixed;
+          top: 50%;
+          left: 50%;
           transform: translate(-50%, -50%);
           width: clamp(124px, 17vw, 156px);
           display: grid;
           place-items: center;
           gap: 8px;
-          z-index: 4;
+          z-index: 1002;
           pointer-events: none;
           padding: 0;
           box-sizing: border-box;
