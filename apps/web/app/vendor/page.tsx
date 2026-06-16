@@ -2330,11 +2330,11 @@ export default function VendorPage() {
 
               <label className="muted tiny">
                 Important notes shown on pack page
-                <textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} />
+                <Textarea value={importantNotes} onChange={(e) => setImportantNotes(e.target.value)} placeholder="Important notes shown on pack page" maxLength={2000} autosize minRows={3} />
               </label>
 
-              <div className="pack-builder-two-panel">
-                <section className="card tier-pane">
+              <SimpleGrid className="pack-builder-two-panel" cols={{ base: 1, xl: 2 }} spacing="md">
+                <Card withBorder radius="xl" p="lg" shadow="sm">
                   <div className="heading-row">
                     <div style={{ display: "grid", gap: 2 }}>
                       <h3>Pack Contents</h3>
@@ -2473,9 +2473,9 @@ export default function VendorPage() {
                       </article>
                     ))}
                   </div>
-                </section>
+                </Card>
 
-                <section className="card search-pane">
+                <Card withBorder radius="xl" p="lg" shadow="sm">
                   <div className="heading-row">
                     <h3>Add Cards</h3>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -2620,8 +2620,8 @@ export default function VendorPage() {
                       </button>
                     </div>
                   ) : null}
-                </section>
-              </div>
+                </Card>
+              </SimpleGrid>
 
               <div className="actions">
                 <button type="button" className="draw-button alt" onClick={addTier} disabled={tiers.length >= limits.maxPackTiers}>+ Add Tier</button>
