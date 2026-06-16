@@ -2029,106 +2029,110 @@ export default function VendorPage() {
                 <Title order={2} size="h3">Storefront Theme</Title>
                 <Text c="dimmed" size="sm">Choose a preset pastel theme for your landing and pack pages.</Text>
               </div>
-              <Paper withBorder radius="lg" p="md" bg="var(--mantine-color-violet-light)">
-                <Group justify="space-between" align="center" wrap="wrap">
-                  <div>
-                    <Text fw={800}>Current theme</Text>
-                    <Text size="sm" c="dimmed">
-                      {selectedThemePreset.label}
-                    </Text>
-                  </div>
-                  <Badge variant="filled" color="grape">
-                    {selectedThemePresetId === "custom" ? "Custom" : "Preset"}
-                  </Badge>
-                </Group>
-                <Group gap="sm" mt="md" wrap="wrap">
-                  <Card withBorder radius="md" p="sm" style={{ background: selectedThemePreset.storefrontSurface }}>
-                    <Stack gap={6}>
-                      <Text fw={700} c={selectedThemePreset.storefrontText}>
-                        {vendorName || "Vendor storefront"}
-                      </Text>
-                      <Text size="sm" c={selectedThemePreset.storefrontMuted}>
-                        Previewing how your storefront header and cards will feel.
-                      </Text>
-                      <Group gap={6}>
-                        <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontPrimary, display: "inline-block" }} />
-                        <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontSecondary, display: "inline-block" }} />
-                        <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontAccent, display: "inline-block" }} />
-                      </Group>
-                    </Stack>
-                  </Card>
-                  <Stack gap={4} style={{ flex: 1, minWidth: 220 }}>
-                    <Button variant="filled" color="grape" radius={selectedThemePreset.storefrontRadius}>
-                      Primary button
-                    </Button>
-                    <Button variant="light" color="grape" radius={selectedThemePreset.storefrontRadius}>
-                      Secondary button
-                    </Button>
-                  </Stack>
-                </Group>
-              </Paper>
-              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-                {THEME_PRESETS.map((preset) => {
-                  const active = selectedThemePresetId === preset.id;
-                  return (
-                    <Button
-                      key={preset.id}
-                      type="button"
-                      variant={active ? 'filled' : 'light'}
-                      color="grape"
-                      onClick={() => {
-                        setThemeDraft({
-                          storefrontPrimary: preset.storefrontPrimary,
-                          storefrontSecondary: preset.storefrontSecondary,
-                          storefrontAccent: preset.storefrontAccent,
-                          storefrontSurface: preset.storefrontSurface,
-                          storefrontText: preset.storefrontText,
-                          storefrontMuted: preset.storefrontMuted,
-                          storefrontRadius: preset.storefrontRadius,
-                        });
-                        setThemePresetId(preset.id);
-                      }}
-                      styles={{ root: { height: 'auto', padding: 16, justifyContent: 'flex-start' }, inner: { width: '100%', display: 'block' } }}
-                    >
-                      <Stack gap={8} align="flex-start">
-                        <Group justify="space-between" align="center" w="100%">
-                          <Text fw={700}>{preset.label}</Text>
-                          {active ? <Badge size="sm" color="grape">Current</Badge> : null}
-                        </Group>
-                        <Group gap={6}>
-                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontPrimary, display: 'inline-block' }} />
-                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSecondary, display: 'inline-block' }} />
-                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontAccent, display: 'inline-block' }} />
-                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSurface, border: '1px solid #d9d9ef', display: 'inline-block' }} />
-                        </Group>
-                        <Text size="xs" c="dimmed">Tap to apply this theme preset.</Text>
+              <form onSubmit={saveTheme}>
+                <Stack gap="md">
+                  <Paper withBorder radius="lg" p="md" bg="var(--mantine-color-violet-light)">
+                    <Group justify="space-between" align="center" wrap="wrap">
+                      <div>
+                        <Text fw={800}>Current theme</Text>
+                        <Text size="sm" c="dimmed">
+                          {selectedThemePreset.label}
+                        </Text>
+                      </div>
+                      <Badge variant="filled" color="grape">
+                        {selectedThemePresetId === "custom" ? "Custom" : "Preset"}
+                      </Badge>
+                    </Group>
+                    <Group gap="sm" mt="md" wrap="wrap">
+                      <Card withBorder radius="md" p="sm" style={{ background: selectedThemePreset.storefrontSurface }}>
+                        <Stack gap={6}>
+                          <Text fw={700} c={selectedThemePreset.storefrontText}>
+                            {vendorName || "Vendor storefront"}
+                          </Text>
+                          <Text size="sm" c={selectedThemePreset.storefrontMuted}>
+                            Previewing how your storefront header and cards will feel.
+                          </Text>
+                          <Group gap={6}>
+                            <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontPrimary, display: "inline-block" }} />
+                            <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontSecondary, display: "inline-block" }} />
+                            <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontAccent, display: "inline-block" }} />
+                          </Group>
+                        </Stack>
+                      </Card>
+                      <Stack gap={4} style={{ flex: 1, minWidth: 220 }}>
+                        <Button variant="filled" color="grape" radius={selectedThemePreset.storefrontRadius}>
+                          Primary button
+                        </Button>
+                        <Button variant="light" color="grape" radius={selectedThemePreset.storefrontRadius}>
+                          Secondary button
+                        </Button>
                       </Stack>
-                    </Button>
-                  );
-                })}
-              </SimpleGrid>
-              <Select
-                label="Pack draw animation"
-                description="Choose how the prize draw reveal animates for customers on mobile and desktop."
-                value={drawAnimationPresetId}
-                onChange={(value) => setDrawAnimationPresetId(value ?? "reel")}
-                data={DRAW_ANIMATION_PRESET_OPTIONS}
-              />
-              <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-                <Paper withBorder radius="md" p="sm">
-                  <Text fw={700}>Reel spin</Text>
-                  <Text size="xs" c="dimmed">Fast moving card reel with a strong lottery feel.</Text>
-                </Paper>
-                <Paper withBorder radius="md" p="sm">
-                  <Text fw={700}>Lottery wheel</Text>
-                  <Text size="xs" c="dimmed">A circular wheel that rotates before locking on the winner.</Text>
-                </Paper>
-                <Paper withBorder radius="md" p="sm">
-                  <Text fw={700}>Card flip</Text>
-                  <Text size="xs" c="dimmed">A face-down prize card flips into the final result.</Text>
-                </Paper>
-              </SimpleGrid>
-              <Button type="submit" loading={saving || loading}>Save Theme</Button>
+                    </Group>
+                  </Paper>
+                  <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+                    {THEME_PRESETS.map((preset) => {
+                      const active = selectedThemePresetId === preset.id;
+                      return (
+                        <Button
+                          key={preset.id}
+                          type="button"
+                          variant={active ? "filled" : "light"}
+                          color="grape"
+                          onClick={() => {
+                            setThemeDraft({
+                              storefrontPrimary: preset.storefrontPrimary,
+                              storefrontSecondary: preset.storefrontSecondary,
+                              storefrontAccent: preset.storefrontAccent,
+                              storefrontSurface: preset.storefrontSurface,
+                              storefrontText: preset.storefrontText,
+                              storefrontMuted: preset.storefrontMuted,
+                              storefrontRadius: preset.storefrontRadius,
+                            });
+                            setThemePresetId(preset.id);
+                          }}
+                          styles={{ root: { height: "auto", padding: 16, justifyContent: "flex-start" }, inner: { width: "100%", display: "block" } }}
+                        >
+                          <Stack gap={8} align="flex-start">
+                            <Group justify="space-between" align="center" w="100%">
+                              <Text fw={700}>{preset.label}</Text>
+                              {active ? <Badge size="sm" color="grape">Current</Badge> : null}
+                            </Group>
+                            <Group gap={6}>
+                              <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontPrimary, display: "inline-block" }} />
+                              <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSecondary, display: "inline-block" }} />
+                              <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontAccent, display: "inline-block" }} />
+                              <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSurface, border: "1px solid #d9d9ef", display: "inline-block" }} />
+                            </Group>
+                            <Text size="xs" c="dimmed">Tap to apply this theme preset.</Text>
+                          </Stack>
+                        </Button>
+                      );
+                    })}
+                  </SimpleGrid>
+                  <Select
+                    label="Pack draw animation"
+                    description="Choose how the prize draw reveal animates for customers on mobile and desktop."
+                    value={drawAnimationPresetId}
+                    onChange={(value) => setDrawAnimationPresetId(value ?? "reel")}
+                    data={DRAW_ANIMATION_PRESET_OPTIONS}
+                  />
+                  <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+                    <Paper withBorder radius="md" p="sm">
+                      <Text fw={700}>Reel spin</Text>
+                      <Text size="xs" c="dimmed">Fast moving card reel with a strong lottery feel.</Text>
+                    </Paper>
+                    <Paper withBorder radius="md" p="sm">
+                      <Text fw={700}>Lottery wheel</Text>
+                      <Text size="xs" c="dimmed">A circular wheel that rotates before locking on the winner.</Text>
+                    </Paper>
+                    <Paper withBorder radius="md" p="sm">
+                      <Text fw={700}>Card flip</Text>
+                      <Text size="xs" c="dimmed">A face-down prize card flips into the final result.</Text>
+                    </Paper>
+                  </SimpleGrid>
+                  <Button type="submit" loading={saving || loading}>Save Theme</Button>
+                </Stack>
+              </form>
             </Stack>
           </Card>
 
