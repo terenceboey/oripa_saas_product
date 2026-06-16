@@ -391,7 +391,7 @@ export default function HomePage() {
             {(() => {
               const image = resolvePackBannerMediaUrl(currentBanner.imageUrl, defaultPackBanner);
               return (
-                <picture>
+                <picture style={{ display: "block", width: "100%", height: "clamp(220px, 32vw, 420px)" }}>
                   {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
                   {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
@@ -405,10 +405,10 @@ export default function HomePage() {
                     style={{
                       display: "block",
                       width: "100%",
-                      height: "clamp(220px, 32vw, 420px)",
-                      objectFit: "contain",
+                      height: "100%",
+                      objectFit: "cover",
                       objectPosition: "center",
-                      background: "var(--card, #fff)",
+                      background: "transparent",
                     }}
                   />
                 </picture>
@@ -490,7 +490,7 @@ export default function HomePage() {
             {(() => {
               const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBanner);
               return (
-                <picture>
+                <picture style={{ display: "block", width: "100%" }}>
                   {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
                   {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
@@ -505,10 +505,10 @@ export default function HomePage() {
                       display: "block",
                       width: "100%",
                       height: 220,
-                      objectFit: "contain",
+                      objectFit: "cover",
                       objectPosition: "center",
                       borderRadius: 16,
-                      background: "var(--card, #fff)",
+                      background: "transparent",
                     }}
                   />
                 </picture>
