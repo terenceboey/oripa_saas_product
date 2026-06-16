@@ -438,7 +438,9 @@ export default function HomePage() {
       </SimpleGrid>
 
       <footer className="site-footer">
-        <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
+        <Button component={Link} href="/fairness-proofs" variant="light">
+          Fairness Proofs
+        </Button>
       </footer>
       </Stack>
     </Container>

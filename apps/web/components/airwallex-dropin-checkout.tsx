@@ -2,6 +2,7 @@
 
 import { createElement, init } from "@airwallex/components-sdk";
 import { useEffect, useRef, useState } from "react";
+import { Alert, Box, Card, Group, Text, Title } from "@mantine/core";
 
 const airwallexEnv = String(process.env.NEXT_PUBLIC_AIRWALLEX_ENV ?? "demo").toLowerCase() === "prod" ? "prod" : "demo";
 
@@ -130,21 +131,21 @@ export function AirwallexDropInCheckout({
   }, [clientSecret, containerId, countryCode, currencyCode, intentId]);
 
   return (
-    <section className="card" style={{ marginTop: 16 }}>
-      <div className="heading-row">
-        <h3>Complete payment</h3>
-        <span className="muted tiny">
+    <Card withBorder radius="xl" p="lg" mt="md" shadow="sm">
+      <Group justify="space-between" align="center" mb="sm">
+        <Title order={3} size="h4">
+          Complete payment
+        </Title>
+        <Text size="sm" c="dimmed">
           {status === "loading" ? "Loading..." : status === "ready" ? "Ready" : "Checkout error"}
-        </span>
-      </div>
-      {message ? <p className={status === "error" ? "error" : "muted"} style={{ marginTop: 8 }}>{message}</p> : null}
-      <div
-        id={containerId}
-        style={{
-          marginTop: 12,
-          minHeight: 360,
-        }}
-      />
-    </section>
+        </Text>
+      </Group>
+      {message ? (
+        <Alert color={status === "error" ? "red" : "blue"} variant="light">
+          {message}
+        </Alert>
+      ) : null}
+      <Box id={containerId} mt="md" mih={360} />
+    </Card>
   );
 }

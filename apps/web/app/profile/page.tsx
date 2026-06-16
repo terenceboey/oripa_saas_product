@@ -103,7 +103,7 @@ type WalletState = {
 
 export default function CustomerProfilePage() {
   return (
-    <Suspense fallback={<main className="container"><section className="card auth-card"><p className="muted">Loading profile...</p></section></main>}>
+    <Suspense fallback={<Container size="md" py="xl"><Paper withBorder radius="xl" p="xl" shadow="sm"><Text c="dimmed">Loading profile...</Text></Paper></Container>}>
       <CustomerProfileContent />
     </Suspense>
   );

@@ -1711,12 +1711,14 @@ export default function VendorPage() {
 
   if (loading && !vendor) {
     return (
-      <main className="container vendor-dashboard">
-        <section className="card auth-card">
-          <h1>Verifying Vendor Access</h1>
-          <p className="muted">Checking whether this account is approved for this vendor.</p>
-        </section>
-      </main>
+      <Container size="md" py="xl">
+        <Paper withBorder radius="xl" p="xl" shadow="sm">
+          <Stack gap="sm">
+            <Title order={1}>Verifying Vendor Access</Title>
+            <Text c="dimmed">Checking whether this account is approved for this vendor.</Text>
+          </Stack>
+        </Paper>
+      </Container>
     );
   }
 
@@ -1749,13 +1751,15 @@ export default function VendorPage() {
 
   if (!vendor) {
     return (
-      <main className="container vendor-dashboard">
-        <section className="card auth-card">
-          <h1>Vendor Access Required</h1>
-          <p className="muted">This page is restricted to approved vendor accounts only.</p>
-          {error ? <p className="error">{error}</p> : null}
-        </section>
-      </main>
+      <Container size="md" py="xl">
+        <Paper withBorder radius="xl" p="xl" shadow="sm">
+          <Stack gap="sm">
+            <Title order={1}>Vendor Access Required</Title>
+            <Text c="dimmed">This page is restricted to approved vendor accounts only.</Text>
+            {error ? <Text c="red">{error}</Text> : null}
+          </Stack>
+        </Paper>
+      </Container>
     );
   }
 
@@ -1806,7 +1810,7 @@ export default function VendorPage() {
 
       {activeTab === "BUSINESS" ? (
         <>
-          <section className="card" style={{ marginTop: 12 }}>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <h2>Plan & Earnings</h2>
             <p className="muted tiny">Current plan: <strong>{limits.planCode}</strong> | Pack tiers max: {limits.maxPackTiers} | Pack items max: {limits.maxPackItems}</p>
             <div className="actions">
@@ -1822,9 +1826,9 @@ export default function VendorPage() {
               <div className="stat"><div className="stat-label">Successful Wallet Top-ups</div><div className="stat-value">{summary?.topupPoints?.toLocaleString() ?? "0"}</div></div>
               <div className="stat"><div className="stat-label">Completed Top-ups</div><div className="stat-value">{summary?.topupCount?.toLocaleString() ?? "0"}</div></div>
             </div>
-          </section>
+          </Card>
 
-          <section className="card" style={{ marginTop: 12 }}>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <h2>Wallet Funding</h2>
             <p className="muted tiny">This shows completed wallet top-ups on this storefront.</p>
             <div className="result-list">
@@ -1841,9 +1845,9 @@ export default function VendorPage() {
               ))}
               {topups.length === 0 ? <p className="muted tiny">No completed top-ups yet.</p> : null}
             </div>
-          </section>
+          </Card>
 
-          <section className="card" style={{ marginTop: 12 }}>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <h2>Prize Winners</h2>
             <p className="muted tiny">Latest completed draws showing which customer won which prize on each pack.</p>
             <div className="vendor-form" style={{ marginTop: 12, gridTemplateColumns: "minmax(0, 320px)" }}>
@@ -1898,13 +1902,13 @@ export default function VendorPage() {
               ))}
               {packWins.length === 0 && !packWinsLoading ? <p className="muted tiny">No winner records found for this filter.</p> : null}
             </div>
-          </section>
+          </Card>
         </>
       ) : null}
 
       {activeTab === "GROWTH" ? (
         <>
-          <section className="card" style={{ marginTop: 12 }}>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <h2>Referral Signups</h2>
             <p className="muted tiny">
               Use this link on your own site, social channels, or customer support flows. Signups using the code are recorded here.
@@ -1932,9 +1936,9 @@ export default function VendorPage() {
               ))}
               {referrals.length === 0 ? <p className="muted tiny">No referral signups yet.</p> : null}
             </div>
-          </section>
+          </Card>
 
-          <section className="card" style={{ marginTop: 12 }}>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <h2>Generate QR Points</h2>
             <p className="muted tiny">Create a short-lived QR token for adding points to a customer wallet.</p>
             <form className="vendor-form" onSubmit={generateQr}>
@@ -1957,7 +1961,7 @@ export default function VendorPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </Card>
         </>
       ) : null}
 
@@ -2220,7 +2224,7 @@ export default function VendorPage() {
       ) : null}
       {activeTab === "PACKS" ? (
         <>
-          <section className="card" style={{ marginTop: 12 }}>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <h2>{editingPackId ? "Edit Pack" : "Create Pack"}</h2>
             <p className="muted tiny">Item limit: {totalDraftItems}/{limits.maxPackItems} | Tier limit: {tiers.length}/{limits.maxPackTiers}</p>
             <div className="actions" style={{ marginTop: 8 }}>
@@ -2634,7 +2638,7 @@ export default function VendorPage() {
               ) : null}
             </div>
           </form>
-        </section>
+        </Card>
 
           <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
             <Stack gap="md">

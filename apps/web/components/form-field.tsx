@@ -1,16 +1,18 @@
-import { Input } from "@mantine/core";
+import { Input, Stack, Text } from "@mantine/core";
 import { ReactNode } from "react";
 
 type FormFieldProps = {
   label: string;
   children: ReactNode;
-  className?: string;
 };
 
-export function FormField({ label, children, className }: FormFieldProps) {
+export function FormField({ label, children }: FormFieldProps) {
   return (
-    <Input.Wrapper className={className} label={label}>
-      {children}
-    </Input.Wrapper>
+    <Stack gap={4}>
+      <Text fw={600} size="sm">
+        {label}
+      </Text>
+      <Input.Wrapper label={null}>{children}</Input.Wrapper>
+    </Stack>
   );
 }
