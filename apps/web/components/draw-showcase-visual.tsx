@@ -57,6 +57,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
     const cardWidth = landingCard.getBoundingClientRect().width;
     const targetScroll = Math.max(0, landingCard.offsetLeft - viewport.clientWidth / 2 + cardWidth / 2);
+    const approachScroll = Math.max(0, targetScroll - cardWidth * 1.6);
 
     if (reduceMotion || phase === "done") {
       viewport.scrollLeft = targetScroll;
@@ -66,20 +67,14 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
     const startScroll = phase === "spinning" ? Math.max(0, targetScroll * 0.04) : viewport.scrollLeft;
     viewport.scrollLeft = startScroll;
 
-    const duration = phase === "spinning" ? 3200 : 900;
+    const duration = phase === "spinning" ? 2800 : 1400;
     const startTime = performance.now();
-    const settleTarget = targetScroll;
+    const settleTarget = phase === "spinning" ? approachScroll : targetScroll;
 
     const easeOutQuint = (value: number) => 1 - Math.pow(1 - value, 5);
-    const easeOutBack = (value: number) => {
-      const overshoot = 1.70158;
-      const t = value - 1;
-      return 1 + t * t * ((overshoot + 1) * t + overshoot);
-    };
-
     const tick = (now: number) => {
       const progress = Math.min((now - startTime) / duration, 1);
-      const eased = phase === "revealing" ? easeOutBack(progress) : easeOutQuint(progress);
+      const eased = phase === "revealing" ? 1 - Math.pow(1 - progress, 3) : easeOutQuint(progress);
       const scroll = startScroll + (settleTarget - startScroll) * eased;
       viewport.scrollLeft = scroll;
 
@@ -136,18 +131,6 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
             <div className="draw-carousel-window" aria-hidden="true" />
             <div className="draw-carousel-center-glow" aria-hidden="true" />
-            <div className="draw-carousel-result">
-              <Image
-                src={showSpin ? currentCard.imageUrl : targetCard.imageUrl}
-                alt={showSpin ? currentCard.label : targetCard.label}
-                radius="lg"
-                fit="contain"
-                className="draw-result-image draw-carousel-result-image"
-              />
-              <Text size="sm" fw={700} ta="center" className="draw-carousel-result-label">
-                {showSpin ? currentCard.label : targetCard.label}
-              </Text>
-            </div>
           </div>
         </div>
       ) : preset === "flip" ? (
@@ -273,7 +256,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
         .draw-carousel-slot.is-landing {
           opacity: 1;
-          transform: scale(1.08);
+          transform: scale(1.045);
           z-index: 2;
         }
 
@@ -365,37 +348,6 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           filter: blur(10px);
           pointer-events: none;
           z-index: 1;
-        }
-
-        .draw-carousel-result {
-          position: absolute;
-          inset: 50% auto auto 50%;
-          transform: translate(-50%, -50%);
-          width: clamp(124px, 18vw, 176px);
-          display: grid;
-          place-items: center;
-          gap: 6px;
-          z-index: 2;
-          pointer-events: none;
-        }
-
-        .draw-carousel-result-image {
-          max-width: 100%;
-          max-height: clamp(170px, 24vw, 250px);
-          border-radius: 20px;
-          box-shadow: 0 18px 32px rgba(0, 0, 0, 0.16);
-          background: rgba(255, 255, 255, 0.95);
-        }
-
-        .draw-carousel-result-label {
-          padding: 6px 10px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.82);
-          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
         }
 
         .draw-reel-track {
