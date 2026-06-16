@@ -535,7 +535,7 @@ export default function PackDrawPage() {
         {drawShowcase ? (
           <Stack gap="md" style={{ position: "relative", overflow: "hidden" }}>
             <div key={confettiBurstKey} aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-              {Array.from({ length: 36 }).map((_, index) => {
+              {Array.from({ length: 18 }).map((_, index) => {
                 const left = (index * 13) % 100;
                 const delay = (index % 6) * 0.05;
                 const duration = 1.6 + (index % 5) * 0.18;
@@ -548,11 +548,11 @@ export default function PackDrawPage() {
                       position: "absolute",
                       top: 0,
                       left: `${left}%`,
-                      width: 10,
-                      height: 18,
-                      borderRadius: 4,
+                      width: 8,
+                      height: 14,
+                      borderRadius: 999,
                       background: `hsl(${hue} 85% 60%)`,
-                      opacity: 0.9,
+                      opacity: 0,
                       animation: `pack-confetti ${duration}s ease-in ${delay}s forwards`,
                       ["--drift" as string]: `${drift}px`,
                     }}
@@ -645,6 +645,21 @@ export default function PackDrawPage() {
       <Modal opened={Boolean(imagePreview)} onClose={() => setImagePreview(null)} centered radius="lg" title={imagePreview?.label ?? "Card preview"}>
         {imagePreview ? <Image src={imagePreview.imageUrl} alt={imagePreview.label} radius="lg" fit="contain" /> : null}
       </Modal>
+      <style jsx global>{`
+        @keyframes pack-confetti {
+          0% {
+            opacity: 0;
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(0.8);
+          }
+          10% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translate3d(var(--drift), 240px, 0) rotate(540deg) scale(1);
+          }
+        }
+      `}</style>
       </Container>
     </VendorThemeProvider>
   );
