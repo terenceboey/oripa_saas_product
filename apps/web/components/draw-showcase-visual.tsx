@@ -361,13 +361,13 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
         }
 
         .draw-carousel-needle {
-          position: absolute;
-          top: 6px;
+          position: fixed;
+          top: calc(50% - 132px);
           left: 50%;
           transform: translateX(-50%);
           width: 52px;
           height: 58px;
-          z-index: 4;
+          z-index: 1003;
           display: grid;
           place-items: start center;
           pointer-events: none;
@@ -393,11 +393,12 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
         }
 
         .draw-carousel-window {
-          position: absolute;
-          inset: 50% auto auto 50%;
+          position: fixed;
+          top: 50%;
+          left: 50%;
           transform: translate(-50%, -50%);
-          width: clamp(138px, 19vw, 188px);
-          height: clamp(220px, 30vw, 304px);
+          width: clamp(148px, 19vw, 190px);
+          height: clamp(236px, 30vw, 306px);
           border-radius: 28px;
           border: 2px solid rgba(123, 92, 250, 0.28);
           box-shadow:
@@ -405,12 +406,13 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
             inset 0 0 0 1px rgba(255, 255, 255, 0.7),
             0 14px 30px rgba(96, 68, 180, 0.14);
           pointer-events: none;
-          z-index: 3;
+          z-index: 1001;
         }
 
         .draw-carousel-center-glow {
-          position: absolute;
-          inset: 50% auto auto 50%;
+          position: fixed;
+          top: 50%;
+          left: 50%;
           transform: translate(-50%, -50%);
           width: clamp(150px, 21vw, 214px);
           height: clamp(238px, 33vw, 332px);
@@ -418,7 +420,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           background: radial-gradient(circle at center, rgba(123, 92, 250, 0.14), transparent 68%);
           filter: blur(10px);
           pointer-events: none;
-          z-index: 1;
+          z-index: 1000;
         }
 
         .draw-carousel-result {
@@ -632,9 +634,13 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           }
 
           .draw-carousel-window {
-            width: clamp(112px, 30vw, 156px);
-            height: clamp(184px, 42vw, 242px);
+            width: clamp(124px, 32vw, 160px);
+            height: clamp(198px, 44vw, 248px);
             border-radius: 22px;
+          }
+
+          .draw-carousel-needle {
+            top: calc(50% - 112px);
           }
 
           .draw-carousel-result {
