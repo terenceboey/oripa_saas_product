@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Badge, Button, Container, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
+import { Badge, Button, Card, Container, FileButton, Group, Image, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
@@ -1962,319 +1962,262 @@ export default function VendorPage() {
       ) : null}
 
       {activeTab === "STORE_SETTINGS" ? (
-        <>
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Vendor Profile / Business</h2>
-            <form className="vendor-form" onSubmit={saveVendorProfile}>
-              <label className="muted tiny">
-                Vendor name
-                <input value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
-              </label>
-              <label className="muted tiny">
-                Business location
-                <input value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
-              </label>
-              <label className="muted tiny">
-                Business contact
-                <input value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
-              </label>
-              <label className="muted tiny">
-                Referral code URL slug
-                <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
-              </label>
-              <button type="submit" className="draw-button" disabled={saving || loading}>Save Vendor Info</button>
-            </form>
-            <form className="vendor-form" onSubmit={saveVendorPrefix}>
-              <label className="muted tiny">
-                Vendor URL prefix (slug)
-                <input
-                  value={vendorSlug}
-                  onChange={(e) => setVendorSlug(e.target.value)}
-                  placeholder="Vendor URL prefix (slug)"
-                  required
-                  minLength={2}
-                  maxLength={50}
-                  pattern="^[a-z0-9-]+$"
-                />
-              </label>
-              <p className="muted tiny">New vendor URL: <code>https://{vendorSlug || "your-prefix"}.{vendorBaseDomain}</code></p>
-              <button type="submit" className="draw-button" disabled={saving || loading}>Update Vendor Prefix</button>
-            </form>
-          </section>
+        <Stack gap="md" mt="md">
+          <Card withBorder radius="xl" p="lg" shadow="sm">
+            <Stack gap="md">
+              <div>
+                <Title order={2} size="h3">Vendor Profile / Business</Title>
+                <Text c="dimmed" size="sm">Update the core business identity and public vendor URL.</Text>
+              </div>
+              <form onSubmit={saveVendorProfile}>
+                <Stack gap="md">
+                  <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                    <TextInput label="Vendor name" value={vendorName} onChange={(e) => setVendorName(e.target.value)} placeholder="Vendor name" required minLength={2} maxLength={80} />
+                    <TextInput label="Business location" value={businessLocation} onChange={(e) => setBusinessLocation(e.target.value)} placeholder="Business location" />
+                    <TextInput label="Business contact" value={businessContact} onChange={(e) => setBusinessContact(e.target.value)} placeholder="Business contact" />
+                    <TextInput label="Referral code URL slug" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Referral code URL slug" required minLength={3} maxLength={40} />
+                  </SimpleGrid>
+                  <Button type="submit" loading={saving || loading}>Save Vendor Info</Button>
+                </Stack>
+              </form>
+              <form onSubmit={saveVendorPrefix}>
+                <Stack gap="md">
+                  <TextInput
+                    label="Vendor URL prefix (slug)"
+                    value={vendorSlug}
+                    onChange={(e) => setVendorSlug(e.target.value)}
+                    placeholder="Vendor URL prefix (slug)"
+                    required
+                    minLength={2}
+                    maxLength={50}
+                    pattern="^[a-z0-9-]+$"
+                  />
+                  <Text size="sm" c="dimmed">
+                    New vendor URL: <code>{'https://' + (vendorSlug || 'your-prefix') + '.' + vendorBaseDomain}</code>
+                  </Text>
+                  <Button type="submit" loading={saving || loading}>Update Vendor Prefix</Button>
+                </Stack>
+              </form>
+            </Stack>
+          </Card>
 
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Storefront Theme</h2>
-            <p className="muted tiny">Choose a preset pastel theme for your landing and pack pages.</p>
-            <form className="vendor-form" onSubmit={saveTheme}>
-              <div className="theme-preset-grid" style={{ gridColumn: "1 / -1" }}>
-                {THEME_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    className={`theme-preset-card ${selectedThemePresetId === preset.id ? "active" : ""}`}
-                    onClick={() => setThemeDraft({
-                      storefrontPrimary: preset.storefrontPrimary,
-                      storefrontSecondary: preset.storefrontSecondary,
-                      storefrontAccent: preset.storefrontAccent,
-                      storefrontSurface: preset.storefrontSurface,
-                      storefrontText: preset.storefrontText,
-                      storefrontMuted: preset.storefrontMuted,
-                      storefrontRadius: preset.storefrontRadius,
-                    })}
-                  >
-                    <strong>{preset.label}</strong>
-                    <span className="theme-preset-swatches">
-                      <i style={{ background: preset.storefrontPrimary }} />
-                      <i style={{ background: preset.storefrontSecondary }} />
-                      <i style={{ background: preset.storefrontAccent }} />
-                      <i style={{ background: preset.storefrontSurface, border: "1px solid #d9d9ef" }} />
-                    </span>
-                    <div
-                      className="theme-preset-mini"
-                      style={
-                        {
-                          ["--mini-primary" as string]: preset.storefrontPrimary,
-                          ["--mini-secondary" as string]: preset.storefrontSecondary,
-                          ["--mini-accent" as string]: preset.storefrontAccent,
-                          ["--mini-surface" as string]: preset.storefrontSurface,
-                          ["--mini-text" as string]: preset.storefrontText,
-                          ["--mini-muted" as string]: preset.storefrontMuted,
-                        } as CSSProperties
-                      }
+          <Card withBorder radius="xl" p="lg" shadow="sm">
+            <Stack gap="md">
+              <div>
+                <Title order={2} size="h3">Storefront Theme</Title>
+                <Text c="dimmed" size="sm">Choose a preset pastel theme for your landing and pack pages.</Text>
+              </div>
+              <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+                {THEME_PRESETS.map((preset) => {
+                  const active = selectedThemePresetId === preset.id;
+                  return (
+                    <Button
+                      key={preset.id}
+                      type="button"
+                      variant={active ? 'filled' : 'light'}
+                      color="grape"
+                      onClick={() => setThemeDraft({
+                        storefrontPrimary: preset.storefrontPrimary,
+                        storefrontSecondary: preset.storefrontSecondary,
+                        storefrontAccent: preset.storefrontAccent,
+                        storefrontSurface: preset.storefrontSurface,
+                        storefrontText: preset.storefrontText,
+                        storefrontMuted: preset.storefrontMuted,
+                        storefrontRadius: preset.storefrontRadius,
+                      })}
+                      styles={{ root: { height: 'auto', padding: 16, justifyContent: 'flex-start' }, inner: { width: '100%', display: 'block' } }}
                     >
-                      <div className="theme-preset-mini-top" />
-                      <div className="theme-preset-mini-card">
-                        <span className="theme-preset-mini-title">Mystery Pack</span>
-                        <span className="theme-preset-mini-sub">Pastel preview</span>
-                        <span className="theme-preset-mini-btn">Open</span>
-                      </div>
-                    </div>
-                  </button>
+                      <Stack gap={8} align="flex-start">
+                        <Text fw={700}>{preset.label}</Text>
+                        <Group gap={6}>
+                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontPrimary, display: 'inline-block' }} />
+                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSecondary, display: 'inline-block' }} />
+                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontAccent, display: 'inline-block' }} />
+                          <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSurface, border: '1px solid #d9d9ef', display: 'inline-block' }} />
+                        </Group>
+                        <Text size="xs" c="dimmed">Tap to apply this theme preset.</Text>
+                      </Stack>
+                    </Button>
+                  );
+                })}
+              </SimpleGrid>
+              <Button type="submit" loading={saving || loading}>Save Theme</Button>
+            </Stack>
+          </Card>
+
+          <Card withBorder radius="xl" p="lg" shadow="sm">
+            <Stack gap="md">
+              <div>
+                <Title order={2} size="h3">Storefront Logo & Favicon</Title>
+                <Text c="dimmed" size="sm">Recommended: square logo 1024x1024 (or at least 512x512), PNG/WebP/JPG, max 5MB. This logo is used in header and favicon.</Text>
+              </div>
+              <form onSubmit={saveVendorLogo}>
+                <Stack gap="md">
+                  <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                    <TextInput label="Logo image URL" value={logoImageUrl} onChange={(e) => setLogoImageUrl(e.target.value)} placeholder="Logo image URL" required />
+                    <TextInput label="Favicon URL (optional)" value={faviconImageUrl} onChange={(e) => setFaviconImageUrl(e.target.value)} placeholder="Favicon URL (optional)" />
+                  </SimpleGrid>
+                  <FileButton onChange={(file) => void handleVendorLogoUpload(file)} accept="image/png,image/jpeg,image/webp">
+                    {(props) => <Button {...props} variant="light" loading={uploadingVendorLogo}>Upload logo</Button>}
+                  </FileButton>
+                  <Button type="submit" loading={saving || loading}>Save Logo</Button>
+                </Stack>
+              </form>
+              {logoImageUrl ? <Image src={logoImageUrl} alt="Vendor logo preview" w={96} h={96} fit="contain" radius="md" /> : null}
+            </Stack>
+          </Card>
+
+          <Card withBorder radius="xl" p="lg" shadow="sm">
+            <Stack gap="md">
+              <div>
+                <Title order={2} size="h3">Banners</Title>
+                <Text c="dimmed" size="sm">Create and manage homepage banners for this vendor storefront.</Text>
+              </div>
+              <form onSubmit={addBanner}>
+                <Stack gap="md">
+                  <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                    <TextInput label="Banner title" value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
+                    <TextInput label="Banner image URL" value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
+                    <TextInput label="Target URL (optional)" value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
+                  </SimpleGrid>
+                  <FileButton onChange={(file) => void handleBannerImageUpload(file)} accept="image/png,image/jpeg,image/webp">
+                    {(props) => <Button {...props} variant="light" loading={uploadingBannerImage}>Upload banner image</Button>}
+                  </FileButton>
+                  <Button type="submit" loading={saving || loading}>Add Banner</Button>
+                </Stack>
+              </form>
+
+              <Stack gap="sm">
+                {banners.map((banner) => (
+                  <Paper key={banner.id} withBorder radius="md" p="sm">
+                    <Group align="center" justify="space-between" wrap="nowrap">
+                      <Group align="center" wrap="nowrap">
+                        <Image src={banner.imageUrl} alt={banner.title} w={72} h={48} fit="cover" radius="sm" />
+                        <div>
+                          <Text fw={600}>{banner.title}</Text>
+                          <Text size="xs" c="dimmed">Order {banner.sortOrder}</Text>
+                        </div>
+                      </Group>
+                      <Button variant="subtle" color="red" onClick={() => void deleteBanner(banner.id)} loading={saving}>Delete</Button>
+                    </Group>
+                  </Paper>
                 ))}
-              </div>
-              <button type="submit" className="draw-button" disabled={saving || loading}>Save Theme</button>
-            </form>
-          </section>
-
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Storefront Logo & Favicon</h2>
-            <p className="muted tiny">
-              Recommended: square logo 1024x1024 (or at least 512x512), PNG/WebP/JPG, max 5MB. This logo is used in header and favicon.
-            </p>
-            <form className="vendor-form" onSubmit={saveVendorLogo}>
-              <label className="muted tiny">
-                Logo image URL
-                <input value={logoImageUrl} onChange={(e) => setLogoImageUrl(e.target.value)} placeholder="Logo image URL" required />
-              </label>
-              <label className="muted tiny">
-                Favicon URL (optional)
-                <input value={faviconImageUrl} onChange={(e) => setFaviconImageUrl(e.target.value)} placeholder="Favicon URL (optional)" />
-              </label>
-              <label className="muted tiny">
-                Upload logo (square recommended, max 5MB)
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => void handleVendorLogoUpload(e.target.files?.[0] ?? null)}
-                  disabled={uploadingVendorLogo}
-                />
-              </label>
-              <button type="submit" className="draw-button" disabled={saving || loading}>Save Logo</button>
-            </form>
-            {logoImageUrl ? (
-              <div className="banner-admin-row" style={{ marginTop: 10, gridTemplateColumns: "96px 1fr" }}>
-                <img src={logoImageUrl} alt="Vendor logo preview" style={{ width: 96, height: 96, objectFit: "contain", background: "#fff" }} />
-                <div className="muted tiny">Logo preview</div>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Banners</h2>
-            <form className="vendor-form" onSubmit={addBanner}>
-              <label className="muted tiny">
-                Banner title
-                <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="Banner title" required />
-              </label>
-              <label className="muted tiny">
-                Banner image URL
-                <input value={bannerImageUrl} onChange={(e) => setBannerImageUrl(e.target.value)} placeholder="Banner image URL" required />
-              </label>
-              <label className="muted tiny">
-                Upload banner image (max 5MB)
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={(e) => void handleBannerImageUpload(e.target.files?.[0] ?? null)}
-                  disabled={uploadingBannerImage}
-                />
-              </label>
-              <label className="muted tiny">
-                Target URL (optional)
-                <input value={bannerTargetUrl} onChange={(e) => setBannerTargetUrl(e.target.value)} placeholder="Target URL (optional)" />
-              </label>
-              <button type="submit" className="draw-button" disabled={saving || loading}>Add Banner</button>
-            </form>
-
-            <div className="banner-admin-list">
-              {banners.map((banner) => (
-                <div className="banner-admin-row" key={banner.id}>
-                  <img src={banner.imageUrl} alt={banner.title} />
-                  <div>
-                    <strong>{banner.title}</strong>
-                    <div className="muted tiny">Order {banner.sortOrder}</div>
-                  </div>
-                  <button type="button" className="sort-pill" onClick={() => void deleteBanner(banner.id)} disabled={saving}>Delete</button>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
+              </Stack>
+            </Stack>
+          </Card>
+        </Stack>
       ) : null}
-
       {activeTab === "FULFILMENT" ? (
-        <section className="card" style={{ marginTop: 12 }}>
-          <div className="heading-row">
-            <div>
-              <h2>Fulfilment Dashboard</h2>
-              <p className="muted tiny">Customer shipping details and prize winners for your own packs only.</p>
-            </div>
-            <span className="muted tiny">{fulfilmentSummary?.total?.toLocaleString() ?? "0"} items</span>
-          </div>
+        <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
+          <Stack gap="md">
+            <Group justify="space-between" align="start" wrap="wrap">
+              <div>
+                <Title order={2} size="h3">Fulfilment Dashboard</Title>
+                <Text c="dimmed" size="sm">Customer shipping details and prize winners for your own packs only.</Text>
+              </div>
+              <Badge variant="light" size="lg">{fulfilmentSummary?.total?.toLocaleString() ?? '0'} items</Badge>
+            </Group>
 
-          <div className="stats-grid" style={{ marginTop: 12 }}>
-            <div className="stat">
-              <div className="stat-label">Ready for fulfilment</div>
-              <div className="stat-value">{fulfilmentSummary?.shippingComplete?.toLocaleString() ?? "0"}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">Needs shipping details</div>
-              <div className="stat-value">{fulfilmentSummary?.shippingMissing?.toLocaleString() ?? "0"}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">Held</div>
-              <div className="stat-value">{fulfilmentSummary?.byStatus?.HELD?.toLocaleString() ?? "0"}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-label">Redemption requested</div>
-              <div className="stat-value">{fulfilmentSummary?.byStatus?.REDEMPTION_REQUESTED?.toLocaleString() ?? "0"}</div>
-            </div>
-          </div>
+            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
+              <Card withBorder radius="lg" p="md">
+                <Text size="sm" c="dimmed">Ready for fulfilment</Text>
+                <Title order={3}>{fulfilmentSummary?.shippingComplete?.toLocaleString() ?? '0'}</Title>
+              </Card>
+              <Card withBorder radius="lg" p="md">
+                <Text size="sm" c="dimmed">Needs shipping details</Text>
+                <Title order={3}>{fulfilmentSummary?.shippingMissing?.toLocaleString() ?? '0'}</Title>
+              </Card>
+              <Card withBorder radius="lg" p="md">
+                <Text size="sm" c="dimmed">Held</Text>
+                <Title order={3}>{fulfilmentSummary?.byStatus?.HELD?.toLocaleString() ?? '0'}</Title>
+              </Card>
+              <Card withBorder radius="lg" p="md">
+                <Text size="sm" c="dimmed">Redemption requested</Text>
+                <Title order={3}>{fulfilmentSummary?.byStatus?.REDEMPTION_REQUESTED?.toLocaleString() ?? '0'}</Title>
+              </Card>
+            </SimpleGrid>
 
-          <div className="vendor-form" style={{ marginTop: 12, gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
-            <label className="muted tiny">
-              Pack filter
-              <select value={selectedFulfilmentPackId} onChange={(e) => setSelectedFulfilmentPackId(e.target.value)}>
-                <option value="all">All packs</option>
-                {packs.map((pack) => (
-                  <option key={pack.id} value={pack.id}>
-                    {pack.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="muted tiny">
-              Status filter
-              <select value={selectedFulfilmentStatus} onChange={(e) => setSelectedFulfilmentStatus(e.target.value)}>
-                {fulfilmentStatusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="muted tiny">
-              Search customer / prize
-              <input
+            <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+              <Select
+                label="Pack filter"
+                value={selectedFulfilmentPackId}
+                onChange={(value) => setSelectedFulfilmentPackId(value ?? 'all')}
+                data={[{ value: 'all', label: 'All packs' }, ...packs.map((pack) => ({ value: pack.id, label: pack.title }))]}
+              />
+              <Select
+                label="Status filter"
+                value={selectedFulfilmentStatus}
+                onChange={(value) => setSelectedFulfilmentStatus(value ?? 'all')}
+                data={fulfilmentStatusOptions.map((option) => ({ value: option.value, label: option.label }))}
+              />
+              <TextInput
+                label="Search customer / prize"
                 value={fulfilmentSearch}
                 onChange={(e) => setFulfilmentSearch(e.target.value)}
                 placeholder="Search customer, pack, prize, or shipping..."
               />
-            </label>
-          </div>
+            </SimpleGrid>
 
-          {fulfilmentLoading ? <p className="muted tiny" style={{ marginTop: 12 }}>Loading fulfilment dashboard...</p> : null}
+            {fulfilmentLoading ? <Text size="sm" c="dimmed">Loading fulfilment dashboard...</Text> : null}
 
-          <div className="result-list" style={{ marginTop: 12 }}>
-            {fulfilmentItems.map((row) => (
-              <div className="result-row" key={row.id} style={{ alignItems: "start" }}>
-                <div style={{ display: "grid", gap: 8, width: "100%" }}>
-                  <div>
-                    <strong>{row.customer?.displayName || row.customer?.fullName || row.customer?.email || "Customer"}</strong>{" "}
-                    won <strong>{row.prizeLabel}</strong>
-                    {row.prizeRarity ? ` (${row.prizeRarity})` : ""} from <strong>{row.pack.title}</strong>
-                  </div>
-                  <div className="muted tiny">
-                    Status: {row.status} - Draw qty {row.drawOrderQuantity} - Created {row.createdAt ? new Date(row.createdAt).toLocaleString() : ""}
-                  </div>
-                  <div className="muted tiny">
-                    <strong>Customer:</strong> {row.customer?.email ?? "-"} {row.customer?.phoneNumber ? ` - ${row.customer.phoneNumber}` : ""}
-                  </div>
-                  <div className="muted tiny">
-                    <strong>Shipping:</strong> {formatFulfillmentAddress(row.customer)}
-                  </div>
-                  <div className="muted tiny">
-                    <strong>Fulfilment readiness:</strong> {row.shippingComplete ? "Ready" : "Missing shipping details"}
-                  </div>
-                  {row.providerMemo ? (
-                    <div className="muted tiny">
-                      <strong>Vendor memo:</strong> {row.providerMemo}
-                    </div>
-                  ) : null}
-                  <div className="vendor-form" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginTop: 4 }}>
-                    <label className="muted tiny">
-                      Status
-                      <select
+            <Stack gap="md">
+              {fulfilmentItems.map((row) => (
+                <Card key={row.id} withBorder radius="lg" p="md">
+                  <Stack gap="sm">
+                    <Group justify="space-between" align="start" wrap="wrap">
+                      <div>
+                        <Text fw={700}>
+                          {row.customer?.displayName || row.customer?.fullName || row.customer?.email || 'Customer'} won {row.prizeLabel}
+                          {row.prizeRarity ? ' (' + row.prizeRarity + ')' : ''} from {row.pack.title}
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          Status: {row.status} - Draw qty {row.drawOrderQuantity} - Created {row.createdAt ? new Date(row.createdAt).toLocaleString() : ''}
+                        </Text>
+                        <Text size="sm" c="dimmed">
+                          Customer: {row.customer?.email ?? '-'}{row.customer?.phoneNumber ? ' - ' + row.customer.phoneNumber : ''}
+                        </Text>
+                        <Text size="sm" c="dimmed">Shipping: {formatFulfillmentAddress(row.customer)}</Text>
+                        <Text size="sm" c="dimmed">Fulfilment readiness: {row.shippingComplete ? 'Ready' : 'Missing shipping details'}</Text>
+                        {row.providerMemo ? <Text size="sm" c="dimmed">Vendor memo: {row.providerMemo}</Text> : null}
+                      </div>
+                      <Badge variant="light">{row.status}</Badge>
+                    </Group>
+
+                    <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+                      <Select
+                        label="Status"
                         value={fulfilmentDrafts[row.id]?.status ?? row.status}
-                        onChange={(e) => updateFulfilmentDraft(row.id, { status: e.target.value })}
-                      >
-                        {fulfilmentStatusOptions.filter((option) => option.value !== "all").map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="muted tiny">
-                      Provider reference / tracking ID
-                      <input
-                        value={fulfilmentDrafts[row.id]?.providerTxSig ?? ""}
+                        onChange={(value) => updateFulfilmentDraft(row.id, { status: value ?? row.status })}
+                        data={fulfilmentStatusOptions.filter((option) => option.value !== 'all').map((option) => ({ value: option.value, label: option.label }))}
+                      />
+                      <TextInput
+                        label="Provider reference / tracking ID"
+                        value={fulfilmentDrafts[row.id]?.providerTxSig ?? ''}
                         onChange={(e) => updateFulfilmentDraft(row.id, { providerTxSig: e.target.value })}
                         placeholder="Tracking ID or provider reference"
                       />
-                    </label>
-                    <label className="muted tiny">
-                      Vendor memo
-                      <input
-                        value={fulfilmentDrafts[row.id]?.providerMemo ?? ""}
+                      <TextInput
+                        label="Vendor memo"
+                        value={fulfilmentDrafts[row.id]?.providerMemo ?? ''}
                         onChange={(e) => updateFulfilmentDraft(row.id, { providerMemo: e.target.value })}
                         placeholder="Add fulfilment note"
                       />
-                    </label>
-                  </div>
-                  <div className="actions" style={{ marginTop: 4 }}>
-                    <button type="button" className="sort-pill" onClick={() => void quickFulfilmentAction(row.id, "REDEMPTION_REQUESTED")} disabled={saving}>
-                      Mark ready
-                    </button>
-                    <button type="button" className="sort-pill" onClick={() => void quickFulfilmentAction(row.id, "REDEEMED")} disabled={saving}>
-                      Mark fulfilled
-                    </button>
-                    <button type="button" className="sort-pill" onClick={() => void quickFulfilmentAction(row.id, "VOIDED")} disabled={saving}>
-                      Void
-                    </button>
-                    <button type="button" className="draw-button" onClick={() => void saveFulfilmentItem(row.id)} disabled={saving}>
-                      Save update
-                    </button>
-                  </div>
-                </div>
-                <span className="badge" style={{ alignSelf: "start" }}>{row.status}</span>
-              </div>
-            ))}
-            {fulfilmentItems.length === 0 && !fulfilmentLoading ? <p className="muted tiny">No fulfilment records found for this filter.</p> : null}
-          </div>
-        </section>
-      ) : null}
+                    </SimpleGrid>
 
+                    <Group gap="sm" wrap="wrap">
+                      <Button variant="light" onClick={() => void quickFulfilmentAction(row.id, 'REDEMPTION_REQUESTED')} loading={saving}>Mark ready</Button>
+                      <Button variant="light" onClick={() => void quickFulfilmentAction(row.id, 'REDEEMED')} loading={saving}>Mark fulfilled</Button>
+                      <Button variant="outline" color="red" onClick={() => void quickFulfilmentAction(row.id, 'VOIDED')} loading={saving}>Void</Button>
+                      <Button onClick={() => void saveFulfilmentItem(row.id)} loading={saving}>Save update</Button>
+                    </Group>
+                  </Stack>
+                </Card>
+              ))}
+              {fulfilmentItems.length === 0 && !fulfilmentLoading ? <Text size="sm" c="dimmed">No fulfilment records found for this filter.</Text> : null}
+            </Stack>
+          </Stack>
+        </Card>
+      ) : null}
       {activeTab === "PACKS" ? (
         <>
           <section className="card" style={{ marginTop: 12 }}>
