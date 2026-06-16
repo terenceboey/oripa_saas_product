@@ -7,6 +7,7 @@ import type { CSSProperties } from "react";
 import { Alert, Anchor, Badge, Button, Container, Divider, Group, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
+import { VendorThemeProvider } from "../../lib/vendor-theme";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -34,6 +35,7 @@ type AuthUser = {
   lastLoginAt?: string | null;
 };
 type VendorTheme = {
+  storefrontThemePreset?: string | null;
   storefrontPrimary: string;
   storefrontSecondary: string;
   storefrontAccent: string;
@@ -225,8 +227,9 @@ export default function LoginPage() {
   }
 
   return (
-    <Container size="sm" py="xl" style={storefrontThemeStyle}>
-      <Paper radius="xl" p="xl" shadow="md" withBorder>
+    <VendorThemeProvider theme={theme}>
+      <Container size="sm" py="xl" style={storefrontThemeStyle}>
+        <Paper radius="xl" p="xl" shadow="md" withBorder>
         <Group justify="space-between" mb="xl">
           <Button component={Link} href="/" variant="light" radius="md">
             Back to Home
@@ -279,8 +282,9 @@ export default function LoginPage() {
             No customer account? <Anchor component={Link} href="/register">Create one</Anchor>
           </Text>
         </Stack>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </VendorThemeProvider>
   );
 }
 

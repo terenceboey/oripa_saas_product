@@ -37,6 +37,7 @@ type Vendor = {
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
   vendorSettings?: {
+    storefrontThemePreset?: string | null;
     storefrontPrimary: string;
     storefrontSecondary: string;
     storefrontAccent: string;
@@ -510,6 +511,7 @@ export default function VendorPage() {
   const [logoImageUrl, setLogoImageUrl] = useState("");
   const [faviconImageUrl, setFaviconImageUrl] = useState("");
   const [themeDraft, setThemeDraft] = useState(DEFAULT_THEME);
+  const [themePresetId, setThemePresetId] = useState<string>("lavender-dawn");
 
   const [bannerTitle, setBannerTitle] = useState("");
   const [bannerImageUrl, setBannerImageUrl] = useState("");
@@ -556,10 +558,11 @@ export default function VendorPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("BUSINESS");
-  const selectedThemePresetId = useMemo(() => {
-    const found = THEME_PRESETS.find((preset) => matchesPreset(themeDraft, preset));
-    return found?.id ?? "custom";
-  }, [themeDraft]);
+  const selectedThemePresetId = useMemo(() => resolveThemePresetId(themeDraft, themePresetId), [themeDraft, themePresetId]);
+  const selectedThemePreset = useMemo(
+    () => THEME_PRESETS.find((preset) => preset.id === selectedThemePresetId) ?? THEME_PRESETS[0],
+    [selectedThemePresetId]
+  );
   const allTiersCollapsed = useMemo(() => tiers.length > 0 && tiers.every((tier) => collapsedTierIds[tier.uiId]), [tiers, collapsedTierIds]);
   const referralSignupUrl = useMemo(() => {
     const code = referralCode.trim() || vendorSlug.trim() || vendor?.slug?.trim() || "";
@@ -689,7 +692,7 @@ export default function VendorPage() {
       setReferralCode(v?.referralCode ?? "");
       setLogoImageUrl(normalizeVendorLogoUrl(v?.logoImageUrl));
       setFaviconImageUrl(normalizeVendorFaviconUrl(v?.faviconImageUrl, v?.logoImageUrl));
-      setThemeDraft({
+      const nextTheme = {
         storefrontPrimary: v?.vendorSettings?.storefrontPrimary ?? DEFAULT_THEME.storefrontPrimary,
         storefrontSecondary: v?.vendorSettings?.storefrontSecondary ?? DEFAULT_THEME.storefrontSecondary,
         storefrontAccent: v?.vendorSettings?.storefrontAccent ?? DEFAULT_THEME.storefrontAccent,
@@ -697,7 +700,9 @@ export default function VendorPage() {
         storefrontText: v?.vendorSettings?.storefrontText ?? DEFAULT_THEME.storefrontText,
         storefrontMuted: v?.vendorSettings?.storefrontMuted ?? DEFAULT_THEME.storefrontMuted,
         storefrontRadius: v?.vendorSettings?.storefrontRadius ?? DEFAULT_THEME.storefrontRadius,
-      });
+      };
+      setThemeDraft(nextTheme);
+      setThemePresetId(resolveThemePresetId(nextTheme, v?.vendorSettings?.storefrontThemePreset));
 
       setLimits(limitsJson.limits ?? { planCode: "BASIC", maxPackItems: 50, maxPackTiers: 5, maxDrawQuantity: 100 });
       setSummary(summaryJson.summary ?? null);
@@ -1076,7 +1081,10 @@ export default function VendorPage() {
         method: "PATCH",
         headers: { ...authHeaders(), "content-type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(themeDraft),
+        body: JSON.stringify({
+          storefrontThemePreset: selectedThemePresetId === "custom" ? null : selectedThemePresetId,
+          ...themeDraft,
+        }),
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) throw new Error(body?.error ?? "Failed to save storefront theme");
@@ -2011,6 +2019,44 @@ export default function VendorPage() {
                 <Title order={2} size="h3">Storefront Theme</Title>
                 <Text c="dimmed" size="sm">Choose a preset pastel theme for your landing and pack pages.</Text>
               </div>
+              <Paper withBorder radius="lg" p="md" bg="var(--mantine-color-violet-light)">
+                <Group justify="space-between" align="center" wrap="wrap">
+                  <div>
+                    <Text fw={800}>Current theme</Text>
+                    <Text size="sm" c="dimmed">
+                      {selectedThemePreset.label}
+                    </Text>
+                  </div>
+                  <Badge variant="filled" color="grape">
+                    {selectedThemePresetId === "custom" ? "Custom" : "Preset"}
+                  </Badge>
+                </Group>
+                <Group gap="sm" mt="md" wrap="wrap">
+                  <Card withBorder radius="md" p="sm" style={{ background: selectedThemePreset.storefrontSurface }}>
+                    <Stack gap={6}>
+                      <Text fw={700} c={selectedThemePreset.storefrontText}>
+                        {vendorName || "Vendor storefront"}
+                      </Text>
+                      <Text size="sm" c={selectedThemePreset.storefrontMuted}>
+                        Previewing how your storefront header and cards will feel.
+                      </Text>
+                      <Group gap={6}>
+                        <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontPrimary, display: "inline-block" }} />
+                        <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontSecondary, display: "inline-block" }} />
+                        <span style={{ width: 14, height: 14, borderRadius: 999, background: selectedThemePreset.storefrontAccent, display: "inline-block" }} />
+                      </Group>
+                    </Stack>
+                  </Card>
+                  <Stack gap={4} style={{ flex: 1, minWidth: 220 }}>
+                    <Button variant="filled" color="grape" radius={selectedThemePreset.storefrontRadius}>
+                      Primary button
+                    </Button>
+                    <Button variant="light" color="grape" radius={selectedThemePreset.storefrontRadius}>
+                      Secondary button
+                    </Button>
+                  </Stack>
+                </Group>
+              </Paper>
               <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
                 {THEME_PRESETS.map((preset) => {
                   const active = selectedThemePresetId === preset.id;
@@ -2020,19 +2066,25 @@ export default function VendorPage() {
                       type="button"
                       variant={active ? 'filled' : 'light'}
                       color="grape"
-                      onClick={() => setThemeDraft({
-                        storefrontPrimary: preset.storefrontPrimary,
-                        storefrontSecondary: preset.storefrontSecondary,
-                        storefrontAccent: preset.storefrontAccent,
-                        storefrontSurface: preset.storefrontSurface,
-                        storefrontText: preset.storefrontText,
-                        storefrontMuted: preset.storefrontMuted,
-                        storefrontRadius: preset.storefrontRadius,
-                      })}
+                      onClick={() => {
+                        setThemeDraft({
+                          storefrontPrimary: preset.storefrontPrimary,
+                          storefrontSecondary: preset.storefrontSecondary,
+                          storefrontAccent: preset.storefrontAccent,
+                          storefrontSurface: preset.storefrontSurface,
+                          storefrontText: preset.storefrontText,
+                          storefrontMuted: preset.storefrontMuted,
+                          storefrontRadius: preset.storefrontRadius,
+                        });
+                        setThemePresetId(preset.id);
+                      }}
                       styles={{ root: { height: 'auto', padding: 16, justifyContent: 'flex-start' }, inner: { width: '100%', display: 'block' } }}
                     >
                       <Stack gap={8} align="flex-start">
-                        <Text fw={700}>{preset.label}</Text>
+                        <Group justify="space-between" align="center" w="100%">
+                          <Text fw={700}>{preset.label}</Text>
+                          {active ? <Badge size="sm" color="grape">Current</Badge> : null}
+                        </Group>
                         <Group gap={6}>
                           <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontPrimary, display: 'inline-block' }} />
                           <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSecondary, display: 'inline-block' }} />
@@ -2767,4 +2819,11 @@ export default function VendorPage() {
       </Stack>
     </Container>
   );
+}
+
+function resolveThemePresetId(theme: typeof DEFAULT_THEME, explicitPreset?: string | null) {
+  const explicitMatch = THEME_PRESETS.find((preset) => preset.id === explicitPreset);
+  if (explicitMatch) return explicitMatch.id;
+  const found = THEME_PRESETS.find((preset) => matchesPreset(theme, preset));
+  return found?.id ?? "custom";
 }

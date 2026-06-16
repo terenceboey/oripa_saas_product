@@ -104,6 +104,7 @@ async function main() {
       platformFeeBps: 0,
       maxPackItems: 500,
       maxDrawQuantity: 100,
+      storefrontThemePreset: "lavender-dawn",
       payoutSchedule: "manual",
     },
     create: {
@@ -113,6 +114,7 @@ async function main() {
       platformFeeBps: 0,
       maxPackItems: 500,
       maxDrawQuantity: 100,
+      storefrontThemePreset: "lavender-dawn",
       payoutSchedule: "manual",
     },
   });

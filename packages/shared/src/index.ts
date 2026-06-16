@@ -41,6 +41,15 @@ const optionalEmailSchema = z.preprocess((value) => {
   return trimmed.length ? trimmed : undefined;
 }, z.string().email().max(254).optional());
 
+export const vendorThemePresetIds = [
+  "lavender-dawn",
+  "mint-cloud",
+  "peach-sorbet",
+  "sky-bloom",
+  "rose-mist",
+] as const;
+export const vendorThemePresetSchema = z.enum(vendorThemePresetIds);
+
 export const createVendorSchema = z.object({
   name: z.string().min(2).max(80),
   slug: z.string().min(2).max(50).regex(/^[a-z0-9-]+$/),
@@ -112,6 +121,7 @@ export const updateVendorReferralSchema = z.object({
 
 const hexColorSchema = z.string().regex(/^#([A-Fa-f0-9]{6})$/, "Color must be a 6-digit hex like #A1B2C3");
 export const updateVendorThemeSchema = z.object({
+  storefrontThemePreset: vendorThemePresetSchema.optional().nullable(),
   storefrontPrimary: hexColorSchema,
   storefrontSecondary: hexColorSchema,
   storefrontAccent: hexColorSchema,

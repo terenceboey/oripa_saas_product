@@ -98,7 +98,7 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
       businessLocation: true,
       businessContact: true,
       vendorSettings: {
-        select: {
+    select: {
           storefrontPrimary: true,
           storefrontSecondary: true,
           storefrontAccent: true,
@@ -106,6 +106,7 @@ vendorRouter.get("/v1/vendor/current", async (req: VendorRequest, res) => {
           storefrontText: true,
           storefrontMuted: true,
           storefrontRadius: true,
+          storefrontThemePreset: true,
         },
       },
     },
@@ -287,6 +288,7 @@ vendorRouter.patch("/v1/vendor/theme", async (req: VendorRequest, res) => {
       storefrontText: true,
       storefrontMuted: true,
       storefrontRadius: true,
+      storefrontThemePreset: true,
     },
   });
 

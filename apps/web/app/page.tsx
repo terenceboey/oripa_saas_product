@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { ActionIcon, Badge, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Button, Card, Container, Divider, Drawer, Group, Paper, SimpleGrid, Stack, Text, Title, Burger } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { VendorThemeProvider } from "../lib/vendor-theme";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../lib/media-url";
@@ -53,6 +55,7 @@ type Tenant = {
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
   vendorSettings?: {
+    storefrontThemePreset?: string | null;
     storefrontPrimary: string;
     storefrontSecondary: string;
     storefrontAccent: string;
@@ -98,6 +101,7 @@ export default function HomePage() {
   const [vendorNotFound, setVendorNotFound] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
+  const [navOpened, { open: openNav, close: closeNav }] = useDisclosure(false);
 
   const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
@@ -247,35 +251,47 @@ export default function HomePage() {
   }
 
   return (
-    <Container size="xl" py="lg" style={storefrontThemeStyle}>
+    <VendorThemeProvider theme={tenant?.vendorSettings}>
+      <Container size="xl" py="lg" style={storefrontThemeStyle}>
       <Stack gap="lg">
       <Paper withBorder radius="xl" p="md" shadow="sm">
-        <Group justify="space-between" align="center" gap="md" wrap="wrap">
-          <Group gap="sm" align="center">
+        <Group justify="space-between" align="center" gap="md" wrap="nowrap">
+          <Group gap="sm" align="center" wrap="nowrap">
             <img
               src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/default-brand-logo.png"}
               alt="Vendor logo"
-              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 12 }}
+              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 12, flexShrink: 0 }}
             />
-            <div>
+            <Stack gap={0} style={{ minWidth: 0 }}>
               <Title order={2} size="h3">
                 {tenant?.name ?? "Storefront"}
               </Title>
-              <Text size="sm" c="dimmed">
+              <Text size="sm" c="dimmed" lineClamp={1}>
                 {runtimeVendorHost}
               </Text>
-            </div>
+            </Stack>
           </Group>
-          <Group gap="xs" justify="flex-end" wrap="wrap">
+
+          <Group gap="xs" justify="flex-end" wrap="nowrap" visibleFrom="sm">
+            <Badge variant="light" size="lg">
+              Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
+            </Badge>
+            <Button variant="subtle" component={Link} href="/setlists">
+              Setlists
+            </Button>
             {user ? (
               <Paper component={Link} href="/profile" withBorder radius="md" p="sm" style={{ textDecoration: "none" }}>
-                <Stack gap={0}>
-                  <Text fw={600}>{user.displayName || user.fullName || "Customer"}</Text>
-                  <Text size="sm" c="dimmed">
-                    {user.email}
-                  </Text>
-                  {!user.profileComplete ? <Text size="xs" c="yellow.7">Complete profile</Text> : null}
-                </Stack>
+                <Group gap="sm" wrap="nowrap" align="center">
+                  <Avatar radius="xl" color="violet" size="sm">
+                    {(user.displayName || user.fullName || "C").slice(0, 1).toUpperCase()}
+                  </Avatar>
+                  <Stack gap={0}>
+                    <Text fw={600}>{user.displayName || user.fullName || "Customer"}</Text>
+                    <Text size="sm" c="dimmed">
+                      {user.email}
+                    </Text>
+                  </Stack>
+                </Group>
               </Paper>
             ) : (
               <>
@@ -288,15 +304,85 @@ export default function HomePage() {
               </>
             )}
             {user ? <Button variant="subtle" onClick={logout}>Logout</Button> : null}
-            <Button variant="subtle" component={Link} href="/setlists">
-              Setlists
-            </Button>
-            <Badge variant="light" size="lg">
-              Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
+          </Group>
+
+          <Group gap="xs" wrap="nowrap" hiddenFrom="sm">
+            <Badge variant="light" size="md">
+              {wallet?.balancePoints?.toLocaleString() ?? "-"} pts
             </Badge>
+            <Burger opened={navOpened} onClick={navOpened ? closeNav : openNav} aria-label="Open navigation" />
           </Group>
         </Group>
       </Paper>
+
+      <Drawer
+        opened={navOpened}
+        onClose={closeNav}
+        title="Menu"
+        position="right"
+        size="sm"
+        padding="md"
+      >
+        <Stack gap="md">
+          <Paper withBorder radius="lg" p="md">
+            <Group gap="sm" align="center" wrap="nowrap">
+              <Avatar radius="xl" color="violet">
+                {(user?.displayName || user?.fullName || tenant?.name || "S").slice(0, 1).toUpperCase()}
+              </Avatar>
+              <Stack gap={2}>
+                <Text fw={700}>{user?.displayName || user?.fullName || "Guest"}</Text>
+                <Text size="sm" c="dimmed">
+                  {user?.email || "Sign in to manage your profile"}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {runtimeVendorHost}
+                </Text>
+              </Stack>
+            </Group>
+          </Paper>
+
+          <Badge variant="light" size="lg" fullWidth>
+            Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
+          </Badge>
+
+          <Button component={Link} href="/setlists" variant="light" fullWidth onClick={closeNav}>
+            Setlists
+          </Button>
+
+          {user ? (
+            <>
+              <Button component={Link} href="/profile" variant="outline" fullWidth onClick={closeNav}>
+                My Profile
+              </Button>
+              <Button
+                variant="subtle"
+                fullWidth
+                onClick={() => {
+                  closeNav();
+                  void logout();
+                }}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button component={Link} href="/login" variant="light" fullWidth onClick={closeNav}>
+                Customer Login
+              </Button>
+              <Button component={Link} href="/register" variant="outline" fullWidth onClick={closeNav}>
+                Customer Register
+              </Button>
+            </>
+          )}
+
+          <Divider />
+
+          <Button component={Link} href="/fairness-proofs" variant="subtle" fullWidth onClick={closeNav}>
+            Fairness Proofs
+          </Button>
+        </Stack>
+      </Drawer>
 
       <Paper withBorder radius="xl" p={0} shadow="sm" style={{ overflow: "hidden", position: "relative" }}>
         {currentBanner ? (
@@ -437,13 +523,74 @@ export default function HomePage() {
         ))}
       </SimpleGrid>
 
-      <footer className="site-footer">
-        <Button component={Link} href="/fairness-proofs" variant="light">
-          Fairness Proofs
-        </Button>
-      </footer>
+      <Paper withBorder radius="xl" p="lg" shadow="sm">
+        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
+          <Stack gap={6}>
+            <Text fw={800} size="lg">
+              {tenant?.name ?? "Storefront"}
+            </Text>
+            <Text c="dimmed" size="sm">
+              Browse live packs, check setlists, and manage your profile from a mobile-first storefront.
+            </Text>
+            <Badge variant="light" size="lg" w="fit-content">
+              {runtimeVendorHost}
+            </Badge>
+          </Stack>
+
+          <Stack gap={8}>
+            <Text fw={700}>Quick links</Text>
+            <Button component={Link} href="/setlists" variant="subtle" justify="flex-start" px={0}>
+              Setlists
+            </Button>
+            <Button component={Link} href="/fairness-proofs" variant="subtle" justify="flex-start" px={0}>
+              Fairness Proofs
+            </Button>
+            <Button component={Link} href="/profile" variant="subtle" justify="flex-start" px={0}>
+              My Profile
+            </Button>
+          </Stack>
+
+          <Stack gap={8}>
+            <Text fw={700}>Account</Text>
+            {user ? (
+              <>
+                <Text size="sm" c="dimmed">
+                  {user.displayName || user.fullName || "Customer"}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {user.email}
+                </Text>
+                <Button variant="light" onClick={logout} fullWidth>
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button component={Link} href="/login" variant="light" fullWidth>
+                  Customer Login
+                </Button>
+                <Button component={Link} href="/register" variant="outline" fullWidth>
+                  Customer Register
+                </Button>
+              </>
+            )}
+          </Stack>
+        </SimpleGrid>
+
+        <Divider my="lg" />
+
+        <Group justify="space-between" align="center" gap="md" wrap="wrap">
+          <Text size="sm" c="dimmed">
+            Powered by Oripa. {new Date().getFullYear()}.
+          </Text>
+          <Text size="sm" c="dimmed">
+            Use the mobile menu for account actions and quick access.
+          </Text>
+        </Group>
+      </Paper>
       </Stack>
-    </Container>
+      </Container>
+    </VendorThemeProvider>
   );
 }
 

@@ -364,6 +364,7 @@ model VendorSettings {
   storefrontText        String         @default("#121826")
   storefrontMuted       String         @default("#516074")
   storefrontRadius      Int            @default(16)
+  storefrontThemePreset String         @default("lavender-dawn")
   payoutSchedule        String?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt

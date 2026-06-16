@@ -9,6 +9,7 @@ import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../../../lib/media-url";
+import { VendorThemeProvider } from "../../../lib/vendor-theme";
 
 type Prize = {
   id: string;
@@ -49,6 +50,7 @@ type DrawResult = {
 };
 
 type VendorTheme = {
+  storefrontThemePreset?: string | null;
   storefrontPrimary: string;
   storefrontSecondary: string;
   storefrontAccent: string;
@@ -344,8 +346,9 @@ export default function PackDrawPage() {
   }, [drawShowcase, drawShowcaseIndex, drawShowcasePool, pack]);
 
   return (
-    <Container size="xl" py="lg" style={storefrontThemeStyle}>
-      <Stack gap="lg">
+    <VendorThemeProvider theme={theme}>
+      <Container size="xl" py="lg" style={storefrontThemeStyle}>
+        <Stack gap="lg">
         <Paper withBorder radius="xl" p="md" shadow="sm">
           <Group justify="space-between" align="center" wrap="wrap">
             <Button component={Link} href="/" variant="light">
@@ -513,7 +516,7 @@ export default function PackDrawPage() {
             ) : null}
           </>
         ) : null}
-      </Stack>
+        </Stack>
 
       <Modal opened={isDrawShowcaseOpen} onClose={drawShowcasePhase === "done" ? closeDrawShowcase : () => null} centered size="lg" withCloseButton={false} radius="lg">
         {drawShowcase ? (
@@ -631,7 +634,8 @@ export default function PackDrawPage() {
       <Modal opened={Boolean(imagePreview)} onClose={() => setImagePreview(null)} centered radius="lg" title={imagePreview?.label ?? "Card preview"}>
         {imagePreview ? <Image src={imagePreview.imageUrl} alt={imagePreview.label} radius="lg" fit="contain" /> : null}
       </Modal>
-    </Container>
+      </Container>
+    </VendorThemeProvider>
   );
 }
 
