@@ -2636,60 +2636,80 @@ export default function VendorPage() {
           </form>
         </section>
 
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Pack Revenue</h2>
-            <div className="result-list">
-              {packEarnings.map((row) => (
-                <div className="result-row" key={row.packId}>
-                  <span>{row.packTitle}</span>
-                  <span>{row.totalPoints.toLocaleString()} pts | {row.totalDrawQuantity} draws</span>
-                </div>
-              ))}
-            </div>
-          </section>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
+            <Stack gap="md">
+              <Title order={2} size="h3">Pack Revenue</Title>
+              <Stack gap="xs">
+                {packEarnings.map((row) => (
+                  <Paper key={row.packId} withBorder radius="md" p="sm">
+                    <Group justify="space-between" wrap="wrap">
+                      <Text fw={600}>{row.packTitle}</Text>
+                      <Text size="sm" c="dimmed">{row.totalPoints.toLocaleString()} pts | {row.totalDrawQuantity} draws</Text>
+                    </Group>
+                  </Paper>
+                ))}
+              </Stack>
+            </Stack>
+          </Card>
 
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Existing Packs</h2>
-            <p className="muted tiny">Creative MVP is pack-anchored: generated drafts use only this pack's prize images and a safe abstract background prompt.</p>
-            <div className="result-list">
-              {packs.map((pack) => (
-                <div className="result-row" key={pack.id}>
-                  <span>{pack.title} <span className="muted tiny">[{pack.status}]</span></span>
-                  <span>{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</span>
-                  <div className="actions">
-                    <button type="button" className="sort-pill" onClick={() => void generateCreativeDraft(pack.id)} disabled={saving || pack.prizes.length === 0}>Generate creative draft</button>
-                    <button type="button" className="sort-pill" onClick={() => editPack(pack)} disabled={saving}>Edit</button>
-                    {pack.status === "DRAFT" ? (
-                      <button type="button" className="sort-pill" onClick={() => void publishPack(pack.id)} disabled={saving}>
-                        Publish
-                      </button>
-                    ) : null}
-                    <button type="button" className="sort-pill" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</button>
-                    <button type="button" className="sort-pill" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
+            <Stack gap="md">
+              <div>
+                <Title order={2} size="h3">Existing Packs</Title>
+                <Text c="dimmed" size="sm">Creative MVP is pack-anchored: generated drafts use only this pack's prize images and a safe abstract background prompt.</Text>
+              </div>
+              <Stack gap="sm">
+                {packs.map((pack) => (
+                  <Paper key={pack.id} withBorder radius="md" p="sm">
+                    <Stack gap="sm">
+                      <Group justify="space-between" align="start" wrap="wrap">
+                        <div>
+                          <Text fw={600}>{pack.title}</Text>
+                          <Text size="sm" c="dimmed">[{pack.status}]</Text>
+                        </div>
+                        <Text size="sm" c="dimmed">{pack.pricePoints.toLocaleString()} pts | {pack.remainingStock}/{pack.totalStock}</Text>
+                      </Group>
+                      <Group gap="xs" wrap="wrap">
+                        <Button variant="light" size="xs" onClick={() => void generateCreativeDraft(pack.id)} disabled={saving || pack.prizes.length === 0}>Generate creative draft</Button>
+                        <Button variant="light" size="xs" onClick={() => editPack(pack)} disabled={saving}>Edit</Button>
+                        {pack.status === "DRAFT" ? <Button variant="light" size="xs" onClick={() => void publishPack(pack.id)} disabled={saving}>Publish</Button> : null}
+                        <Button variant="outline" size="xs" onClick={() => void archivePack(pack.id)} disabled={saving || pack.status === "ARCHIVED"}>Archive</Button>
+                        <Button variant="outline" color="red" size="xs" onClick={() => void deletePack(pack.id)} disabled={saving}>Delete</Button>
+                      </Group>
+                    </Stack>
+                  </Paper>
+                ))}
+              </Stack>
+            </Stack>
+          </Card>
 
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2>Private Creative Drafts</h2>
-            <p className="muted tiny">Publish is intentionally blocked in MVP until legal image-use approval, immutable storage, and publish-time revalidation are implemented.</p>
-            <div className="banner-admin-list">
-              {creativeJobs.flatMap((job) => job.assets.map((asset) => ({ job, asset }))).map(({ job, asset }) => (
-                <div className="banner-admin-row" key={asset.id}>
-                  <img src={asset.imageUrl} alt={asset.title} />
-                  <div>
-                    <strong>{asset.title}</strong>
-                    <div className="muted tiny">{job.status} | {job.stylePreset} | {asset.status}</div>
-                    <div className="muted tiny">Hash {asset.contentHash.slice(0, 12)}… | Prompt: {job.safePrompt}</div>
-                  </div>
-                  <button type="button" className="sort-pill" onClick={() => void attemptPublishCreative(job.id, asset.id)} disabled={saving}>Publish gate check</button>
-                </div>
-              ))}
-              {creativeJobs.length === 0 ? <p className="muted tiny">No creative drafts yet. Generate one from an existing pack.</p> : null}
-            </div>
-          </section>
+          <Card withBorder radius="xl" p="lg" shadow="sm" mt="md">
+            <Stack gap="md">
+              <div>
+                <Title order={2} size="h3">Private Creative Drafts</Title>
+                <Text c="dimmed" size="sm">Publish is intentionally blocked in MVP until legal image-use approval, immutable storage, and publish-time revalidation are implemented.</Text>
+              </div>
+              <Stack gap="sm">
+                {creativeJobs.flatMap((job) => job.assets.map((asset) => ({ job, asset }))).map(({ job, asset }) => (
+                  <Paper key={asset.id} withBorder radius="md" p="sm">
+                    <Group align="center" justify="space-between" wrap="wrap">
+                      <Group align="center" wrap="nowrap">
+                        <Image src={asset.imageUrl} alt={asset.title} w={72} h={72} fit="cover" radius="sm" />
+                        <div>
+                          <Text fw={600}>{asset.title}</Text>
+                          <Text size="xs" c="dimmed">{job.status} | {job.stylePreset} | {asset.status}</Text>
+                          <Text size="xs" c="dimmed">Hash {asset.contentHash.slice(0, 12)}? | Prompt: {job.safePrompt}</Text>
+                        </div>
+                      </Group>
+                      <Button variant="light" size="xs" onClick={() => void attemptPublishCreative(job.id, asset.id)} loading={saving}>Publish gate check</Button>
+                    </Group>
+                  </Paper>
+                ))}
+                {creativeJobs.length === 0 ? <Text size="sm" c="dimmed">No creative drafts yet. Generate one from an existing pack.</Text> : null}
+              </Stack>
+            </Stack>
+          </Card>
+
         </>
       ) : null}
 
