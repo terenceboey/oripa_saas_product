@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Badge, Card, Group, Image, Paper, Stack, Text } from "@mantine/core";
 
@@ -25,6 +25,8 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
   const showSpin = phase === "spinning";
   const showReveal = phase === "revealing";
   const displayPool = pool.length > 0 ? pool : [targetCard];
+  const [overlayCard, setOverlayCard] = useState<DrawShowcaseCard>(targetCard);
+  const [overlayMotion, setOverlayMotion] = useState<"idle" | "shuffling" | "settling">("idle");
   const rouletteSlots = useMemo(() => {
     const totalSlots = Math.max(displayPool.length * 6, 24);
     const landingIndex = Math.max(Math.floor(totalSlots * 0.72), 14);
@@ -39,6 +41,8 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
   const carouselTrackRef = useRef<HTMLDivElement | null>(null);
   const carouselFrameRef = useRef<HTMLDivElement | null>(null);
   const carouselAnimationRef = useRef<number | null>(null);
+  const overlayShuffleRef = useRef<number | null>(null);
+  const overlaySettleRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (preset !== "wheel") return undefined;
@@ -96,6 +100,65 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
     };
   }, [phase, preset, rouletteSlots]);
 
+  useEffect(() => {
+    if (preset !== "wheel") return undefined;
+
+    if (overlayShuffleRef.current) {
+      window.clearInterval(overlayShuffleRef.current);
+      overlayShuffleRef.current = null;
+    }
+
+    if (overlaySettleRef.current) {
+      window.clearTimeout(overlaySettleRef.current);
+      overlaySettleRef.current = null;
+    }
+
+    const shufflePool = displayPool.length > 0 ? displayPool : [targetCard];
+
+    if (phase === "spinning") {
+      setOverlayCard(currentCard);
+      setOverlayMotion("idle");
+      return undefined;
+    }
+
+    if (phase === "revealing") {
+      setOverlayMotion("shuffling");
+      setOverlayCard(currentCard);
+
+      overlayShuffleRef.current = window.setInterval(() => {
+        const randomCard = shufflePool[Math.floor(Math.random() * shufflePool.length)] ?? targetCard;
+        setOverlayCard(randomCard);
+      }, 95);
+
+      overlaySettleRef.current = window.setTimeout(() => {
+        if (overlayShuffleRef.current) {
+          window.clearInterval(overlayShuffleRef.current);
+          overlayShuffleRef.current = null;
+        }
+        setOverlayCard(targetCard);
+        setOverlayMotion("settling");
+      }, 850);
+
+      return () => {
+        if (overlayShuffleRef.current) {
+          window.clearInterval(overlayShuffleRef.current);
+          overlayShuffleRef.current = null;
+        }
+        if (overlaySettleRef.current) {
+          window.clearTimeout(overlaySettleRef.current);
+          overlaySettleRef.current = null;
+        }
+      };
+    }
+
+    if (phase === "done") {
+      setOverlayCard(targetCard);
+      setOverlayMotion("settling");
+    }
+
+    return undefined;
+  }, [currentCard, displayPool, phase, preset, targetCard]);
+
   return (
     <Paper withBorder radius="xl" p="lg" className={`draw-showcase-shell draw-showcase-${preset} draw-showcase-${phase ?? "idle"}`}>
       {preset === "wheel" ? (
@@ -131,6 +194,14 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
             <div className="draw-carousel-window" aria-hidden="true" />
             <div className="draw-carousel-center-glow" aria-hidden="true" />
+            <div className={`draw-carousel-result ${overlayMotion === "shuffling" ? "is-shuffling" : overlayMotion === "settling" ? "is-settling" : ""}`}>
+              <div className="draw-carousel-result-card">
+                <Image src={overlayCard.imageUrl} alt={overlayCard.label} radius="lg" fit="contain" className="draw-result-image draw-carousel-result-image" />
+              </div>
+              <Text size="sm" fw={700} ta="center" className="draw-carousel-result-label">
+                {overlayCard.label}
+              </Text>
+            </div>
           </div>
         </div>
       ) : preset === "flip" ? (
@@ -350,6 +421,66 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           z-index: 1;
         }
 
+        .draw-carousel-result {
+          position: absolute;
+          inset: 50% auto auto 50%;
+          transform: translate(-50%, -50%);
+          width: clamp(132px, 18vw, 176px);
+          display: grid;
+          place-items: center;
+          gap: 8px;
+          z-index: 4;
+          pointer-events: none;
+          transition: transform 260ms ease, opacity 260ms ease, filter 260ms ease;
+        }
+
+        .draw-carousel-result.is-shuffling {
+          transform: translate(-50%, -50%) scale(0.985);
+          filter: saturate(1.06);
+        }
+
+        .draw-carousel-result.is-settling {
+          transform: translate(-50%, -50%) scale(1);
+          filter: saturate(1);
+        }
+
+        .draw-carousel-result-card {
+          width: 100%;
+          border-radius: 24px;
+          background: rgba(255, 255, 255, 0.96);
+          box-shadow:
+            0 18px 32px rgba(0, 0, 0, 0.14),
+            inset 0 0 0 1px rgba(122, 92, 250, 0.12);
+          padding: 10px;
+          transition: transform 260ms ease, box-shadow 260ms ease;
+        }
+
+        .draw-carousel-result.is-shuffling .draw-carousel-result-card {
+          transform: translateY(-2px) rotate(-1deg);
+          box-shadow:
+            0 22px 38px rgba(0, 0, 0, 0.16),
+            inset 0 0 0 1px rgba(122, 92, 250, 0.14);
+        }
+
+        .draw-carousel-result-image {
+          width: 100%;
+          max-width: 100%;
+          max-height: clamp(168px, 24vw, 250px);
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.95);
+        }
+
+        .draw-carousel-result-label {
+          padding: 6px 10px;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.86);
+          box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
         .draw-reel-track {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -499,11 +630,11 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           }
 
           .draw-carousel-result {
-            width: clamp(100px, 28vw, 140px);
+            width: clamp(104px, 28vw, 144px);
           }
 
           .draw-carousel-result-image {
-            max-height: clamp(148px, 34vw, 204px);
+            max-height: clamp(146px, 34vw, 198px);
           }
 
           .draw-carousel-result-label {
