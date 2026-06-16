@@ -526,30 +526,37 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           }
 
           .draw-carousel-frame {
-            width: min(96vw, 540px);
-            padding: 22px 12px 18px;
+            width: min(100vw - 24px, 540px);
+            padding: 18px 10px 14px;
+            border-radius: 24px;
           }
 
           .draw-carousel-track {
-            gap: 10px;
-            padding: 0 54vw;
+            gap: 8px;
+            padding: 0 42vw;
           }
 
           .draw-carousel-slot {
-            width: clamp(84px, 22vw, 108px);
+            width: clamp(74px, 20vw, 96px);
           }
 
           .draw-carousel-window {
-            width: clamp(124px, 34vw, 168px);
-            height: clamp(204px, 46vw, 270px);
+            width: clamp(112px, 30vw, 156px);
+            height: clamp(184px, 42vw, 242px);
+            border-radius: 22px;
           }
 
           .draw-carousel-result {
-            width: clamp(112px, 30vw, 156px);
+            width: clamp(100px, 28vw, 140px);
           }
 
           .draw-carousel-result-image {
-            max-height: clamp(160px, 38vw, 224px);
+            max-height: clamp(148px, 34vw, 204px);
+          }
+
+          .draw-carousel-result-label {
+            font-size: 0.72rem;
+            padding: 4px 8px;
           }
         }
       `}</style>
