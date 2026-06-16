@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FormField } from "./form-field";
+import { Alert, Anchor, Badge, Button, Container, FileButton, Group, Paper, Select, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
 import { COUNTRY_OPTIONS } from "../lib/countries";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -338,258 +338,132 @@ export function VendorApplicationForm({
     }
   }
 
+  const countryData = COUNTRY_OPTIONS.map((country) => ({ value: country.code, label: country.name }));
+
   return (
-    <section className="card auth-card" style={{ width: "100%", maxWidth: 960 }}>
-      { !loading && !hasAccess ? (
-        <>
-          <h1>Vendor Access Required</h1>
-          <p className="error">{error ?? "You do not have access to this vendor page."}</p>
-        </>
-      ) : (
-        <>
-      <h1>{title}</h1>
-      <p className="muted">{description}</p>
-      {note ? <p className="badge">{note}</p> : null}
-      {applicationStatus ? <p className="muted tiny">Application status: <strong>{applicationStatus}</strong></p> : null}
-      {loading ? <p className="muted">Loading vendor details...</p> : null}
-
-      {hasAccess ? (
-        <form className="auth-form" onSubmit={saveApplication}>
-          <section className="vendor-form-section">
-            <h2>Business information</h2>
-            <div className="vendor-form-grid">
-              <FormField label="Entity name">
-                <input value={form.entityName} onChange={(event) => updateField("entityName", event.target.value)} placeholder="Entity name" required />
-              </FormField>
-
-              <FormField label="Years of operations">
-                <select value={form.yearsOfOperations} onChange={(event) => updateField("yearsOfOperations", event.target.value as FormState["yearsOfOperations"])} required>
-                  <option value="">Select range</option>
-                  <option value="LT_1">0-1 years</option>
-                  <option value="ONE_TO_THREE">1-3 years</option>
-                  <option value="THREE_TO_FIVE">3-5 years</option>
-                  <option value="FIVE_PLUS">5+ years</option>
-                </select>
-              </FormField>
-
-              <FormField label="Business registration number / tax ID (optional)">
-                <input value={form.businessRegistrationNumber} onChange={(event) => updateField("businessRegistrationNumber", event.target.value)} placeholder="Business registration number / tax ID" />
-              </FormField>
-
-              <FormField label="Business email (optional)">
-                <input type="email" value={form.businessEmail} onChange={(event) => updateField("businessEmail", event.target.value)} placeholder="Business email" />
-              </FormField>
-
-              <FormField label="Contact phone number (optional)">
-                <input value={form.contactPhoneNumber} onChange={(event) => updateField("contactPhoneNumber", event.target.value)} placeholder="Contact phone number" />
-              </FormField>
+    <Container size="lg" py="xl">
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        {!loading && !hasAccess ? (
+          <Stack gap="md">
+            <Title order={1}>Vendor Access Required</Title>
+            <Alert color="red">{error ?? "You do not have access to this vendor page."}</Alert>
+          </Stack>
+        ) : (
+          <Stack gap="lg">
+            <div>
+              <Title order={1}>{title}</Title>
+              <Text c="dimmed" mt={6}>{description}</Text>
+              {note ? <Badge variant="light" mt="sm">{note}</Badge> : null}
+              {applicationStatus ? <Text size="sm" c="dimmed" mt="xs">Application status: <strong>{applicationStatus}</strong></Text> : null}
+              {loading ? <Text c="dimmed" mt="xs">Loading vendor details...</Text> : null}
             </div>
-          </section>
 
-          <section className="vendor-form-section">
-            <h2>Business address</h2>
-            <div className="vendor-form-grid">
-              <FormField label="Address line 1">
-                <input value={form.registeredBusinessAddressLine1} onChange={(event) => updateField("registeredBusinessAddressLine1", event.target.value)} placeholder="Street address, building, or unit" required />
-              </FormField>
+            {hasAccess ? (
+              <form onSubmit={saveApplication}>
+                <Stack gap="lg">
+                  <Paper withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Title order={2} size="h3">Business information</Title>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="Entity name" value={form.entityName} onChange={(event) => updateField("entityName", event.target.value)} placeholder="Entity name" required />
+                        <Select label="Years of operations" value={form.yearsOfOperations || null} onChange={(value) => updateField("yearsOfOperations", (value ?? "") as FormState["yearsOfOperations"])} data={[
+                          { value: "LT_1", label: "0-1 years" },
+                          { value: "ONE_TO_THREE", label: "1-3 years" },
+                          { value: "THREE_TO_FIVE", label: "3-5 years" },
+                          { value: "FIVE_PLUS", label: "5+ years" },
+                        ]} required />
+                        <TextInput label="Business registration number / tax ID (optional)" value={form.businessRegistrationNumber} onChange={(event) => updateField("businessRegistrationNumber", event.target.value)} placeholder="Business registration number / tax ID" />
+                        <TextInput label="Business email (optional)" type="email" value={form.businessEmail} onChange={(event) => updateField("businessEmail", event.target.value)} placeholder="Business email" />
+                        <TextInput label="Contact phone number (optional)" value={form.contactPhoneNumber} onChange={(event) => updateField("contactPhoneNumber", event.target.value)} placeholder="Contact phone number" />
+                      </SimpleGrid>
+                    </Stack>
+                  </Paper>
 
-              <FormField label="Address line 2 (optional)">
-                <input value={form.registeredBusinessAddressLine2} onChange={(event) => updateField("registeredBusinessAddressLine2", event.target.value)} placeholder="Suite, floor, or apartment" />
-              </FormField>
+                  <Paper withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Title order={2} size="h3">Business address</Title>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="Address line 1" value={form.registeredBusinessAddressLine1} onChange={(event) => updateField("registeredBusinessAddressLine1", event.target.value)} placeholder="Street address, building, or unit" required />
+                        <TextInput label="Address line 2 (optional)" value={form.registeredBusinessAddressLine2} onChange={(event) => updateField("registeredBusinessAddressLine2", event.target.value)} placeholder="Suite, floor, or apartment" />
+                        <TextInput label="City" value={form.registeredBusinessAddressCity} onChange={(event) => updateField("registeredBusinessAddressCity", event.target.value)} placeholder="City" required />
+                        <TextInput label="State / Province" value={form.registeredBusinessAddressStateProvince} onChange={(event) => updateField("registeredBusinessAddressStateProvince", event.target.value)} placeholder="State or province" required />
+                        <TextInput label="Postal code" value={form.registeredBusinessAddressPostalCode} onChange={(event) => updateField("registeredBusinessAddressPostalCode", event.target.value)} placeholder="Postal code" required />
+                        <Select label="Country" value={form.registeredBusinessAddressCountry || null} onChange={(value) => updateField("registeredBusinessAddressCountry", value ?? "")} data={countryData} searchable required />
+                      </SimpleGrid>
+                    </Stack>
+                  </Paper>
 
-              <FormField label="City">
-                <input value={form.registeredBusinessAddressCity} onChange={(event) => updateField("registeredBusinessAddressCity", event.target.value)} placeholder="City" required />
-              </FormField>
+                  <Paper withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Title order={2} size="h3">Primary contact and identity</Title>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="Person in charge" value={form.personInCharge} onChange={(event) => updateField("personInCharge", event.target.value)} placeholder="Person in charge" required />
+                        <TextInput label="Person in charge date of birth" type="date" value={form.personInChargeDateOfBirth} onChange={(event) => updateField("personInChargeDateOfBirth", event.target.value)} required />
+                        <Select label="Person in charge country" value={form.personInChargeCountry || null} onChange={(value) => updateField("personInChargeCountry", value ?? "")} data={countryData} searchable required />
+                        <Select label="Identifying document type" value={form.identificationDocumentType || null} onChange={(value) => updateField("identificationDocumentType", (value ?? "") as FormState["identificationDocumentType"])} data={[
+                          { value: "PASSPORT", label: "Passport" },
+                          { value: "DRIVING_LICENCE", label: "Driving licence" },
+                        ]} required />
+                      </SimpleGrid>
+                    </Stack>
+                  </Paper>
 
-              <FormField label="State / Province">
-                <input value={form.registeredBusinessAddressStateProvince} onChange={(event) => updateField("registeredBusinessAddressStateProvince", event.target.value)} placeholder="State or province" required />
-              </FormField>
+                  <Paper withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Title order={2} size="h3">Online presence</Title>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="Business website URL" type="url" value={form.businessWebsiteUrl} onChange={(event) => updateField("businessWebsiteUrl", event.target.value)} placeholder="https://example.com" />
+                        <TextInput label="Facebook URL" type="url" value={form.facebookUrl} onChange={(event) => updateField("facebookUrl", event.target.value)} placeholder="https://facebook.com/..." />
+                        <TextInput label="Instagram URL" type="url" value={form.instagramUrl} onChange={(event) => updateField("instagramUrl", event.target.value)} placeholder="https://instagram.com/..." />
+                        <TextInput label="TikTok URL" type="url" value={form.tiktokUrl} onChange={(event) => updateField("tiktokUrl", event.target.value)} placeholder="https://www.tiktok.com/..." />
+                        <TextInput label="X URL" type="url" value={form.xUrl} onChange={(event) => updateField("xUrl", event.target.value)} placeholder="https://x.com/..." />
+                        <TextInput label="LinkedIn URL" type="url" value={form.linkedinUrl} onChange={(event) => updateField("linkedinUrl", event.target.value)} placeholder="https://linkedin.com/..." />
+                        <TextInput label="YouTube URL" type="url" value={form.youtubeUrl} onChange={(event) => updateField("youtubeUrl", event.target.value)} placeholder="https://youtube.com/..." />
+                      </SimpleGrid>
+                    </Stack>
+                  </Paper>
 
-              <FormField label="Postal code">
-                <input value={form.registeredBusinessAddressPostalCode} onChange={(event) => updateField("registeredBusinessAddressPostalCode", event.target.value)} placeholder="Postal code" required />
-              </FormField>
+                  <Paper withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Title order={2} size="h3">Payout details</Title>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="Account holder name" value={form.payoutBankAccountHolderName} onChange={(event) => updateField("payoutBankAccountHolderName", event.target.value)} placeholder="Account holder name" required />
+                        <TextInput label="Bank name" value={form.payoutBankName} onChange={(event) => updateField("payoutBankName", event.target.value)} placeholder="Bank name" required />
+                        <Select label="Bank country" value={form.payoutBankCountry || null} onChange={(value) => updateField("payoutBankCountry", value ?? "")} data={countryData} searchable required />
+                        <TextInput label="Account number" value={form.payoutBankAccountNumber} onChange={(event) => updateField("payoutBankAccountNumber", event.target.value)} placeholder="Account number" />
+                        <TextInput label="IBAN (optional)" value={form.payoutBankIban} onChange={(event) => updateField("payoutBankIban", event.target.value)} placeholder="IBAN" />
+                        <TextInput label="SWIFT / BIC (optional)" value={form.payoutBankSwiftBic} onChange={(event) => updateField("payoutBankSwiftBic", event.target.value)} placeholder="SWIFT / BIC" />
+                        <TextInput label="Branch code (optional)" value={form.payoutBankBranchCode} onChange={(event) => updateField("payoutBankBranchCode", event.target.value)} placeholder="Branch code" />
+                      </SimpleGrid>
+                    </Stack>
+                  </Paper>
 
-              <FormField label="Country">
-                <select value={form.registeredBusinessAddressCountry} onChange={(event) => updateField("registeredBusinessAddressCountry", event.target.value)} required>
-                  <option value="">Select country</option>
-                  {COUNTRY_OPTIONS.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            </div>
-          </section>
+                  <Paper withBorder radius="lg" p="md">
+                    <Stack gap="md">
+                      <Title order={2} size="h3">Supporting document</Title>
+                      <FileButton onChange={(file) => void uploadDocument(file)} accept="image/png,image/jpeg,image/webp,application/pdf">
+                        {(props) => <Button {...props} variant="light" disabled={uploading}>Upload identifying document</Button>}
+                      </FileButton>
+                      {form.identificationDocumentUrl ? (
+                        <Text size="sm" c="dimmed">
+                          Document uploaded: <Anchor href={form.identificationDocumentUrl} target="_blank" rel="noreferrer">Open document</Anchor>
+                        </Text>
+                      ) : null}
+                    </Stack>
+                  </Paper>
 
-          <section className="vendor-form-section">
-            <h2>Primary contact and identity</h2>
-            <div className="vendor-form-grid">
-              <FormField label="Person in charge">
-                <input value={form.personInCharge} onChange={(event) => updateField("personInCharge", event.target.value)} placeholder="Person in charge" required />
-              </FormField>
-
-              <FormField label="Person in charge date of birth">
-                <input type="date" value={form.personInChargeDateOfBirth} onChange={(event) => updateField("personInChargeDateOfBirth", event.target.value)} required />
-              </FormField>
-
-              <FormField label="Person in charge country">
-                <select value={form.personInChargeCountry} onChange={(event) => updateField("personInChargeCountry", event.target.value)} required>
-                  <option value="">Select country</option>
-                  {COUNTRY_OPTIONS.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-
-              <FormField label="Identifying document type">
-                <select value={form.identificationDocumentType} onChange={(event) => updateField("identificationDocumentType", event.target.value as FormState["identificationDocumentType"])} required>
-                  <option value="">Select document</option>
-                  <option value="PASSPORT">Passport</option>
-                  <option value="DRIVING_LICENCE">Driving licence</option>
-                </select>
-              </FormField>
-            </div>
-          </section>
-
-          <section className="vendor-form-section">
-            <h2>Online presence</h2>
-            <div className="vendor-form-grid">
-              <FormField label="Business website URL">
-                <input
-                  type="url"
-                  value={form.businessWebsiteUrl}
-                  onChange={(event) => updateField("businessWebsiteUrl", event.target.value)}
-                  placeholder="https://example.com"
-                />
-              </FormField>
-
-              <FormField label="Facebook URL">
-                <input
-                  type="url"
-                  value={form.facebookUrl}
-                  onChange={(event) => updateField("facebookUrl", event.target.value)}
-                  placeholder="https://facebook.com/..."
-                />
-              </FormField>
-
-              <FormField label="Instagram URL">
-                <input
-                  type="url"
-                  value={form.instagramUrl}
-                  onChange={(event) => updateField("instagramUrl", event.target.value)}
-                  placeholder="https://instagram.com/..."
-                />
-              </FormField>
-
-              <FormField label="TikTok URL">
-                <input
-                  type="url"
-                  value={form.tiktokUrl}
-                  onChange={(event) => updateField("tiktokUrl", event.target.value)}
-                  placeholder="https://www.tiktok.com/..."
-                />
-              </FormField>
-
-              <FormField label="X URL">
-                <input
-                  type="url"
-                  value={form.xUrl}
-                  onChange={(event) => updateField("xUrl", event.target.value)}
-                  placeholder="https://x.com/..."
-                />
-              </FormField>
-
-              <FormField label="LinkedIn URL">
-                <input
-                  type="url"
-                  value={form.linkedinUrl}
-                  onChange={(event) => updateField("linkedinUrl", event.target.value)}
-                  placeholder="https://linkedin.com/..."
-                />
-              </FormField>
-
-              <FormField label="YouTube URL">
-                <input
-                  type="url"
-                  value={form.youtubeUrl}
-                  onChange={(event) => updateField("youtubeUrl", event.target.value)}
-                  placeholder="https://youtube.com/..."
-                />
-              </FormField>
-            </div>
-          </section>
-
-          <section className="vendor-form-section">
-            <h2>Payout details</h2>
-            <div className="vendor-form-grid">
-              <FormField label="Account holder name">
-                <input value={form.payoutBankAccountHolderName} onChange={(event) => updateField("payoutBankAccountHolderName", event.target.value)} placeholder="Account holder name" required />
-              </FormField>
-
-              <FormField label="Bank name">
-                <input value={form.payoutBankName} onChange={(event) => updateField("payoutBankName", event.target.value)} placeholder="Bank name" required />
-              </FormField>
-
-              <FormField label="Bank country">
-                <select value={form.payoutBankCountry} onChange={(event) => updateField("payoutBankCountry", event.target.value)} required>
-                  <option value="">Select country</option>
-                  {COUNTRY_OPTIONS.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-
-              <FormField label="Account number">
-                <input value={form.payoutBankAccountNumber} onChange={(event) => updateField("payoutBankAccountNumber", event.target.value)} placeholder="Account number" />
-              </FormField>
-
-              <FormField label="IBAN (optional)">
-                <input value={form.payoutBankIban} onChange={(event) => updateField("payoutBankIban", event.target.value)} placeholder="IBAN" />
-              </FormField>
-
-              <FormField label="SWIFT / BIC (optional)">
-                <input value={form.payoutBankSwiftBic} onChange={(event) => updateField("payoutBankSwiftBic", event.target.value)} placeholder="SWIFT / BIC" />
-              </FormField>
-
-              <FormField label="Branch code (optional)">
-                <input value={form.payoutBankBranchCode} onChange={(event) => updateField("payoutBankBranchCode", event.target.value)} placeholder="Branch code" />
-              </FormField>
-            </div>
-          </section>
-
-          <section className="vendor-form-section">
-            <h2>Supporting document</h2>
-            <FormField label="Upload identifying document">
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp,application/pdf"
-                onChange={(event) => void uploadDocument(event.target.files?.[0] ?? null)}
-                disabled={uploading}
-              />
-            </FormField>
-
-            {form.identificationDocumentUrl ? (
-              <div className="muted tiny" style={{ marginTop: 8 }}>
-                Document uploaded: <a href={form.identificationDocumentUrl} target="_blank" rel="noreferrer">{form.identificationDocumentUrl}</a>
-              </div>
+                  <Button type="submit" loading={saving || uploading} radius="md">
+                    {saving ? "Saving..." : primaryActionLabel}
+                  </Button>
+                </Stack>
+              </form>
             ) : null}
-          </section>
 
-          <button type="submit" className="draw-button" disabled={saving || uploading}>
-            {saving ? "Saving..." : primaryActionLabel}
-          </button>
-        </form>
-      ) : null}
-
-      {hasAccess && error ? <p className="error">{error}</p> : null}
-      {message ? <p className="badge">{message}</p> : null}
-        </>
-      )}
-    </section>
+            {hasAccess && error ? <Alert color="red">{error}</Alert> : null}
+            {message ? <Alert color="green">{message}</Alert> : null}
+          </Stack>
+        )}
+      </Paper>
+    </Container>
   );
 }

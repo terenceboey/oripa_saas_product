@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { FormField } from "../../components/form-field";
+import { Alert, Anchor, Button, Container, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -95,30 +95,40 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <main className="container">
-      <header className="auth-top-nav">
-        <Link href="/" className="sort-pill">Back to Home</Link>
-      </header>
-      <section className="card auth-card">
-        <h1>Verify Email</h1>
-        <p className="muted">Enter the 6-digit OTP sent to your email to activate your account.</p>
-        <form className="auth-form" onSubmit={handleVerify}>
-          <FormField label="Email">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          </FormField>
-          <FormField label="6-digit OTP">
-            <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit OTP" inputMode="numeric" pattern="\d{6}" required />
-          </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Verifying..." : "Verify OTP"}</button>
-          <button type="button" className="sort-pill" disabled={resending} onClick={resendOtp}>{resending ? "Sending..." : "Resend OTP"}</button>
-        </form>
-        {error ? <p className="error">{error}</p> : null}
-        {message ? <p className="badge">{message}</p> : null}
-        <p className="muted" style={{ marginTop: 14 }}>
-          Already verified? <Link href="/login">Login</Link>
-        </p>
-      </section>
-    </main>
+    <Container size="sm" py="xl">
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Button component={Link} href="/" variant="light" radius="md" mb="xl">
+          Back to Home
+        </Button>
+        <Stack gap="lg">
+          <div>
+            <Title order={1}>Verify Email</Title>
+            <Text c="dimmed" mt={6}>
+              Enter the 6-digit OTP sent to your email to activate your account.
+            </Text>
+          </div>
+          <form onSubmit={handleVerify}>
+            <Stack gap="md">
+              <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+              <TextInput label="6-digit OTP" value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="6-digit OTP" inputMode="numeric" pattern="\d{6}" required />
+              <Group>
+                <Button type="submit" loading={loading} radius="md">
+                  Verify OTP
+                </Button>
+                <Button type="button" variant="default" loading={resending} onClick={resendOtp} radius="md">
+                  Resend OTP
+                </Button>
+              </Group>
+            </Stack>
+          </form>
+          {error ? <Alert color="red" title="Verification error">{error}</Alert> : null}
+          {message ? <Alert color="green" title="Status">{message}</Alert> : null}
+          <Text c="dimmed">
+            Already verified? <Anchor component={Link} href="/login">Login</Anchor>
+          </Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormField } from "../../../components/form-field";
+import { Alert, Anchor, Button, Container, Group, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -142,50 +142,48 @@ function VendorLoginContent() {
   }
 
   return (
-    <main className="container">
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/" className="sort-pill">
-          Back to Home
-        </Link>
-        <Link href="/vendor/register" className="sort-pill">
-          Vendor Register
-        </Link>
-        {isVendorMember ? (
-          <button type="button" className="sort-pill" onClick={() => void logout()}>
-            Logout
-          </button>
-        ) : null}
-      </header>
+    <Container size="sm" py="xl">
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Group justify="space-between" mb="xl">
+          <Button component={Link} href="/" variant="light" radius="md">
+            Back to Home
+          </Button>
+          <Button component={Link} href="/vendor/register" variant="subtle" radius="md">
+            Vendor Register
+          </Button>
+          {isVendorMember ? (
+            <Button variant="subtle" onClick={() => void logout()} radius="md">
+              Logout
+            </Button>
+          ) : null}
+        </Group>
 
-      <section className="card auth-card">
-        <h1>Vendor Login</h1>
-        <p className="muted">
-          Sign in with your vendor account. Your application can still be under review while you work in the dashboard.
-        </p>
+        <Stack gap="lg">
+          <div>
+            <Title order={1}>Vendor Login</Title>
+            <Text c="dimmed" mt={6}>
+              Sign in with your vendor account. Your application can still be under review while you work in the dashboard.
+            </Text>
+          </div>
 
-        <form className="auth-form" onSubmit={handleVendorLogin}>
-          <FormField label="Vendor email">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Vendor email" required />
-          </FormField>
-          <FormField label="Password">
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-          </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>
-            {loading ? "Signing in..." : "Vendor Login"}
-          </button>
-        </form>
+          <form onSubmit={handleVendorLogin}>
+            <Stack gap="md">
+              <TextInput label="Vendor email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Vendor email" required />
+              <PasswordInput label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+              <Button type="submit" loading={loading} radius="md">
+                Vendor Login
+              </Button>
+            </Stack>
+          </form>
 
-        <div className="auth-divider">Other vendor login options</div>
-        <div className="auth-social-row">
-          <a className="auth-social-button google" href="#" onClick={startGoogleVendorLogin}>
-            <span className="google-g">G</span>
-            <span>Vendor login with Google</span>
-          </a>
-        </div>
+          <Button component="a" href="#" onClick={startGoogleVendorLogin} variant="light" radius="md">
+            Vendor login with Google
+          </Button>
 
-        {displayError ? <p className="error">{displayError}</p> : null}
-        {displayMessage ? <p className="badge">{displayMessage}</p> : null}
-      </section>
-    </main>
+          {displayError ? <Alert color="red" title="Login error">{displayError}</Alert> : null}
+          {displayMessage ? <Alert color="green" title="Status">{displayMessage}</Alert> : null}
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

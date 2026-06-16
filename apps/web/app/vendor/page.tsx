@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Badge, Button, Container, Group, Paper, Stack, Tabs, Text, Title } from "@mantine/core";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
@@ -258,6 +259,7 @@ type ItemDraft = {
 };
 
 type TierDraft = {
+  uiId: string;
   name: string;
   percentage: string;
   items: ItemDraft[];
@@ -429,6 +431,7 @@ function createItem(): ItemDraft {
 
 function createTier(index: number): TierDraft {
   return {
+    uiId: crypto.randomUUID(),
     name: `${String.fromCharCode(65 + index)} Tier`,
     percentage: "",
     items: [createItem()],
@@ -440,6 +443,7 @@ function tierSnapshotToDrafts(snapshot: unknown): TierDraft[] | null {
   if (!parsed.success) return null;
 
   return parsed.data.tiers.map((tier) => ({
+    uiId: crypto.randomUUID(),
     name: tier.name,
     percentage: typeof tier.percentage === "number" ? String(tier.percentage) : "",
     items: tier.items.map((item) => ({
@@ -526,6 +530,7 @@ export default function VendorPage() {
   const [drawLimitValue, setDrawLimitValue] = useState("1");
   const [drawLimitResetTimezone, setDrawLimitResetTimezone] = useState("Asia/Singapore");
   const [tiers, setTiers] = useState<TierDraft[]>([createTier(0)]);
+  const [collapsedTierIds, setCollapsedTierIds] = useState<Record<string, boolean>>({});
   const [qrPoints, setQrPoints] = useState("100");
   const [qrExpiryMinutes, setQrExpiryMinutes] = useState("15");
   const [activeQr, setActiveQr] = useState<VendorQr | null>(null);
@@ -555,6 +560,7 @@ export default function VendorPage() {
     const found = THEME_PRESETS.find((preset) => matchesPreset(themeDraft, preset));
     return found?.id ?? "custom";
   }, [themeDraft]);
+  const allTiersCollapsed = useMemo(() => tiers.length > 0 && tiers.every((tier) => collapsedTierIds[tier.uiId]), [tiers, collapsedTierIds]);
   const referralSignupUrl = useMemo(() => {
     const code = referralCode.trim() || vendorSlug.trim() || vendor?.slug?.trim() || "";
     if (!code) return "";
@@ -1324,6 +1330,7 @@ export default function VendorPage() {
       }
       const payload = body as CsvImportResponse;
       const nextTiers: TierDraft[] = payload.tiers.map((tier) => ({
+        uiId: crypto.randomUUID(),
         name: tier.name,
         percentage: typeof tier.percentage === "number" ? String(tier.percentage) : "",
         items: tier.items.map((item) => ({
@@ -1334,6 +1341,7 @@ export default function VendorPage() {
         })),
       }));
       setTiers(nextTiers.length > 0 ? nextTiers : [createTier(0)]);
+      setCollapsedTierIds({});
       setCsvImportSummary(
         `Imported ${payload.summary.totalRows} rows across ${payload.summary.tierCount} tiers. Matched: ${payload.summary.matchedRows}, fallback image: ${payload.summary.unmatchedRows}.`
       );
@@ -1460,11 +1468,30 @@ export default function VendorPage() {
   }
 
   function addTier() {
+    const nextTier = createTier(tiers.length);
     setTiers((prev) => {
       if (prev.length >= limits.maxPackTiers) return prev;
-      return [...prev, createTier(prev.length)];
+      return [...prev, nextTier];
     });
+    if (allTiersCollapsed) {
+      setCollapsedTierIds((current) => ({ ...current, [nextTier.uiId]: true }));
+    }
     setSelectedTierIndex((prev) => Math.min(prev + 1, limits.maxPackTiers - 1));
+  }
+
+  function collapseAllTiers() {
+    setCollapsedTierIds(Object.fromEntries(tiers.map((tier) => [tier.uiId, true])));
+  }
+
+  function expandAllTiers() {
+    setCollapsedTierIds({});
+  }
+
+  function toggleTierCollapsed(tierId: string) {
+    setCollapsedTierIds((current) => ({
+      ...current,
+      [tierId]: !current[tierId],
+    }));
   }
 
   function removeTier(tierIndex: number) {
@@ -1521,6 +1548,7 @@ export default function VendorPage() {
     setDrawLimitValue("1");
     setDrawLimitResetTimezone("Asia/Singapore");
     setTiers([createTier(0)]);
+    setCollapsedTierIds({});
     setSelectedTierIndex(0);
     setCardSearchQuery("");
     setCatalogResults([]);
@@ -1548,6 +1576,7 @@ export default function VendorPage() {
         ? snapshotTiers
         : [
             {
+              uiId: crypto.randomUUID(),
               name: "A Tier",
               percentage: "",
               items: pack.prizes.map((prize) => ({
@@ -1563,6 +1592,7 @@ export default function VendorPage() {
             },
           ]
     );
+    setCollapsedTierIds({});
     setSelectedTierIndex(0);
   }
 
@@ -1730,62 +1760,49 @@ export default function VendorPage() {
   }
 
   return (
-    <main className="container vendor-dashboard">
-      <header className="site-header">
-        <div className="brand-text">
-          <strong>Vendor Dashboard</strong>
-          <span>{vendor?.name ?? "-"} ({vendor?.host ?? runtimeVendorHost})</span>
-          {vendor?.applicationStatus ? <span className="muted tiny">Application status: {vendor.applicationStatus}</span> : null}
-        </div>
-        <div className="actions">
-          <Link className="sort-pill" href="/vendor/profile">Vendor Profile</Link>
-          <a className="sort-pill" href="/">Back to Homepage</a>
-          <button type="button" className="sort-pill" onClick={() => void logout()}>Logout</button>
-        </div>
-      </header>
+    <Container size="xl" py="lg">
+      <Stack gap="md">
+        <Paper withBorder radius="xl" p="md" shadow="sm">
+          <Group justify="space-between" align="center" gap="md" wrap="wrap">
+            <div>
+              <Title order={1} size="h2">
+                Vendor Dashboard
+              </Title>
+              <Text c="dimmed">
+                {vendor?.name ?? "-"} ({vendor?.host ?? runtimeVendorHost})
+              </Text>
+              {vendor?.applicationStatus ? (
+                <Text size="sm" c="dimmed">
+                  Application status: {vendor.applicationStatus}
+                </Text>
+              ) : null}
+            </div>
+            <Group gap="xs" wrap="wrap">
+              <Button variant="light" component={Link} href="/vendor/profile">
+                Vendor Profile
+              </Button>
+              <Button variant="subtle" component={Link} href="/">
+                Back to Homepage
+              </Button>
+              <Button variant="outline" onClick={() => void logout()}>
+                Logout
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
 
-      {error ? <p className="error">{error}</p> : null}
-      {success ? <p className="badge">{success}</p> : null}
+        {error ? <Text c="red">{error}</Text> : null}
+        {success ? <Badge variant="light">{success}</Badge> : null}
 
-      <section className="card">
-        <div className="actions">
-          <button
-            type="button"
-            className={`sort-pill ${activeTab === "BUSINESS" ? "active" : ""}`}
-            onClick={() => setActiveTabInUrl("BUSINESS")}
-          >
-            Business
-          </button>
-          <button
-            type="button"
-            className={`sort-pill ${activeTab === "GROWTH" ? "active" : ""}`}
-            onClick={() => setActiveTabInUrl("GROWTH")}
-          >
-            Referrals & QR
-          </button>
-          <button
-            type="button"
-            className={`sort-pill ${activeTab === "STORE_SETTINGS" ? "active" : ""}`}
-            onClick={() => setActiveTabInUrl("STORE_SETTINGS")}
-          >
-            Store Settings
-          </button>
-          <button
-            type="button"
-            className={`sort-pill ${activeTab === "PACKS" ? "active" : ""}`}
-            onClick={() => setActiveTabInUrl("PACKS")}
-          >
-            Pack Studio
-          </button>
-          <button
-            type="button"
-            className={`sort-pill ${activeTab === "FULFILMENT" ? "active" : ""}`}
-            onClick={() => setActiveTabInUrl("FULFILMENT")}
-          >
-            Fulfilment
-          </button>
-        </div>
-      </section>
+        <Tabs value={activeTab} onChange={(value) => value && setActiveTabInUrl(value as "BUSINESS" | "GROWTH" | "STORE_SETTINGS" | "PACKS" | "FULFILMENT")}>
+          <Tabs.List grow>
+            <Tabs.Tab value="BUSINESS">Business</Tabs.Tab>
+            <Tabs.Tab value="GROWTH">Referrals & QR</Tabs.Tab>
+            <Tabs.Tab value="STORE_SETTINGS">Store Settings</Tabs.Tab>
+            <Tabs.Tab value="PACKS">Pack Studio</Tabs.Tab>
+            <Tabs.Tab value="FULFILMENT">Fulfilment</Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
 
       {activeTab === "BUSINESS" ? (
         <>
@@ -2376,111 +2393,140 @@ export default function VendorPage() {
               <div className="pack-builder-two-panel">
                 <section className="card tier-pane">
                   <div className="heading-row">
-                    <h3>Pack Contents</h3>
-                    <span className="muted tiny">{totalDraftItems}/{limits.maxPackItems} cards</span>
+                    <div style={{ display: "grid", gap: 2 }}>
+                      <h3>Pack Contents</h3>
+                      <span className="muted tiny">{totalDraftItems}/{limits.maxPackItems} cards</span>
+                    </div>
+                    <div className="actions" style={{ gap: 8 }}>
+                      <button type="button" className="sort-pill" onClick={collapseAllTiers} disabled={tiers.length === 0 || allTiersCollapsed}>
+                        Collapse All
+                      </button>
+                      <button type="button" className="sort-pill" onClick={expandAllTiers} disabled={tiers.length === 0 || !allTiersCollapsed}>
+                        Expand All
+                      </button>
+                    </div>
                   </div>
                   <div className="tier-stack">
                     {tiers.map((tier, tierIndex) => (
                       <article
-                        key={`tier-${tierIndex}`}
+                        key={tier.uiId}
                         className={`tier-bucket ${selectedTierIndex === tierIndex ? "active" : ""}`}
                         onClick={() => setSelectedTierIndex(tierIndex)}
                       >
                         <div className="heading-row">
-                          <strong>{tier.name || `Tier ${tierIndex + 1}`}</strong>
-                          <span className="muted tiny">{tier.items.length} cards</span>
-                        </div>
-                        <div className="pack-builder-grid">
-                          <label className="muted tiny">
-                            Tier label
-                            <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
-                          </label>
-                          <label className="muted tiny">
-                            Tier rate %
-                            <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
-                          </label>
-                        </div>
-                        <div className="tier-card-strip">
-                          {tier.items.map((item, itemIndex) => (
-                            <div
-                              className="tier-item-editor"
-                              key={`tier-${tierIndex}-item-${itemIndex}`}
+                          <div style={{ display: "grid", gap: 2 }}>
+                            <strong>{tier.name || `Tier ${tierIndex + 1}`}</strong>
+                            <span className="muted tiny">{tier.items.length} cards | {tier.percentage.trim() ? `${tier.percentage}%` : "auto rate"}</span>
+                          </div>
+                          <div className="actions" style={{ gap: 6 }}>
+                            <span className="muted tiny">{collapsedTierIds[tier.uiId] ? "Collapsed" : "Expanded"}</span>
+                            <button
+                              type="button"
+                              className="sort-pill"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleTierCollapsed(tier.uiId);
+                              }}
                             >
-                              <div className="tier-item-preview">
-                                <img src={item.imageUrl || DEFAULT_CARD} alt={item.label || "Card"} />
-                                <div className="tier-item-preview-meta">
-                                  <strong>{item.label || "Untitled card"}</strong>
-                                  <span className="muted tiny">
-                                    {item.catalogItemId ? "Catalog item" : "Manual item"}
-                                  </span>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="sort-pill"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeItem(tierIndex, itemIndex);
-                                  }}
-                                  title={`Remove ${item.label || "card"}`}
-                                >
-                                  Remove
-                                </button>
-                              </div>
-                              <div className="tier-item-fields">
-                                <label className="muted tiny">
-                                  Item label
-                                  <input
-                                    value={item.label}
-                                    onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)}
-                                    placeholder="Item label"
-                                  />
-                                </label>
-                                <label className="muted tiny">
-                                  Estimated value
-                                  <input
-                                    value={item.estimatedValue}
-                                    onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)}
-                                    type="number"
-                                    min={0}
-                                    step="1"
-                                    placeholder="Estimated value"
-                                  />
-                                </label>
-                                <label className="muted tiny">
-                                  Quantity available
-                                  <input
-                                    value={item.stock}
-                                    onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)}
-                                    type="number"
-                                    min={1}
-                                    step="1"
-                                    placeholder="How many times this item can be won"
-                                  />
-                                </label>
-                              </div>
-                              <div className="tier-item-presets">
-                                {[1, 5, 10, 25, 50].map((qty) => (
-                                  <button
-                                    key={`${tierIndex}-${itemIndex}-qty-${qty}`}
-                                    type="button"
-                                    className={`sort-pill ${item.stock === String(qty) ? "active" : ""}`}
-                                    onClick={() => updateItem(tierIndex, itemIndex, "stock", String(qty))}
-                                  >
-                                    {qty}x
-                                  </button>
-                                ))}
-                              </div>
-                              <p className="muted tiny">
-                                This controls how many winning copies of this exact prize are allowed in the pack.
-                              </p>
+                              {collapsedTierIds[tier.uiId] ? "Expand" : "Collapse"}
+                            </button>
+                          </div>
+                        </div>
+                        {!collapsedTierIds[tier.uiId] ? (
+                          <>
+                            <div className="pack-builder-grid">
+                              <label className="muted tiny">
+                                Tier label
+                                <input value={tier.name} onChange={(e) => updateTier(tierIndex, "name", e.target.value)} placeholder="Tier name (e.g. A Tier)" required />
+                              </label>
+                              <label className="muted tiny">
+                                Tier rate %
+                                <input value={tier.percentage} onChange={(e) => updateTier(tierIndex, "percentage", e.target.value)} placeholder="Tier % (optional, auto if blank)" type="number" min={0} max={100} step="0.0001" />
+                              </label>
                             </div>
-                          ))}
-                          {tier.items.length === 0 ? <p className="muted tiny">No cards added yet.</p> : null}
-                        </div>
-                        <div className="actions" style={{ marginTop: 8 }}>
-                          <button type="button" className="sort-pill" onClick={(e) => { e.stopPropagation(); addItem(tierIndex); }} disabled={totalDraftItems >= limits.maxPackItems}>+ Add blank item</button>
-                          <button type="button" className="sort-pill" onClick={(e) => { e.stopPropagation(); removeTier(tierIndex); }} disabled={tiers.length <= 1}>Remove Tier</button>
-                        </div>
+                            <div className="tier-card-strip">
+                              {tier.items.map((item, itemIndex) => (
+                                <div
+                                  className="tier-item-editor"
+                                  key={`tier-${tier.uiId}-item-${itemIndex}`}
+                                >
+                                  <div className="tier-item-preview">
+                                    <img src={item.imageUrl || DEFAULT_CARD} alt={item.label || "Card"} />
+                                    <div className="tier-item-preview-meta">
+                                      <strong>{item.label || "Untitled card"}</strong>
+                                      <span className="muted tiny">
+                                        {item.catalogItemId ? "Catalog item" : "Manual item"}
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      className="sort-pill"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeItem(tierIndex, itemIndex);
+                                      }}
+                                      title={`Remove ${item.label || "card"}`}
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                  <div className="tier-item-fields">
+                                    <label className="muted tiny">
+                                      Item label
+                                      <input
+                                        value={item.label}
+                                        onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)}
+                                        placeholder="Item label"
+                                      />
+                                    </label>
+                                    <label className="muted tiny">
+                                      Estimated value
+                                      <input
+                                        value={item.estimatedValue}
+                                        onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)}
+                                        type="number"
+                                        min={0}
+                                        step="1"
+                                        placeholder="Estimated value"
+                                      />
+                                    </label>
+                                    <label className="muted tiny">
+                                      Quantity available
+                                      <input
+                                        value={item.stock}
+                                        onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)}
+                                        type="number"
+                                        min={1}
+                                        step="1"
+                                        placeholder="How many times this item can be won"
+                                      />
+                                    </label>
+                                  </div>
+                                  <div className="tier-item-presets">
+                                    {[1, 5, 10, 25, 50].map((qty) => (
+                                      <button
+                                        key={`${tier.uiId}-${itemIndex}-qty-${qty}`}
+                                        type="button"
+                                        className={`sort-pill ${item.stock === String(qty) ? "active" : ""}`}
+                                        onClick={() => updateItem(tierIndex, itemIndex, "stock", String(qty))}
+                                      >
+                                        {qty}x
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <p className="muted tiny">
+                                    This controls how many winning copies of this exact prize are allowed in the pack.
+                                  </p>
+                                </div>
+                              ))}
+                              {tier.items.length === 0 ? <p className="muted tiny">No cards added yet.</p> : null}
+                            </div>
+                            <div className="actions" style={{ marginTop: 8 }}>
+                              <button type="button" className="sort-pill" onClick={(e) => { e.stopPropagation(); addItem(tierIndex); }} disabled={totalDraftItems >= limits.maxPackItems}>+ Add blank item</button>
+                              <button type="button" className="sort-pill" onClick={(e) => { e.stopPropagation(); removeTier(tierIndex); }} disabled={tiers.length <= 1}>Remove Tier</button>
+                            </div>
+                          </>
+                        ) : null}
                       </article>
                     ))}
                   </div>
@@ -2755,6 +2801,7 @@ export default function VendorPage() {
           </div>
         </div>
       ) : null}
-    </main>
+      </Stack>
+    </Container>
   );
 }

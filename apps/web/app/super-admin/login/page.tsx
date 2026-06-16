@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FormField } from "../../../components/form-field";
+import { Alert, Anchor, Button, Container, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { apiBaseUrl, apiFetch } from "../../../lib/api";
 
 export default function SuperAdminLoginPage() {
@@ -71,34 +71,34 @@ export default function SuperAdminLoginPage() {
   }
 
   return (
-    <main className="container">
-      <header className="auth-top-nav">
-        <Link href="/" className="sort-pill">
+    <Container size="sm" py="xl">
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Button component={Link} href="/" variant="light" radius="md" mb="xl">
           Back to Home
-        </Link>
-      </header>
+        </Button>
 
-      <section className="card auth-card">
-        <h1>Super Admin Login</h1>
-        <p className="muted">
-          This area is restricted to the single platform super admin account.
-        </p>
+        <Stack gap="lg">
+          <div>
+            <Title order={1}>Super Admin Login</Title>
+            <Text c="dimmed" mt={6}>
+              This area is restricted to the single platform super admin account.
+            </Text>
+          </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <FormField label="Email">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Super admin email" required />
-          </FormField>
-          <FormField label="Password">
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-          </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in as Super Admin"}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit}>
+            <Stack gap="md">
+              <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Super admin email" required />
+              <PasswordInput label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+              <Button type="submit" loading={loading} radius="md">
+                Sign in as Super Admin
+              </Button>
+            </Stack>
+          </form>
 
-        {message ? <p className="badge">{message}</p> : null}
-        {error ? <p className="error">{error}</p> : null}
-      </section>
-    </main>
+          {message ? <Alert color="green" title="Status">{message}</Alert> : null}
+          {error ? <Alert color="red" title="Login error">{error}</Alert> : null}
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

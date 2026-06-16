@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import type { CSSProperties } from "react";
+import { Alert, Anchor, Badge, Button, Container, Group, Paper, Select, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
 import { AirwallexDropInCheckout } from "../../components/airwallex-dropin-checkout";
-import { FormField } from "../../components/form-field";
 import { COUNTRY_OPTIONS } from "../../lib/countries";
 import { formatCurrencyAmount, resolveCurrencyCodeForCountry } from "../../lib/airwallex";
 import { applyVendorFavicon } from "../../lib/favicon";
@@ -424,268 +424,230 @@ function CustomerProfileContent() {
   }
 
   return (
-    <main className="container" style={storefrontThemeStyle}>
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/" className="sort-pill">Back to Home</Link>
-        {user ? (
-          <button type="button" className="sort-pill" onClick={() => void logout()}>
-            Logout
-          </button>
-        ) : null}
-      </header>
+    <Container size="md" py="xl" style={storefrontThemeStyle}>
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Group justify="space-between" mb="xl">
+          <Button component={Link} href="/" variant="light" radius="md">
+            Back to Home
+          </Button>
+          {user ? (
+            <Button variant="subtle" onClick={() => void logout()} radius="md">
+              Logout
+            </Button>
+          ) : null}
+        </Group>
 
-      <section className="card auth-card">
-        <h1>Customer Profile</h1>
-        <p className="muted">
-          Complete your customer information so account, wallet, and future checkout flows have the details they need.
-        </p>
+        <Stack gap="lg">
+          <div>
+            <Title order={1}>Customer Profile</Title>
+            <Text c="dimmed" mt={6}>
+              Complete your customer information so account, wallet, and future checkout flows have the details they need.
+            </Text>
+          </div>
 
-        {loading ? <p className="muted">Loading profile...</p> : null}
-        {!loading && !user ? (
-          <p className="muted">
-            {error ?? "Please log in to complete your profile."} <Link href="/login">Go to login</Link>
-          </p>
-        ) : null}
+          {loading ? <Text c="dimmed">Loading profile...</Text> : null}
+          {!loading && !user ? (
+            <Alert color="yellow" title="Login required">
+              {error ?? "Please log in to complete your profile."} <Anchor component={Link} href="/login">Go to login</Anchor>
+            </Alert>
+          ) : null}
 
-        {user ? (
-          <>
-            <div className="auth-profile-card">
-              <strong>{user.profileComplete ? "Profile complete" : "Profile incomplete"}</strong>
-              <div className="muted tiny">{user.email}</div>
-              <div className="muted tiny">{user.shippingComplete ? "Shipping details on file" : "Shipping details missing"}</div>
-            </div>
+          {user ? (
+            <>
+              <Paper withBorder radius="lg" p="md">
+                <Stack gap={4}>
+                  <Text fw={700}>{user.profileComplete ? "Profile complete" : "Profile incomplete"}</Text>
+                  <Text size="sm" c="dimmed">{user.email}</Text>
+                  <Badge variant="light">{user.shippingComplete ? "Shipping details on file" : "Shipping details missing"}</Badge>
+                </Stack>
+              </Paper>
 
-            <form className="auth-form" onSubmit={saveProfile}>
-              <FormField label="Full name">
-                <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" required />
-              </FormField>
-              <FormField label="Date of birth">
-                <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
-              </FormField>
-              <FormField label="Country">
-                <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)} required>
-                  <option value="">Select country</option>
-                  {COUNTRY_OPTIONS.map((country) => (
-                    <option key={country.code} value={country.code}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-              <button type="submit" className="draw-button" disabled={saving}>
-                {saving ? "Saving..." : "Save Profile"}
-              </button>
-            </form>
-
-            <section className="card" style={{ marginTop: 18 }}>
-              <h2>Shipping / Fulfilment Details</h2>
-              <p className="muted tiny">
-                These details are shown to vendors after a win so they can arrange shipping or fulfilment.
-              </p>
-              <form className="auth-form" onSubmit={saveShippingDetails}>
-                <FormField label="Phone number">
-                  <input
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="Phone number"
-                    autoComplete="tel"
+              <form onSubmit={saveProfile}>
+                <Stack gap="md">
+                  <TextInput label="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" autoComplete="name" required />
+                  <TextInput label="Date of birth" type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} required />
+                  <Select
+                    label="Country"
+                    value={countryCode}
+                    onChange={(value) => setCountryCode(value ?? "")}
+                    data={COUNTRY_OPTIONS.map((country) => ({ value: country.code, label: country.name }))}
+                    searchable
                     required
                   />
-                </FormField>
-                <FormField label="Address line 1">
-                  <input
-                    value={shippingAddressLine1}
-                    onChange={(e) => setShippingAddressLine1(e.target.value)}
-                    placeholder="Street address"
-                    autoComplete="address-line1"
-                    required
-                  />
-                </FormField>
-                <FormField label="Address line 2">
-                  <input
-                    value={shippingAddressLine2}
-                    onChange={(e) => setShippingAddressLine2(e.target.value)}
-                    placeholder="Apartment, unit, building, floor"
-                    autoComplete="address-line2"
-                  />
-                </FormField>
-                <div className="pack-builder-grid">
-                  <FormField label="City">
-                    <input
-                      value={shippingAddressCity}
-                      onChange={(e) => setShippingAddressCity(e.target.value)}
-                      placeholder="City"
-                      autoComplete="address-level2"
-                      required
-                    />
-                  </FormField>
-                  <FormField label="State / Province">
-                    <input
-                      value={shippingAddressState}
-                      onChange={(e) => setShippingAddressState(e.target.value)}
-                      placeholder="State / Province"
-                      autoComplete="address-level1"
-                    />
-                  </FormField>
-                </div>
-                <div className="pack-builder-grid">
-                  <FormField label="Postal code">
-                    <input
-                      value={shippingAddressPostalCode}
-                      onChange={(e) => setShippingAddressPostalCode(e.target.value)}
-                      placeholder="Postal code"
-                      autoComplete="postal-code"
-                      required
-                    />
-                  </FormField>
-                  <FormField label="Country">
-                    <select
-                      value={shippingAddressCountry}
-                      onChange={(e) => setShippingAddressCountry(e.target.value)}
-                      autoComplete="country"
-                      required
-                    >
-                      <option value="">Select country</option>
-                      {COUNTRY_OPTIONS.map((country) => (
-                        <option key={country.code} value={country.code}>
-                          {country.name}
-                        </option>
-                      ))}
-                    </select>
-                  </FormField>
-                </div>
-                <button type="submit" className="draw-button" disabled={saving}>
-                  {saving ? "Saving..." : "Save Shipping Details"}
-                </button>
+                  <Button type="submit" loading={saving} radius="md">
+                    Save Profile
+                  </Button>
+                </Stack>
               </form>
-            </section>
-          </>
-        ) : null}
 
-        {error && user ? <p className="error">{error}</p> : null}
-        {message ? <p className="badge">{message}</p> : null}
-
-        {user ? (
-          <section className="card" style={{ marginTop: 18 }}>
-            <div className="heading-row">
-              <h2>Points Wallet</h2>
-              <span className="muted tiny">Storefront balance for this vendor</span>
-            </div>
-
-            <div className="stats-grid" style={{ marginTop: 10 }}>
-              <div className="stat">
-                <div className="stat-label">Current balance</div>
-                <div className="stat-value">{walletLoading ? "..." : formatPoints(wallet?.balancePoints ?? 0)}</div>
-              </div>
-              <div className="stat">
-                <div className="stat-label">Top-ups</div>
-                <div className="stat-value">{topupHistoryEntries.length}</div>
-              </div>
-              <div className="stat">
-                <div className="stat-label">Spends</div>
-                <div className="stat-value">{wallet?.drawOrders?.length ?? 0}</div>
-              </div>
-            </div>
-
-            <p className="muted tiny" style={{ marginTop: 8 }}>
-              Top-ups are processed through Airwallex sandbox. Your amount is charged in your local currency at a fixed rate of {topupPointsPerCurrencyUnit} points = 1 {customerCurrencyCode}.
-            </p>
-
-            <div className="actions" style={{ marginTop: 12 }}>
-              {fixedTopupAmounts.map((amount) => (
-                <button
-                  key={amount}
-                  type="button"
-                  className={`sort-pill ${topupAmount === String(amount) ? "active" : ""}`}
-                  disabled={topupSaving}
-                  onClick={() => {
-                    setTopupAmount(String(amount));
-                    void submitTopup(amount);
-                  }}
-                >
-                  +{formatPoints(amount)} pts ({formatTopupCharge(amount)})
-                </button>
-              ))}
-            </div>
-
-            <form className="auth-form" onSubmit={submitCustomTopup} style={{ marginTop: 12 }}>
-              <FormField label="Custom top-up amount">
-                <input
-                  type="number"
-                  min={1}
-                  max={100000}
-                  value={customTopupAmount}
-                  onChange={(e) => setCustomTopupAmount(e.target.value)}
-                  placeholder="Enter custom points amount"
-                />
-                <div className="muted tiny" style={{ marginTop: 6 }}>
-                  Estimated charge: {formatTopupCharge(Number(customTopupAmount) || 0)}
-                </div>
-              </FormField>
-              <button type="submit" className="draw-button" disabled={topupSaving}>
-                {topupSaving ? "Top-up..." : "Top up custom amount"}
-              </button>
-            </form>
-
-            {walletMessage ? <p className="badge" style={{ marginTop: 10 }}>{walletMessage}</p> : null}
-            {walletError ? <p className="error">{walletError}</p> : null}
-
-            {topupCheckout ? (
-              <AirwallexDropInCheckout
-                containerId="airwallex-dropin-checkout"
-                intentId={topupCheckout.intentId}
-                clientSecret={topupCheckout.clientSecret}
-                currencyCode={topupCheckout.currencyCode}
-                countryCode={topupCheckout.countryCode ?? user.countryCode ?? null}
-                onSuccess={handleCheckoutSuccess}
-                onError={(nextError) => setWalletError(nextError)}
-              />
-            ) : null}
-
-            <div style={{ marginTop: 16 }}>
-              <h3>Purchase history</h3>
-              <div className="result-list">
-                {topupHistoryEntries.length ? topupHistoryEntries.map((entry) => {
-                  const entryMetadata = entry.metadata as { currencyCode?: string | null; amountCurrency?: number | string | null } | null;
-                  const entryCurrencyCode = entryMetadata?.currencyCode ?? customerCurrencyCode;
-                  const entryAmountCurrency = Number(entryMetadata?.amountCurrency ?? 0);
-                  return (
-                    <div className="result-row" key={entry.id}>
-                      <span>
-                        {formatPoints(entry.amountPoints)} pts purchased{" "}
-                        {entryAmountCurrency ? `(${formatCurrencyAmount(entryAmountCurrency, entryCurrencyCode)})` : ""}
-                      </span>
-                      <span className="muted tiny">
-                        {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ""}
-                      </span>
-                    </div>
-                  );
-                }) : <p className="muted tiny">No top-up history yet.</p>}
-              </div>
-            </div>
-
-            <div style={{ marginTop: 16 }}>
-              <h3>Spending history</h3>
-              <div className="result-list">
-                {wallet?.drawOrders?.length ? wallet.drawOrders.map((draw) => (
-                  <div className="result-row" key={draw.id}>
-                    <span>
-                      {draw.packTitle} x{draw.quantity}
-                    </span>
-                    <span>{formatPoints(draw.totalPoints)} pts</span>
+              <Paper withBorder radius="lg" p="lg">
+                <Stack gap="sm">
+                  <div>
+                    <Title order={2} size="h3">Shipping / Fulfilment Details</Title>
+                    <Text c="dimmed" size="sm">
+                      These details are shown to vendors after a win so they can arrange shipping or fulfilment.
+                    </Text>
                   </div>
-                )) : <p className="muted tiny">No spending history yet.</p>}
-              </div>
-            </div>
-          </section>
-        ) : null}
+                  <form onSubmit={saveShippingDetails}>
+                    <Stack gap="md">
+                      <TextInput label="Phone number" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone number" autoComplete="tel" required />
+                      <TextInput label="Address line 1" value={shippingAddressLine1} onChange={(e) => setShippingAddressLine1(e.target.value)} placeholder="Street address" autoComplete="address-line1" required />
+                      <TextInput label="Address line 2" value={shippingAddressLine2} onChange={(e) => setShippingAddressLine2(e.target.value)} placeholder="Apartment, unit, building, floor" autoComplete="address-line2" />
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="City" value={shippingAddressCity} onChange={(e) => setShippingAddressCity(e.target.value)} placeholder="City" autoComplete="address-level2" required />
+                        <TextInput label="State / Province" value={shippingAddressState} onChange={(e) => setShippingAddressState(e.target.value)} placeholder="State / Province" autoComplete="address-level1" />
+                      </SimpleGrid>
+                      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                        <TextInput label="Postal code" value={shippingAddressPostalCode} onChange={(e) => setShippingAddressPostalCode(e.target.value)} placeholder="Postal code" autoComplete="postal-code" required />
+                        <Select
+                          label="Country"
+                          value={shippingAddressCountry}
+                          onChange={(value) => setShippingAddressCountry(value ?? "")}
+                          data={COUNTRY_OPTIONS.map((country) => ({ value: country.code, label: country.name }))}
+                          searchable
+                          required
+                        />
+                      </SimpleGrid>
+                      <Button type="submit" loading={saving} radius="md">
+                        Save Shipping Details
+                      </Button>
+                    </Stack>
+                  </form>
+                </Stack>
+              </Paper>
+            </>
+          ) : null}
 
-        {user?.profileComplete ? (
-          <p className="muted" style={{ marginTop: 14 }}>
-            Ready to continue? <Link href="/">Return to storefront</Link>
-          </p>
-        ) : null}
-      </section>
-    </main>
+          {error && user ? <Alert color="red" title="Profile error">{error}</Alert> : null}
+          {message ? <Alert color="green" title="Status">{message}</Alert> : null}
+
+          {user ? (
+            <Paper withBorder radius="lg" p="lg">
+              <Stack gap="md">
+                <Group justify="space-between">
+                  <Title order={2} size="h3">Points Wallet</Title>
+                  <Text c="dimmed" size="sm">Storefront balance for this vendor</Text>
+                </Group>
+
+                <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+                  <Paper withBorder p="md" radius="lg">
+                    <Text size="sm" c="dimmed">Current balance</Text>
+                    <Text fw={700} size="xl">{walletLoading ? "..." : formatPoints(wallet?.balancePoints ?? 0)}</Text>
+                  </Paper>
+                  <Paper withBorder p="md" radius="lg">
+                    <Text size="sm" c="dimmed">Top-ups</Text>
+                    <Text fw={700} size="xl">{topupHistoryEntries.length}</Text>
+                  </Paper>
+                  <Paper withBorder p="md" radius="lg">
+                    <Text size="sm" c="dimmed">Spends</Text>
+                    <Text fw={700} size="xl">{wallet?.drawOrders?.length ?? 0}</Text>
+                  </Paper>
+                </SimpleGrid>
+
+                <Text c="dimmed" size="sm">
+                  Top-ups are processed through Airwallex sandbox. Your amount is charged in your local currency at a fixed rate of {topupPointsPerCurrencyUnit} points = 1 {customerCurrencyCode}.
+                </Text>
+
+                <Group>
+                  {fixedTopupAmounts.map((amount) => (
+                    <Button
+                      key={amount}
+                      variant={topupAmount === String(amount) ? "filled" : "light"}
+                      disabled={topupSaving}
+                      onClick={() => {
+                        setTopupAmount(String(amount));
+                        void submitTopup(amount);
+                      }}
+                      radius="md"
+                    >
+                      +{formatPoints(amount)} pts ({formatTopupCharge(amount)})
+                    </Button>
+                  ))}
+                </Group>
+
+                <form onSubmit={submitCustomTopup}>
+                  <Stack gap="md">
+                    <TextInput
+                      label="Custom top-up amount"
+                      type="number"
+                      min={1}
+                      max={100000}
+                      value={customTopupAmount}
+                      onChange={(e) => setCustomTopupAmount(e.target.value)}
+                      placeholder="Enter custom points amount"
+                    />
+                    <Text c="dimmed" size="sm">
+                      Estimated charge: {formatTopupCharge(Number(customTopupAmount) || 0)}
+                    </Text>
+                    <Button type="submit" loading={topupSaving} radius="md">
+                      Top up custom amount
+                    </Button>
+                  </Stack>
+                </form>
+
+                {walletMessage ? <Alert color="green" title="Wallet">{walletMessage}</Alert> : null}
+                {walletError ? <Alert color="red" title="Wallet error">{walletError}</Alert> : null}
+
+                {topupCheckout ? (
+                  <AirwallexDropInCheckout
+                    containerId="airwallex-dropin-checkout"
+                    intentId={topupCheckout.intentId}
+                    clientSecret={topupCheckout.clientSecret}
+                    currencyCode={topupCheckout.currencyCode}
+                    countryCode={topupCheckout.countryCode ?? user.countryCode ?? null}
+                    onSuccess={handleCheckoutSuccess}
+                    onError={(nextError) => setWalletError(nextError)}
+                  />
+                ) : null}
+
+                <div>
+                  <Title order={3} size="h4">Purchase history</Title>
+                  <Stack gap="xs" mt="sm">
+                    {topupHistoryEntries.length ? topupHistoryEntries.map((entry) => {
+                      const entryMetadata = entry.metadata as { currencyCode?: string | null; amountCurrency?: number | string | null } | null;
+                      const entryCurrencyCode = entryMetadata?.currencyCode ?? customerCurrencyCode;
+                      const entryAmountCurrency = Number(entryMetadata?.amountCurrency ?? 0);
+                      return (
+                        <Paper key={entry.id} withBorder radius="md" p="sm">
+                          <Group justify="space-between">
+                            <Text size="sm">
+                              {formatPoints(entry.amountPoints)} pts purchased{" "}
+                              {entryAmountCurrency ? `(${formatCurrencyAmount(entryAmountCurrency, entryCurrencyCode)})` : ""}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : ""}
+                            </Text>
+                          </Group>
+                        </Paper>
+                      );
+                    }) : <Text c="dimmed" size="sm">No top-up history yet.</Text>}
+                  </Stack>
+                </div>
+
+                <div>
+                  <Title order={3} size="h4">Spending history</Title>
+                  <Stack gap="xs" mt="sm">
+                    {wallet?.drawOrders?.length ? wallet.drawOrders.map((draw) => (
+                      <Paper key={draw.id} withBorder radius="md" p="sm">
+                        <Group justify="space-between">
+                          <Text size="sm">{draw.packTitle} x{draw.quantity}</Text>
+                          <Text size="sm">{formatPoints(draw.totalPoints)} pts</Text>
+                        </Group>
+                      </Paper>
+                    )) : <Text c="dimmed" size="sm">No spending history yet.</Text>}
+                  </Stack>
+                </div>
+              </Stack>
+            </Paper>
+          ) : null}
+
+          {user?.profileComplete ? (
+            <Text c="dimmed">
+              Ready to continue? <Anchor component={Link} href="/">Return to storefront</Anchor>
+            </Text>
+          ) : null}
+        </Stack>
+      </Paper>
+    </Container>
   );
 }

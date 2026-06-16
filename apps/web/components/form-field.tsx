@@ -1,3 +1,4 @@
+import { Input } from "@mantine/core";
 import { ReactNode } from "react";
 
 type FormFieldProps = {
@@ -8,10 +9,8 @@ type FormFieldProps = {
 
 export function FormField({ label, children, className }: FormFieldProps) {
   return (
-    <label className={className ?? "muted tiny"}>
-      {label}
+    <Input.Wrapper className={className} label={label}>
       {children}
-    </label>
+    </Input.Wrapper>
   );
 }
-

@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { ActionIcon, Badge, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../lib/media-url";
@@ -246,39 +247,60 @@ export default function HomePage() {
   }
 
   return (
-    <main className="container" style={storefrontThemeStyle}>
-      <header className="site-header">
-        <div className="brand">
-          <img src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/default-brand-logo.png"} alt="Vendor logo" />
-          <div className="brand-text">
-            <strong>{tenant?.name ?? "Storefront"}</strong>
-            <span>{runtimeVendorHost}</span>
-          </div>
-        </div>
-        <div className="header-right">
-          {user ? (
-            <Link href="/profile" className="auth-inline-card">
-              <strong>{user.displayName || user.fullName || "Customer"}</strong>
-              <span>{user.email}</span>
-              {!user.profileComplete ? <span>Complete profile</span> : null}
-            </Link>
-          ) : (
-            <>
-              <a className="sort-pill" href="/login">Customer Login</a>
-              <a className="sort-pill" href="/register">Customer Register</a>
-            </>
-          )}
-          {user ? (
-            <button type="button" className="sort-pill" onClick={logout}>Logout</button>
-          ) : null}
-          <a className="sort-pill" href="/setlists">Setlists</a>
-          <div className="wallet-chip">Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}</div>
-        </div>
-      </header>
+    <Container size="xl" py="lg" style={storefrontThemeStyle}>
+      <Stack gap="lg">
+      <Paper withBorder radius="xl" p="md" shadow="sm">
+        <Group justify="space-between" align="center" gap="md" wrap="wrap">
+          <Group gap="sm" align="center">
+            <img
+              src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/default-brand-logo.png"}
+              alt="Vendor logo"
+              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 12 }}
+            />
+            <div>
+              <Title order={2} size="h3">
+                {tenant?.name ?? "Storefront"}
+              </Title>
+              <Text size="sm" c="dimmed">
+                {runtimeVendorHost}
+              </Text>
+            </div>
+          </Group>
+          <Group gap="xs" justify="flex-end" wrap="wrap">
+            {user ? (
+              <Paper component={Link} href="/profile" withBorder radius="md" p="sm" style={{ textDecoration: "none" }}>
+                <Stack gap={0}>
+                  <Text fw={600}>{user.displayName || user.fullName || "Customer"}</Text>
+                  <Text size="sm" c="dimmed">
+                    {user.email}
+                  </Text>
+                  {!user.profileComplete ? <Text size="xs" c="yellow.7">Complete profile</Text> : null}
+                </Stack>
+              </Paper>
+            ) : (
+              <>
+                <Button variant="light" component={Link} href="/login">
+                  Customer Login
+                </Button>
+                <Button variant="outline" component={Link} href="/register">
+                  Customer Register
+                </Button>
+              </>
+            )}
+            {user ? <Button variant="subtle" onClick={logout}>Logout</Button> : null}
+            <Button variant="subtle" component={Link} href="/setlists">
+              Setlists
+            </Button>
+            <Badge variant="light" size="lg">
+              Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
+            </Badge>
+          </Group>
+        </Group>
+      </Paper>
 
-      <section className="banner-wrap">
+      <Paper withBorder radius="xl" p={0} shadow="sm" style={{ overflow: "hidden", position: "relative" }}>
         {currentBanner ? (
-          <a className="banner-link" href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer">
+          <a href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer" style={{ display: "block", position: "relative", color: "inherit", textDecoration: "none" }}>
             {(() => {
               const image = resolvePackBannerMediaUrl(currentBanner.imageUrl, defaultPackBanner);
               return (
@@ -286,7 +308,6 @@ export default function HomePage() {
                   {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
                   {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
-                    className="banner-image"
                     src={image.fallback}
                     alt={currentBanner.title}
                     loading="lazy"
@@ -294,59 +315,82 @@ export default function HomePage() {
                     onError={(e) => {
                       e.currentTarget.src = defaultPackBannerMobile;
                     }}
+                    style={{ display: "block", width: "100%", height: "clamp(220px, 32vw, 420px)", objectFit: "cover" }}
                   />
                 </picture>
               );
             })()}
-            <div className="banner-overlay">
-              <h2>{currentBanner.title}</h2>
-              <p>Limited-time campaign</p>
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.52))" }} />
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "end", padding: 24 }}>
+              <Stack gap={4}>
+                <Title order={2} c="white">{currentBanner.title}</Title>
+                <Text c="white" opacity={0.9}>Limited-time campaign</Text>
+              </Stack>
             </div>
           </a>
         ) : (
-          <div className="banner-empty card">
-            <p>No banner yet. Add banners in vendor dashboard.</p>
-          </div>
+          <Stack gap="xs" p="xl">
+            <Title order={3}>No banner yet</Title>
+            <Text c="dimmed">Add banners in vendor dashboard.</Text>
+          </Stack>
         )}
 
         {banners.length > 1 ? (
           <>
-            <button type="button" className="carousel-btn left" onClick={goToPreviousBanner} aria-label="Previous banner">‹</button>
-            <button type="button" className="carousel-btn right" onClick={goToNextBanner} aria-label="Next banner">›</button>
+            <ActionIcon
+              variant="white"
+              size="lg"
+              radius="xl"
+              aria-label="Previous banner"
+              onClick={goToPreviousBanner}
+              style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)" }}
+            >
+              ?
+            </ActionIcon>
+            <ActionIcon
+              variant="white"
+              size="lg"
+              radius="xl"
+              aria-label="Next banner"
+              onClick={goToNextBanner}
+              style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)" }}
+            >
+              ?
+            </ActionIcon>
+            <Group gap={6} justify="center" style={{ position: "absolute", left: 0, right: 0, bottom: 16 }}>
+              {banners.map((banner, index) => (
+                <ActionIcon
+                  key={banner.id}
+                  variant={index === bannerIndex ? "filled" : "light"}
+                  size="sm"
+                  radius="xl"
+                  onClick={() => setBannerIndex(index)}
+                  aria-label={'Go to banner ' + (index + 1)}
+                />
+              ))}
+            </Group>
           </>
         ) : null}
+      </Paper>
 
-        {banners.length > 1 ? (
-          <div className="dots">
-            {banners.map((banner, index) => (
-              <button
-                key={banner.id}
-                type="button"
-                className={`dot ${index === bannerIndex ? "active" : ""}`}
-                onClick={() => setBannerIndex(index)}
-                aria-label={`Go to banner ${index + 1}`}
-              />
-            ))}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="catalog-hero card">
-        <div className="heading-row">
+      <Paper withBorder radius="xl" p="lg" shadow="sm">
+        <Group justify="space-between" align="center" mb="md">
           <div>
-            <h1 className="hero-title">{activeCategory} Mystery Packs</h1>
+            <Title order={1} size="h2">
+              {activeCategory} Mystery Packs
+            </Title>
+            <Text c="dimmed">Browse live packs on this storefront.</Text>
           </div>
-          <button type="button" className="refresh-button" onClick={() => void loadData(true)} disabled={loading}>
-            {loading ? "Loading..." : "Refresh"}
-          </button>
-        </div>
+          <Button onClick={() => void loadData(true)} loading={loading} variant="light">
+            Refresh
+          </Button>
+        </Group>
+        {error ? <Text c="red">{error}</Text> : null}
+      </Paper>
 
-        {error ? <p className="error">{error}</p> : null}
-      </section>
-
-      <section className="pack-grid">
+      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
         {sortedPacks.map((pack) => (
-          <article className="card pack-card" key={pack.id}>
+          <Card key={pack.id} withBorder radius="xl" shadow="sm" padding="lg">
             {(() => {
               const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBanner);
               return (
@@ -354,7 +398,6 @@ export default function HomePage() {
                   {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
                   {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img
-                    className="pack-card-banner"
                     src={image.fallback}
                     alt={`${pack.title} banner`}
                     loading="lazy"
@@ -362,38 +405,43 @@ export default function HomePage() {
                     onError={(e) => {
                       e.currentTarget.src = defaultPackBannerMobile;
                     }}
+                    style={{ display: "block", width: "100%", height: 220, objectFit: "cover", borderRadius: 16 }}
                   />
                 </picture>
               );
             })()}
-            <div className="pack-header">
-              <h2>{pack.title}</h2>
-              <div className="pack-badges">
-                {pack.isNew ? <span className="badge">New</span> : null}
-                {pack.limitedLabel ? <span className="badge warn">{pack.limitedLabel}</span> : null}
+            <Group justify="space-between" align="start" mt="md" mb="xs">
+              <div>
+                <Title order={3} size="h4">
+                  {pack.title}
+                </Title>
+                <Text size="sm" c="dimmed">
+                  Remaining {pack.remainingStock}/{pack.totalStock}
+                </Text>
               </div>
-            </div>
+              <Group gap="xs">
+                {pack.isNew ? <Badge color="green" variant="light">New</Badge> : null}
+                {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
+              </Group>
+            </Group>
 
-            <p className="muted remaining-text">Remaining {pack.remainingStock}/{pack.totalStock}</p>
+            <Group justify="space-between" mt="md">
+              <Text size="sm" c="dimmed">1 draw</Text>
+              <Text fw={700} size="lg">{pack.pricePoints.toLocaleString()} pts</Text>
+            </Group>
 
-            <div className="price-line">
-              <span className="muted">1 draw</span>
-              <strong>{pack.pricePoints.toLocaleString()} pts</strong>
-            </div>
-
-            <div className="actions">
-              <Link href={`/pack/${pack.id}`} className="draw-button link-button">
-                Open Draw Page
-              </Link>
-            </div>
-          </article>
+            <Button component={Link} href={`/pack/${pack.id}`} fullWidth mt="md">
+              Open Draw Page
+            </Button>
+          </Card>
         ))}
-      </section>
+      </SimpleGrid>
 
       <footer className="site-footer">
         <a className="sort-pill" href="/fairness-proofs">Fairness Proofs</a>
       </footer>
-    </main>
+      </Stack>
+    </Container>
   );
 }
 

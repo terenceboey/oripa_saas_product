@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { FormField } from "../../components/form-field";
+import { Alert, Anchor, Button, Container, Divider, Group, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
@@ -171,46 +171,51 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="container" style={storefrontThemeStyle}>
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/" className="sort-pill">Back to Home</Link>
-        {user ? (
-          <button type="button" className="sort-pill" onClick={() => void logout()}>
-            Logout
-          </button>
-        ) : null}
-      </header>
+    <Container size="sm" py="xl" style={storefrontThemeStyle}>
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Group justify="space-between" mb="xl">
+          <Button component={Link} href="/" variant="light" radius="md">
+            Back to Home
+          </Button>
+          {user ? (
+            <Button variant="subtle" onClick={() => void logout()} radius="md">
+              Logout
+            </Button>
+          ) : null}
+        </Group>
 
-      <section className="card auth-card">
-        <h1>Create Customer Account</h1>
-        <p className="muted">Create a customer account first. After email verification, we will take you to the customer information page. Vendor applications use a separate approval flow.</p>
+        <Stack gap="lg">
+          <div>
+            <Title order={1}>Create Customer Account</Title>
+            <Text c="dimmed" mt={6}>
+              Create a customer account first. After email verification, we will take you to the customer information page. Vendor applications use a separate approval flow.
+            </Text>
+          </div>
 
-        <form className="auth-form" onSubmit={handleRegister}>
-          <FormField label="Email">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          </FormField>
-          <FormField label="Password">
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (8+ chars)" minLength={8} required />
-          </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Creating..." : "Create Customer Account"}</button>
-        </form>
+          <form onSubmit={handleRegister}>
+            <Stack gap="md">
+              <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+              <PasswordInput label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password (8+ chars)" minLength={8} required />
+              <Button type="submit" loading={loading} radius="md">
+                Create Customer Account
+              </Button>
+            </Stack>
+          </form>
 
-        <div className="auth-divider">Other login options</div>
-        <div className="auth-social-row">
-          <a className="auth-social-button google" href="#" onClick={startGoogleRegister}>
-            <span className="google-g">G</span>
-            <span>Continue with Google</span>
-          </a>
-        </div>
+          <Divider label="Other login options" labelPosition="center" />
+          <Button component="a" href="#" onClick={startGoogleRegister} variant="light" radius="md">
+            Continue with Google
+          </Button>
 
-        {error ? <p className="error">{error}</p> : null}
-        {message ? <p className="badge">{message}</p> : null}
+          {error ? <Alert color="red" title="Registration error">{error}</Alert> : null}
+          {message ? <Alert color="green" title="Status">{message}</Alert> : null}
 
-        <p className="muted" style={{ marginTop: 14 }}>
-          Already have a customer account? <Link href="/login">Login</Link>
-        </p>
-      </section>
-    </main>
+          <Text c="dimmed">
+            Already have a customer account? <Anchor component={Link} href="/login">Login</Anchor>
+          </Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 

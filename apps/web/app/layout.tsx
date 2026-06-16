@@ -1,7 +1,10 @@
 import "./globals.css";
+import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import type { Metadata } from "next";
 import { Inter, Rajdhani } from "next/font/google";
 import { CsrfBootstrap } from "../components/csrf-bootstrap";
+import { AppProvider } from "../components/app-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,8 +28,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${rajdhani.variable}`}>
       <body>
-        <CsrfBootstrap />
-        {children}
+        <AppProvider>
+          <CsrfBootstrap />
+          {children}
+        </AppProvider>
       </body>
     </html>
   );

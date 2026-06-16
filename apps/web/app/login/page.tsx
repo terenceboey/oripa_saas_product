@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
-import { FormField } from "../../components/form-field";
+import { Alert, Anchor, Badge, Button, Container, Divider, Group, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 
@@ -225,55 +225,62 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="container" style={storefrontThemeStyle}>
-      <header className="auth-top-nav profile-top-nav">
-        <Link href="/" className="sort-pill">Back to Home</Link>
-        {user ? (
-          <button type="button" className="sort-pill" onClick={() => void logout()}>
-            Logout
-          </button>
-        ) : null}
-      </header>
+    <Container size="sm" py="xl" style={storefrontThemeStyle}>
+      <Paper radius="xl" p="xl" shadow="md" withBorder>
+        <Group justify="space-between" mb="xl">
+          <Button component={Link} href="/" variant="light" radius="md">
+            Back to Home
+          </Button>
+          {user ? (
+            <Button variant="subtle" onClick={() => void logout()} radius="md">
+              Logout
+            </Button>
+          ) : null}
+        </Group>
 
-      <section className="card auth-card">
-        <h1>Customer Login</h1>
-        <p className="muted">Sign in as a customer with email/password or Google. Vendor accounts use a separate login and approval flow.</p>
-
-        <form className="auth-form" onSubmit={handleLogin}>
-          <FormField label="Email">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-          </FormField>
-          <FormField label="Password">
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
-          </FormField>
-          <button type="submit" className="draw-button" disabled={loading}>{loading ? "Signing in..." : "Customer Login"}</button>
-        </form>
-
-        <div className="auth-divider">Other login options</div>
-        <div className="auth-social-row">
-          <a className="auth-social-button google" href="#" onClick={startGoogleLogin}>
-            <span className="google-g">G</span>
-            <span>Continue with Google</span>
-          </a>
-        </div>
-
-        {error ? <p className="error">{error}</p> : null}
-        {message ? <p className="badge">{message}</p> : null}
-        {user ? (
-          <div className="auth-profile-card">
-            <strong>Signed in as {user.displayName || user.fullName || "Customer"}</strong>
-            <div className="muted tiny">{user.email}</div>
-            <div className="muted tiny">Status: {user.status}</div>
-            <div className="muted tiny">{user.profileComplete ? "Profile complete" : "Profile needs completion"}</div>
-            <div className="muted tiny"><Link href="/profile">Edit customer profile</Link></div>
+        <Stack gap="lg">
+          <div>
+            <Title order={1}>Customer Login</Title>
+            <Text c="dimmed" mt={6}>
+              Sign in as a customer with email/password or Google. Vendor accounts use a separate login and approval flow.
+            </Text>
           </div>
-        ) : null}
 
-        <p className="muted" style={{ marginTop: 14 }}>
-          No customer account? <Link href="/register">Create one</Link>
-        </p>
-      </section>
-    </main>
+          <form onSubmit={handleLogin}>
+            <Stack gap="md">
+              <TextInput label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+              <PasswordInput label="Password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+              <Button type="submit" loading={loading} radius="md">
+                Customer Login
+              </Button>
+            </Stack>
+          </form>
+
+          <Divider label="Other login options" labelPosition="center" />
+          <Button component="a" href="#" onClick={startGoogleLogin} variant="light" radius="md">
+            Continue with Google
+          </Button>
+
+          {error ? <Alert color="red" title="Login error">{error}</Alert> : null}
+          {message ? <Alert color="green" title="Status">{message}</Alert> : null}
+          {user ? (
+            <Paper withBorder radius="lg" p="md">
+              <Stack gap={4}>
+                <Text fw={700}>Signed in as {user.displayName || user.fullName || "Customer"}</Text>
+                <Text size="sm" c="dimmed">{user.email}</Text>
+                <Badge variant="light">Status: {user.status}</Badge>
+                <Text size="sm" c="dimmed">{user.profileComplete ? "Profile complete" : "Profile needs completion"}</Text>
+                <Anchor component={Link} href="/profile" size="sm">Edit customer profile</Anchor>
+              </Stack>
+            </Paper>
+          ) : null}
+
+          <Text c="dimmed">
+            No customer account? <Anchor component={Link} href="/register">Create one</Anchor>
+          </Text>
+        </Stack>
+      </Paper>
+    </Container>
   );
 }
 

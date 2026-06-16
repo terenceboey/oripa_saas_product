@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@airwallex/components-sdk": "^1.32.0",
+    "@mantine/core": "^8.3.18",
+    "@mantine/dates": "^8.3.18",
+    "@mantine/hooks": "^8.3.18",
     "@oripa/shared": "0.1.0",
     "country-to-currency": "^3.0.1",
     "next": "^16.2.6",
