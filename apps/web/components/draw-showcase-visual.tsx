@@ -423,35 +423,36 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
         .draw-carousel-result {
           position: absolute;
-          inset: 50% auto auto 50%;
-          transform: translate(-50%, -50%);
-          width: clamp(132px, 18vw, 176px);
+          inset: 0;
+          width: 100%;
+          height: 100%;
           display: grid;
           place-items: center;
           gap: 8px;
           z-index: 4;
           pointer-events: none;
-          transition: transform 260ms ease, opacity 260ms ease, filter 260ms ease;
+          padding: 0 14px;
+          box-sizing: border-box;
+          transition: opacity 260ms ease, filter 260ms ease;
         }
 
         .draw-carousel-result.is-shuffling {
-          transform: translate(-50%, -50%) scale(0.985);
           filter: saturate(1.06);
         }
 
         .draw-carousel-result.is-settling {
-          transform: translate(-50%, -50%) scale(1);
           filter: saturate(1);
         }
 
         .draw-carousel-result-card {
-          width: 100%;
+          width: min(220px, 58vw);
           border-radius: 24px;
           background: rgba(255, 255, 255, 0.96);
           box-shadow:
             0 18px 32px rgba(0, 0, 0, 0.14),
             inset 0 0 0 1px rgba(122, 92, 250, 0.12);
           padding: 10px;
+          margin-inline: auto;
           transition: transform 260ms ease, box-shadow 260ms ease;
         }
 
@@ -465,7 +466,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
         .draw-carousel-result-image {
           width: 100%;
           max-width: 100%;
-          max-height: clamp(168px, 24vw, 250px);
+          max-height: clamp(168px, 24vw, 240px);
           border-radius: 18px;
           background: rgba(255, 255, 255, 0.95);
         }
@@ -630,11 +631,11 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           }
 
           .draw-carousel-result {
-            width: clamp(104px, 28vw, 144px);
+            padding: 0 10px;
           }
 
           .draw-carousel-result-image {
-            max-height: clamp(146px, 34vw, 198px);
+            max-height: clamp(146px, 34vw, 192px);
           }
 
           .draw-carousel-result-label {
