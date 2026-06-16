@@ -391,7 +391,15 @@ export default function PackDrawPage() {
                         alt={`${pack.title} banner`}
                         loading="lazy"
                         decoding="async"
-                        style={{ width: "100%", height: "auto", display: "block", borderRadius: 16, objectFit: "cover" }}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          display: "block",
+                          borderRadius: 16,
+                          objectFit: "contain",
+                          objectPosition: "center",
+                          background: "var(--card, #fff)",
+                        }}
                         onError={(e) => {
                           e.currentTarget.src = defaultPackBannerImageMobile;
                         }}
@@ -466,7 +474,7 @@ export default function PackDrawPage() {
                                     })
                                   }
                                 >
-                                  <Image src={item.imageUrl || defaultPokemonCardImage} alt={item.label} radius="sm" h={140} fit="cover" />
+                                  <Image src={item.imageUrl || defaultPokemonCardImage} alt={item.label} radius="sm" h={140} fit="contain" bg="white" />
                                   <Stack gap={2} mt={6}>
                                     <Text fw={700} size="sm" lineClamp={2}>
                                       {item.label}
@@ -499,7 +507,7 @@ export default function PackDrawPage() {
                   <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
                     {lastDraw.draws.map((draw) => (
                       <Card key={draw.drawId} withBorder radius="md" p="xs">
-                        <Image src={draw.prizeImageUrl || defaultPokemonCardImage} alt={draw.prizeLabel || "No Prize"} radius="sm" h={160} fit="cover" />
+                        <Image src={draw.prizeImageUrl || defaultPokemonCardImage} alt={draw.prizeLabel || "No Prize"} radius="sm" h={160} fit="contain" bg="white" />
                         <Stack gap={2} mt={6}>
                           <Text fw={700} size="sm" lineClamp={2}>
                             {draw.prizeLabel || "No Prize"}

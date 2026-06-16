@@ -5,6 +5,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { ActionIcon, Avatar, Badge, Button, Card, Container, Divider, Drawer, Group, Paper, SimpleGrid, Stack, Text, Title, Burger } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconChevronLeft, IconChevronRight, IconCircle, IconCircleFilled } from "@tabler/icons-react";
 import { VendorThemeProvider } from "../lib/vendor-theme";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
@@ -401,7 +402,14 @@ export default function HomePage() {
                     onError={(e) => {
                       e.currentTarget.src = defaultPackBannerMobile;
                     }}
-                    style={{ display: "block", width: "100%", height: "clamp(220px, 32vw, 420px)", objectFit: "cover" }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      height: "clamp(220px, 32vw, 420px)",
+                      objectFit: "contain",
+                      objectPosition: "center",
+                      background: "var(--card, #fff)",
+                    }}
                   />
                 </picture>
               );
@@ -431,7 +439,7 @@ export default function HomePage() {
               onClick={goToPreviousBanner}
               style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)" }}
             >
-              ?
+              <IconChevronLeft size={20} stroke={2.5} />
             </ActionIcon>
             <ActionIcon
               variant="white"
@@ -441,7 +449,7 @@ export default function HomePage() {
               onClick={goToNextBanner}
               style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)" }}
             >
-              ?
+              <IconChevronRight size={20} stroke={2.5} />
             </ActionIcon>
             <Group gap={6} justify="center" style={{ position: "absolute", left: 0, right: 0, bottom: 16 }}>
               {banners.map((banner, index) => (
@@ -452,7 +460,9 @@ export default function HomePage() {
                   radius="xl"
                   onClick={() => setBannerIndex(index)}
                   aria-label={'Go to banner ' + (index + 1)}
-                />
+                >
+                  {index === bannerIndex ? <IconCircleFilled size={10} /> : <IconCircle size={10} />}
+                </ActionIcon>
               ))}
             </Group>
           </>
@@ -491,7 +501,15 @@ export default function HomePage() {
                     onError={(e) => {
                       e.currentTarget.src = defaultPackBannerMobile;
                     }}
-                    style={{ display: "block", width: "100%", height: 220, objectFit: "cover", borderRadius: 16 }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      height: 220,
+                      objectFit: "contain",
+                      objectPosition: "center",
+                      borderRadius: 16,
+                      background: "var(--card, #fff)",
+                    }}
                   />
                 </picture>
               );

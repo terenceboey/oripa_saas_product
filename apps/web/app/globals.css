@@ -1003,7 +1003,9 @@ h6,
 .tier-item-preview img {
   width: 56px;
   aspect-ratio: 63 / 88;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
   border-radius: 6px;
 }
 
@@ -1075,7 +1077,9 @@ h6,
 .catalog-result-tile img {
   width: 100%;
   aspect-ratio: 63 / 88;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #fff;
   border-radius: 6px;
 }
 
