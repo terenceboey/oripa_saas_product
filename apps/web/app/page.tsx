@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
-import { ActionIcon, Avatar, Badge, Button, Card, Container, Divider, Drawer, Group, Paper, SimpleGrid, Stack, Text, Title, Burger } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { ActionIcon, Badge, Button, Card, Container, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconCircle, IconCircleFilled } from "@tabler/icons-react";
+import { StorefrontNav } from "../components/storefront-nav";
 import { VendorThemeProvider } from "../lib/vendor-theme";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
-import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../lib/media-url";
+import { normalizeVendorFaviconUrl, resolvePackBannerMediaUrl } from "../lib/media-url";
 
 type Banner = {
   id: string;
@@ -102,7 +102,6 @@ export default function HomePage() {
   const [vendorNotFound, setVendorNotFound] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
-  const [navOpened, { open: openNav, close: closeNav }] = useDisclosure(false);
 
   const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
@@ -255,135 +254,19 @@ export default function HomePage() {
     <VendorThemeProvider theme={tenant?.vendorSettings}>
       <Container size="xl" py="lg" style={storefrontThemeStyle}>
       <Stack gap="lg">
-      <Paper withBorder radius="xl" p="md" shadow="sm">
-        <Group justify="space-between" align="center" gap="md" wrap="nowrap">
-          <Group gap="sm" align="center" wrap="nowrap">
-            <img
-              src={normalizeVendorLogoUrl(tenant?.logoImageUrl) || "/default-brand-logo.png"}
-              alt="Vendor logo"
-              style={{ width: 48, height: 48, objectFit: "contain", borderRadius: 12, flexShrink: 0 }}
-            />
-            <Stack gap={0} style={{ minWidth: 0 }}>
-              <Title order={2} size="h3">
-                {tenant?.name ?? "Storefront"}
-              </Title>
-              <Text size="sm" c="dimmed" lineClamp={1}>
-                {runtimeVendorHost}
-              </Text>
-            </Stack>
-          </Group>
-
-          <Group gap="xs" justify="flex-end" wrap="nowrap" visibleFrom="sm">
-            <Badge variant="light" size="lg">
-              Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
-            </Badge>
-            <Button variant="subtle" component={Link} href="/setlists">
-              Setlists
-            </Button>
-            {user ? (
-              <Paper component={Link} href="/profile" withBorder radius="md" p="sm" style={{ textDecoration: "none" }}>
-                <Group gap="sm" wrap="nowrap" align="center">
-                  <Avatar radius="xl" color="violet" size="sm">
-                    {(user.displayName || user.fullName || "C").slice(0, 1).toUpperCase()}
-                  </Avatar>
-                  <Stack gap={0}>
-                    <Text fw={600}>{user.displayName || user.fullName || "Customer"}</Text>
-                    <Text size="sm" c="dimmed">
-                      {user.email}
-                    </Text>
-                  </Stack>
-                </Group>
-              </Paper>
-            ) : (
-              <>
-                <Button variant="light" component={Link} href="/login">
-                  Customer Login
-                </Button>
-                <Button variant="outline" component={Link} href="/register">
-                  Customer Register
-                </Button>
-              </>
-            )}
-            {user ? <Button variant="subtle" onClick={logout}>Logout</Button> : null}
-          </Group>
-
-          <Group gap="xs" wrap="nowrap" hiddenFrom="sm">
-            <Badge variant="light" size="md">
-              {wallet?.balancePoints?.toLocaleString() ?? "-"} pts
-            </Badge>
-            <Burger opened={navOpened} onClick={navOpened ? closeNav : openNav} aria-label="Open navigation" />
-          </Group>
-        </Group>
-      </Paper>
-
-      <Drawer
-        opened={navOpened}
-        onClose={closeNav}
-        title="Menu"
-        position="right"
-        size="sm"
-        padding="md"
-      >
-        <Stack gap="md">
-          <Paper withBorder radius="lg" p="md">
-            <Group gap="sm" align="center" wrap="nowrap">
-              <Avatar radius="xl" color="violet">
-                {(user?.displayName || user?.fullName || tenant?.name || "S").slice(0, 1).toUpperCase()}
-              </Avatar>
-              <Stack gap={2}>
-                <Text fw={700}>{user?.displayName || user?.fullName || "Guest"}</Text>
-                <Text size="sm" c="dimmed">
-                  {user?.email || "Sign in to manage your profile"}
-                </Text>
-                <Text size="xs" c="dimmed">
-                  {runtimeVendorHost}
-                </Text>
-              </Stack>
-            </Group>
-          </Paper>
-
-          <Badge variant="light" size="lg" fullWidth>
-            Points: {wallet?.balancePoints?.toLocaleString() ?? "-"}
-          </Badge>
-
-          <Button component={Link} href="/setlists" variant="light" fullWidth onClick={closeNav}>
-            Setlists
-          </Button>
-
-          {user ? (
-            <>
-              <Button component={Link} href="/profile" variant="outline" fullWidth onClick={closeNav}>
-                My Profile
-              </Button>
-              <Button
-                variant="subtle"
-                fullWidth
-                onClick={() => {
-                  closeNav();
-                  void logout();
-                }}
-              >
-                Logout
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button component={Link} href="/login" variant="light" fullWidth onClick={closeNav}>
-                Customer Login
-              </Button>
-              <Button component={Link} href="/register" variant="outline" fullWidth onClick={closeNav}>
-                Customer Register
-              </Button>
-            </>
-          )}
-
-          <Divider />
-
-          <Button component={Link} href="/fairness-proofs" variant="subtle" fullWidth onClick={closeNav}>
-            Fairness Proofs
-          </Button>
-        </Stack>
-      </Drawer>
+      <StorefrontNav
+        brandName={tenant?.name ?? "Storefront"}
+        host={runtimeVendorHost}
+        logoUrl={tenant?.logoImageUrl}
+        pointsLabel={`Points: ${wallet?.balancePoints?.toLocaleString() ?? "-"}`}
+        desktopActions={[{ label: "Setlists", href: "/setlists", variant: "subtle" }]}
+        drawerActions={[
+          { label: "Setlists", href: "/setlists", variant: "light" },
+          { label: "Fairness Proofs", href: "/fairness-proofs", variant: "subtle" },
+        ]}
+        user={user}
+        onLogout={logout}
+      />
 
       <Paper withBorder radius="xl" p={0} shadow="sm" style={{ overflow: "hidden", position: "relative" }}>
         {currentBanner ? (

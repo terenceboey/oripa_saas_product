@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Title } from "@mantine/core";
+import { StorefrontNav } from "../../components/storefront-nav";
+import { applyVendorFavicon } from "../../lib/favicon";
+import { normalizeVendorFaviconUrl } from "../../lib/media-url";
 
 type SetlistItem = {
   id: string;
@@ -35,8 +38,16 @@ type SetlistStatsResponse = {
   byGame?: Record<string, number>;
 };
 
+type Tenant = {
+  name: string;
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const PAGE_SIZE = 18;
+const clientPageHeader = { "x-client-page": "/setlists" };
 const gameOptions = [
   { value: "pokemon", label: "Pokemon" },
   { value: "one-piece", label: "One Piece" },
@@ -44,14 +55,48 @@ const gameOptions = [
 ] as const;
 
 export default function SetlistsPage() {
+  const runtimeVendorHost = useMemo(() => {
+    if (typeof window !== "undefined" && window.location?.host) return window.location.host.toLowerCase();
+    return configuredVendorHost;
+  }, []);
   const [game, setGame] = useState<(typeof gameOptions)[number]["value"]>("pokemon");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "name">("newest");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const [mainData, setMainData] = useState<SetlistResponse>({ total: 0, totalPages: 1, page: 1, limit: PAGE_SIZE, items: [] });
   const [recentItems, setRecentItems] = useState<SetlistItem[]>([]);
   const [tabCounts, setTabCounts] = useState({ pokemon: 0, onePiece: 0, pokemonJapan: 0 });
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${apiBase}/v1/vendor/current`, {
+      headers: clientPageHeader,
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        setTenant((payload.vendor ?? payload.tenant ?? null) as Tenant | null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTenant(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    applyVendorFavicon(normalizeVendorFaviconUrl(tenant?.faviconImageUrl, tenant?.logoImageUrl));
+  }, [tenant?.faviconImageUrl, tenant?.logoImageUrl]);
 
   useEffect(() => {
     setPage(1);
@@ -158,24 +203,25 @@ export default function SetlistsPage() {
   return (
     <Container size="xl" py="xl">
       <Stack gap="lg">
+        <StorefrontNav
+          brandName={tenant?.name ?? "Storefront"}
+          host={runtimeVendorHost}
+          logoUrl={tenant?.logoImageUrl}
+          desktopActions={[{ label: "Home", href: "/", variant: "subtle" }]}
+          drawerActions={[
+            { label: "Home", href: "/", variant: "light" },
+            { label: "Fairness Proofs", href: "/fairness-proofs", variant: "subtle" },
+          ]}
+        />
+
         <Paper withBorder radius="xl" p="lg" shadow="sm">
           <Stack gap="md">
-            <Group justify="space-between" align="start" wrap="wrap">
-              <div>
-                <Title order={1}>Setlists</Title>
-                <Text c="dimmed" mt={4}>
-                  Browse every release across the platform.
-                </Text>
-              </div>
-              <Group gap="xs" wrap="wrap">
-                <Button component={Link} href="/" variant="light">
-                  Home
-                </Button>
-                <Button component={Link} href="/pack" variant="outline">
-                  Packs
-                </Button>
-              </Group>
-            </Group>
+            <div>
+              <Title order={1}>Setlists</Title>
+              <Text c="dimmed" mt={4}>
+                Browse every release across the platform.
+              </Text>
+            </div>
 
             <Tabs value={game} onChange={(value) => setGame((value as typeof game) ?? "pokemon")} variant="pills" radius="xl">
               <Tabs.List>
