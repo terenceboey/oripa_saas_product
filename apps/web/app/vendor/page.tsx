@@ -556,13 +556,13 @@ export default function VendorPage() {
     return found?.id ?? "custom";
   }, [themeDraft]);
   const referralSignupUrl = useMemo(() => {
-    const code = referralCode.trim();
+    const code = referralCode.trim() || vendorSlug.trim() || vendor?.slug?.trim() || "";
     if (!code) return "";
     const origin = typeof window !== "undefined" && window.location?.origin ? window.location.origin : `https://${runtimeVendorHost}`;
     const url = new URL("/register", origin);
     url.searchParams.set("ref", code);
     return url.toString();
-  }, [referralCode, runtimeVendorHost]);
+  }, [referralCode, vendor?.slug, vendorSlug, runtimeVendorHost]);
   const packWinsInitialLoadRef = useRef(false);
 
   const totalDraftItems = tiers.reduce((sum, tier) => sum + tier.items.length, 0);
@@ -2402,19 +2402,78 @@ export default function VendorPage() {
                         </div>
                         <div className="tier-card-strip">
                           {tier.items.map((item, itemIndex) => (
-                            <button
-                              type="button"
-                              className="tier-card-tile"
+                            <div
+                              className="tier-item-editor"
                               key={`tier-${tierIndex}-item-${itemIndex}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeItem(tierIndex, itemIndex);
-                              }}
-                              title={`Remove ${item.label || "card"}`}
                             >
-                              <img src={item.imageUrl || DEFAULT_CARD} alt={item.label || "Card"} />
-                              <span>{item.label || "Untitled card"}</span>
-                            </button>
+                              <div className="tier-item-preview">
+                                <img src={item.imageUrl || DEFAULT_CARD} alt={item.label || "Card"} />
+                                <div className="tier-item-preview-meta">
+                                  <strong>{item.label || "Untitled card"}</strong>
+                                  <span className="muted tiny">
+                                    {item.catalogItemId ? "Catalog item" : "Manual item"}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className="sort-pill"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeItem(tierIndex, itemIndex);
+                                  }}
+                                  title={`Remove ${item.label || "card"}`}
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                              <div className="tier-item-fields">
+                                <label className="muted tiny">
+                                  Item label
+                                  <input
+                                    value={item.label}
+                                    onChange={(e) => updateItem(tierIndex, itemIndex, "label", e.target.value)}
+                                    placeholder="Item label"
+                                  />
+                                </label>
+                                <label className="muted tiny">
+                                  Estimated value
+                                  <input
+                                    value={item.estimatedValue}
+                                    onChange={(e) => updateItem(tierIndex, itemIndex, "estimatedValue", e.target.value)}
+                                    type="number"
+                                    min={0}
+                                    step="1"
+                                    placeholder="Estimated value"
+                                  />
+                                </label>
+                                <label className="muted tiny">
+                                  Quantity available
+                                  <input
+                                    value={item.stock}
+                                    onChange={(e) => updateItem(tierIndex, itemIndex, "stock", e.target.value)}
+                                    type="number"
+                                    min={1}
+                                    step="1"
+                                    placeholder="How many times this item can be won"
+                                  />
+                                </label>
+                              </div>
+                              <div className="tier-item-presets">
+                                {[1, 5, 10, 25, 50].map((qty) => (
+                                  <button
+                                    key={`${tierIndex}-${itemIndex}-qty-${qty}`}
+                                    type="button"
+                                    className={`sort-pill ${item.stock === String(qty) ? "active" : ""}`}
+                                    onClick={() => updateItem(tierIndex, itemIndex, "stock", String(qty))}
+                                  >
+                                    {qty}x
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="muted tiny">
+                                This controls how many winning copies of this exact prize are allowed in the pack.
+                              </p>
+                            </div>
                           ))}
                           {tier.items.length === 0 ? <p className="muted tiny">No cards added yet.</p> : null}
                         </div>
