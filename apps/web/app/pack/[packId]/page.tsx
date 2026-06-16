@@ -240,7 +240,6 @@ export default function PackDrawPage() {
     setDrawShowcaseIndex(0);
     setDrawShowcasePhase(null);
     setDrawShowcaseCard(null);
-    setConfettiBurstKey((value) => value + 1);
     void ensureAudioContext();
 
     const idempotencyKey = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
@@ -306,6 +305,8 @@ export default function PackDrawPage() {
     const currentDraw = drawShowcase.draws[drawShowcaseIndex];
     const fallbackCard = drawShowcasePool[0] ?? { label: "Mystery Card", imageUrl: defaultPokemonCardImage };
     const spinPool = drawShowcasePool.length > 0 ? drawShowcasePool : [fallbackCard];
+    const spinDurationMs = 3200;
+    const revealDurationMs = 1800;
     let spinInterval: number | null = null;
     let revealTimeout: number | null = null;
     let nextTimeout: number | null = null;
@@ -329,7 +330,6 @@ export default function PackDrawPage() {
       };
       setDrawShowcaseCard(finalCard);
       setDrawShowcasePhase("revealing");
-      setConfettiBurstKey((value) => value + 1);
       void playRevealChime();
 
       nextTimeout = window.setTimeout(() => {
@@ -339,8 +339,9 @@ export default function PackDrawPage() {
           return;
         }
         setDrawShowcasePhase("done");
-      }, 1000);
-    }, 1200);
+        setConfettiBurstKey((value) => value + 1);
+      }, revealDurationMs);
+    }, spinDurationMs);
 
     return () => {
       active = false;
@@ -534,32 +535,34 @@ export default function PackDrawPage() {
       <Modal opened={isDrawShowcaseOpen} onClose={drawShowcasePhase === "done" ? closeDrawShowcase : () => null} centered size="lg" withCloseButton={false} radius="lg">
         {drawShowcase ? (
           <Stack gap="md" style={{ position: "relative", overflow: "hidden" }}>
-            <div key={confettiBurstKey} aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-              {Array.from({ length: 18 }).map((_, index) => {
-                const left = (index * 13) % 100;
-                const delay = (index % 6) * 0.05;
-                const duration = 1.6 + (index % 5) * 0.18;
-                const hue = (index * 37) % 360;
-                const drift = ((index % 9) - 4) * 14;
-                return (
-                  <span
-                    key={`${confettiBurstKey}-${index}`}
-                    style={{
-                      position: "absolute",
-                      top: 0,
-                      left: `${left}%`,
-                      width: 8,
-                      height: 14,
-                      borderRadius: 999,
-                      background: `hsl(${hue} 85% 60%)`,
-                      opacity: 0,
-                      animation: `pack-confetti ${duration}s ease-in ${delay}s forwards`,
-                      ["--drift" as string]: `${drift}px`,
-                    }}
-                  />
-                );
-              })}
-            </div>
+            {drawShowcasePhase === "done" ? (
+              <div key={confettiBurstKey} aria-hidden="true" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+                {Array.from({ length: 18 }).map((_, index) => {
+                  const left = (index * 13) % 100;
+                  const delay = (index % 6) * 0.05;
+                  const duration = 1.6 + (index % 5) * 0.18;
+                  const hue = (index * 37) % 360;
+                  const drift = ((index % 9) - 4) * 14;
+                  return (
+                    <span
+                      key={`${confettiBurstKey}-${index}`}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: `${left}%`,
+                        width: 8,
+                        height: 14,
+                        borderRadius: 999,
+                        background: `hsl(${hue} 85% 60%)`,
+                        opacity: 0,
+                        animation: `pack-confetti ${duration}s ease-in ${delay}s forwards`,
+                        ["--drift" as string]: `${drift}px`,
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            ) : null}
 
             <Group justify="space-between" align="start" wrap="wrap">
               <div>
