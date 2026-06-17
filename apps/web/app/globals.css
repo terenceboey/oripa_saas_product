@@ -406,7 +406,7 @@ h6,
   border-color: rgba(255, 255, 255, 0.08) !important;
   box-shadow: 0 24px 80px rgba(10, 8, 20, 0.26);
   color: #fff;
-  max-width: 560px;
+  max-width: none;
   margin-inline: auto;
   width: 100%;
 }
@@ -464,7 +464,7 @@ h6,
 .pack-carousel-active {
   position: relative;
   z-index: 3;
-  width: min(100%, 420px);
+  width: min(100%, 500px);
   margin: 0 auto;
   transform: translateZ(96px);
   transform-style: preserve-3d;
@@ -483,8 +483,8 @@ h6,
   top: 26px;
   z-index: 1;
   left: 50%;
-  width: min(34vw, 210px);
-  opacity: 0.34;
+  width: min(22vw, 260px);
+  opacity: 0.42;
   filter: saturate(0.78) brightness(0.72);
   transform-style: preserve-3d;
   transition: transform 420ms cubic-bezier(0.19, 0.82, 0.24, 1), opacity 360ms ease, filter 360ms ease;
@@ -496,12 +496,12 @@ h6,
 }
 
 .pack-carousel-side-left {
-  transform: translateX(-118%) translateZ(-160px) rotateY(12deg) scale(0.78);
+  transform: translateX(-154%) translateZ(-150px) rotateY(18deg) scale(0.84);
   transform-origin: right center;
 }
 
 .pack-carousel-side-left:hover {
-  transform: translateX(-112%) translateZ(-130px) rotateY(9deg) scale(0.8);
+  transform: translateX(-148%) translateZ(-122px) rotateY(14deg) scale(0.86);
 }
 
 .pack-carousel-side-left-next {
@@ -513,12 +513,12 @@ h6,
 }
 
 .pack-carousel-side-right {
-  transform: translateX(18%) translateZ(-160px) rotateY(-12deg) scale(0.78);
+  transform: translateX(54%) translateZ(-150px) rotateY(-18deg) scale(0.84);
   transform-origin: left center;
 }
 
 .pack-carousel-side-right:hover {
-  transform: translateX(12%) translateZ(-130px) rotateY(-9deg) scale(0.8);
+  transform: translateX(48%) translateZ(-122px) rotateY(-14deg) scale(0.86);
 }
 
 .pack-carousel-side-right-next {
@@ -609,7 +609,7 @@ h6,
 }
 
 .pack-carousel-card-active .pack-carousel-cover {
-  width: min(78%, 300px) !important;
+  width: min(74%, 340px) !important;
   margin-inline: auto;
 }
 
@@ -1181,6 +1181,17 @@ h6,
   .card-preview-grid,
   .draw-result-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 761px) {
+  .pack-carousel-stage {
+    min-height: 720px;
+    padding-inline: clamp(18px, 2vw, 40px);
+  }
+
+  .pack-carousel-floating-controls {
+    display: none;
   }
 }
 
