@@ -266,13 +266,6 @@ export default function HomePage() {
     goToPack(activePackIndex + 1, "next");
   }
 
-  function goToPackDot(index: number) {
-    if (index === activePackIndex || sortedPacks.length <= 1) return;
-    const forwardDistance = (index - activePackIndex + sortedPacks.length) % sortedPacks.length;
-    const backwardDistance = (activePackIndex - index + sortedPacks.length) % sortedPacks.length;
-    goToPack(index, forwardDistance <= backwardDistance ? "next" : "previous");
-  }
-
   function goToPackOffset(offset: number) {
     if (offset === 0 || sortedPacks.length <= 1) return;
     const targetIndex = activePackIndex + offset;
@@ -543,14 +536,15 @@ export default function HomePage() {
               {desktopCarouselOffsets.map((offset) => {
                 const pack = sortedPacks[(activePackIndex + offset + sortedPacks.length) % sortedPacks.length];
                 if (!pack) return null;
+                const canSelectSidePack = Math.abs(offset) === 1;
 
                 const slotClassName =
                   offset === -2
                     ? `pack-carousel-slot pack-carousel-slot-far-left pack-carousel-slot-far-left-${packSlideDirection}`
                     : offset === -1
-                      ? `pack-carousel-slot pack-carousel-slot-left pack-carousel-slot-left-${packSlideDirection}`
+                      ? `pack-carousel-slot pack-carousel-slot-left pack-carousel-slot-clickable pack-carousel-slot-left-${packSlideDirection}`
                       : offset === 1
-                        ? `pack-carousel-slot pack-carousel-slot-right pack-carousel-slot-right-${packSlideDirection}`
+                        ? `pack-carousel-slot pack-carousel-slot-right pack-carousel-slot-clickable pack-carousel-slot-right-${packSlideDirection}`
                         : offset === 2
                           ? `pack-carousel-slot pack-carousel-slot-far-right pack-carousel-slot-far-right-${packSlideDirection}`
                           : `pack-carousel-slot pack-carousel-slot-active pack-carousel-slot-active-${packSlideDirection}`;
@@ -572,7 +566,7 @@ export default function HomePage() {
                       pack,
                       offset === 0 ? "active" : "side",
                       label,
-                      offset === 0 ? undefined : () => goToPackOffset(offset),
+                      canSelectSidePack ? () => goToPackOffset(offset) : undefined,
                     )}
                   </div>
                 );
@@ -590,8 +584,9 @@ export default function HomePage() {
                     variant={index === activePackIndex ? "filled" : "light"}
                     size="sm"
                     radius="xl"
-                    onClick={() => goToPackDot(index)}
                     aria-label={'Go to pack ' + (index + 1)}
+                    aria-current={index === activePackIndex ? "true" : undefined}
+                    tabIndex={-1}
                   >
                     {index === activePackIndex ? <IconCircleFilled size={10} /> : <IconCircle size={10} />}
                   </ActionIcon>

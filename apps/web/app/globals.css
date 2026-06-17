@@ -414,7 +414,7 @@ h6,
 .pack-carousel-stage {
   position: relative;
   overflow: visible;
-  min-height: 650px;
+  min-height: 640px;
   isolation: isolate;
   cursor: grab;
   touch-action: pan-y;
@@ -472,10 +472,11 @@ h6,
 
 .pack-carousel-slot {
   position: absolute;
-  top: 26px;
+  top: 22px;
   left: 50%;
   z-index: 1;
   transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.19, 0.82, 0.24, 1), opacity 360ms ease, filter 360ms ease;
 }
 
 .pack-carousel-slot-active {
@@ -502,25 +503,30 @@ h6,
 
 .pack-carousel-card-side {
   width: 100%;
-  opacity: 0.42;
-  filter: saturate(0.78) brightness(0.72);
+  opacity: 0.5;
+  filter: saturate(0.82) brightness(0.76);
   transform-style: preserve-3d;
+  pointer-events: none;
   transition: transform 420ms cubic-bezier(0.19, 0.82, 0.24, 1), opacity 360ms ease, filter 360ms ease;
 }
 
-.pack-carousel-slot:hover .pack-carousel-card-side {
-  opacity: 0.78;
+.pack-carousel-slot-clickable .pack-carousel-card-side {
+  pointer-events: auto;
+}
+
+.pack-carousel-slot-clickable:hover .pack-carousel-card-side {
+  opacity: 0.86;
   filter: saturate(0.95) brightness(0.98);
 }
 
 .pack-carousel-slot-left {
   width: min(22vw, 260px);
-  transform: translateX(-154%) translateZ(-150px) rotateY(18deg) scale(0.84);
+  transform: translateX(-165%) translateZ(-120px) rotateY(14deg) scale(0.84);
   transform-origin: right center;
 }
 
 .pack-carousel-slot-left:hover {
-  transform: translateX(-148%) translateZ(-122px) rotateY(14deg) scale(0.86);
+  transform: translateX(-160%) translateZ(-96px) rotateY(10deg) scale(0.87);
 }
 
 .pack-carousel-slot-left-next {
@@ -533,12 +539,12 @@ h6,
 
 .pack-carousel-slot-right {
   width: min(22vw, 260px);
-  transform: translateX(54%) translateZ(-150px) rotateY(-18deg) scale(0.84);
+  transform: translateX(65%) translateZ(-120px) rotateY(-14deg) scale(0.84);
   transform-origin: left center;
 }
 
 .pack-carousel-slot-right:hover {
-  transform: translateX(48%) translateZ(-122px) rotateY(-14deg) scale(0.86);
+  transform: translateX(60%) translateZ(-96px) rotateY(-10deg) scale(0.87);
 }
 
 .pack-carousel-slot-right-next {
@@ -551,27 +557,28 @@ h6,
 
 .pack-carousel-slot-far-left,
 .pack-carousel-slot-far-right {
-  width: min(18vw, 220px);
-  opacity: 0.24;
+  width: min(18vw, 210px);
+  opacity: 0.34;
   filter: saturate(0.7) brightness(0.62);
+  pointer-events: none;
 }
 
 .pack-carousel-slot-far-left {
-  transform: translateX(-214%) translateZ(-230px) rotateY(28deg) scale(0.72);
+  transform: translateX(-270%) translateZ(-210px) rotateY(22deg) scale(0.7);
   transform-origin: right center;
 }
 
 .pack-carousel-slot-far-left:hover {
-  transform: translateX(-206%) translateZ(-200px) rotateY(22deg) scale(0.74);
+  transform: translateX(-270%) translateZ(-210px) rotateY(22deg) scale(0.7);
 }
 
 .pack-carousel-slot-far-right {
-  transform: translateX(112%) translateZ(-230px) rotateY(-28deg) scale(0.72);
+  transform: translateX(170%) translateZ(-210px) rotateY(-22deg) scale(0.7);
   transform-origin: left center;
 }
 
 .pack-carousel-slot-far-right:hover {
-  transform: translateX(104%) translateZ(-200px) rotateY(-22deg) scale(0.74);
+  transform: translateX(170%) translateZ(-210px) rotateY(-22deg) scale(0.7);
 }
 
 .pack-carousel-card {
@@ -591,7 +598,6 @@ h6,
 }
 
 .pack-carousel-card-side {
-  pointer-events: auto;
   border-color: transparent !important;
   box-shadow: none;
   padding: 0 !important;
