@@ -268,7 +268,7 @@ export default function HomePage() {
         onLogout={logout}
       />
 
-      <Paper withBorder radius="xl" p={0} shadow="sm" style={{ overflow: "hidden", position: "relative", width: "100%", maxWidth: 760, marginInline: "auto" }}>
+      <Paper withBorder radius="xl" p={0} shadow="sm" style={{ overflow: "hidden", position: "relative", width: "100%" }}>
         {currentBanner ? (
           <a href={currentBanner.targetUrl ?? "#"} target="_blank" rel="noreferrer" style={{ display: "block", position: "relative", color: "inherit", textDecoration: "none" }}>
             {(() => {
