@@ -503,6 +503,32 @@ export default function HomePage() {
               onPointerCancel={handlePackPointerCancel}
               onPointerLeave={handlePackPointerCancel}
             >
+              {sortedPacks.length > 1 ? (
+                <div className="pack-carousel-floating-controls" aria-label="Pack carousel navigation">
+                  <ActionIcon
+                    variant="white"
+                    size="xl"
+                    radius="xl"
+                    aria-label="Previous pack"
+                    onClick={goToPreviousPack}
+                    disabled={sortedPacks.length <= 1}
+                    className="pack-carousel-floating-button pack-carousel-floating-button-left"
+                  >
+                    <IconChevronLeft size={22} stroke={2.5} />
+                  </ActionIcon>
+                  <ActionIcon
+                    variant="white"
+                    size="xl"
+                    radius="xl"
+                    aria-label="Next pack"
+                    onClick={goToNextPack}
+                    disabled={sortedPacks.length <= 1}
+                    className="pack-carousel-floating-button pack-carousel-floating-button-right"
+                  >
+                    <IconChevronRight size={22} stroke={2.5} />
+                  </ActionIcon>
+                </div>
+              ) : null}
               {previousPack ? (
                 <div key={`previous-${previousPack.id}-${packSlideNonce}`} className={`pack-carousel-side pack-carousel-side-left pack-carousel-side-left-${packSlideDirection}`}>
                   {renderPackCard(previousPack, "side", "Previous", goToPreviousPack)}
