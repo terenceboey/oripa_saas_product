@@ -274,6 +274,7 @@ export default function HomePage() {
 
   function handlePackPointerDown(event: PointerEvent<HTMLDivElement>) {
     if (sortedPacks.length <= 1) return;
+    if ((event.target as HTMLElement).closest("a,button")) return;
     swipeStartXRef.current = event.clientX;
     swipeStartYRef.current = event.clientY;
   }

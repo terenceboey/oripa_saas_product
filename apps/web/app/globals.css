@@ -468,6 +468,7 @@ h6,
   margin: 0;
   transform: translateZ(96px);
   transform-style: preserve-3d;
+  pointer-events: auto;
 }
 
 .pack-carousel-slot {
@@ -678,8 +679,11 @@ h6,
 }
 
 .pack-carousel-details {
+  position: relative;
+  z-index: 12;
   color: #fff;
   text-align: center;
+  pointer-events: auto;
 }
 
 .pack-carousel-subtitle {
@@ -707,8 +711,11 @@ h6,
 }
 
 .pack-carousel-action {
+  position: relative;
+  z-index: 14;
   background: linear-gradient(135deg, var(--brand), var(--brand-accent)) !important;
   box-shadow: 0 16px 36px color-mix(in srgb, var(--brand) 34%, transparent);
+  pointer-events: auto;
 }
 
 .pack-header h2 {
