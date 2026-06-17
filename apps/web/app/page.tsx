@@ -102,6 +102,7 @@ export default function HomePage() {
   const [vendorNotFound, setVendorNotFound] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activeCategory, setActiveCategory] = useState("Pokemon");
+  const [activePackIndex, setActivePackIndex] = useState(0);
 
   const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
@@ -215,7 +216,18 @@ export default function HomePage() {
     return next;
   }, [packs, sortKey]);
 
+  useEffect(() => {
+    if (!sortedPacks.length) {
+      setActivePackIndex(0);
+      return;
+    }
+    setActivePackIndex((current) => Math.min(current, sortedPacks.length - 1));
+  }, [sortedPacks.length]);
+
   const currentBanner = banners[bannerIndex];
+  const activePack = sortedPacks[activePackIndex] ?? null;
+  const previousPack = sortedPacks.length > 1 ? sortedPacks[(activePackIndex - 1 + sortedPacks.length) % sortedPacks.length] : null;
+  const nextPack = sortedPacks.length > 2 ? sortedPacks[(activePackIndex + 1) % sortedPacks.length] : sortedPacks.length === 2 ? sortedPacks[(activePackIndex + 1) % sortedPacks.length] : null;
   const storefrontThemeStyle = useMemo(() => {
     const theme = tenant?.vendorSettings;
     if (!theme) return undefined;
@@ -239,6 +251,100 @@ export default function HomePage() {
   function goToNextBanner() {
     if (!banners.length) return;
     setBannerIndex((current) => (current + 1) % banners.length);
+  }
+
+  function goToPreviousPack() {
+    if (!sortedPacks.length) return;
+    setActivePackIndex((current) => (current - 1 + sortedPacks.length) % sortedPacks.length);
+  }
+
+  function goToNextPack() {
+    if (!sortedPacks.length) return;
+    setActivePackIndex((current) => (current + 1) % sortedPacks.length);
+  }
+
+  function getTopPrize(pack: Pack) {
+    return pack.prizes.reduce<Prize | null>((best, prize) => {
+      if (!best || prize.estimatedValue > best.estimatedValue) return prize;
+      return best;
+    }, null);
+  }
+
+  function renderPackCard(pack: Pack, variant: "active" | "side", label: string, onSelect?: () => void) {
+    const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBanner);
+    const topPrize = getTopPrize(pack);
+    const isActive = variant === "active";
+
+    return (
+      <Card
+        withBorder
+        radius="lg"
+        shadow={isActive ? "lg" : "sm"}
+        padding={isActive ? "lg" : "sm"}
+        className={isActive ? "pack-carousel-card pack-carousel-card-active" : "pack-carousel-card pack-carousel-card-side"}
+        onClick={onSelect}
+        style={{ cursor: onSelect ? "pointer" : "default" }}
+      >
+        <picture style={{ display: "block", width: "100%" }}>
+          {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
+          {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
+          <img
+            src={image.fallback}
+            alt={`${pack.title} banner`}
+            loading="lazy"
+            decoding="async"
+            onError={(e) => {
+              e.currentTarget.src = defaultPackBannerMobile;
+            }}
+            className="pack-carousel-image"
+          />
+        </picture>
+
+        <Stack gap={isActive ? "md" : 6} mt={isActive ? "md" : "xs"}>
+          <Group justify="space-between" align="start" gap="sm">
+            <div>
+              <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                {label}
+              </Text>
+              <Title order={isActive ? 2 : 4} size={isActive ? "h3" : "h5"}>
+                {pack.title}
+              </Title>
+            </div>
+            <Group gap={6}>
+              {pack.isNew ? <Badge color="green" variant="light">New</Badge> : null}
+              {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
+            </Group>
+          </Group>
+
+          {isActive ? (
+            <>
+              <div className="pack-carousel-stats">
+                <div>
+                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">Price</Text>
+                  <Text fw={900}>{pack.pricePoints.toLocaleString()} pts</Text>
+                </div>
+                <div>
+                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">Remaining</Text>
+                  <Text fw={900}>{pack.remainingStock.toLocaleString()}/{pack.totalStock.toLocaleString()}</Text>
+                </div>
+                <div>
+                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">Top Prize</Text>
+                  <Text fw={900} lineClamp={1}>{topPrize?.label ?? "Mystery prize"}</Text>
+                </div>
+              </div>
+
+              <Button component={Link} href={`/pack/${pack.id}`} fullWidth size="md">
+                Open Draw Page
+              </Button>
+            </>
+          ) : (
+            <Text size="sm" c="dimmed">
+              {pack.pricePoints.toLocaleString()} pts per draw
+            </Text>
+          )}
+        </Stack>
+      </Card>
+    );
   }
 
   async function logout() {
@@ -367,62 +473,57 @@ export default function HomePage() {
         {error ? <Text c="red">{error}</Text> : null}
       </Paper>
 
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
-        {sortedPacks.map((pack) => (
-          <Card key={pack.id} withBorder radius="xl" shadow="sm" padding="lg">
-            {(() => {
-              const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBanner);
-              return (
-                <picture style={{ display: "block", width: "100%" }}>
-                  {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
-                  {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
-                  <img
-                    src={image.fallback}
-                    alt={`${pack.title} banner`}
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => {
-                      e.currentTarget.src = defaultPackBannerMobile;
-                    }}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      height: 220,
-                      objectFit: "cover",
-                      objectPosition: "center",
-                      borderRadius: 16,
-                      background: "transparent",
-                    }}
-                  />
-                </picture>
-              );
-            })()}
-            <Group justify="space-between" align="start" mt="md" mb="xs">
-              <div>
-                <Title order={3} size="h4">
-                  {pack.title}
-                </Title>
-                <Text size="sm" c="dimmed">
-                  Remaining {pack.remainingStock}/{pack.totalStock}
-                </Text>
+      <Paper withBorder radius="xl" p={{ base: "md", md: "xl" }} shadow="sm" className="pack-carousel-shell">
+        {activePack ? (
+          <Stack gap="md">
+            <div className="pack-carousel-stage">
+              {previousPack ? (
+                <div className="pack-carousel-side pack-carousel-side-left">
+                  {renderPackCard(previousPack, "side", "Previous", goToPreviousPack)}
+                </div>
+              ) : null}
+
+              <div className="pack-carousel-active">
+                {renderPackCard(activePack, "active", `Pack ${activePackIndex + 1} of ${sortedPacks.length}`)}
               </div>
-              <Group gap="xs">
-                {pack.isNew ? <Badge color="green" variant="light">New</Badge> : null}
-                {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
+
+              {nextPack ? (
+                <div className="pack-carousel-side pack-carousel-side-right">
+                  {renderPackCard(nextPack, "side", "Next", goToNextPack)}
+                </div>
+              ) : null}
+            </div>
+
+            <Group justify="center" gap="sm">
+              <ActionIcon variant="light" size="lg" radius="xl" aria-label="Previous pack" onClick={goToPreviousPack} disabled={sortedPacks.length <= 1}>
+                <IconChevronLeft size={20} stroke={2.5} />
+              </ActionIcon>
+              <Group gap={6}>
+                {sortedPacks.map((pack, index) => (
+                  <ActionIcon
+                    key={pack.id}
+                    variant={index === activePackIndex ? "filled" : "light"}
+                    size="sm"
+                    radius="xl"
+                    onClick={() => setActivePackIndex(index)}
+                    aria-label={'Go to pack ' + (index + 1)}
+                  >
+                    {index === activePackIndex ? <IconCircleFilled size={10} /> : <IconCircle size={10} />}
+                  </ActionIcon>
+                ))}
               </Group>
+              <ActionIcon variant="light" size="lg" radius="xl" aria-label="Next pack" onClick={goToNextPack} disabled={sortedPacks.length <= 1}>
+                <IconChevronRight size={20} stroke={2.5} />
+              </ActionIcon>
             </Group>
-
-            <Group justify="space-between" mt="md">
-              <Text size="sm" c="dimmed">1 draw</Text>
-              <Text fw={700} size="lg">{pack.pricePoints.toLocaleString()} pts</Text>
-            </Group>
-
-            <Button component={Link} href={`/pack/${pack.id}`} fullWidth mt="md">
-              Open Draw Page
-            </Button>
-          </Card>
-        ))}
-      </SimpleGrid>
+          </Stack>
+        ) : (
+          <Stack gap="xs" align="center" py="xl">
+            <Title order={3}>No live packs yet</Title>
+            <Text c="dimmed">Check back when this storefront publishes a pack.</Text>
+          </Stack>
+        )}
+      </Paper>
 
       <Paper withBorder radius="xl" p="lg" shadow="sm">
         <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">

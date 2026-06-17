@@ -392,6 +392,96 @@ h6,
   background: radial-gradient(circle at top, #eef4ff, #dde7fb 60%);
 }
 
+.pack-carousel-shell {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 38%, white), white 58%),
+    var(--card);
+}
+
+.pack-carousel-stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+  isolation: isolate;
+}
+
+.pack-carousel-active {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 500px);
+  margin: 0 auto;
+}
+
+.pack-carousel-side {
+  position: absolute;
+  top: 44px;
+  z-index: 1;
+  width: min(34vw, 360px);
+  opacity: 0.48;
+  filter: saturate(0.82);
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.pack-carousel-side:hover {
+  opacity: 0.72;
+}
+
+.pack-carousel-side-left {
+  left: 0;
+  transform: translateX(-22%) scale(0.9);
+}
+
+.pack-carousel-side-left:hover {
+  transform: translateX(-18%) scale(0.92);
+}
+
+.pack-carousel-side-right {
+  right: 0;
+  transform: translateX(22%) scale(0.9);
+}
+
+.pack-carousel-side-right:hover {
+  transform: translateX(18%) scale(0.92);
+}
+
+.pack-carousel-card {
+  background: color-mix(in srgb, var(--card) 94%, white);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.pack-carousel-card-active {
+  border-color: color-mix(in srgb, var(--brand) 36%, var(--border));
+}
+
+.pack-carousel-card-side {
+  pointer-events: auto;
+}
+
+.pack-carousel-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+}
+
+.pack-carousel-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.pack-carousel-stats > div {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--brand-soft) 28%, white);
+}
+
 .pack-header h2 {
   margin: 0;
   font-size: 20px;
@@ -1421,6 +1511,23 @@ h6,
 
 @media (max-width: 760px) {
   .fairness-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pack-carousel-stage {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .pack-carousel-side {
+    display: none;
+  }
+
+  .pack-carousel-active {
+    width: 100%;
+  }
+
+  .pack-carousel-stats {
     grid-template-columns: 1fr;
   }
 }
