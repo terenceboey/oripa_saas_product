@@ -624,6 +624,7 @@ async function createVendorPack(req: VendorRequest, res: any) {
       vendorId: auth.vendorId,
       title: parsed.data.title,
       packBannerImageUrl: parsed.data.packBannerImageUrl ?? DEFAULT_PACK_BANNER_IMAGE,
+      packCoverImageUrl: parsed.data.packCoverImageUrl,
       pricePoints: parsed.data.pricePoints,
       totalStock: parsed.data.totalStock,
       remainingStock: parsed.data.totalStock,
@@ -729,6 +730,7 @@ packRouter.patch("/v1/vendor/packs/:packId", async (req: VendorRequest, res) => 
         data: {
           title: parsed.data.title,
           packBannerImageUrl: parsed.data.packBannerImageUrl,
+          packCoverImageUrl: parsed.data.packCoverImageUrl,
           pricePoints: parsed.data.pricePoints,
           totalStock: parsed.data.totalStock,
           remainingStock: parsed.data.totalStock,

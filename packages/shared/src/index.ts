@@ -192,6 +192,7 @@ export const packTierSnapshotSchema = z.object({
 export const createPackSchema = z.object({
   title: z.string().min(2).max(120),
   packBannerImageUrl: packBannerImageUrlSchema.optional(),
+  packCoverImageUrl: packBannerImageUrlSchema.optional(),
   pricePoints: z.number().int().positive(),
   totalStock: z.number().int().positive(),
   startsAt: z.string().datetime().optional(),

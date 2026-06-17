@@ -377,6 +377,7 @@ model Pack {
   vendorId                String
   title                   String
   packBannerImageUrl      String?
+  packCoverImageUrl       String?
   pricePoints             Int
   totalStock              Int
   remainingStock          Int

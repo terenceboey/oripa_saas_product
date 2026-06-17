@@ -33,6 +33,7 @@ type Pack = {
   id: string;
   title: string;
   packBannerImageUrl?: string | null;
+  packCoverImageUrl?: string | null;
   pricePoints: number;
   remainingStock: number;
   totalStock: number;
@@ -319,7 +320,7 @@ export default function HomePage() {
   }
 
   function renderPackCard(pack: Pack, variant: "active" | "side", label: string, onSelect?: () => void) {
-    const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBanner);
+    const image = resolvePackBannerMediaUrl(pack.packCoverImageUrl ?? pack.packBannerImageUrl, defaultPackBanner);
     const topPrize = getTopPrize(pack);
     const isActive = variant === "active";
 
