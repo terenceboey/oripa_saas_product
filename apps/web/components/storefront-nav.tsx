@@ -154,7 +154,13 @@ export function StorefrontNav({
                 {pointsLabel}
               </Badge>
             ) : null}
-            <Burger opened={opened} onClick={opened ? close : open} aria-label="Open navigation" />
+            <Burger
+              opened={opened}
+              onClick={opened ? close : open}
+              aria-label="Open navigation"
+              color="var(--brand)"
+              style={{ color: "var(--brand)" }}
+            />
           </Group>
         </Group>
       </Paper>

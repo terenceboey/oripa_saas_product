@@ -43,16 +43,11 @@ const optionalEmailSchema = z.preprocess((value) => {
 
 export const vendorThemePresetIds = [
   "lavender-dawn",
-  "mint-cloud",
-  "peach-sorbet",
-  "sky-bloom",
-  "rose-mist",
   "midnight-prism",
   "cosmic-violet",
   "emerald-night",
   "pearl-aurora",
   "champagne-glow",
-  "frosted-orchid",
 ] as const;
 export const vendorThemePresetSchema = z.enum(vendorThemePresetIds);
 

@@ -1890,6 +1890,15 @@ html[data-vendor-theme-active="true"] .mantine-ActionIcon-root {
   color: var(--text) !important;
 }
 
+html[data-vendor-theme-active="true"] .mantine-Burger-root {
+  color: var(--brand) !important;
+  --burger-color: var(--brand) !important;
+}
+
+html[data-vendor-theme-active="true"] .mantine-Burger-burger {
+  background-color: var(--brand) !important;
+}
+
 html[data-vendor-theme-active="true"] .mantine-TextInput-input,
 html[data-vendor-theme-active="true"] .mantine-Textarea-input,
 html[data-vendor-theme-active="true"] .mantine-Select-input,
