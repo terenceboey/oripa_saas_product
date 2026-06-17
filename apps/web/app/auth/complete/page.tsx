@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { Alert, Anchor, Button, Container, Paper, Stack, Text, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../../components/storefront-footer";
 import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../../lib/vendor-theme";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -17,6 +18,7 @@ type AuthUser = {
 };
 
 type Tenant = {
+  name?: string | null;
   vendorSettings?: VendorStorefrontTheme | null;
 };
 
@@ -151,6 +153,7 @@ function AuthCompleteContent() {
           </Button>
         </Stack>
       </Paper>
+      <StorefrontFooter brandName={tenant?.name ?? "Storefront"} host={runtimeVendorHost} />
     </Container>
     </VendorThemeProvider>
   );

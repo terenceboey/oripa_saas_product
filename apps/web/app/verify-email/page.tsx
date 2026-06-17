@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Anchor, Button, Container, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../components/storefront-footer";
 import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../lib/vendor-theme";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -11,6 +12,7 @@ const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localh
 const clientPageHeader = { "x-client-page": "/verify-email" };
 
 type Tenant = {
+  name?: string | null;
   vendorSettings?: VendorStorefrontTheme | null;
 };
 
@@ -161,6 +163,7 @@ export default function VerifyEmailPage() {
           </Text>
         </Stack>
       </Paper>
+      <StorefrontFooter brandName={tenant?.name ?? "Storefront"} host={runtimeVendorHost} />
     </Container>
     </VendorThemeProvider>
   );

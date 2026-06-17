@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button, Card, Container, Group, Image, Modal, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
+import { StorefrontFooter } from "../../../components/storefront-footer";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../../../lib/media-url";
@@ -110,6 +111,7 @@ export default function PackDrawPage() {
   const [confettiBurstKey, setConfettiBurstKey] = useState(0);
   const [pendingDrawQuantity, setPendingDrawQuantity] = useState<number | null>(null);
   const [theme, setTheme] = useState<VendorTheme | null>(null);
+  const [vendorName, setVendorName] = useState("Storefront");
   const [vendorLogo, setVendorLogo] = useState<string | null>(null);
   const [vendorFavicon, setVendorFavicon] = useState<string | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -146,6 +148,7 @@ export default function PackDrawPage() {
       setPack(packPayload.pack);
       setWallet(walletPayload.wallet ?? null);
       setTheme(vendorPayload?.vendor?.vendorSettings ?? null);
+      setVendorName(vendorPayload?.vendor?.name ?? vendorPayload?.tenant?.name ?? "Storefront");
       setVendorLogo(normalizeVendorLogoUrl(vendorPayload?.vendor?.logoImageUrl) || null);
       setVendorFavicon(normalizeVendorFaviconUrl(vendorPayload?.vendor?.faviconImageUrl, vendorPayload?.vendor?.logoImageUrl) || null);
     } catch (err) {
@@ -654,6 +657,7 @@ export default function PackDrawPage() {
           }
         }
       `}</style>
+      <StorefrontFooter brandName={vendorName} host={runtimeVendorHost} />
       </Container>
     </VendorThemeProvider>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../../components/storefront-footer";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl } from "../../../lib/media-url";
 import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../../lib/vendor-theme";
@@ -40,6 +41,7 @@ type CardResponse = {
 };
 
 type Tenant = {
+  name?: string | null;
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
   vendorSettings?: VendorStorefrontTheme | null;
@@ -143,6 +145,7 @@ export default function SetlistDetailPage() {
   const setInfo = data?.set;
   const cards = data?.items ?? [];
   const pageTitle = setInfo?.name ?? "Set";
+  const runtimeVendorHost = typeof window !== "undefined" ? window.location.host.toLowerCase() : "Storefront";
 
   return (
     <VendorThemeProvider theme={tenant?.vendorSettings}>
@@ -214,6 +217,7 @@ export default function SetlistDetailPage() {
             </Card>
           ))}
         </SimpleGrid>
+        <StorefrontFooter brandName={tenant?.name ?? "Storefront"} host={runtimeVendorHost} />
       </Stack>
     </Container>
     </VendorThemeProvider>

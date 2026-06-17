@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import Link from "next/link";
-import { ActionIcon, Badge, Button, Container, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Badge, Button, Container, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconCircle, IconCircleFilled } from "@tabler/icons-react";
+import { StorefrontFooter } from "../components/storefront-footer";
 import { StorefrontNav } from "../components/storefront-nav";
 import { buildVendorCssVariables, VendorThemeProvider } from "../lib/vendor-theme";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
@@ -551,71 +552,7 @@ export default function HomePage() {
         )}
       </Paper>
 
-      <Paper withBorder radius="xl" p="lg" shadow="sm">
-        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="lg">
-          <Stack gap={6}>
-            <Text fw={800} size="lg">
-              {tenant?.name ?? "Storefront"}
-            </Text>
-            <Text c="dimmed" size="sm">
-              Browse live packs, check setlists, and manage your profile from a mobile-first storefront.
-            </Text>
-            <Badge variant="light" size="lg" w="fit-content">
-              {runtimeVendorHost}
-            </Badge>
-          </Stack>
-
-          <Stack gap={8}>
-            <Text fw={700}>Quick links</Text>
-            <Button component={Link} href="/setlists" variant="subtle" justify="flex-start" px={0}>
-              Setlists
-            </Button>
-            <Button component={Link} href="/fairness-proofs" variant="subtle" justify="flex-start" px={0}>
-              Fairness Proofs
-            </Button>
-            <Button component={Link} href="/profile" variant="subtle" justify="flex-start" px={0}>
-              My Profile
-            </Button>
-          </Stack>
-
-          <Stack gap={8}>
-            <Text fw={700}>Account</Text>
-            {user ? (
-              <>
-                <Text size="sm" c="dimmed">
-                  {user.displayName || user.fullName || "Customer"}
-                </Text>
-                <Text size="sm" c="dimmed">
-                  {user.email}
-                </Text>
-                <Button variant="light" onClick={logout} fullWidth>
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button component={Link} href="/login" variant="light" fullWidth>
-                  Customer Login
-                </Button>
-                <Button component={Link} href="/register" variant="outline" fullWidth>
-                  Customer Register
-                </Button>
-              </>
-            )}
-          </Stack>
-        </SimpleGrid>
-
-        <Divider my="lg" />
-
-        <Group justify="space-between" align="center" gap="md" wrap="wrap">
-          <Text size="sm" c="dimmed">
-            Powered by Oripa. {new Date().getFullYear()}.
-          </Text>
-          <Text size="sm" c="dimmed">
-            Use the mobile menu for account actions and quick access.
-          </Text>
-        </Group>
-      </Paper>
+      <StorefrontFooter brandName={tenant?.name ?? "Storefront"} host={runtimeVendorHost} user={user} onLogout={logout} />
       </Stack>
       </Container>
     </VendorThemeProvider>

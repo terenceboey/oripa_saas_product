@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../components/storefront-footer";
 import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../lib/vendor-theme";
 
 type Tenant = {
+  name?: string | null;
   vendorSettings?: VendorStorefrontTheme | null;
 };
 
@@ -232,6 +234,7 @@ function hexToFloat01(hex) {
             </Paper>
           ) : null}
         </Stack>
+        <StorefrontFooter brandName={tenant?.name ?? "Storefront"} host={runtimeVendorHost} />
       </Stack>
     </Container>
     </VendorThemeProvider>

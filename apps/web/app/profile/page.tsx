@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo, useState, type FormEvent } from "react";
 import { Alert, Anchor, Badge, Button, Container, Group, Paper, Select, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../components/storefront-footer";
 import { AirwallexDropInCheckout } from "../../components/airwallex-dropin-checkout";
 import { COUNTRY_OPTIONS } from "../../lib/countries";
 import { formatCurrencyAmount, resolveCurrencyCodeForCountry } from "../../lib/airwallex";
@@ -47,6 +48,7 @@ type VendorTheme = {
 };
 
 type VendorBranding = {
+  name?: string | null;
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
 };
@@ -201,6 +203,7 @@ function CustomerProfileContent() {
         if (!active) return;
         setTheme(payload?.vendor?.vendorSettings ?? null);
         setBranding({
+          name: payload?.vendor?.name ?? null,
           logoImageUrl: normalizeVendorLogoUrl(payload?.vendor?.logoImageUrl) || null,
           faviconImageUrl: normalizeVendorFaviconUrl(payload?.vendor?.faviconImageUrl, payload?.vendor?.logoImageUrl) || null,
         });
@@ -638,6 +641,7 @@ function CustomerProfileContent() {
           ) : null}
         </Stack>
         </Paper>
+        <StorefrontFooter brandName={branding?.name ?? "Storefront"} host={runtimeVendorHost} user={user} onLogout={user ? logout : undefined} />
       </Container>
     </VendorThemeProvider>
   );

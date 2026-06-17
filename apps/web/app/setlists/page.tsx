@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../components/storefront-footer";
 import { StorefrontNav } from "../../components/storefront-nav";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl } from "../../lib/media-url";
@@ -326,6 +327,7 @@ export default function SetlistsPage() {
             </Button>
           </Group>
         </Paper>
+        <StorefrontFooter brandName={tenant?.name ?? "Storefront"} host={runtimeVendorHost} />
       </Stack>
     </Container>
     </VendorThemeProvider>

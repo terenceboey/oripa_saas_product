@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Anchor, Button, Container, Divider, Group, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
+import { StorefrontFooter } from "../../components/storefront-footer";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
 import { buildVendorCssVariables, VendorThemeProvider } from "../../lib/vendor-theme";
@@ -32,6 +33,7 @@ type VendorTheme = {
   storefrontRadius: number;
 };
 type VendorBranding = {
+  name?: string | null;
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
 };
@@ -89,6 +91,7 @@ export default function RegisterPage() {
       .then((payload) => {
         setTheme(payload?.vendor?.vendorSettings ?? null);
         setBranding({
+          name: payload?.vendor?.name ?? null,
           logoImageUrl: normalizeVendorLogoUrl(payload?.vendor?.logoImageUrl) || null,
           faviconImageUrl: normalizeVendorFaviconUrl(payload?.vendor?.faviconImageUrl, payload?.vendor?.logoImageUrl) || null,
         });
@@ -205,6 +208,7 @@ export default function RegisterPage() {
           </Text>
         </Stack>
         </Paper>
+        <StorefrontFooter brandName={branding?.name ?? "Storefront"} host={runtimeVendorHost} user={user} onLogout={user ? logout : undefined} />
       </Container>
     </VendorThemeProvider>
   );
