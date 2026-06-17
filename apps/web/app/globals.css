@@ -394,21 +394,24 @@ h6,
 
 .pack-carousel-shell {
   background:
-    radial-gradient(circle at 50% 10%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 34%),
+    radial-gradient(circle at 50% 8%, color-mix(in srgb, var(--brand) 18%, transparent), transparent 36%),
     linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 38%, white), white 58%),
     var(--card);
+  max-width: 780px;
+  margin-inline: auto;
+  width: 100%;
 }
 
 .pack-carousel-stage {
   position: relative;
   overflow: hidden;
-  min-height: 590px;
+  min-height: 560px;
   isolation: isolate;
   cursor: grab;
   touch-action: pan-y;
   user-select: none;
-  perspective: 1100px;
-  perspective-origin: 50% 42%;
+  perspective: 1200px;
+  perspective-origin: 50% 34%;
   transform-style: preserve-3d;
 }
 
@@ -419,9 +422,9 @@ h6,
 .pack-carousel-active {
   position: relative;
   z-index: 3;
-  width: min(100%, 500px);
+  width: min(100%, 440px);
   margin: 0 auto;
-  transform: translateZ(72px);
+  transform: translateZ(96px);
   transform-style: preserve-3d;
 }
 
@@ -435,11 +438,12 @@ h6,
 
 .pack-carousel-side {
   position: absolute;
-  top: 56px;
+  top: 30px;
   z-index: 1;
-  width: min(34vw, 360px);
-  opacity: 0.56;
-  filter: saturate(0.85) brightness(0.92);
+  left: 50%;
+  width: min(42vw, 360px);
+  opacity: 0.44;
+  filter: saturate(0.82) brightness(0.86);
   transform-style: preserve-3d;
   transition: transform 420ms cubic-bezier(0.19, 0.82, 0.24, 1), opacity 360ms ease, filter 360ms ease;
 }
@@ -450,13 +454,12 @@ h6,
 }
 
 .pack-carousel-side-left {
-  left: 0;
-  transform: translateX(-18%) translateZ(-150px) rotateY(28deg) scale(0.88);
+  transform: translateX(-104%) translateZ(-210px) rotateY(24deg) scale(0.82);
   transform-origin: right center;
 }
 
 .pack-carousel-side-left:hover {
-  transform: translateX(-14%) translateZ(-120px) rotateY(22deg) scale(0.9);
+  transform: translateX(-98%) translateZ(-175px) rotateY(18deg) scale(0.84);
 }
 
 .pack-carousel-side-left-next {
@@ -468,13 +471,12 @@ h6,
 }
 
 .pack-carousel-side-right {
-  right: 0;
-  transform: translateX(18%) translateZ(-150px) rotateY(-28deg) scale(0.88);
+  transform: translateX(4%) translateZ(-210px) rotateY(-24deg) scale(0.82);
   transform-origin: left center;
 }
 
 .pack-carousel-side-right:hover {
-  transform: translateX(14%) translateZ(-120px) rotateY(-22deg) scale(0.9);
+  transform: translateX(-2%) translateZ(-175px) rotateY(-18deg) scale(0.84);
 }
 
 .pack-carousel-side-right-next {
@@ -506,6 +508,8 @@ h6,
 .pack-carousel-card-side {
   pointer-events: auto;
   box-shadow: 0 18px 44px rgba(18, 24, 38, 0.13);
+  padding: 8px !important;
+  overflow: hidden;
 }
 
 .pack-carousel-image {
@@ -520,6 +524,26 @@ h6,
   user-select: none;
   -webkit-user-drag: none;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+.pack-carousel-card-side .pack-carousel-image {
+  aspect-ratio: 5 / 6;
+  object-fit: contain;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--brand-soft) 54%, white), white 70%),
+    white;
+}
+
+.pack-carousel-preview-label {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(18, 24, 38, 0.18), rgba(18, 24, 38, 0.78));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
 }
 
 .pack-carousel-stats {
@@ -1597,73 +1621,73 @@ h6,
 
 @keyframes pack-carousel-active-from-right {
   0% {
-    opacity: 0.62;
-    transform: translateX(46%) translateZ(-90px) rotateY(-26deg) scale(0.9);
+    opacity: 0.58;
+    transform: translateX(34%) translateZ(-170px) rotateY(-24deg) scale(0.84);
   }
-  68% {
+  72% {
     opacity: 1;
-    transform: translateX(-2%) translateZ(86px) rotateY(2deg) scale(1.01);
+    transform: translateX(-1.5%) translateZ(112px) rotateY(1.5deg) scale(1.01);
   }
   100% {
-    transform: translateZ(72px) rotateY(0deg) scale(1);
+    transform: translateZ(96px) rotateY(0deg) scale(1);
   }
 }
 
 @keyframes pack-carousel-active-from-left {
   0% {
-    opacity: 0.62;
-    transform: translateX(-46%) translateZ(-90px) rotateY(26deg) scale(0.9);
+    opacity: 0.58;
+    transform: translateX(-34%) translateZ(-170px) rotateY(24deg) scale(0.84);
   }
-  68% {
+  72% {
     opacity: 1;
-    transform: translateX(2%) translateZ(86px) rotateY(-2deg) scale(1.01);
+    transform: translateX(1.5%) translateZ(112px) rotateY(-1.5deg) scale(1.01);
   }
   100% {
-    transform: translateZ(72px) rotateY(0deg) scale(1);
+    transform: translateZ(96px) rotateY(0deg) scale(1);
   }
 }
 
 @keyframes pack-carousel-left-settle-next {
   0% {
-    opacity: 0.9;
-    transform: translateX(18%) translateZ(20px) rotateY(8deg) scale(0.98);
+    opacity: 0.86;
+    transform: translateX(-28%) translateZ(36px) rotateY(8deg) scale(0.96);
   }
   100% {
-    opacity: 0.56;
-    transform: translateX(-18%) translateZ(-150px) rotateY(28deg) scale(0.88);
+    opacity: 0.44;
+    transform: translateX(-104%) translateZ(-210px) rotateY(24deg) scale(0.82);
   }
 }
 
 @keyframes pack-carousel-left-settle-previous {
   0% {
-    opacity: 0.22;
-    transform: translateX(-58%) translateZ(-260px) rotateY(42deg) scale(0.78);
+    opacity: 0.12;
+    transform: translateX(-132%) translateZ(-320px) rotateY(34deg) scale(0.72);
   }
   100% {
-    opacity: 0.56;
-    transform: translateX(-18%) translateZ(-150px) rotateY(28deg) scale(0.88);
+    opacity: 0.44;
+    transform: translateX(-104%) translateZ(-210px) rotateY(24deg) scale(0.82);
   }
 }
 
 @keyframes pack-carousel-right-settle-next {
   0% {
-    opacity: 0.22;
-    transform: translateX(58%) translateZ(-260px) rotateY(-42deg) scale(0.78);
+    opacity: 0.12;
+    transform: translateX(32%) translateZ(-320px) rotateY(-34deg) scale(0.72);
   }
   100% {
-    opacity: 0.56;
-    transform: translateX(18%) translateZ(-150px) rotateY(-28deg) scale(0.88);
+    opacity: 0.44;
+    transform: translateX(4%) translateZ(-210px) rotateY(-24deg) scale(0.82);
   }
 }
 
 @keyframes pack-carousel-right-settle-previous {
   0% {
-    opacity: 0.9;
-    transform: translateX(-18%) translateZ(20px) rotateY(-8deg) scale(0.98);
+    opacity: 0.86;
+    transform: translateX(-72%) translateZ(36px) rotateY(-8deg) scale(0.96);
   }
   100% {
-    opacity: 0.56;
-    transform: translateX(18%) translateZ(-150px) rotateY(-28deg) scale(0.88);
+    opacity: 0.44;
+    transform: translateX(4%) translateZ(-210px) rotateY(-24deg) scale(0.82);
   }
 }
 

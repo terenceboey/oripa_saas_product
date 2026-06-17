@@ -351,49 +351,48 @@ export default function HomePage() {
           />
         </picture>
 
-        <Stack gap={isActive ? "md" : 6} mt={isActive ? "md" : "xs"}>
-          <Group justify="space-between" align="start" gap="sm">
-            <div>
-              <Text size="xs" c="dimmed" fw={700} tt="uppercase">
-                {label}
-              </Text>
-              <Title order={isActive ? 2 : 4} size={isActive ? "h3" : "h5"}>
-                {pack.title}
-              </Title>
-            </div>
-            <Group gap={6}>
-              {pack.isNew ? <Badge color="green" variant="light">New</Badge> : null}
-              {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
-            </Group>
-          </Group>
-
-          {isActive ? (
-            <>
-              <div className="pack-carousel-stats">
-                <div>
-                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">Price</Text>
-                  <Text fw={900}>{pack.pricePoints.toLocaleString()} pts</Text>
-                </div>
-                <div>
-                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">Remaining</Text>
-                  <Text fw={900}>{pack.remainingStock.toLocaleString()}/{pack.totalStock.toLocaleString()}</Text>
-                </div>
-                <div>
-                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">Top Prize</Text>
-                  <Text fw={900} lineClamp={1}>{topPrize?.label ?? "Mystery prize"}</Text>
-                </div>
+        {isActive ? (
+          <Stack gap="md" mt="md">
+            <Group justify="space-between" align="start" gap="sm">
+              <div>
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                  {label}
+                </Text>
+                <Title order={2} size="h3">
+                  {pack.title}
+                </Title>
               </div>
+              <Group gap={6}>
+                {pack.isNew ? <Badge color="green" variant="light">New</Badge> : null}
+                {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
+              </Group>
+            </Group>
 
-              <Button component={Link} href={`/pack/${pack.id}`} fullWidth size="md">
-                Open Draw Page
-              </Button>
-            </>
-          ) : (
-            <Text size="sm" c="dimmed">
-              {pack.pricePoints.toLocaleString()} pts per draw
-            </Text>
-          )}
-        </Stack>
+            <div className="pack-carousel-stats">
+              <div>
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Price</Text>
+                <Text fw={900}>{pack.pricePoints.toLocaleString()} pts</Text>
+              </div>
+              <div>
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Remaining</Text>
+                <Text fw={900}>{pack.remainingStock.toLocaleString()}/{pack.totalStock.toLocaleString()}</Text>
+              </div>
+              <div>
+                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Top Prize</Text>
+                <Text fw={900} lineClamp={1}>{topPrize?.label ?? "Mystery prize"}</Text>
+              </div>
+            </div>
+
+            <Button component={Link} href={`/pack/${pack.id}`} fullWidth size="md">
+              Open Draw Page
+            </Button>
+          </Stack>
+        ) : (
+          <div className="pack-carousel-preview-label">
+            <Text fw={900} lineClamp={1}>{pack.title}</Text>
+            <Text size="xs">{pack.pricePoints.toLocaleString()} pts</Text>
+          </div>
+        )}
       </Card>
     );
   }
