@@ -415,6 +415,7 @@ h6,
   position: relative;
   overflow: visible;
   min-height: 640px;
+  padding-block: 28px 44px;
   isolation: isolate;
   cursor: grab;
   touch-action: pan-y;
@@ -473,7 +474,7 @@ h6,
 
 .pack-carousel-slot {
   position: absolute;
-  top: 22px;
+  top: 46px;
   left: 50%;
   z-index: 1;
   transform-style: preserve-3d;
@@ -716,6 +717,12 @@ h6,
   background: linear-gradient(135deg, var(--brand), var(--brand-accent)) !important;
   box-shadow: 0 16px 36px color-mix(in srgb, var(--brand) 34%, transparent);
   pointer-events: auto;
+}
+
+.pack-carousel-bottom-controls {
+  position: relative;
+  z-index: 16;
+  margin-top: 18px;
 }
 
 .pack-header h2 {
@@ -1244,7 +1251,8 @@ h6,
 
 @media (min-width: 761px) {
   .pack-carousel-stage {
-    min-height: 760px;
+    min-height: 820px;
+    padding-block: 44px 72px;
     padding-inline: clamp(24px, 3vw, 72px);
   }
 
@@ -1253,7 +1261,7 @@ h6,
   }
 
   .pack-carousel-slot {
-    top: 18px;
+    top: 44px;
   }
 }
 
@@ -1766,14 +1774,14 @@ h6,
   }
 
   .pack-carousel-stage {
-    min-height: 0;
+    min-height: clamp(620px, 154vw, 760px);
     overflow: visible;
-    padding: 0 34px 8px;
+    padding: 24px 34px 34px;
   }
 
   .pack-carousel-slot {
     display: block;
-    top: 24px;
+    top: 28px;
     width: min(42vw, 168px);
     opacity: 0.28;
   }
@@ -1831,13 +1839,14 @@ h6,
 
   .pack-carousel-action {
     position: relative;
-    z-index: 6;
+    z-index: 14;
     order: 3;
   }
 
   .pack-carousel-floating-button {
     width: 42px;
     height: 42px;
+    top: 36%;
   }
 
   .pack-carousel-floating-button-left {
@@ -1846,6 +1855,10 @@ h6,
 
   .pack-carousel-floating-button-right {
     right: 0;
+  }
+
+  .pack-carousel-bottom-controls {
+    margin-top: 14px;
   }
 }
 

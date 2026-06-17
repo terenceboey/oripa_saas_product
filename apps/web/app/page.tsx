@@ -574,7 +574,7 @@ export default function HomePage() {
               })}
             </div>
 
-            <Group justify="center" gap="sm">
+            <Group justify="center" gap="sm" className="pack-carousel-bottom-controls">
               <ActionIcon variant="light" size="lg" radius="xl" aria-label="Previous pack" onClick={goToPreviousPack} disabled={sortedPacks.length <= 1}>
                 <IconChevronLeft size={20} stroke={2.5} />
               </ActionIcon>
