@@ -78,6 +78,7 @@ type AuthUser = {
 };
 
 type SortKey = "recommended" | "remaining_asc" | "price_asc" | "price_desc" | "newest";
+type PackSlideDirection = "next" | "previous";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -101,6 +102,8 @@ export default function HomePage() {
   const [vendorNotFound, setVendorNotFound] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
   const [activePackIndex, setActivePackIndex] = useState(0);
+  const [packSlideDirection, setPackSlideDirection] = useState<PackSlideDirection>("next");
+  const [packSlideNonce, setPackSlideNonce] = useState(0);
   const swipeStartXRef = useRef<number | null>(null);
   const swipeStartYRef = useRef<number | null>(null);
   const suppressPackClickRef = useRef(false);
@@ -254,14 +257,26 @@ export default function HomePage() {
     setBannerIndex((current) => (current + 1) % banners.length);
   }
 
-  function goToPreviousPack() {
+  function goToPack(index: number, direction: PackSlideDirection) {
     if (!sortedPacks.length) return;
-    setActivePackIndex((current) => (current - 1 + sortedPacks.length) % sortedPacks.length);
+    setPackSlideDirection(direction);
+    setPackSlideNonce((current) => current + 1);
+    setActivePackIndex((index + sortedPacks.length) % sortedPacks.length);
+  }
+
+  function goToPreviousPack() {
+    goToPack(activePackIndex - 1, "previous");
   }
 
   function goToNextPack() {
-    if (!sortedPacks.length) return;
-    setActivePackIndex((current) => (current + 1) % sortedPacks.length);
+    goToPack(activePackIndex + 1, "next");
+  }
+
+  function goToPackDot(index: number) {
+    if (index === activePackIndex || sortedPacks.length <= 1) return;
+    const forwardDistance = (index - activePackIndex + sortedPacks.length) % sortedPacks.length;
+    const backwardDistance = (activePackIndex - index + sortedPacks.length) % sortedPacks.length;
+    goToPack(index, forwardDistance <= backwardDistance ? "next" : "previous");
   }
 
   function handlePackPointerDown(event: PointerEvent<HTMLDivElement>) {
@@ -499,24 +514,24 @@ export default function HomePage() {
           <Stack gap="md">
             {error ? <Text c="red">{error}</Text> : null}
             <div
-              className="pack-carousel-stage"
+              className={`pack-carousel-stage pack-carousel-stage-${packSlideDirection}`}
               onPointerDown={handlePackPointerDown}
               onPointerUp={handlePackPointerUp}
               onPointerCancel={handlePackPointerCancel}
               onPointerLeave={handlePackPointerCancel}
             >
               {previousPack ? (
-                <div className="pack-carousel-side pack-carousel-side-left">
+                <div key={`previous-${previousPack.id}-${packSlideNonce}`} className={`pack-carousel-side pack-carousel-side-left pack-carousel-side-left-${packSlideDirection}`}>
                   {renderPackCard(previousPack, "side", "Previous", goToPreviousPack)}
                 </div>
               ) : null}
 
-              <div className="pack-carousel-active">
+              <div key={`active-${activePack.id}-${packSlideNonce}`} className={`pack-carousel-active pack-carousel-active-${packSlideDirection}`}>
                 {renderPackCard(activePack, "active", `Pack ${activePackIndex + 1} of ${sortedPacks.length}`)}
               </div>
 
               {nextPack ? (
-                <div className="pack-carousel-side pack-carousel-side-right">
+                <div key={`next-${nextPack.id}-${packSlideNonce}`} className={`pack-carousel-side pack-carousel-side-right pack-carousel-side-right-${packSlideDirection}`}>
                   {renderPackCard(nextPack, "side", "Next", goToNextPack)}
                 </div>
               ) : null}
@@ -533,7 +548,7 @@ export default function HomePage() {
                     variant={index === activePackIndex ? "filled" : "light"}
                     size="sm"
                     radius="xl"
-                    onClick={() => setActivePackIndex(index)}
+                    onClick={() => goToPackDot(index)}
                     aria-label={'Go to pack ' + (index + 1)}
                   >
                     {index === activePackIndex ? <IconCircleFilled size={10} /> : <IconCircle size={10} />}
