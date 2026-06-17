@@ -514,18 +514,23 @@ h6,
   overflow: hidden;
 }
 
-.pack-carousel-card picture {
+.pack-carousel-cover {
   position: relative !important;
   overflow: hidden;
+  width: 100%;
+  aspect-ratio: 5 / 7;
   border-radius: 24px;
   isolation: isolate;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   box-shadow:
     0 26px 70px rgba(0, 0, 0, 0.46),
     0 0 0 1px rgba(255, 255, 255, 0.16),
     inset 0 0 0 1px rgba(255, 255, 255, 0.18);
 }
 
-.pack-carousel-card picture::before {
+.pack-carousel-cover::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -539,7 +544,7 @@ h6,
   animation: pack-cover-shimmer 5.8s ease-in-out infinite;
 }
 
-.pack-carousel-card picture::after {
+.pack-carousel-cover::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -552,31 +557,20 @@ h6,
   opacity: 0.55;
 }
 
-.pack-carousel-card-active picture {
+.pack-carousel-cover-glow {
+  position: absolute;
+  inset: auto 10% -10% 10%;
+  height: 26%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-accent) 42%, transparent);
+  filter: blur(24px);
+  opacity: 0.62;
+  z-index: -1;
+}
+
+.pack-carousel-card-active .pack-carousel-cover {
   width: min(68%, 260px) !important;
   margin-inline: auto;
-}
-
-.pack-carousel-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 5 / 7;
-  object-fit: cover;
-  object-position: center;
-  border-radius: 24px;
-  border: 0;
-  background: transparent;
-  user-select: none;
-  -webkit-user-drag: none;
-  box-shadow: none;
-}
-
-.pack-carousel-card-side .pack-carousel-image {
-  aspect-ratio: 5 / 7;
-  object-fit: cover;
-  background:
-    radial-gradient(circle at top, color-mix(in srgb, var(--brand-soft) 54%, white), white 70%),
-    white;
 }
 
 .pack-carousel-preview-label {
@@ -1675,7 +1669,7 @@ h6,
     transform: translateZ(48px);
   }
 
-  .pack-carousel-card-active picture {
+  .pack-carousel-card-active .pack-carousel-cover {
     width: min(64vw, 236px) !important;
   }
 

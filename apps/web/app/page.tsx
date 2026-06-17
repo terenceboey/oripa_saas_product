@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent } from "react";
 import Link from "next/link";
-import { ActionIcon, Badge, Button, Card, Container, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Badge, Button, Container, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconCircle, IconCircleFilled } from "@tabler/icons-react";
 import { StorefrontNav } from "../components/storefront-nav";
 import { VendorThemeProvider } from "../lib/vendor-theme";
@@ -323,34 +323,30 @@ export default function HomePage() {
     const image = resolvePackBannerMediaUrl(pack.packCoverImageUrl ?? pack.packBannerImageUrl, defaultPackBanner);
     const topPrize = getTopPrize(pack);
     const isActive = variant === "active";
+    const coverStyle = {
+      backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.08), rgba(5,4,10,0.18)), url(${JSON.stringify(image.fallback)})`,
+    } as CSSProperties;
 
     return (
-      <Card
-        withBorder
-        radius="lg"
-        shadow={isActive ? "lg" : "sm"}
-        padding={isActive ? "lg" : "sm"}
+      <div
         className={isActive ? "pack-carousel-card pack-carousel-card-active" : "pack-carousel-card pack-carousel-card-side"}
         onClick={onSelect ? () => {
           if (suppressPackClickRef.current) return;
           onSelect();
         } : undefined}
+        role={onSelect ? "button" : undefined}
+        tabIndex={onSelect ? 0 : undefined}
+        onKeyDown={onSelect ? (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          if (suppressPackClickRef.current) return;
+          onSelect();
+        } : undefined}
         style={{ cursor: onSelect ? "pointer" : "default" }}
       >
-        <picture style={{ display: "block", width: "100%" }}>
-          {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
-          {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
-          <img
-            src={image.fallback}
-            alt={`${pack.title} banner`}
-            loading="lazy"
-            decoding="async"
-            onError={(e) => {
-              e.currentTarget.src = defaultPackBannerMobile;
-            }}
-            className="pack-carousel-image"
-          />
-        </picture>
+        <div className="pack-carousel-cover" aria-label={`${pack.title} cover`} style={coverStyle}>
+          <span className="pack-carousel-cover-glow" aria-hidden="true" />
+        </div>
 
         {isActive ? (
           <Stack className="pack-carousel-details" gap="md" mt="md" align="center">
@@ -393,7 +389,7 @@ export default function HomePage() {
             <Text size="xs">{pack.pricePoints.toLocaleString()} pts</Text>
           </div>
         )}
-      </Card>
+      </div>
     );
   }
 
