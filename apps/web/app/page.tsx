@@ -232,9 +232,14 @@ export default function HomePage() {
 
   const currentBanner = banners[bannerIndex];
   const activePack = sortedPacks[activePackIndex] ?? null;
-  const previousPack = sortedPacks.length > 1 ? sortedPacks[(activePackIndex - 1 + sortedPacks.length) % sortedPacks.length] : null;
-  const nextPack = sortedPacks.length > 2 ? sortedPacks[(activePackIndex + 1) % sortedPacks.length] : sortedPacks.length === 2 ? sortedPacks[(activePackIndex + 1) % sortedPacks.length] : null;
   const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(tenant?.vendorSettings), [tenant?.vendorSettings]);
+  const desktopCarouselOffsets = useMemo(() => {
+    if (sortedPacks.length >= 5) return [-2, -1, 0, 1, 2];
+    if (sortedPacks.length === 4) return [-2, -1, 0, 1];
+    if (sortedPacks.length === 3) return [-1, 0, 1];
+    if (sortedPacks.length === 2) return [0, 1];
+    return [0];
+  }, [sortedPacks.length]);
 
   function goToPreviousBanner() {
     if (!banners.length) return;
@@ -266,6 +271,12 @@ export default function HomePage() {
     const forwardDistance = (index - activePackIndex + sortedPacks.length) % sortedPacks.length;
     const backwardDistance = (activePackIndex - index + sortedPacks.length) % sortedPacks.length;
     goToPack(index, forwardDistance <= backwardDistance ? "next" : "previous");
+  }
+
+  function goToPackOffset(offset: number) {
+    if (offset === 0 || sortedPacks.length <= 1) return;
+    const targetIndex = activePackIndex + offset;
+    goToPack(targetIndex, offset > 0 ? "next" : "previous");
   }
 
   function handlePackPointerDown(event: PointerEvent<HTMLDivElement>) {
@@ -317,7 +328,7 @@ export default function HomePage() {
 
     return (
       <div
-        className={isActive ? "pack-carousel-card pack-carousel-card-active" : "pack-carousel-card pack-carousel-card-side"}
+        className={isActive ? "pack-carousel-active pack-carousel-card pack-carousel-card-active" : "pack-carousel-card pack-carousel-card-side"}
         onClick={onSelect ? () => {
           if (suppressPackClickRef.current) return;
           onSelect();
@@ -529,21 +540,43 @@ export default function HomePage() {
                   </ActionIcon>
                 </div>
               ) : null}
-              {previousPack ? (
-                <div key={`previous-${previousPack.id}-${packSlideNonce}`} className={`pack-carousel-side pack-carousel-side-left pack-carousel-side-left-${packSlideDirection}`}>
-                  {renderPackCard(previousPack, "side", "Previous", goToPreviousPack)}
-                </div>
-              ) : null}
+              {desktopCarouselOffsets.map((offset) => {
+                const pack = sortedPacks[(activePackIndex + offset + sortedPacks.length) % sortedPacks.length];
+                if (!pack) return null;
 
-              <div key={`active-${activePack.id}-${packSlideNonce}`} className={`pack-carousel-active pack-carousel-active-${packSlideDirection}`}>
-                {renderPackCard(activePack, "active", `Pack ${activePackIndex + 1} of ${sortedPacks.length}`)}
-              </div>
+                const slotClassName =
+                  offset === -2
+                    ? `pack-carousel-slot pack-carousel-slot-far-left pack-carousel-slot-far-left-${packSlideDirection}`
+                    : offset === -1
+                      ? `pack-carousel-slot pack-carousel-slot-left pack-carousel-slot-left-${packSlideDirection}`
+                      : offset === 1
+                        ? `pack-carousel-slot pack-carousel-slot-right pack-carousel-slot-right-${packSlideDirection}`
+                        : offset === 2
+                          ? `pack-carousel-slot pack-carousel-slot-far-right pack-carousel-slot-far-right-${packSlideDirection}`
+                          : `pack-carousel-slot pack-carousel-slot-active pack-carousel-slot-active-${packSlideDirection}`;
 
-              {nextPack ? (
-                <div key={`next-${nextPack.id}-${packSlideNonce}`} className={`pack-carousel-side pack-carousel-side-right pack-carousel-side-right-${packSlideDirection}`}>
-                  {renderPackCard(nextPack, "side", "Next", goToNextPack)}
-                </div>
-              ) : null}
+                const label =
+                  offset === 0
+                    ? `Pack ${activePackIndex + 1} of ${sortedPacks.length}`
+                    : offset === -2
+                      ? "Older"
+                      : offset === -1
+                        ? "Previous"
+                        : offset === 1
+                          ? "Next"
+                          : "Later";
+
+                return (
+                  <div key={`slot-${offset}-${pack.id}-${packSlideNonce}`} className={slotClassName}>
+                    {renderPackCard(
+                      pack,
+                      offset === 0 ? "active" : "side",
+                      label,
+                      offset === 0 ? undefined : () => goToPackOffset(offset),
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <Group justify="center" gap="sm">
