@@ -1603,10 +1603,11 @@ export default function VendorPage() {
     setSuccess(null);
 
     try {
-      if (tiers.length > limits.maxPackTiers) {
+      const canEditPrizePool = !editingPackId || editingPackStatus === "DRAFT";
+      if (canEditPrizePool && tiers.length > limits.maxPackTiers) {
         throw new Error(`Tier count exceeds plan limit (${limits.maxPackTiers}).`);
       }
-      if (totalDraftItems > limits.maxPackItems) {
+      if (canEditPrizePool && totalDraftItems > limits.maxPackItems) {
         throw new Error(`Item count exceeds plan limit (${limits.maxPackItems}).`);
       }
 
@@ -1615,7 +1616,7 @@ export default function VendorPage() {
         packBannerImageUrl: packBannerImageUrl.trim() ? packBannerImageUrl.trim() : DEFAULT_PACK_BANNER,
         packCoverImageUrl: packCoverImageUrl.trim() ? packCoverImageUrl.trim() : DEFAULT_PACK_COVER,
         pricePoints: Number(pricePoints),
-        totalStock: Number(totalStock),
+        totalStock: canEditPrizePool ? Number(totalStock) : undefined,
         startsAt: toIsoDateTime(startsAt),
         endsAt: toIsoDateTime(endsAt),
         isNew,
@@ -1624,20 +1625,22 @@ export default function VendorPage() {
         drawLimitMode,
         drawLimitValue: drawLimitMode === "DAILY_RESET" ? Number(drawLimitValue) : undefined,
         drawLimitResetTimezone,
-        tiers: tiers.map((tier) => ({
-          name: tier.name,
-          percentage: tier.percentage.trim() ? Number(tier.percentage) : undefined,
-          items: tier.items.map((item) => ({
-            label: item.label,
-            estimatedValue: Number(item.estimatedValue),
-            stock: item.stock.trim() ? Number(item.stock) : undefined,
-            imageUrl: item.imageUrl.trim() ? item.imageUrl.trim() : undefined,
-            catalogItemId: item.catalogItemId,
-            catalogSource: item.catalogSource,
-            catalogSourceItemId: item.catalogSourceItemId,
-            language: item.language,
-          })),
-        })),
+        tiers: canEditPrizePool
+          ? tiers.map((tier) => ({
+              name: tier.name,
+              percentage: tier.percentage.trim() ? Number(tier.percentage) : undefined,
+              items: tier.items.map((item) => ({
+                label: item.label,
+                estimatedValue: Number(item.estimatedValue),
+                stock: item.stock.trim() ? Number(item.stock) : undefined,
+                imageUrl: item.imageUrl.trim() ? item.imageUrl.trim() : undefined,
+                catalogItemId: item.catalogItemId,
+                catalogSource: item.catalogSource,
+                catalogSourceItemId: item.catalogSourceItemId,
+                language: item.language,
+              })),
+            }))
+          : undefined,
       };
 
       const endpoint = editingPackId ? `${apiBase}/v1/vendor/packs/${editingPackId}` : `${apiBase}/v1/vendor/packs`;
