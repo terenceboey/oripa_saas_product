@@ -353,38 +353,37 @@ export default function HomePage() {
         </picture>
 
         {isActive ? (
-          <Stack gap="md" mt="md">
-            <Group justify="space-between" align="start" gap="sm">
-              <div>
-                <Text size="xs" c="dimmed" fw={700} tt="uppercase">
-                  {label}
-                </Text>
-                <Title order={2} size="h3">
-                  {pack.title}
-                </Title>
-              </div>
-              <Group gap={6}>
+          <Stack className="pack-carousel-details" gap="md" mt="md" align="center">
+            <Group justify="center" gap={6}>
+              <Badge color="violet" variant="light">{label}</Badge>
                 {pack.isNew ? <Badge color="green" variant="light">New</Badge> : null}
                 {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
-              </Group>
             </Group>
+            <Stack gap={2} align="center">
+              <Title order={2} size="h2" ta="center">
+                {pack.title}
+              </Title>
+              <Text className="pack-carousel-subtitle" ta="center" lineClamp={1}>
+                {topPrize ? `Top pull: ${topPrize.label}` : "Mystery prizes inside"}
+              </Text>
+            </Stack>
 
             <div className="pack-carousel-stats">
               <div>
-                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Price</Text>
+                <Text size="xs" fw={700} tt="uppercase">Price</Text>
                 <Text fw={900}>{pack.pricePoints.toLocaleString()} pts</Text>
               </div>
               <div>
-                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Remaining</Text>
-                <Text fw={900}>{pack.remainingStock.toLocaleString()}/{pack.totalStock.toLocaleString()}</Text>
+                <Text size="xs" fw={700} tt="uppercase">Inside</Text>
+                <Text fw={900}>{pack.prizes.length.toLocaleString()} prizes</Text>
               </div>
               <div>
-                <Text size="xs" c="dimmed" fw={700} tt="uppercase">Top Prize</Text>
-                <Text fw={900} lineClamp={1}>{topPrize?.label ?? "Mystery prize"}</Text>
+                <Text size="xs" fw={700} tt="uppercase">Remaining</Text>
+                <Text fw={900}>{pack.remainingStock.toLocaleString()}/{pack.totalStock.toLocaleString()}</Text>
               </div>
             </div>
 
-            <Button component={Link} href={`/pack/${pack.id}`} fullWidth size="md">
+            <Button component={Link} href={`/pack/${pack.id}`} fullWidth size="lg" radius="xl" className="pack-carousel-action">
               Open Draw Page
             </Button>
           </Stack>
