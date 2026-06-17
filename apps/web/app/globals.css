@@ -413,7 +413,7 @@ h6,
 
 .pack-carousel-stage {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   min-height: 650px;
   isolation: isolate;
   cursor: grab;
@@ -524,11 +524,12 @@ h6,
   position: relative !important;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 5 / 7;
+  aspect-ratio: 4 / 5;
   border-radius: 24px;
   isolation: isolate;
+  background-color: color-mix(in srgb, var(--brand-soft) 34%, #080711);
   background-position: center;
-  background-size: cover;
+  background-size: contain;
   background-repeat: no-repeat;
   box-shadow:
     0 26px 70px rgba(0, 0, 0, 0.46),
@@ -575,7 +576,7 @@ h6,
 }
 
 .pack-carousel-card-active .pack-carousel-cover {
-  width: min(68%, 260px) !important;
+  width: min(78%, 300px) !important;
   margin-inline: auto;
 }
 
@@ -1659,8 +1660,9 @@ h6,
   }
 
   .pack-carousel-stage {
-    min-height: 620px;
-    overflow: hidden;
+    min-height: 0;
+    overflow: visible;
+    padding-bottom: 8px;
   }
 
   .pack-carousel-side {
@@ -1676,7 +1678,16 @@ h6,
   }
 
   .pack-carousel-card-active .pack-carousel-cover {
-    width: min(64vw, 236px) !important;
+    width: min(64vw, 220px) !important;
+  }
+
+  .pack-carousel-details {
+    gap: 10px !important;
+  }
+
+  .pack-carousel-details h2 {
+    font-size: 24px !important;
+    line-height: 1.1;
   }
 
   .pack-carousel-side-left {
@@ -1697,6 +1708,18 @@ h6,
 
   .pack-carousel-stats {
     grid-template-columns: 1fr;
+    gap: 6px;
+    order: 4;
+  }
+
+  .pack-carousel-stats > div {
+    padding: 8px;
+  }
+
+  .pack-carousel-action {
+    position: relative;
+    z-index: 6;
+    order: 3;
   }
 }
 
