@@ -85,6 +85,113 @@ h6,
   font-family: var(--font-display), var(--font-body), "Segoe UI", sans-serif;
 }
 
+.pack-loader-screen,
+.pack-loader-inline {
+  display: grid;
+  place-items: center;
+  gap: 14px;
+  color: var(--text);
+}
+
+.pack-loader-screen {
+  min-height: 100vh;
+  padding: 32px;
+  background:
+    radial-gradient(circle at 50% 4%, color-mix(in srgb, var(--brand-accent) 34%, transparent), transparent 34%),
+    radial-gradient(circle at 50% 78%, color-mix(in srgb, var(--brand) 22%, transparent), transparent 48%),
+    linear-gradient(180deg, #090812, #12101d 52%, color-mix(in srgb, var(--brand) 18%, #0b0914));
+}
+
+.pack-loader-inline {
+  min-width: 160px;
+  padding: 20px;
+}
+
+.route-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, #090812 68%, transparent);
+  backdrop-filter: blur(10px);
+  pointer-events: all;
+}
+
+.pack-loader-card {
+  width: 74px;
+  aspect-ratio: 4 / 5;
+  border-radius: 16px;
+  padding: 5px;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--brand-accent) 82%, white), var(--brand)),
+    var(--brand);
+  box-shadow:
+    0 24px 52px color-mix(in srgb, var(--brand) 28%, transparent),
+    0 0 0 1px color-mix(in srgb, white 20%, transparent);
+  transform-style: preserve-3d;
+  animation: pack-loader-spin 1.2s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.pack-loader-card-face {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background:
+    radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--brand-accent) 30%, transparent), transparent 32%),
+    linear-gradient(180deg, color-mix(in srgb, var(--card) 86%, transparent), color-mix(in srgb, var(--brand-soft) 78%, transparent));
+  border: 1px solid color-mix(in srgb, white 22%, transparent);
+}
+
+.pack-loader-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, var(--brand-accent) 0 28%, transparent 30%),
+    conic-gradient(from 0deg, var(--brand), var(--brand-accent), var(--brand));
+  box-shadow: 0 0 18px color-mix(in srgb, var(--brand-accent) 54%, transparent);
+}
+
+.pack-loader-text {
+  font-family: var(--font-display), var(--font-body), "Segoe UI", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--text) 86%, white);
+}
+
+@keyframes pack-loader-spin {
+  0% {
+    transform: rotateY(0deg) rotateZ(-3deg);
+  }
+  50% {
+    transform: rotateY(180deg) rotateZ(3deg);
+  }
+  100% {
+    transform: rotateY(360deg) rotateZ(-3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-loader-card {
+    animation: pack-loader-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes pack-loader-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.84;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
 .container {
   max-width: 1100px;
   margin: 0 auto;

@@ -1,7 +1,8 @@
 "use client";
 
 import { MantineProvider, createTheme } from "@mantine/core";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { RouteTransitionLoader } from "./route-transition-loader";
 
 const theme = createTheme({
   primaryColor: "grape",
@@ -15,6 +16,9 @@ const theme = createTheme({
 export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <MantineProvider theme={theme} defaultColorScheme="light">
+      <Suspense fallback={null}>
+        <RouteTransitionLoader />
+      </Suspense>
       {children}
     </MantineProvider>
   );
