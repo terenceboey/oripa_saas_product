@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent } from "react";
 import Link from "next/link";
 import { ActionIcon, Badge, Button, Card, Container, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconCircle, IconCircleFilled } from "@tabler/icons-react";
@@ -81,7 +81,6 @@ type SortKey = "recommended" | "remaining_asc" | "price_asc" | "price_desc" | "n
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
-const categories = ["Pokemon", "ONE PIECE", "Yu-Gi-Oh!", "Dragon Ball"];
 const clientPageHeader = { "x-client-page": "/" };
 const defaultPackBanner = "/default-pack-banner-desktop.webp";
 const defaultPackBannerMobile = "/default-pack-banner-mobile.webp";
@@ -101,8 +100,10 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [vendorNotFound, setVendorNotFound] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("recommended");
-  const [activeCategory, setActiveCategory] = useState("Pokemon");
   const [activePackIndex, setActivePackIndex] = useState(0);
+  const swipeStartXRef = useRef<number | null>(null);
+  const swipeStartYRef = useRef<number | null>(null);
+  const suppressPackClickRef = useRef(false);
 
   const headers = useMemo(() => ({ ...clientPageHeader }), [runtimeVendorHost]);
 
@@ -263,6 +264,38 @@ export default function HomePage() {
     setActivePackIndex((current) => (current + 1) % sortedPacks.length);
   }
 
+  function handlePackPointerDown(event: PointerEvent<HTMLDivElement>) {
+    if (sortedPacks.length <= 1) return;
+    swipeStartXRef.current = event.clientX;
+    swipeStartYRef.current = event.clientY;
+  }
+
+  function handlePackPointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (swipeStartXRef.current === null || swipeStartYRef.current === null) return;
+
+    const deltaX = event.clientX - swipeStartXRef.current;
+    const deltaY = event.clientY - swipeStartYRef.current;
+    swipeStartXRef.current = null;
+    swipeStartYRef.current = null;
+
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) < Math.abs(deltaY) * 1.25) return;
+
+    suppressPackClickRef.current = true;
+    if (deltaX < 0) {
+      goToNextPack();
+    } else {
+      goToPreviousPack();
+    }
+    window.setTimeout(() => {
+      suppressPackClickRef.current = false;
+    }, 250);
+  }
+
+  function handlePackPointerCancel() {
+    swipeStartXRef.current = null;
+    swipeStartYRef.current = null;
+  }
+
   function getTopPrize(pack: Pack) {
     return pack.prizes.reduce<Prize | null>((best, prize) => {
       if (!best || prize.estimatedValue > best.estimatedValue) return prize;
@@ -282,7 +315,10 @@ export default function HomePage() {
         shadow={isActive ? "lg" : "sm"}
         padding={isActive ? "lg" : "sm"}
         className={isActive ? "pack-carousel-card pack-carousel-card-active" : "pack-carousel-card pack-carousel-card-side"}
-        onClick={onSelect}
+        onClick={onSelect ? () => {
+          if (suppressPackClickRef.current) return;
+          onSelect();
+        } : undefined}
         style={{ cursor: onSelect ? "pointer" : "default" }}
       >
         <picture style={{ display: "block", width: "100%" }}>
@@ -458,25 +494,17 @@ export default function HomePage() {
         ) : null}
       </Paper>
 
-      <Paper withBorder radius="xl" p="lg" shadow="sm">
-        <Group justify="space-between" align="center" mb="md">
-          <div>
-            <Title order={1} size="h2">
-              {activeCategory} Mystery Packs
-            </Title>
-            <Text c="dimmed">Browse live packs on this storefront.</Text>
-          </div>
-          <Button onClick={() => void loadData(true)} loading={loading} variant="light">
-            Refresh
-          </Button>
-        </Group>
-        {error ? <Text c="red">{error}</Text> : null}
-      </Paper>
-
       <Paper withBorder radius="xl" p={{ base: "md", md: "xl" }} shadow="sm" className="pack-carousel-shell">
         {activePack ? (
           <Stack gap="md">
-            <div className="pack-carousel-stage">
+            {error ? <Text c="red">{error}</Text> : null}
+            <div
+              className="pack-carousel-stage"
+              onPointerDown={handlePackPointerDown}
+              onPointerUp={handlePackPointerUp}
+              onPointerCancel={handlePackPointerCancel}
+              onPointerLeave={handlePackPointerCancel}
+            >
               {previousPack ? (
                 <div className="pack-carousel-side pack-carousel-side-left">
                   {renderPackCard(previousPack, "side", "Previous", goToPreviousPack)}
@@ -519,6 +547,7 @@ export default function HomePage() {
           </Stack>
         ) : (
           <Stack gap="xs" align="center" py="xl">
+            {error ? <Text c="red">{error}</Text> : null}
             <Title order={3}>No live packs yet</Title>
             <Text c="dimmed">Check back when this storefront publishes a pack.</Text>
           </Stack>

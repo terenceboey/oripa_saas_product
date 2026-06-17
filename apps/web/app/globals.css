@@ -403,6 +403,13 @@ h6,
   overflow: hidden;
   min-height: 560px;
   isolation: isolate;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.pack-carousel-stage:active {
+  cursor: grabbing;
 }
 
 .pack-carousel-active {
@@ -466,6 +473,8 @@ h6,
   border-radius: 8px;
   border: 1px solid var(--border);
   background: transparent;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .pack-carousel-stats {
