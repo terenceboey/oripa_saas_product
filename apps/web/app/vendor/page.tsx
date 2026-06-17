@@ -316,6 +316,11 @@ const DEFAULT_PACK_COVER_OPTIONS = [
   { label: "Shadow Ghost Jackpot", image: "/pack-covers/shadow-ghost-jackpot-cover.webp" },
   { label: "Thunder Phoenix Jackpot", image: "/pack-covers/thunder-phoenix-jackpot-cover.webp" },
   { label: "Fire Dragon Jackpot", image: "/pack-covers/fire-dragon-jackpot-cover.webp" },
+  { label: "Futuristic Cyber Vault", image: "/pack-covers/futuristic-cyber-vault-cover.webp" },
+  { label: "Neon Arcade Jackpot", image: "/pack-covers/neon-arcade-jackpot-cover.webp" },
+  { label: "Matrix Data Relic", image: "/pack-covers/matrix-data-relic-cover.webp" },
+  { label: "Fairyland Crystal Chest", image: "/pack-covers/fairyland-crystal-chest-cover.webp" },
+  { label: "Volcanic Dragon Forge", image: "/pack-covers/volcanic-dragon-forge-cover.webp" },
 ] as const;
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
