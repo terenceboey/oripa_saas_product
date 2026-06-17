@@ -1,13 +1,18 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Badge, Button, Card, Container, FileButton, Group, Image, Modal, Paper, Select, SimpleGrid, Stack, Tabs, Text, TextInput, Textarea, Title } from "@mantine/core";
 import { useBackForwardRefresh } from "../../lib/use-back-forward-refresh";
 import QRCode from "qrcode";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
+import {
+  buildVendorCssVariables,
+  VENDOR_THEME_PRESETS,
+  VendorThemeProvider,
+  type VendorStorefrontTheme,
+} from "../../lib/vendor-theme";
 import { packTierSnapshotSchema, type PackTierSnapshot, vendorDrawAnimationPresetIds } from "@oripa/shared";
 import {
   CATALOG_GAME_OPTIONS,
@@ -333,14 +338,14 @@ function isLocalhostLike(host: string) {
   );
 }
 
-const DEFAULT_THEME = {
-  storefrontPrimary: "#7A5CFA",
-  storefrontSecondary: "#EEE7FF",
-  storefrontAccent: "#A66BFF",
-  storefrontSurface: "#FFFFFF",
-  storefrontText: "#2D2350",
-  storefrontMuted: "#6E6395",
-  storefrontRadius: 18,
+const DEFAULT_THEME: VendorStorefrontTheme = {
+  storefrontPrimary: VENDOR_THEME_PRESETS[0].storefrontPrimary,
+  storefrontSecondary: VENDOR_THEME_PRESETS[0].storefrontSecondary,
+  storefrontAccent: VENDOR_THEME_PRESETS[0].storefrontAccent,
+  storefrontSurface: VENDOR_THEME_PRESETS[0].storefrontSurface,
+  storefrontText: VENDOR_THEME_PRESETS[0].storefrontText,
+  storefrontMuted: VENDOR_THEME_PRESETS[0].storefrontMuted,
+  storefrontRadius: VENDOR_THEME_PRESETS[0].storefrontRadius,
 };
 
 const DRAW_ANIMATION_PRESET_OPTIONS = vendorDrawAnimationPresetIds.map((id) => ({
@@ -349,67 +354,13 @@ const DRAW_ANIMATION_PRESET_OPTIONS = vendorDrawAnimationPresetIds.map((id) => (
     id === "reel" ? "Reel spin" : id === "wheel" ? "Lottery wheel" : "Card flip",
 }));
 
-const THEME_PRESETS = [
-  { id: "lavender-dawn", label: "Lavender Dawn (Default)", ...DEFAULT_THEME },
-  {
-    id: "midnight-prism",
-    label: "Midnight Prism",
-    storefrontPrimary: "#8C6CFF",
-    storefrontSecondary: "#211A36",
-    storefrontAccent: "#D86BFF",
-    storefrontSurface: "#120F1E",
-    storefrontText: "#F4F0FF",
-    storefrontMuted: "#B8A9D9",
-    storefrontRadius: 22,
-  },
-  {
-    id: "cosmic-violet",
-    label: "Cosmic Violet",
-    storefrontPrimary: "#7E5CFF",
-    storefrontSecondary: "#1A1430",
-    storefrontAccent: "#6DE0FF",
-    storefrontSurface: "#0E1020",
-    storefrontText: "#F2F6FF",
-    storefrontMuted: "#9BA8CF",
-    storefrontRadius: 20,
-  },
-  {
-    id: "emerald-night",
-    label: "Emerald Night",
-    storefrontPrimary: "#35D0A2",
-    storefrontSecondary: "#102821",
-    storefrontAccent: "#B5FF6B",
-    storefrontSurface: "#0B1715",
-    storefrontText: "#ECFFF8",
-    storefrontMuted: "#91B9AA",
-    storefrontRadius: 20,
-  },
-  {
-    id: "pearl-aurora",
-    label: "Pearl Aurora",
-    storefrontPrimary: "#7F6BFF",
-    storefrontSecondary: "#ECE8FF",
-    storefrontAccent: "#60D8FF",
-    storefrontSurface: "#FFFDFB",
-    storefrontText: "#25203F",
-    storefrontMuted: "#756E92",
-    storefrontRadius: 22,
-  },
-  {
-    id: "champagne-glow",
-    label: "Champagne Glow",
-    storefrontPrimary: "#D99A3D",
-    storefrontSecondary: "#FFF0D8",
-    storefrontAccent: "#FF6F91",
-    storefrontSurface: "#FFF9F1",
-    storefrontText: "#3F2B22",
-    storefrontMuted: "#8A7565",
-    storefrontRadius: 20,
-  },
-] as const;
+const THEME_PRESETS = VENDOR_THEME_PRESETS.map((preset) => ({
+  ...preset,
+  label: preset.id === "lavender-dawn" ? "Lavender Dawn (Default)" : preset.label,
+}));
 
 function matchesPreset(
-  theme: typeof DEFAULT_THEME,
+  theme: VendorStorefrontTheme,
   preset: (typeof THEME_PRESETS)[number]
 ) {
   return (
@@ -582,6 +533,7 @@ export default function VendorPage() {
     () => THEME_PRESETS.find((preset) => preset.id === selectedThemePresetId) ?? THEME_PRESETS[0],
     [selectedThemePresetId]
   );
+  const vendorDashboardThemeStyle = useMemo(() => buildVendorCssVariables(themeDraft), [themeDraft]);
   const allTiersCollapsed = useMemo(() => tiers.length > 0 && tiers.every((tier) => collapsedTierIds[tier.uiId]), [tiers, collapsedTierIds]);
   const referralSignupUrl = useMemo(() => {
     const code = referralCode.trim() || vendorSlug.trim() || vendor?.slug?.trim() || "";
@@ -1793,7 +1745,8 @@ export default function VendorPage() {
   }
 
   return (
-    <Container size="xl" py="lg">
+    <VendorThemeProvider theme={themeDraft}>
+    <Container size="xl" py="lg" style={vendorDashboardThemeStyle}>
       <Stack gap="md">
         <Paper withBorder radius="xl" p="md" shadow="sm">
           <Group justify="space-between" align="center" gap="md" wrap="wrap">
@@ -2874,6 +2827,7 @@ export default function VendorPage() {
       </Modal>
       </Stack>
     </Container>
+    </VendorThemeProvider>
   );
 }
 
