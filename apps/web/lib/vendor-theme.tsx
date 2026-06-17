@@ -269,12 +269,25 @@ export function buildVendorCssVariables(theme: VendorStorefrontTheme | null | un
 
   return {
     ["--brand" as string]: paletteSource.storefrontPrimary,
+    ["--primary" as string]: paletteSource.storefrontPrimary,
     ["--card" as string]: paletteSource.storefrontSurface,
+    ["--surface" as string]: paletteSource.storefrontSurface,
     ["--text" as string]: paletteSource.storefrontText,
     ["--muted" as string]: paletteSource.storefrontMuted,
     ["--border" as string]: paletteSource.storefrontSecondary,
     ["--brand-soft" as string]: paletteSource.storefrontSecondary,
+    ["--secondary" as string]: paletteSource.storefrontSecondary,
     ["--brand-accent" as string]: paletteSource.storefrontAccent,
+    ["--mini-primary" as string]: paletteSource.storefrontPrimary,
+    ["--mini-secondary" as string]: paletteSource.storefrontSecondary,
+    ["--mini-surface" as string]: paletteSource.storefrontSurface,
+    ["--mini-text" as string]: paletteSource.storefrontText,
+    ["--mini-muted" as string]: paletteSource.storefrontMuted,
+    ["--mini-accent" as string]: paletteSource.storefrontAccent,
+    ["--mantine-color-text" as string]: paletteSource.storefrontText,
+    ["--mantine-color-dimmed" as string]: paletteSource.storefrontMuted,
+    ["--mantine-color-body" as string]: paletteSource.storefrontSurface,
+    ["--mantine-color-default-border" as string]: paletteSource.storefrontSecondary,
     ["--radius-lg" as string]: `${paletteSource.storefrontRadius}px`,
   } as CSSProperties;
 }
@@ -288,16 +301,25 @@ export function VendorThemeProvider({
 }) {
   const nextTheme = useMemo(() => buildVendorMantineTheme(theme), [theme]);
   const cssVariables = useMemo(() => buildVendorCssVariables(theme), [theme]);
+  const presetId = useMemo(() => resolveVendorThemePresetId(theme), [theme]);
 
   useEffect(() => {
     if (!cssVariables || typeof document === "undefined") return;
     const root = document.documentElement;
     const previousValues = new Map<string, string>();
+    const previousActive = root.getAttribute("data-vendor-theme-active");
+    const previousPreset = root.getAttribute("data-vendor-theme-preset");
 
     Object.entries(cssVariables).forEach(([key, value]) => {
       previousValues.set(key, root.style.getPropertyValue(key));
       root.style.setProperty(key, String(value));
     });
+    root.setAttribute("data-vendor-theme-active", "true");
+    if (presetId) {
+      root.setAttribute("data-vendor-theme-preset", presetId);
+    } else {
+      root.setAttribute("data-vendor-theme-preset", "custom");
+    }
 
     return () => {
       previousValues.forEach((value, key) => {
@@ -307,8 +329,18 @@ export function VendorThemeProvider({
           root.style.removeProperty(key);
         }
       });
+      if (previousActive === null) {
+        root.removeAttribute("data-vendor-theme-active");
+      } else {
+        root.setAttribute("data-vendor-theme-active", previousActive);
+      }
+      if (previousPreset === null) {
+        root.removeAttribute("data-vendor-theme-preset");
+      } else {
+        root.setAttribute("data-vendor-theme-preset", previousPreset);
+      }
     };
-  }, [cssVariables]);
+  }, [cssVariables, presetId]);
 
   if (!nextTheme) return <>{children}</>;
   return <MantineProvider theme={nextTheme}>{children}</MantineProvider>;
