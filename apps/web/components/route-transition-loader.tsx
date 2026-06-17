@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { PackLoader } from "./pack-loader";
 
+const MINIMUM_LOADER_MS = 900;
+const FAIL_SAFE_LOADER_MS = 8000;
+
 function isModifiedClick(event: MouseEvent) {
   return event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
 }
@@ -27,7 +30,7 @@ export function RouteTransitionLoader() {
     hideTimerRef.current = window.setTimeout(() => {
       setVisible(false);
       hideTimerRef.current = null;
-    }, 180);
+    }, MINIMUM_LOADER_MS);
 
     return () => {
       if (hideTimerRef.current !== null) {
@@ -62,7 +65,7 @@ export function RouteTransitionLoader() {
       failSafeTimerRef.current = window.setTimeout(() => {
         setVisible(false);
         failSafeTimerRef.current = null;
-      }, 8000);
+      }, FAIL_SAFE_LOADER_MS);
     }
 
     function showForPageUnload() {
