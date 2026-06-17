@@ -205,6 +205,7 @@ type Pack = {
   id: string;
   title: string;
   packBannerImageUrl?: string | null;
+  packCoverImageUrl?: string | null;
   pricePoints: number;
   totalStock: number;
   remainingStock: number;
@@ -300,11 +301,21 @@ type CsvImportResponse = {
 
 const DEFAULT_CARD = "https://archives.bulbagarden.net/media/upload/1/17/Cardback.jpg";
 const DEFAULT_PACK_BANNER = "/default-pack-banner-desktop.webp";
+const DEFAULT_PACK_COVER = "/pack-covers/grand-line-treasure-cover.webp";
 const DEFAULT_PACK_BANNER_OPTIONS = [
   { label: "Default Green", desktop: "/default-pack-banner-desktop.webp", mobile: "/default-pack-banner-mobile.webp" },
   { label: "S+ TIER REWARDS", desktop: "/pack-presets/splus-tier-rewards.png", mobile: "/pack-presets/splus-tier-rewards.png" },
   { label: "GACHAPON", desktop: "/pack-presets/gachapon.png", mobile: "/pack-presets/gachapon.png" },
   { label: "MYSTERY PACK RUSH", desktop: "/pack-presets/mystery-pack-rush.png", mobile: "/pack-presets/mystery-pack-rush.png" },
+] as const;
+const DEFAULT_PACK_COVER_OPTIONS = [
+  { label: "Grand Line Treasure", image: "/pack-covers/grand-line-treasure-cover.webp" },
+  { label: "Charizard Chase Rush", image: "/pack-covers/charizard-chase-rush-cover.webp" },
+  { label: "Pikachu Promo Party", image: "/pack-covers/pikachu-promo-party-cover.webp" },
+  { label: "Grand Line Jackpot", image: "/pack-covers/grand-line-jackpot-cover.webp" },
+  { label: "Shadow Ghost Jackpot", image: "/pack-covers/shadow-ghost-jackpot-cover.webp" },
+  { label: "Thunder Phoenix Jackpot", image: "/pack-covers/thunder-phoenix-jackpot-cover.webp" },
+  { label: "Fire Dragon Jackpot", image: "/pack-covers/fire-dragon-jackpot-cover.webp" },
 ] as const;
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "";
@@ -491,6 +502,7 @@ export default function VendorPage() {
   const [editingPackStatus, setEditingPackStatus] = useState<"DRAFT" | "LIVE" | "ARCHIVED">("DRAFT");
   const [packTitle, setPackTitle] = useState("");
   const [packBannerImageUrl, setPackBannerImageUrl] = useState(DEFAULT_PACK_BANNER);
+  const [packCoverImageUrl, setPackCoverImageUrl] = useState(DEFAULT_PACK_COVER);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [pricePoints, setPricePoints] = useState("100");
@@ -1518,6 +1530,7 @@ export default function VendorPage() {
     setEditingPackStatus("DRAFT");
     setPackTitle("");
     setPackBannerImageUrl(DEFAULT_PACK_BANNER);
+    setPackCoverImageUrl(DEFAULT_PACK_COVER);
     setStartsAt("");
     setEndsAt("");
     setPricePoints("100");
@@ -1540,6 +1553,7 @@ export default function VendorPage() {
     setEditingPackStatus(pack.status);
     setPackTitle(pack.title);
     setPackBannerImageUrl(pack.packBannerImageUrl ?? DEFAULT_PACK_BANNER);
+    setPackCoverImageUrl(pack.packCoverImageUrl ?? DEFAULT_PACK_COVER);
     setPricePoints(String(pack.pricePoints));
     setTotalStock(String(pack.totalStock));
     setStartsAt(toLocalInputValue(pack.startsAt));
@@ -1594,6 +1608,7 @@ export default function VendorPage() {
       const payload = {
         title: packTitle,
         packBannerImageUrl: packBannerImageUrl.trim() ? packBannerImageUrl.trim() : DEFAULT_PACK_BANNER,
+        packCoverImageUrl: packCoverImageUrl.trim() ? packCoverImageUrl.trim() : DEFAULT_PACK_COVER,
         pricePoints: Number(pricePoints),
         totalStock: Number(totalStock),
         startsAt: toIsoDateTime(startsAt),
@@ -2312,8 +2327,39 @@ export default function VendorPage() {
                   Pack banner image URL
                   <input value={packBannerImageUrl} onChange={(e) => setPackBannerImageUrl(e.target.value)} placeholder="Pack banner image URL" required />
                 </label>
+                <label className="muted tiny">
+                  Pack carousel cover URL
+                  <input value={packCoverImageUrl} onChange={(e) => setPackCoverImageUrl(e.target.value)} placeholder="Pack carousel cover URL" required />
+                </label>
                 <div className="muted tiny" style={{ gridColumn: "1 / -1" }}>
-                  Choose from default pack banners
+                  Choose a homepage carousel pack cover
+                  <div className="theme-preset-grid" style={{ marginTop: 8 }}>
+                    {DEFAULT_PACK_COVER_OPTIONS.map((option) => (
+                      <button
+                        key={option.image}
+                        type="button"
+                        className={`theme-preset-card ${packCoverImageUrl === option.image ? "active" : ""}`}
+                        onClick={() => setPackCoverImageUrl(option.image)}
+                      >
+                        <strong>{option.label}</strong>
+                        <img
+                          src={option.image}
+                          alt={option.label}
+                          style={{
+                            width: "100%",
+                            aspectRatio: "4 / 5",
+                            objectFit: "contain",
+                            borderRadius: 8,
+                            border: "1px solid var(--border)",
+                            background: "color-mix(in srgb, var(--card) 86%, transparent)",
+                          }}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="muted tiny" style={{ gridColumn: "1 / -1" }}>
+                  Choose from wide pack banners
                   <div className="theme-preset-grid" style={{ marginTop: 8 }}>
                     {DEFAULT_PACK_BANNER_OPTIONS.map((option) => (
                       <button
@@ -2342,9 +2388,10 @@ export default function VendorPage() {
                   />
                 </label>
                 {packBannerImageUrl ? (
-                  <div className="banner-admin-row" style={{ gridColumn: "1 / -1", gridTemplateColumns: "220px 1fr" }}>
+                  <div className="banner-admin-row" style={{ gridColumn: "1 / -1", gridTemplateColumns: "160px 220px 1fr" }}>
+                    <img src={packCoverImageUrl} alt="Pack carousel cover preview" style={{ width: "100%", aspectRatio: "4 / 5", objectFit: "contain", background: "color-mix(in srgb, var(--card) 86%, transparent)" }} />
                     <img src={packBannerImageUrl} alt="Pack banner preview" style={{ width: "100%", height: "auto", objectFit: "contain", background: "#fff" }} />
-                    <div className="muted tiny">Pack banner preview</div>
+                    <div className="muted tiny">Carousel cover and wide pack banner preview</div>
                   </div>
                 ) : null}
                 <label className="muted tiny">
