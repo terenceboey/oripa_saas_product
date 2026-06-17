@@ -47,6 +47,12 @@ export const vendorThemePresetIds = [
   "peach-sorbet",
   "sky-bloom",
   "rose-mist",
+  "midnight-prism",
+  "cosmic-violet",
+  "emerald-night",
+  "pearl-aurora",
+  "champagne-glow",
+  "frosted-orchid",
 ] as const;
 export const vendorThemePresetSchema = z.enum(vendorThemePresetIds);
 

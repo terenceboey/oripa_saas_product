@@ -395,6 +395,72 @@ const THEME_PRESETS = [
     storefrontMuted: "#7B6687",
     storefrontRadius: 18,
   },
+  {
+    id: "midnight-prism",
+    label: "Midnight Prism",
+    storefrontPrimary: "#8C6CFF",
+    storefrontSecondary: "#211A36",
+    storefrontAccent: "#D86BFF",
+    storefrontSurface: "#120F1E",
+    storefrontText: "#F4F0FF",
+    storefrontMuted: "#B8A9D9",
+    storefrontRadius: 22,
+  },
+  {
+    id: "cosmic-violet",
+    label: "Cosmic Violet",
+    storefrontPrimary: "#7E5CFF",
+    storefrontSecondary: "#1A1430",
+    storefrontAccent: "#6DE0FF",
+    storefrontSurface: "#0E1020",
+    storefrontText: "#F2F6FF",
+    storefrontMuted: "#9BA8CF",
+    storefrontRadius: 20,
+  },
+  {
+    id: "emerald-night",
+    label: "Emerald Night",
+    storefrontPrimary: "#35D0A2",
+    storefrontSecondary: "#102821",
+    storefrontAccent: "#B5FF6B",
+    storefrontSurface: "#0B1715",
+    storefrontText: "#ECFFF8",
+    storefrontMuted: "#91B9AA",
+    storefrontRadius: 20,
+  },
+  {
+    id: "pearl-aurora",
+    label: "Pearl Aurora",
+    storefrontPrimary: "#7F6BFF",
+    storefrontSecondary: "#ECE8FF",
+    storefrontAccent: "#60D8FF",
+    storefrontSurface: "#FFFDFB",
+    storefrontText: "#25203F",
+    storefrontMuted: "#756E92",
+    storefrontRadius: 22,
+  },
+  {
+    id: "champagne-glow",
+    label: "Champagne Glow",
+    storefrontPrimary: "#D99A3D",
+    storefrontSecondary: "#FFF0D8",
+    storefrontAccent: "#FF6F91",
+    storefrontSurface: "#FFF9F1",
+    storefrontText: "#3F2B22",
+    storefrontMuted: "#8A7565",
+    storefrontRadius: 20,
+  },
+  {
+    id: "frosted-orchid",
+    label: "Frosted Orchid",
+    storefrontPrimary: "#C767D8",
+    storefrontSecondary: "#F6E9FF",
+    storefrontAccent: "#6F8DFF",
+    storefrontSurface: "#FFFFFF",
+    storefrontText: "#332341",
+    storefrontMuted: "#806D91",
+    storefrontRadius: 22,
+  },
 ] as const;
 
 function matchesPreset(
@@ -2027,11 +2093,21 @@ export default function VendorPage() {
             <Stack gap="md">
               <div>
                 <Title order={2} size="h3">Storefront Theme</Title>
-                <Text c="dimmed" size="sm">Choose a preset pastel theme for your landing and pack pages.</Text>
+                <Text c="dimmed" size="sm">Choose a light or dark premium theme for your landing and pack pages.</Text>
               </div>
               <form onSubmit={saveTheme}>
                 <Stack gap="md">
-                  <Paper withBorder radius="lg" p="md" bg="var(--mantine-color-violet-light)">
+                  <Paper
+                    withBorder
+                    radius="lg"
+                    p="md"
+                    style={{
+                      background:
+                        selectedThemePreset.storefrontSurface.toLowerCase() === "#ffffff" || selectedThemePreset.storefrontSurface.toLowerCase().startsWith("#fff")
+                          ? `linear-gradient(135deg, ${selectedThemePreset.storefrontSecondary}, #ffffff)`
+                          : `radial-gradient(circle at 50% 4%, ${selectedThemePreset.storefrontAccent}55, transparent 34%), radial-gradient(circle at 50% 78%, ${selectedThemePreset.storefrontPrimary}38, transparent 48%), linear-gradient(180deg, ${selectedThemePreset.storefrontSurface}, #090812)`,
+                    }}
+                  >
                     <Group justify="space-between" align="center" wrap="wrap">
                       <div>
                         <Text fw={800}>Current theme</Text>
@@ -2103,9 +2179,9 @@ export default function VendorPage() {
                               <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontAccent, display: "inline-block" }} />
                               <span style={{ width: 14, height: 14, borderRadius: 999, background: preset.storefrontSurface, border: "1px solid #d9d9ef", display: "inline-block" }} />
                             </Group>
-                            <Text size="xs" c="dimmed">Tap to apply this theme preset.</Text>
-                          </Stack>
-                        </Button>
+                          <Text size="xs" c="dimmed">Tap to apply this theme preset.</Text>
+                        </Stack>
+                      </Button>
                       );
                     })}
                   </SimpleGrid>
