@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Container, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
+import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../lib/vendor-theme";
+
+type Tenant = {
+  vendorSettings?: VendorStorefrontTheme | null;
+};
 
 type FairnessProofSummary = {
   drawOrderId: string;
@@ -62,6 +67,33 @@ export default function FairnessProofsPage() {
   const [loadingByOrderId, setLoadingByOrderId] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(tenant?.vendorSettings), [tenant?.vendorSettings]);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${apiBase}/v1/vendor/current`, {
+      headers,
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        setTenant((payload.vendor ?? payload.tenant ?? null) as Tenant | null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTenant(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [headers]);
 
   const loadSummaries = useCallback(async () => {
     setLoading(true);
@@ -113,7 +145,8 @@ export default function FairnessProofsPage() {
   }
 
   return (
-    <Container size="lg" py="lg">
+    <VendorThemeProvider theme={tenant?.vendorSettings}>
+    <Container size="lg" py="lg" style={storefrontThemeStyle}>
       <Stack gap="md">
         <Paper withBorder radius="xl" p="lg" shadow="sm">
           <Group justify="space-between" align="center" wrap="wrap">
@@ -201,6 +234,7 @@ function hexToFloat01(hex) {
         </Stack>
       </Stack>
     </Container>
+    </VendorThemeProvider>
   );
 }
 

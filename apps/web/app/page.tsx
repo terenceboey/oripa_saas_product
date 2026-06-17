@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ActionIcon, Badge, Button, Container, Divider, Group, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconCircle, IconCircleFilled } from "@tabler/icons-react";
 import { StorefrontNav } from "../components/storefront-nav";
-import { VendorThemeProvider } from "../lib/vendor-theme";
+import { buildVendorCssVariables, VendorThemeProvider } from "../lib/vendor-theme";
 import { useBackForwardRefresh } from "../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../lib/favicon";
 import { normalizeVendorFaviconUrl, resolvePackBannerMediaUrl } from "../lib/media-url";
@@ -233,20 +233,7 @@ export default function HomePage() {
   const activePack = sortedPacks[activePackIndex] ?? null;
   const previousPack = sortedPacks.length > 1 ? sortedPacks[(activePackIndex - 1 + sortedPacks.length) % sortedPacks.length] : null;
   const nextPack = sortedPacks.length > 2 ? sortedPacks[(activePackIndex + 1) % sortedPacks.length] : sortedPacks.length === 2 ? sortedPacks[(activePackIndex + 1) % sortedPacks.length] : null;
-  const storefrontThemeStyle = useMemo(() => {
-    const theme = tenant?.vendorSettings;
-    if (!theme) return undefined;
-    return {
-      ["--brand" as string]: theme.storefrontPrimary,
-      ["--card" as string]: theme.storefrontSurface,
-      ["--text" as string]: theme.storefrontText,
-      ["--muted" as string]: theme.storefrontMuted,
-      ["--border" as string]: theme.storefrontSecondary,
-      ["--brand-soft" as string]: theme.storefrontSecondary,
-      ["--brand-accent" as string]: theme.storefrontAccent,
-      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
-    } as CSSProperties;
-  }, [tenant?.vendorSettings]);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(tenant?.vendorSettings), [tenant?.vendorSettings]);
 
   function goToPreviousBanner() {
     if (!banners.length) return;

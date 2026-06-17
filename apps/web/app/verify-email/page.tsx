@@ -4,10 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Alert, Anchor, Button, Container, Group, Paper, Stack, Text, TextInput, Title } from "@mantine/core";
+import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../lib/vendor-theme";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
 const clientPageHeader = { "x-client-page": "/verify-email" };
+
+type Tenant = {
+  vendorSettings?: VendorStorefrontTheme | null;
+};
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -23,17 +28,44 @@ export default function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
   const returnTo = useMemo(() => {
     const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
     const raw = String(url?.searchParams.get("returnTo") ?? "").trim();
     if (raw.startsWith("/")) return raw;
     return `/profile?vendorHost=${encodeURIComponent(runtimeVendorHost)}`;
   }, [runtimeVendorHost]);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(tenant?.vendorSettings), [tenant?.vendorSettings]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
     const qEmail = String(url.searchParams.get("email") ?? "").trim();
     if (qEmail) setEmail(qEmail);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${apiBase}/v1/vendor/current`, {
+      headers: clientPageHeader,
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        setTenant((payload.vendor ?? payload.tenant ?? null) as Tenant | null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTenant(null);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function handleVerify(event: React.FormEvent<HTMLFormElement>) {
@@ -95,7 +127,8 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <Container size="sm" py="xl">
+    <VendorThemeProvider theme={tenant?.vendorSettings}>
+    <Container size="sm" py="xl" style={storefrontThemeStyle}>
       <Paper radius="xl" p="xl" shadow="md" withBorder>
         <Button component={Link} href="/" variant="light" radius="md" mb="xl">
           Back to Home
@@ -129,6 +162,7 @@ export default function VerifyEmailPage() {
         </Stack>
       </Paper>
     </Container>
+    </VendorThemeProvider>
   );
 }
 

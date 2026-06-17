@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
+import { applyVendorFavicon } from "../../../lib/favicon";
+import { normalizeVendorFaviconUrl } from "../../../lib/media-url";
+import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../../lib/vendor-theme";
 
 type SetInfo = {
   sourceSetId: string;
@@ -36,8 +39,15 @@ type CardResponse = {
   items: SetCard[];
 };
 
+type Tenant = {
+  logoImageUrl?: string | null;
+  faviconImageUrl?: string | null;
+  vendorSettings?: VendorStorefrontTheme | null;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const PAGE_SIZE = 24;
+const clientPageHeader = { "x-client-page": "/setlists/[sourceSetId]" };
 
 export default function SetlistDetailPage() {
   const params = useParams<{ sourceSetId: string }>();
@@ -52,6 +62,37 @@ export default function SetlistDetailPage() {
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("");
   const [page, setPage] = useState(1);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(tenant?.vendorSettings), [tenant?.vendorSettings]);
+
+  useEffect(() => {
+    let active = true;
+    fetch(`${apiBase}/v1/vendor/current`, {
+      headers: clientPageHeader,
+      credentials: "include",
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        setTenant((payload.vendor ?? payload.tenant ?? null) as Tenant | null);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTenant(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    applyVendorFavicon(normalizeVendorFaviconUrl(tenant?.faviconImageUrl, tenant?.logoImageUrl));
+  }, [tenant?.faviconImageUrl, tenant?.logoImageUrl]);
 
   useEffect(() => {
     setPage(1);
@@ -104,7 +145,8 @@ export default function SetlistDetailPage() {
   const pageTitle = setInfo?.name ?? "Set";
 
   return (
-    <Container size="xl" py="xl">
+    <VendorThemeProvider theme={tenant?.vendorSettings}>
+    <Container size="xl" py="xl" style={storefrontThemeStyle}>
       <Stack gap="lg">
         <Group justify="space-between" align="center" wrap="wrap">
           <Button component={Link} href={`/setlists?game=${game}${source ? `&source=${source}` : ""}`} variant="light">
@@ -174,6 +216,7 @@ export default function SetlistDetailPage() {
         </SimpleGrid>
       </Stack>
     </Container>
+    </VendorThemeProvider>
   );
 }
 

@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
 import { Alert, Anchor, Button, Container, Divider, Group, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl } from "../../lib/media-url";
-import { VendorThemeProvider } from "../../lib/vendor-theme";
+import { buildVendorCssVariables, VendorThemeProvider } from "../../lib/vendor-theme";
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 const configuredVendorHost = process.env.NEXT_PUBLIC_TENANT_HOST ?? "demo.localhost";
@@ -108,19 +107,7 @@ export default function RegisterPage() {
     setMessage("You have been logged out.");
   }
 
-  const storefrontThemeStyle = useMemo(() => {
-    if (!theme) return undefined;
-    return {
-      ["--brand" as string]: theme.storefrontPrimary,
-      ["--card" as string]: theme.storefrontSurface,
-      ["--text" as string]: theme.storefrontText,
-      ["--muted" as string]: theme.storefrontMuted,
-      ["--border" as string]: theme.storefrontSecondary,
-      ["--brand-soft" as string]: theme.storefrontSecondary,
-      ["--brand-accent" as string]: theme.storefrontAccent,
-      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
-    } as CSSProperties;
-  }, [theme]);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(theme), [theme]);
 
   useEffect(() => {
     applyVendorFavicon(normalizeVendorFaviconUrl(branding?.faviconImageUrl, branding?.logoImageUrl));

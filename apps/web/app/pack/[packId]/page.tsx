@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import { Badge, Button, Card, Container, Group, Image, Modal, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
 import { useBackForwardRefresh } from "../../../lib/use-back-forward-refresh";
 import { applyVendorFavicon } from "../../../lib/favicon";
 import { normalizeVendorFaviconUrl, normalizeVendorLogoUrl, resolvePackBannerMediaUrl } from "../../../lib/media-url";
-import { VendorThemeProvider } from "../../../lib/vendor-theme";
+import { buildVendorCssVariables, VendorThemeProvider } from "../../../lib/vendor-theme";
 import { DrawShowcaseVisual } from "../../../components/draw-showcase-visual";
 
 type Prize = {
@@ -276,19 +275,7 @@ export default function PackDrawPage() {
     await handleDraw(quantity);
   }
 
-  const storefrontThemeStyle = useMemo(() => {
-    if (!theme) return undefined;
-    return {
-      ["--brand" as string]: theme.storefrontPrimary,
-      ["--card" as string]: theme.storefrontSurface,
-      ["--text" as string]: theme.storefrontText,
-      ["--muted" as string]: theme.storefrontMuted,
-      ["--border" as string]: theme.storefrontSecondary,
-      ["--brand-soft" as string]: theme.storefrontSecondary,
-      ["--brand-accent" as string]: theme.storefrontAccent,
-      ["--radius-lg" as string]: `${theme.storefrontRadius}px`,
-    } as CSSProperties;
-  }, [theme]);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(theme), [theme]);
   const drawAnimationPreset = theme?.drawAnimationPreset ?? "reel";
 
   useEffect(() => {

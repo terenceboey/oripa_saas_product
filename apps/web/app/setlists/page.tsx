@@ -6,6 +6,7 @@ import { Badge, Button, Card, Container, Group, Image, Paper, Select, SimpleGrid
 import { StorefrontNav } from "../../components/storefront-nav";
 import { applyVendorFavicon } from "../../lib/favicon";
 import { normalizeVendorFaviconUrl } from "../../lib/media-url";
+import { buildVendorCssVariables, type VendorStorefrontTheme, VendorThemeProvider } from "../../lib/vendor-theme";
 
 type SetlistItem = {
   id: string;
@@ -42,6 +43,7 @@ type Tenant = {
   name: string;
   logoImageUrl?: string | null;
   faviconImageUrl?: string | null;
+  vendorSettings?: VendorStorefrontTheme | null;
 };
 
 const apiBase = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
@@ -199,9 +201,11 @@ export default function SetlistsPage() {
   const featured = useMemo(() => recentItems[0] ?? mainData.items[0] ?? null, [recentItems, mainData.items]);
   const totalPages = Math.max(1, mainData.totalPages || 1);
   const currentPage = Math.min(Math.max(1, mainData.page || page), totalPages);
+  const storefrontThemeStyle = useMemo(() => buildVendorCssVariables(tenant?.vendorSettings), [tenant?.vendorSettings]);
 
   return (
-    <Container size="xl" py="xl">
+    <VendorThemeProvider theme={tenant?.vendorSettings}>
+    <Container size="xl" py="xl" style={storefrontThemeStyle}>
       <Stack gap="lg">
         <StorefrontNav
           brandName={tenant?.name ?? "Storefront"}
@@ -324,6 +328,7 @@ export default function SetlistsPage() {
         </Paper>
       </Stack>
     </Container>
+    </VendorThemeProvider>
   );
 }
 

@@ -1,10 +1,10 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useMemo, type CSSProperties, type ReactNode } from "react";
 import { MantineProvider, createTheme, type MantineColorsTuple, type MantineThemeOverride } from "@mantine/core";
 import { vendorThemePresetIds } from "@oripa/shared";
 
-type VendorStorefrontTheme = {
+export type VendorStorefrontTheme = {
   storefrontThemePreset?: string | null;
   storefrontPrimary: string;
   storefrontSecondary: string;
@@ -262,6 +262,23 @@ export function buildVendorMantineTheme(theme: VendorStorefrontTheme | null | un
   });
 }
 
+export function buildVendorCssVariables(theme: VendorStorefrontTheme | null | undefined): CSSProperties | undefined {
+  if (!theme) return undefined;
+  const preset = getThemePreset(theme);
+  const paletteSource = preset ?? theme;
+
+  return {
+    ["--brand" as string]: paletteSource.storefrontPrimary,
+    ["--card" as string]: paletteSource.storefrontSurface,
+    ["--text" as string]: paletteSource.storefrontText,
+    ["--muted" as string]: paletteSource.storefrontMuted,
+    ["--border" as string]: paletteSource.storefrontSecondary,
+    ["--brand-soft" as string]: paletteSource.storefrontSecondary,
+    ["--brand-accent" as string]: paletteSource.storefrontAccent,
+    ["--radius-lg" as string]: `${paletteSource.storefrontRadius}px`,
+  } as CSSProperties;
+}
+
 export function VendorThemeProvider({
   theme,
   children,
@@ -269,7 +286,30 @@ export function VendorThemeProvider({
   theme?: VendorStorefrontTheme | null;
   children: ReactNode;
 }) {
-  const nextTheme = buildVendorMantineTheme(theme);
+  const nextTheme = useMemo(() => buildVendorMantineTheme(theme), [theme]);
+  const cssVariables = useMemo(() => buildVendorCssVariables(theme), [theme]);
+
+  useEffect(() => {
+    if (!cssVariables || typeof document === "undefined") return;
+    const root = document.documentElement;
+    const previousValues = new Map<string, string>();
+
+    Object.entries(cssVariables).forEach(([key, value]) => {
+      previousValues.set(key, root.style.getPropertyValue(key));
+      root.style.setProperty(key, String(value));
+    });
+
+    return () => {
+      previousValues.forEach((value, key) => {
+        if (value) {
+          root.style.setProperty(key, value);
+        } else {
+          root.style.removeProperty(key);
+        }
+      });
+    };
+  }, [cssVariables]);
+
   if (!nextTheme) return <>{children}</>;
   return <MantineProvider theme={nextTheme}>{children}</MantineProvider>;
 }
