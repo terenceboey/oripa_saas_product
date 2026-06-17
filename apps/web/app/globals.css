@@ -521,12 +521,12 @@ h6,
 
 .pack-carousel-slot-left {
   width: min(22vw, 260px);
-  transform: translateX(-165%) translateZ(-120px) rotateY(14deg) scale(0.84);
+  transform: translateX(calc(-50% - clamp(300px, 28vw, 420px))) translateZ(-120px) rotateY(14deg) scale(0.84);
   transform-origin: right center;
 }
 
 .pack-carousel-slot-left:hover {
-  transform: translateX(-160%) translateZ(-96px) rotateY(10deg) scale(0.87);
+  transform: translateX(calc(-50% - clamp(290px, 27vw, 405px))) translateZ(-96px) rotateY(10deg) scale(0.87);
 }
 
 .pack-carousel-slot-left-next {
@@ -539,12 +539,12 @@ h6,
 
 .pack-carousel-slot-right {
   width: min(22vw, 260px);
-  transform: translateX(65%) translateZ(-120px) rotateY(-14deg) scale(0.84);
+  transform: translateX(calc(-50% + clamp(300px, 28vw, 420px))) translateZ(-120px) rotateY(-14deg) scale(0.84);
   transform-origin: left center;
 }
 
 .pack-carousel-slot-right:hover {
-  transform: translateX(60%) translateZ(-96px) rotateY(-10deg) scale(0.87);
+  transform: translateX(calc(-50% + clamp(290px, 27vw, 405px))) translateZ(-96px) rotateY(-10deg) scale(0.87);
 }
 
 .pack-carousel-slot-right-next {
@@ -564,21 +564,21 @@ h6,
 }
 
 .pack-carousel-slot-far-left {
-  transform: translateX(-270%) translateZ(-210px) rotateY(22deg) scale(0.7);
+  transform: translateX(calc(-50% - clamp(500px, 42vw, 650px))) translateZ(-210px) rotateY(22deg) scale(0.7);
   transform-origin: right center;
 }
 
 .pack-carousel-slot-far-left:hover {
-  transform: translateX(-270%) translateZ(-210px) rotateY(22deg) scale(0.7);
+  transform: translateX(calc(-50% - clamp(500px, 42vw, 650px))) translateZ(-210px) rotateY(22deg) scale(0.7);
 }
 
 .pack-carousel-slot-far-right {
-  transform: translateX(170%) translateZ(-210px) rotateY(-22deg) scale(0.7);
+  transform: translateX(calc(-50% + clamp(500px, 42vw, 650px))) translateZ(-210px) rotateY(-22deg) scale(0.7);
   transform-origin: left center;
 }
 
 .pack-carousel-slot-far-right:hover {
-  transform: translateX(170%) translateZ(-210px) rotateY(-22deg) scale(0.7);
+  transform: translateX(calc(-50% + clamp(500px, 42vw, 650px))) translateZ(-210px) rotateY(-22deg) scale(0.7);
 }
 
 .pack-carousel-card {
@@ -1901,44 +1901,44 @@ h6,
 @keyframes pack-carousel-left-settle-next {
   0% {
     opacity: 0.86;
-    transform: translateX(-34%) translateZ(32px) rotateY(5deg) scale(0.92);
+    transform: translateX(calc(-50% - clamp(160px, 14vw, 220px))) translateZ(32px) rotateY(5deg) scale(0.92);
   }
   100% {
-    opacity: 0.34;
-    transform: translateX(-118%) translateZ(-160px) rotateY(12deg) scale(0.78);
+    opacity: 0.5;
+    transform: translateX(calc(-50% - clamp(300px, 28vw, 420px))) translateZ(-120px) rotateY(14deg) scale(0.84);
   }
 }
 
 @keyframes pack-carousel-left-settle-previous {
   0% {
     opacity: 0.12;
-    transform: translateX(-142%) translateZ(-240px) rotateY(18deg) scale(0.68);
+    transform: translateX(calc(-50% - clamp(500px, 42vw, 650px))) translateZ(-210px) rotateY(22deg) scale(0.7);
   }
   100% {
-    opacity: 0.34;
-    transform: translateX(-118%) translateZ(-160px) rotateY(12deg) scale(0.78);
+    opacity: 0.5;
+    transform: translateX(calc(-50% - clamp(300px, 28vw, 420px))) translateZ(-120px) rotateY(14deg) scale(0.84);
   }
 }
 
 @keyframes pack-carousel-right-settle-next {
   0% {
     opacity: 0.12;
-    transform: translateX(48%) translateZ(-240px) rotateY(-18deg) scale(0.68);
+    transform: translateX(calc(-50% + clamp(500px, 42vw, 650px))) translateZ(-210px) rotateY(-22deg) scale(0.7);
   }
   100% {
-    opacity: 0.34;
-    transform: translateX(18%) translateZ(-160px) rotateY(-12deg) scale(0.78);
+    opacity: 0.5;
+    transform: translateX(calc(-50% + clamp(300px, 28vw, 420px))) translateZ(-120px) rotateY(-14deg) scale(0.84);
   }
 }
 
 @keyframes pack-carousel-right-settle-previous {
   0% {
     opacity: 0.86;
-    transform: translateX(-50%) translateZ(32px) rotateY(-5deg) scale(0.92);
+    transform: translateX(calc(-50% + clamp(160px, 14vw, 220px))) translateZ(32px) rotateY(-5deg) scale(0.92);
   }
   100% {
-    opacity: 0.34;
-    transform: translateX(18%) translateZ(-160px) rotateY(-12deg) scale(0.78);
+    opacity: 0.5;
+    transform: translateX(calc(-50% + clamp(300px, 28vw, 420px))) translateZ(-120px) rotateY(-14deg) scale(0.84);
   }
 }
 
