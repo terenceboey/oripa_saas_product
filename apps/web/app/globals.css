@@ -195,10 +195,12 @@ h6,
 }
 
 .stat {
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   border-radius: 12px;
   padding: 12px;
-  background: #fff;
+  background: color-mix(in srgb, var(--card) 76%, transparent);
+  color: var(--text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
 }
 
 .stat-label {
@@ -210,6 +212,7 @@ h6,
   font-size: 24px;
   font-weight: 700;
   margin-top: 4px;
+  color: var(--text);
 }
 
 .pack-grid {
@@ -2071,6 +2074,20 @@ html[data-vendor-theme-active="true"] .mantine-Button-root[data-variant="default
 html[data-vendor-theme-active="true"] .mantine-Badge-root {
   background: color-mix(in srgb, var(--brand-soft) 58%, transparent) !important;
   border-color: color-mix(in srgb, var(--border) 76%, transparent) !important;
+  color: var(--text) !important;
+}
+
+html[data-vendor-theme-active="true"] .stat {
+  background: color-mix(in srgb, var(--card) 72%, var(--brand-soft) 28%) !important;
+  border-color: color-mix(in srgb, var(--border) 72%, transparent) !important;
+  color: var(--text) !important;
+}
+
+html[data-vendor-theme-active="true"] .stat-label {
+  color: var(--muted) !important;
+}
+
+html[data-vendor-theme-active="true"] .stat-value {
   color: var(--text) !important;
 }
 
