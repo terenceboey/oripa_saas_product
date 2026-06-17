@@ -274,7 +274,7 @@ export default function HomePage() {
             {(() => {
               const image = resolvePackBannerMediaUrl(currentBanner.imageUrl, defaultPackBanner);
               return (
-                <picture style={{ display: "block", width: "100%", height: "clamp(220px, 32vw, 420px)" }}>
+                <picture style={{ display: "block", width: "100%", aspectRatio: "16 / 9" }}>
                   {image.allowSources ? <source media="(max-width: 760px)" srcSet={image.mobile} type={image.mobileType ?? undefined} /> : null}
                   {image.allowSources ? <source srcSet={image.desktop} type={image.desktopType ?? undefined} /> : null}
                   <img

@@ -14,8 +14,8 @@ const targetRoots = [
 ];
 
 const variants = [
-  { suffix: "desktop", width: 1600, quality: 78 },
-  { suffix: "mobile", width: 800, quality: 72 },
+  { suffix: "desktop", width: 1600, height: 900, quality: 78 },
+  { suffix: "mobile", width: 800, height: 450, quality: 72 },
 ];
 
 async function processImage(relativePath) {
@@ -25,7 +25,7 @@ async function processImage(relativePath) {
   for (const variant of variants) {
     const output = `${baseNoExt}-${variant.suffix}.webp`;
     await sharp(source)
-      .resize({ width: variant.width, withoutEnlargement: true })
+      .resize({ width: variant.width, height: variant.height, fit: "cover", position: "center" })
       .webp({ quality: variant.quality, effort: 5 })
       .toFile(output);
     console.log(`[optimize-banners] ${relativePath} -> ${path.relative(publicDir, output)}`);
