@@ -108,6 +108,90 @@ function selectDeterministicPrize(prizes: PrizeState[], rand01: number) {
 
 export const drawRouter = Router();
 
+drawRouter.post("/v1/draws/trial", async (req: VendorRequest, res) => {
+  const vendorId = req.vendorId;
+  if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });
+
+  const parsed = drawSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Invalid payload", issues: parsed.error.issues });
+  }
+
+  const { packId, quantity } = parsed.data;
+  if (quantity > 10) {
+    return res.status(400).json({ error: "Trial draw is limited to 10 draws" });
+  }
+
+  try {
+    const now = new Date();
+    const pack = await prisma.pack.findFirst({
+      where: {
+        id: packId,
+        vendorId,
+        isActive: true,
+        status: "LIVE",
+        OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+        AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: now } }] }],
+      },
+      select: {
+        id: true,
+        pricePoints: true,
+        remainingStock: true,
+        prizes: true,
+      },
+    });
+    if (!pack) throw new Error("Pack not found or inactive");
+    if (pack.remainingStock < quantity) throw new Error("Not enough stock remaining");
+
+    const prizeLookup = new Map(pack.prizes.map((prize) => [prize.id, prize]));
+    const prizeState: PrizeState[] = pack.prizes.map((prize) => ({
+      id: prize.id,
+      label: prize.label,
+      weight: prize.weight,
+      remainingStock: prize.remainingStock,
+    }));
+
+    const draws: {
+      drawId: string;
+      prizeId: string | null;
+      prizeLabel: string | null;
+      prizeImageUrl: string | null;
+    }[] = [];
+
+    for (let i = 0; i < quantity; i += 1) {
+      const selectedResult = selectDeterministicPrize(prizeState, Math.random());
+      const selected = selectedResult.selected;
+      const prize = selected?.id ? prizeLookup.get(selected.id) : null;
+
+      if (selected) {
+        const inMemoryRow = prizeState.find((row) => row.id === selected.id);
+        if (inMemoryRow) inMemoryRow.remainingStock -= 1;
+      }
+
+      draws.push({
+        drawId: `trial-${randomUUID()}`,
+        prizeId: selected?.id ?? null,
+        prizeLabel: prize?.label ?? null,
+        prizeImageUrl: prize?.imageUrl ?? null,
+      });
+    }
+
+    return res.json({
+      vendorId,
+      packId: pack.id,
+      drawOrderId: `trial-${randomUUID()}`,
+      requestId: String(req.header("x-request-id") ?? "").trim() || randomUUID(),
+      quantity,
+      totalCost: 0,
+      isTrial: true,
+      draws,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Trial draw failed";
+    return res.status(400).json({ error: message });
+  }
+});
+
 drawRouter.post("/v1/draws", async (req: VendorRequest, res) => {
   const vendorId = req.vendorId;
   if (!vendorId) return res.status(400).json({ error: "Vendor not resolved" });

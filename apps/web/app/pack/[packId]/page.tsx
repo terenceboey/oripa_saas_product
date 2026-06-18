@@ -43,6 +43,7 @@ type DrawResult = {
   packId: string;
   quantity: number;
   totalCost: number;
+  isTrial?: boolean;
   draws: Array<{
     drawId: string;
     prizeId: string | null;
@@ -117,6 +118,7 @@ export default function PackDrawPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [drawing, setDrawing] = useState(false);
+  const [trialDrawing, setTrialDrawing] = useState(false);
   const [lastDraw, setLastDraw] = useState<DrawResult | null>(null);
   const [imagePreview, setImagePreview] = useState<ImagePreview | null>(null);
   const [drawShowcase, setDrawShowcase] = useState<DrawResult | null>(null);
@@ -319,6 +321,39 @@ export default function PackDrawPage() {
     }
   }
 
+  async function handleTrialDraw(quantity: number) {
+    if (!pack) return;
+    setTrialDrawing(true);
+    setError(null);
+    setDrawShowcase(null);
+    setDrawShowcaseIndex(0);
+    setDrawShowcasePhase(null);
+    setDrawShowcaseCard(null);
+    void ensureAudioContext();
+
+    try {
+      const response = await fetch(`${apiBase}/v1/draws/trial`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "content-type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ packId: pack.id, quantity }),
+      });
+
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Trial draw failed");
+
+      setLastDraw(payload);
+      setDrawShowcase(payload);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Trial draw failed");
+    } finally {
+      setTrialDrawing(false);
+    }
+  }
+
   async function confirmDraw() {
     if (pendingDrawQuantity === null) return;
     const quantity = pendingDrawQuantity;
@@ -476,6 +511,15 @@ export default function PackDrawPage() {
                   <Button variant="outline" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 10} onClick={() => openDrawConfirmation(10)}>
                     10x Draw
                   </Button>
+                  <Button
+                    variant="light"
+                    color="teal"
+                    loading={trialDrawing}
+                    disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1}
+                    onClick={() => void handleTrialDraw(1)}
+                  >
+                    Test Trial Draw
+                  </Button>
                 </Group>
 
                 {error ? <Text c="red">{error}</Text> : null}
@@ -599,9 +643,9 @@ export default function PackDrawPage() {
               <Paper withBorder radius="xl" p="lg" shadow="sm">
                 <Stack gap="sm">
                   <div>
-                    <Title order={2}>Draw Result</Title>
+                    <Title order={2}>{lastDraw.isTrial ? "Trial Draw Result" : "Draw Result"}</Title>
                     <Text c="dimmed">
-                      Quantity {lastDraw.quantity} | Cost {lastDraw.totalCost.toLocaleString()} pts
+                      Quantity {lastDraw.quantity} | {lastDraw.isTrial ? "Free trial - no points spent" : `Cost ${lastDraw.totalCost.toLocaleString()} pts`}
                     </Text>
                   </div>
                   <SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="sm">
@@ -694,7 +738,7 @@ export default function PackDrawPage() {
 
             <Group justify="space-between" align="center" wrap="wrap">
               <Text c="dimmed" size="sm">
-                {drawShowcase.quantity} draw{drawShowcase.quantity > 1 ? "s" : ""} | Cost {drawShowcase.totalCost.toLocaleString()} pts
+                {drawShowcase.quantity} draw{drawShowcase.quantity > 1 ? "s" : ""} | {drawShowcase.isTrial ? "Free trial" : `Cost ${drawShowcase.totalCost.toLocaleString()} pts`}
               </Text>
               {drawShowcasePhase === "done" ? <Button onClick={closeDrawShowcase}>Continue</Button> : null}
             </Group>
