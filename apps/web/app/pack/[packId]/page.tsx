@@ -457,7 +457,7 @@ export default function PackDrawPage() {
 
         {pack ? (
           <>
-            <Paper withBorder radius="xl" p="lg" shadow="sm">
+            <Paper withBorder radius="xl" p="lg" shadow="sm" className="pack-detail-hero">
               <Stack gap="md">
                 {(() => {
                   const image = resolvePackBannerMediaUrl(pack.packBannerImageUrl, defaultPackBannerImage);
@@ -470,13 +470,11 @@ export default function PackDrawPage() {
                         alt={`${pack.title} banner`}
                         loading="lazy"
                         decoding="async"
+                        className="pack-detail-banner"
                         style={{
                           width: "100%",
-                          height: "auto",
                           display: "block",
                           borderRadius: 16,
-                          objectFit: "contain",
-                          objectPosition: "center",
                           background: "var(--card, #fff)",
                         }}
                         onError={(e) => {
@@ -497,30 +495,55 @@ export default function PackDrawPage() {
                   {pack.limitedLabel ? <Badge color="yellow" variant="light">{pack.limitedLabel}</Badge> : null}
                 </Group>
 
-                <Group justify="space-between" align="center" wrap="wrap">
-                  <Text c="dimmed">1 draw</Text>
-                  <Text fw={800} size="lg">
-                    {pack.pricePoints.toLocaleString()} pts
-                  </Text>
-                </Group>
+                <Paper withBorder radius="xl" p="md" className="pack-draw-cta-panel">
+                  <Stack gap="md">
+                    <Group justify="space-between" align="center" wrap="wrap">
+                      <div>
+                        <Text size="xs" tt="uppercase" fw={900} c="dimmed">
+                          Ready to pull?
+                        </Text>
+                        <Title order={2} className="pack-draw-cta-title">
+                          Choose your draw
+                        </Title>
+                      </div>
+                      <Badge size="xl" radius="xl" className="pack-draw-price-badge">
+                        {pack.pricePoints.toLocaleString()} pts / draw
+                      </Badge>
+                    </Group>
 
-                <Group gap="sm" wrap="wrap">
-                  <Button disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1} onClick={() => openDrawConfirmation(1)}>
-                    Draw
-                  </Button>
-                  <Button variant="outline" disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 10} onClick={() => openDrawConfirmation(10)}>
-                    10x Draw
-                  </Button>
-                  <Button
-                    variant="light"
-                    color="teal"
-                    loading={trialDrawing}
-                    disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1}
-                    onClick={() => void handleTrialDraw(1)}
-                  >
-                    Test Trial Draw
-                  </Button>
-                </Group>
+                    <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
+                      <Button
+                        size="xl"
+                        radius="xl"
+                        className="pack-draw-button pack-draw-button-primary"
+                        disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1}
+                        onClick={() => openDrawConfirmation(1)}
+                      >
+                        Draw 1x
+                      </Button>
+                      <Button
+                        size="xl"
+                        radius="xl"
+                        className="pack-draw-button pack-draw-button-multi"
+                        disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 10}
+                        onClick={() => openDrawConfirmation(10)}
+                      >
+                        10x Draw
+                      </Button>
+                      <Button
+                        size="xl"
+                        radius="xl"
+                        variant="light"
+                        className="pack-draw-button pack-draw-button-trial"
+                        loading={trialDrawing}
+                        disabled={drawing || isDrawShowcaseOpen || isDrawConfirmationOpen || pack.remainingStock < 1}
+                        onClick={() => void handleTrialDraw(1)}
+                      >
+                        Free Trial Draw
+                      </Button>
+                    </SimpleGrid>
+                  </Stack>
+                </Paper>
 
                 {error ? <Text c="red">{error}</Text> : null}
               </Stack>
