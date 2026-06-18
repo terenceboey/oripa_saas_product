@@ -60,6 +60,8 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
     if (!landingCard) return undefined;
 
     const cardWidth = landingCard.getBoundingClientRect().width;
+    const edgePadding = Math.max(24, viewport.clientWidth / 2 - cardWidth / 2);
+    track.style.setProperty("--carousel-edge-padding", `${edgePadding}px`);
     const targetScroll = Math.max(0, landingCard.offsetLeft - viewport.clientWidth / 2 + cardWidth / 2);
     const approachScroll = Math.max(0, targetScroll - cardWidth * 1.6);
 
@@ -273,7 +275,10 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
         .draw-carousel-frame {
           position: relative;
-          width: min(94vw, 860px);
+          width: 100%;
+          max-width: 640px;
+          margin-inline: auto;
+          box-sizing: border-box;
           padding: 26px 18px 20px;
           border-radius: 32px;
           background:
@@ -296,7 +301,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
 
         .draw-carousel-viewport {
           position: relative;
-          overflow-x: auto;
+          overflow: hidden;
           overflow-y: hidden;
           scroll-behavior: auto;
           scrollbar-width: none;
@@ -313,7 +318,8 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           align-items: center;
           gap: 14px;
           width: max-content;
-          padding: 0 50vw;
+          padding: 0 var(--carousel-edge-padding, 220px);
+          box-sizing: content-box;
           will-change: scroll-position;
         }
 
@@ -619,14 +625,15 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           }
 
           .draw-carousel-frame {
-            width: min(100vw - 24px, 540px);
+            width: 100%;
+            max-width: min(100vw - 24px, 540px);
             padding: 18px 10px 14px;
             border-radius: 24px;
           }
 
           .draw-carousel-track {
             gap: 8px;
-            padding: 0 42vw;
+            padding: 0 var(--carousel-edge-padding, 130px);
           }
 
           .draw-carousel-slot {
