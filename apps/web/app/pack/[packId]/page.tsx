@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import type { CSSProperties } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button, Card, Container, Group, Image, Modal, Paper, SimpleGrid, Stack, Text, Title } from "@mantine/core";
 import { packTierSnapshotSchema, type PackTierSnapshot } from "@oripa/shared";
@@ -86,6 +87,21 @@ function resolveTierOdds(tiers: PackTierSnapshot["tiers"]) {
   return tiers.map((tier) => (typeof tier.percentage === "number" ? tier.percentage : fallbackPercent));
 }
 
+const tierChartColors = ["#38bdf8", "#22c55e", "#f8fafc", "#a855f7", "#facc15", "#fb7185", "#14b8a6", "#f97316", "#818cf8", "#e879f9"];
+
+function formatPercent(value: number) {
+  return `${Number(value.toFixed(value >= 10 ? 1 : 2)).toLocaleString()}%`;
+}
+
+function formatEstimatedValueRange(items: PackTierSnapshot["tiers"][number]["items"]) {
+  const values = items.map((item) => item.estimatedValue).filter((value) => Number.isFinite(value));
+  if (values.length === 0) return "Est. value not set";
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const formatValue = (value: number) => `${value.toLocaleString()} pts`;
+  return min === max ? `~${formatValue(min)}` : `~${formatValue(min)} - ${formatValue(max)}`;
+}
+
 export default function PackDrawPage() {
   const params = useParams<{ packId: string }>();
   const packId = String(params?.packId ?? "");
@@ -124,6 +140,38 @@ export default function PackDrawPage() {
     if (!tierSnapshot) return [];
     return resolveTierOdds(tierSnapshot.tiers);
   }, [tierSnapshot]);
+  const tierChartEntries = useMemo(() => {
+    if (!tierSnapshot) return [];
+    return tierSnapshot.tiers.map((tier, index) => {
+      const chance = tierOdds[index] ?? 0;
+      return {
+        name: tier.name,
+        chance,
+        color: tierChartColors[index % tierChartColors.length],
+        itemCount: tier.items.length,
+        itemChance: tier.items.length > 0 ? chance / tier.items.length : 0,
+        valueRange: formatEstimatedValueRange(tier.items),
+      };
+    });
+  }, [tierOdds, tierSnapshot]);
+  const featuredTier = useMemo(() => {
+    return tierChartEntries.reduce<(typeof tierChartEntries)[number] | null>((best, entry) => {
+      if (!best || entry.chance > best.chance) return entry;
+      return best;
+    }, null);
+  }, [tierChartEntries]);
+  const tierChartGradient = useMemo(() => {
+    const visibleEntries = tierChartEntries.filter((entry) => entry.chance > 0);
+    if (visibleEntries.length === 0) return "conic-gradient(#64748b 0% 100%)";
+    let cursor = 0;
+    const segments = visibleEntries.map((entry, index) => {
+      const start = cursor;
+      const end = index === visibleEntries.length - 1 ? 100 : Math.min(100, cursor + entry.chance);
+      cursor = end;
+      return `${entry.color} ${start}% ${end}%`;
+    });
+    return `conic-gradient(${segments.join(", ")})`;
+  }, [tierChartEntries]);
 
   const loadData = useCallback(async () => {
     if (!packId) return;
@@ -435,13 +483,68 @@ export default function PackDrawPage() {
             </Paper>
 
             {tierSnapshot && tierSnapshot.tiers.length > 0 ? (
-              <Paper withBorder radius="xl" p="lg" shadow="sm">
-                <Stack gap="md">
-                  <div>
-                    <Title order={2}>Contents</Title>
-                    <Text c="dimmed">This reflects the vendor-configured tier structure preserved with the pack.</Text>
-                  </div>
+              <>
+                <Paper withBorder radius="xl" p="lg" shadow="sm" className="pack-odds-panel">
+                  <Stack gap="lg">
+                    <Stack gap={2} align="center">
+                      <Text size="sm" c="dimmed" fw={700}>
+                        Pack Odds
+                      </Text>
+                      <Title order={2} ta="center">
+                        {pack.title}
+                      </Title>
+                    </Stack>
+
+                    <SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl" style={{ alignItems: "center" }}>
+                      <div className="pack-odds-donut-wrap">
+                        <div className="pack-odds-donut" style={{ background: tierChartGradient }}>
+                          <div className="pack-odds-donut-center">
+                            <Text fw={900} size="xl" ta="center">
+                              {featuredTier?.name ?? "Odds"}
+                            </Text>
+                            <Text fw={900} size="xl" ta="center" style={{ color: featuredTier?.color ?? "var(--brand-accent)" }}>
+                              {formatPercent(featuredTier?.chance ?? 0)}
+                            </Text>
+                            <Text size="sm" c="dimmed" ta="center">
+                              {featuredTier?.valueRange ?? "Tier breakdown"}
+                            </Text>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pack-odds-legend">
+                        {tierChartEntries.map((entry) => (
+                          <div key={entry.name} className="pack-odds-legend-row" style={{ "--tier-color": entry.color } as CSSProperties}>
+                            <div className="pack-odds-legend-marker" />
+                            <div>
+                              <Group justify="space-between" gap="sm" wrap="nowrap">
+                                <Text fw={800}>{entry.name}</Text>
+                                <Text fw={900} style={{ color: entry.color }}>
+                                  {formatPercent(entry.chance)}
+                                </Text>
+                              </Group>
+                              <Text size="sm" c="dimmed">
+                                {entry.valueRange} | {entry.itemCount.toLocaleString()} items | {formatPercent(entry.itemChance)} each
+                              </Text>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </SimpleGrid>
+
+                    <Text size="sm" c="dimmed" ta="center">
+                      Odds are based on the vendor-configured tier rates for this pack. Individual item odds are split evenly within each tier.
+                    </Text>
+                  </Stack>
+                </Paper>
+
+                <Paper withBorder radius="xl" p="lg" shadow="sm">
                   <Stack gap="md">
+                    <div>
+                      <Title order={2}>Contents</Title>
+                      <Text c="dimmed">This reflects the vendor-configured tier structure preserved with the pack.</Text>
+                    </div>
+                    <Stack gap="md">
                     {tierSnapshot.tiers.map((tier, tierIndex) => {
                       const tierChance = tierOdds[tierIndex] ?? 0;
                       const itemChance = tier.items.length > 0 ? tierChance / tier.items.length : 0;
@@ -486,9 +589,10 @@ export default function PackDrawPage() {
                         </Card>
                       );
                     })}
+                    </Stack>
                   </Stack>
-                </Stack>
-              </Paper>
+                </Paper>
+              </>
             ) : null}
 
             {lastDraw ? (

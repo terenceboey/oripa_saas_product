@@ -1878,8 +1878,93 @@ h6,
   background: color-mix(in srgb, var(--surface) 86%, var(--secondary) 14%);
 }
 
+.pack-odds-panel {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--brand-accent) 20%, transparent), transparent 32%),
+    linear-gradient(180deg, color-mix(in srgb, var(--surface) 82%, #151128 18%), var(--surface));
+}
+
+.pack-odds-donut-wrap {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+.pack-odds-donut {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(74vw, 420px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: drop-shadow(0 24px 44px color-mix(in srgb, var(--brand) 18%, transparent));
+}
+
+.pack-odds-donut::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 18%, color-mix(in srgb, var(--brand-accent) 12%, transparent), transparent 36%),
+    var(--surface);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--border) 72%, transparent),
+    0 0 0 10px color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.pack-odds-donut::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(255, 255, 255, 0.34), transparent 16%, rgba(255, 255, 255, 0.18) 36%, transparent 52%, rgba(255, 255, 255, 0.24) 76%, transparent);
+  mix-blend-mode: screen;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.pack-odds-donut-center {
+  position: relative;
+  z-index: 1;
+  width: 58%;
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+
+.pack-odds-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+}
+
+.pack-odds-legend-row {
+  display: grid;
+  grid-template-columns: 4px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.pack-odds-legend-marker {
+  width: 4px;
+  min-height: 44px;
+  border-radius: 999px;
+  background: var(--tier-color);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--tier-color) 58%, transparent);
+}
+
 @media (max-width: 760px) {
   .fairness-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pack-odds-donut {
+    width: min(84vw, 330px);
+  }
+
+  .pack-odds-legend {
     grid-template-columns: 1fr;
   }
 
