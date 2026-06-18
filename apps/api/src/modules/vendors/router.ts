@@ -65,7 +65,24 @@ vendorRouter.get("/v1/vendors/by-host", async (req, res) => {
   const host = String(req.query.host ?? "").trim().toLowerCase();
   if (!host) return res.status(400).json({ error: "host is required" });
 
-  const vendor = await prisma.vendor.findUnique({ where: { host } });
+  const vendor = await prisma.vendor.findUnique({
+    where: { host },
+    include: {
+      vendorSettings: {
+        select: {
+          storefrontPrimary: true,
+          storefrontSecondary: true,
+          storefrontAccent: true,
+          storefrontSurface: true,
+          storefrontText: true,
+          storefrontMuted: true,
+          storefrontRadius: true,
+          storefrontThemePreset: true,
+          drawAnimationPreset: true,
+        },
+      },
+    },
+  });
   if (!vendor) return res.status(404).json({ error: "Vendor not found" });
 
   return res.json({ vendor });
