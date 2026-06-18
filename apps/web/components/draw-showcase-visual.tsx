@@ -200,7 +200,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
               <div className="draw-carousel-result-card">
                 <Image src={overlayCard.imageUrl} alt={overlayCard.label} radius="lg" fit="contain" className="draw-result-image draw-carousel-result-image" />
               </div>
-              <Text size="sm" fw={700} ta="center" className="draw-carousel-result-label">
+              <Text size="sm" fw={700} ta="center" className="draw-carousel-result-label" title={overlayCard.label}>
                 {overlayCard.label}
               </Text>
             </div>
@@ -242,7 +242,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           #{index + 1} of {total}
         </Badge>
         <Group gap="xs" justify="center">
-          <Text fw={800} ta="center">
+          <Text fw={800} ta="center" className="draw-showcase-title" title={currentCard.label}>
             {currentCard.label}
           </Text>
           {phase === "revealing" ? <Badge color="yellow">Winner</Badge> : null}
@@ -497,6 +497,17 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           white-space: nowrap;
         }
 
+        .draw-showcase-title {
+          width: min(100%, 520px);
+          min-height: 1.35em;
+          max-height: 2.7em;
+          line-height: 1.35;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+
         .draw-reel-track {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -659,8 +670,21 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           }
 
           .draw-carousel-result-label {
+            display: block;
+            width: 100%;
+            min-height: 26px;
+            max-height: 26px;
+            line-height: 18px;
             font-size: 0.72rem;
             padding: 4px 8px;
+          }
+
+          .draw-showcase-title {
+            width: min(100%, 300px);
+            min-height: 44px;
+            max-height: 44px;
+            line-height: 22px;
+            font-size: 0.92rem;
           }
         }
       `}</style>
