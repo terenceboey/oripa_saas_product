@@ -245,7 +245,7 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
           <Text fw={800} ta="center" className="draw-showcase-title" title={currentCard.label}>
             {currentCard.label}
           </Text>
-          {phase === "revealing" ? <Badge color="yellow">Winner</Badge> : null}
+          {phase === "revealing" || phase === "done" ? <Badge color="yellow">Winner</Badge> : null}
         </Group>
       </Stack>
 
