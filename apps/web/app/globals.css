@@ -1885,6 +1885,7 @@ h6,
 
   .pack-carousel-shell {
     padding: 0 !important;
+    margin-block: 24px 32px;
     overflow: hidden;
     background:
       radial-gradient(circle at 50% 12%, color-mix(in srgb, var(--brand-accent) 24%, transparent), transparent 34%),
@@ -1893,9 +1894,9 @@ h6,
   }
 
   .pack-carousel-stage {
-    min-height: clamp(620px, 150vw, 760px);
+    min-height: clamp(660px, 156vw, 800px);
     overflow: visible;
-    padding: 18px 0 18px;
+    padding: 34px 0 32px;
     perspective: 900px;
     perspective-origin: 50% 28%;
   }
@@ -1914,7 +1915,14 @@ h6,
 
   .pack-carousel-slot-active {
     width: min(100%, 360px);
+    opacity: 1;
+    filter: none;
     transform: translateX(-50%) translateZ(74px);
+  }
+
+  .pack-carousel-card-active {
+    opacity: 1;
+    filter: none;
   }
 
   .pack-carousel-card-active .pack-carousel-cover {
@@ -2010,7 +2018,7 @@ h6,
   }
 
   .pack-carousel-bottom-controls {
-    margin-top: -10px;
+    margin-top: 8px;
     padding-bottom: 6px;
   }
 }
