@@ -317,7 +317,7 @@ export default function HomePage() {
     const topPrize = getTopPrize(pack);
     const isActive = variant === "active";
     const coverStyle = {
-      backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.08), rgba(5,4,10,0.18)), url(${JSON.stringify(image.fallback)})`,
+      backgroundImage: `url(${JSON.stringify(image.fallback)})`,
     } as CSSProperties;
 
     return (
