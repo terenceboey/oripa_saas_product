@@ -1885,8 +1885,8 @@ h6,
 
   .pack-carousel-shell {
     padding: 0 !important;
-    margin-block: 24px 32px;
-    overflow: hidden;
+    margin-block: 36px 48px;
+    overflow: visible;
     background:
       radial-gradient(circle at 50% 12%, color-mix(in srgb, var(--brand-accent) 24%, transparent), transparent 34%),
       radial-gradient(circle at 50% 78%, color-mix(in srgb, var(--brand) 30%, transparent), transparent 52%),
@@ -1894,9 +1894,9 @@ h6,
   }
 
   .pack-carousel-stage {
-    min-height: clamp(660px, 156vw, 800px);
+    min-height: clamp(660px, 150vw, 760px);
     overflow: visible;
-    padding: 34px 0 32px;
+    padding: 44px 0 46px;
     perspective: 900px;
     perspective-origin: 50% 28%;
   }
@@ -1926,7 +1926,7 @@ h6,
   }
 
   .pack-carousel-card-active .pack-carousel-cover {
-    width: min(70vw, 276px) !important;
+    width: min(66vw, 260px) !important;
     box-shadow:
       0 32px 80px rgba(0, 0, 0, 0.58),
       0 0 0 1px rgba(255, 255, 255, 0.18),
@@ -1994,13 +1994,23 @@ h6,
   }
 
   .pack-carousel-stats {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
     order: 4;
   }
 
   .pack-carousel-stats > div {
-    padding: 8px;
+    padding: 8px 6px;
+    border-radius: 14px;
+  }
+
+  .pack-carousel-stats > div > :first-child {
+    font-size: 10px;
+  }
+
+  .pack-carousel-stats > div > :last-child {
+    font-size: 13px;
+    line-height: 1.12;
   }
 
   .pack-carousel-action {
