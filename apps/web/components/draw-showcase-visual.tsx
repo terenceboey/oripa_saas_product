@@ -499,7 +499,8 @@ export function DrawShowcaseVisual({ preset, phase, currentCard, targetCard, poo
         .draw-carousel-result-label {
           padding: 6px 10px;
           border-radius: 999px;
-          background: rgba(255, 255, 255, 0.86);
+          color: #111827 !important;
+          background: rgba(255, 255, 255, 0.94);
           box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
           max-width: 100%;
           overflow: hidden;
