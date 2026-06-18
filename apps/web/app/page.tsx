@@ -508,32 +508,6 @@ export default function HomePage() {
               onPointerCancel={handlePackPointerCancel}
               onPointerLeave={handlePackPointerCancel}
             >
-              {sortedPacks.length > 1 ? (
-                <div className="pack-carousel-floating-controls" aria-label="Pack carousel navigation">
-                  <ActionIcon
-                    variant="white"
-                    size="xl"
-                    radius="xl"
-                    aria-label="Previous pack"
-                    onClick={goToPreviousPack}
-                    disabled={sortedPacks.length <= 1}
-                    className="pack-carousel-floating-button pack-carousel-floating-button-left"
-                  >
-                    <IconChevronLeft size={22} stroke={2.5} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="white"
-                    size="xl"
-                    radius="xl"
-                    aria-label="Next pack"
-                    onClick={goToNextPack}
-                    disabled={sortedPacks.length <= 1}
-                    className="pack-carousel-floating-button pack-carousel-floating-button-right"
-                  >
-                    <IconChevronRight size={22} stroke={2.5} />
-                  </ActionIcon>
-                </div>
-              ) : null}
               {desktopCarouselOffsets.map((offset) => {
                 const pack = sortedPacks[(activePackIndex + offset + sortedPacks.length) % sortedPacks.length];
                 if (!pack) return null;
@@ -575,7 +549,7 @@ export default function HomePage() {
             </div>
 
             <Group justify="center" gap="sm" className="pack-carousel-bottom-controls">
-              <ActionIcon variant="light" size="lg" radius="xl" aria-label="Previous pack" onClick={goToPreviousPack} disabled={sortedPacks.length <= 1}>
+              <ActionIcon className="pack-carousel-control-arrow" variant="light" size="lg" radius="xl" aria-label="Previous pack" onClick={goToPreviousPack} disabled={sortedPacks.length <= 1}>
                 <IconChevronLeft size={20} stroke={2.5} />
               </ActionIcon>
               <Group gap={6}>
@@ -593,7 +567,7 @@ export default function HomePage() {
                   </ActionIcon>
                 ))}
               </Group>
-              <ActionIcon variant="light" size="lg" radius="xl" aria-label="Next pack" onClick={goToNextPack} disabled={sortedPacks.length <= 1}>
+              <ActionIcon className="pack-carousel-control-arrow" variant="light" size="lg" radius="xl" aria-label="Next pack" onClick={goToNextPack} disabled={sortedPacks.length <= 1}>
                 <IconChevronRight size={20} stroke={2.5} />
               </ActionIcon>
             </Group>

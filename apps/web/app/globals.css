@@ -1893,9 +1893,9 @@ h6,
   }
 
   .pack-carousel-stage {
-    min-height: clamp(650px, 154vw, 790px);
+    min-height: clamp(620px, 150vw, 760px);
     overflow: visible;
-    padding: 18px 0 28px;
+    padding: 18px 0 18px;
     perspective: 900px;
     perspective-origin: 50% 28%;
   }
@@ -1913,12 +1913,12 @@ h6,
   }
 
   .pack-carousel-slot-active {
-    width: min(100%, 370px);
+    width: min(100%, 360px);
     transform: translateX(-50%) translateZ(74px);
   }
 
   .pack-carousel-card-active .pack-carousel-cover {
-    width: min(72vw, 292px) !important;
+    width: min(70vw, 276px) !important;
     box-shadow:
       0 32px 80px rgba(0, 0, 0, 0.58),
       0 0 0 1px rgba(255, 255, 255, 0.18),
@@ -1947,11 +1947,11 @@ h6,
 
   .pack-carousel-details {
     gap: 10px !important;
-    padding: 0 22px;
+    padding: 0 24px;
   }
 
   .pack-carousel-details h2 {
-    font-size: 28px !important;
+    font-size: clamp(22px, 7vw, 27px) !important;
     line-height: 1.1;
   }
 
@@ -2003,12 +2003,14 @@ h6,
     min-height: 54px;
   }
 
-  .pack-carousel-floating-button {
+  .pack-carousel-floating-controls,
+  .pack-carousel-floating-button,
+  .pack-carousel-control-arrow {
     display: none;
   }
 
   .pack-carousel-bottom-controls {
-    margin-top: -20px;
+    margin-top: -10px;
     padding-bottom: 6px;
   }
 }
@@ -2116,28 +2118,28 @@ h6,
 @keyframes pack-carousel-mobile-from-right {
   0% {
     opacity: 0.74;
-    transform: translateX(28%) translateZ(-120px) rotateY(-16deg) scale(0.92);
+    transform: translateX(calc(-50% + min(36vw, 140px))) translateZ(-120px) rotateY(-16deg) scale(0.92);
   }
   72% {
     opacity: 1;
-    transform: translateX(-1.5%) translateZ(84px) rotateY(1deg) scale(1.01);
+    transform: translateX(calc(-50% - 6px)) translateZ(84px) rotateY(1deg) scale(1.01);
   }
   100% {
-    transform: translateX(0) translateZ(74px) rotateY(0deg) scale(1);
+    transform: translateX(-50%) translateZ(74px) rotateY(0deg) scale(1);
   }
 }
 
 @keyframes pack-carousel-mobile-from-left {
   0% {
     opacity: 0.74;
-    transform: translateX(-28%) translateZ(-120px) rotateY(16deg) scale(0.92);
+    transform: translateX(calc(-50% - min(36vw, 140px))) translateZ(-120px) rotateY(16deg) scale(0.92);
   }
   72% {
     opacity: 1;
-    transform: translateX(1.5%) translateZ(84px) rotateY(-1deg) scale(1.01);
+    transform: translateX(calc(-50% + 6px)) translateZ(84px) rotateY(-1deg) scale(1.01);
   }
   100% {
-    transform: translateX(0) translateZ(74px) rotateY(0deg) scale(1);
+    transform: translateX(-50%) translateZ(74px) rotateY(0deg) scale(1);
   }
 }
 
