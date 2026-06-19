@@ -2498,8 +2498,22 @@ html[data-vendor-theme-active="true"] .mantine-Tabs-tab {
   color: var(--text) !important;
 }
 
+html[data-vendor-theme-active="true"] .mantine-Tabs-tab:hover:not([data-active="true"]) {
+  background: color-mix(in srgb, var(--brand-soft) 72%, var(--card) 28%) !important;
+  color: var(--text) !important;
+}
+
 html[data-vendor-theme-active="true"] .mantine-Tabs-tab[data-active="true"] {
   background: linear-gradient(135deg, var(--brand), var(--brand-accent)) !important;
+  color: #fff !important;
+}
+
+html[data-vendor-theme-active="true"] .mantine-Tabs-tab[data-active="true"]:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 88%, #000 12%),
+    color-mix(in srgb, var(--brand-accent) 88%, #000 12%)
+  ) !important;
   color: #fff !important;
 }
 
